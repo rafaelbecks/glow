@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lizard Visualizer</title>
+  <title>Lizard Visualizer - Live MIDI</title>
   <style>
     body, html {
       margin: 0;
@@ -32,12 +32,9 @@
 </head>
 <body>
   <button id="startButton">Start Visualizer</button>
-  <!-- <audio id="audio" src="track.wav"></audio> -->
   <canvas id="canvas"></canvas>
 
-  <script type="module">
-    import { Midi } from 'https://cdn.jsdelivr.net/npm/@tonejs/midi@2.0.27/+esm';
-
+  <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     let width, height;
@@ -50,154 +47,146 @@
     resize();
     window.addEventListener('resize', resize);
 
+    const activeNotes = {
+      chords: [],
+      lead: [],
+      arp: []
+    };
+
+    const NOTE_ON = 0x90;
+    const NOTE_OFF = 0x80;
+
+    function pitchToColor(midi) {
+      const hue = (midi % 12) * 30;
+      return `hsla(${hue}, 100%, 70%, 0.6)`;
+    }
+
+    function drawLissajousComplex(t, notes) {
+      if (notes.length === 0) return;
+      const a = notes[0] % 7 + 1;
+      const b = notes[1 % notes.length] % 7 + 1;
+      const delta = (notes[2 % notes.length] || notes[0]) * 0.1;
+
+      ctx.save();
+      ctx.translate(width / 2, height / 2);
+      ctx.rotate(Math.sin(t * 0.1) * 0.3);
+      ctx.beginPath();
+      for (let i = 0; i < Math.PI * 2; i += 0.01) {
+        const x = Math.sin(a * i + delta + t * 0.5) * 250;
+        const y = Math.sin(b * i + t * 0.3) * 250;
+        ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = 'hsla(' + (a + b) * 20 + ', 100%, 60%, 0.5)';
+      ctx.shadowColor = ctx.strokeStyle;
+      ctx.shadowBlur = 25;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawOutlinedRotatingTriangle(x, y, size, angle, color) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(0, -size);
+      ctx.lineTo(size * 0.866, size * 0.5);
+      ctx.lineTo(-size * 0.866, size * 0.5);
+      ctx.closePath();
+      ctx.strokeStyle = color;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 20;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawNoteVisuals(notes, t, type = 'triangle', radiusScale = 1, spread = 300) {
+      notes.forEach(({ midi, velocity, timestamp }) => {
+        const progress = (t - timestamp) / 1000;
+        if (progress > 2) return; // ignore older notes
+
+        const angle = midi * 0.3 + progress * 2;
+        const radius = radiusScale * (velocity + 0.5) * spread;
+
+        const offsetX = width * 0.25;
+        const offsetY = height * 0.25;
+
+        const baseX = Math.cos(angle) * radius;
+        const baseY = Math.sin(angle) * radius * 0.5;
+
+        const x = baseX + offsetX;
+        const y = baseY + offsetY;
+        const color = pitchToColor(midi);
+
+        if (type === 'triangle') {
+          drawOutlinedRotatingTriangle(x, y, (20 + velocity * 12) * 2.5, t + midi * 0.2, color);
+          drawOutlinedRotatingTriangle(width - x, height - y, (20 + velocity * 12) * 2.5, t + midi * 0.2, color);
+        } else if (type === 'sinewave') {
+          ctx.beginPath();
+          ctx.strokeStyle = color;
+          for (let i = -width / 2; i < width / 2; i += 5) {
+            const frequency = 0.01 + midi * 0.0005;
+            const yOffset = Math.sin((i + t * 100 + midi * 5) * frequency) * 40;
+            ctx.lineTo(i + width / 2, yOffset + height / 2);
+          }
+          ctx.stroke();
+        }
+      });
+    }
+
+    function noteOn(channel, midi, velocity) {
+      const list = activeNotes[channel];
+      if (!list.some(n => n.midi === midi)) {
+        list.push({ midi, velocity, timestamp: performance.now() });
+      }
+    }
+
+    function noteOff(channel, midi) {
+      const list = activeNotes[channel];
+      const index = list.findIndex(n => n.midi === midi);
+      if (index !== -1) list.splice(index, 1);
+    }
+
+    async function setupMIDI() {
+      const access = await navigator.requestMIDIAccess();
+      for (const input of access.inputs.values()) {
+        const name = input.name.toLowerCase();
+        let channel = null;
+        if (name.includes("bus 1")) channel = "chords";
+        if (name.includes("bus 2")) channel = "lead";
+        if (name.includes("bus 3")) channel = "arp";
+        if (!channel) continue;
+
+        input.onmidimessage = (msg) => {
+          const [status, data1, data2] = msg.data;
+          const cmd = status & 0xf0;
+          if (cmd === NOTE_ON && data2 > 0) noteOn(channel, data1, data2 / 127);
+          if (cmd === NOTE_OFF || (cmd === NOTE_ON && data2 === 0)) noteOff(channel, data1);
+        };
+      }
+    }
+
     const startButton = document.getElementById('startButton');
     startButton.addEventListener('click', async () => {
       startButton.style.display = 'none';
-
-      startButton.style.display = 'none';
-
-      const [chordsData, leadData, arpData] = await Promise.all([
-        fetch('chords.mid').then(res => res.arrayBuffer()),
-        fetch('lead.mid').then(res => res.arrayBuffer()),
-        fetch('arp.mid').then(res => res.arrayBuffer())
-      ]);
-
-      const chords = new Midi(chordsData);
-      const lead = new Midi(leadData);
-      const arp = new Midi(arpData);
-
-      // function convertNoteTimes(midi) {
-      //   const midiBpm = midi.header.tempos[0]?.bpm || 120;
-      //   const scale = 60 / midiBpm;
-
-      //   for (const track of midi.tracks) {
-      //     for (const note of track.notes) {
-      //       note.time *= scale;
-      //       note.duration *= scale;
-      //     }
-      //   }
-      // }
-
-      // convertNoteTimes(chords);
-      // convertNoteTimes(lead);
-      // convertNoteTimes(arp);
-
-      const startTime = performance.now();
-
-      function pitchToColor(midi) {
-        const hue = (midi % 12) * 30; // 0 to 360
-        return `hsla(${hue}, 100%, 70%, 0.6)`;
-      }
-
-      function drawLissajousComplex(t, chordNotes) {
-        if (chordNotes.length === 0) return;
-
-        const a = chordNotes[0] % 7 + 1;
-        const b = chordNotes[1 % chordNotes.length] % 7 + 1;
-        const delta = (chordNotes[2 % chordNotes.length] || chordNotes[0]) * 0.1;
-
-        ctx.save();
-        ctx.translate(width / 2, height / 2);
-        ctx.rotate(Math.sin(t * 0.1) * 0.3);
-        ctx.beginPath();
-        for (let i = 0; i < Math.PI * 2; i += 0.01) {
-          const x = Math.sin(a * i + delta + t * 0.5) * 250;
-          const y = Math.sin(b * i + t * 0.3) * 250;
-          ctx.lineTo(x, y);
-        }
-        ctx.strokeStyle = 'hsla(' + (a + b) * 20 + ', 100%, 60%, 0.5)';
-        ctx.shadowColor = ctx.strokeStyle;
-        ctx.shadowBlur = 25;
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      function drawOutlinedRotatingTriangle(x, y, size, angle, color) {
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(angle);
-        ctx.beginPath();
-        ctx.moveTo(0, -size);
-        ctx.lineTo(size * 0.866, size * 0.5);
-        ctx.lineTo(-size * 0.866, size * 0.5);
-        ctx.closePath();
-        ctx.strokeStyle = color;
-        ctx.shadowColor = color;
-        ctx.shadowBlur = 20;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      function draw(time) {
-        const t = (time - startTime) / 1000;
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-        ctx.fillRect(0, 0, width, height);
-
-        ctx.save();
-
-        const activeChordNotes = chords.tracks[0].notes.filter(n => {
-          const progress = t - n.time;
-          return progress > 0 && progress < n.duration;
-        }).map(n => n.midi);
-
-        drawLissajousComplex(t, activeChordNotes);
-
-        const drawNotes = (track, type = 'triangle', radiusScale = 1, spread = 300) => {
-          for (const note of track.notes) {
-            const noteTime = note.time;
-            const duration = note.duration;
-            const progress = t - noteTime;
-
-            if (progress > 0 && progress < duration) {
-              const angle = note.midi * 0.3 + progress * 2;
-              const radius = radiusScale * (note.velocity + 0.5) * spread;
-
-              const offsetX = width * 0.25;
-              const offsetY = height * 0.25;
-
-              const baseX = Math.cos(angle) * radius;
-              const baseY = Math.sin(angle) * radius * 0.5;
-
-              const x = baseX + offsetX;
-              const y = baseY + offsetY;
-
-
-              const color = pitchToColor(note.midi);
-              ctx.shadowColor = color;
-              ctx.shadowBlur = 10;
-
-              if (type === 'triangle') {
-                drawOutlinedRotatingTriangle(x, y, (20 + note.velocity * 12) * 2.5, t + note.midi * 0.2, color);
-                drawOutlinedRotatingTriangle(width - x, height - y, (20 + note.velocity * 12) * 2.5, t + note.midi * 0.2, color);
-
-
-                // drawOutlinedRotatingTriangle(newX, newY, (20 + note.velocity * 12) * 2.5, t + note.midi * 0.2, color);
-
-              } else if (type === 'sinewave') {
-                ctx.beginPath();
-                ctx.strokeStyle = color;
-                for (let i = -width / 2; i < width / 2; i += 5) {
-                  const frequency = 0.01 + note.midi * 0.0005;
-                  const yOffset = Math.sin((i + t * 100 + note.midi * 5) * frequency) * 40;
-                  ctx.lineTo(i + width / 2, yOffset + height / 2);
-                }
-                ctx.stroke();
-              }
-            }
-          }
-        };
-
-        drawNotes(lead.tracks[0], 'sinewave', 1.2);
-        drawNotes(arp.tracks[0], 'triangle', 1);
-
-        ctx.restore();
-        requestAnimationFrame(draw);
-      }
-
+      await setupMIDI();
       requestAnimationFrame(draw);
     });
+
+    function draw(time) {
+      const t = time / 1000;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.save();
+      drawLissajousComplex(t, activeNotes.chords.map(n => n.midi));
+      drawNoteVisuals(activeNotes.lead, t, 'sinewave', 1.2);
+      drawNoteVisuals(activeNotes.arp, t, 'triangle', 1);
+      ctx.restore();
+
+      requestAnimationFrame(draw);
+    }
   </script>
 </body>
 </html>
