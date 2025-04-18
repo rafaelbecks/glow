@@ -178,6 +178,49 @@
       });
     }
 
+    function drawMoirePattern(t, notes) {
+      if (notes.length === 0) return;
+
+      const baseCount = 20;
+      const spacing = 20;
+      const speed = 0.0015;
+
+      ctx.save();
+      ctx.translate(width / 2, height / 2);
+
+      notes.forEach((n, i) => {
+        const midi = n.midi;
+        const velocity = n.velocity || 0.5;
+        const angleOffset = Math.sin(t * speed * (i + 1)) * 0.4;
+        const circleCount = baseCount + Math.floor((midi % 12) * 1.5);
+        const sizeMultiplier = 1 + velocity * 1.5;
+        const hue = (midi % 12) * 30;
+
+        ctx.strokeStyle = `hsla(${hue}, 100%, 70%, 0.15)`;
+        ctx.shadowColor = `hsla(${hue}, 100%, 70%, 0.8)`;
+        ctx.shadowBlur = 15;
+        ctx.lineWidth = 1;
+
+        for (let j = 0; j < circleCount; j++) {
+          const radius = j * spacing * sizeMultiplier;
+          ctx.beginPath();
+          for (let a = 0; a < Math.PI * 2; a += 0.1) {
+            const x = radius * Math.cos(a + angleOffset * j);
+            const y = radius * Math.sin(a + angleOffset * j);
+            if (j === 0 && a === 0) {
+              ctx.moveTo(x, y);
+            } else {
+              ctx.lineTo(x, y);
+            }
+          }
+          ctx.stroke();
+        }
+      });
+
+      ctx.restore();
+    }
+
+
     function noteOn(channel, midi, velocity) {
       const list = activeNotes[channel];
       if (!list.some(n => n.midi === midi)) {
@@ -226,7 +269,9 @@
       // drawLissajousComplex(t, activeNotes.chords.map(n => n.midi));
       drawHarmonographComplex(t, activeNotes.chords.map(n => n.midi));
       drawNoteVisuals(activeNotes.lead, t, 'sinewave', 1.2);
-      drawNoteVisuals(activeNotes.arp, t, 'triangle', 1);
+      // drawNoteVisuals(activeNotes.arp, t, 'triangle', 1);
+      drawMoirePattern(t, activeNotes.arp);
+
       ctx.restore();
 
       requestAnimationFrame(draw);
