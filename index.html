@@ -60,10 +60,16 @@
     window.addEventListener('resize', resize);
 
     const activeNotes = {
-      chords: [],
-      lead: [],
-      arp: []
+      lissajous: [],
+      harmonograph: [],
+      sphere: [],
+      gego: [],
+      sinewave: [],
+      triangle: [],
+      moireCircles: []
     };
+
+
 
     const NOTE_ON = 0x90;
     const NOTE_OFF = 0x80;
@@ -122,7 +128,7 @@
       notes.forEach((midi, idx) => {
         const seed = midi * 0.1;
 
-        const velocity = (activeNotes.chords.find(n => n.midi === midi)?.velocity || 0); // 0–1 range
+        const velocity = (activeNotes.harmonograph.find(n => n.midi === midi)?.velocity || 0); // 0–1 range
         const velocityScale = 1 + velocity * 1.5; // scale up to 250% at full velocity
 
         const A1 = (100 + Math.sin(t * 0.3 + idx) * 50) * velocityScale;
@@ -313,7 +319,7 @@
       const velocityAvg = notes.reduce((acc, n) => acc + n.velocity, 0) / notes.length;
 
       const nodeCount = 5 + notes.length * 15; // más notas = más nodos
-      const deformAmount = 2 + velocityAvg * 3; // rebote más sutil
+      const deformAmount = 2 + velocityAvg * 4; // rebote más sutil
       const scaleFactor = 1 + velocityAvg * 1.2;
 
       if (chordSig !== lastChordSig) {
@@ -414,9 +420,13 @@
       for (const input of access.inputs.values()) {
         const name = input.name.toLowerCase();
         let channel = null;
-        if (name.includes("bus 1")) channel = "chords";
-        if (name.includes("bus 2")) channel = "lead";
-        if (name.includes("bus 3")) channel = "arp";
+        if (name.includes("bus 1")) channel = "lissajous";
+        if (name.includes("bus 2")) channel = "harmonograph";
+        if (name.includes("bus 3")) channel = "sphere";
+        if (name.includes("bus 4")) channel = "gego";
+        if (name.includes("bus 5")) channel = "sinewave";
+        if (name.includes("bus 6")) channel = "triangle";
+        if (name.includes("bus 7")) channel = "moireCircles";
         if (!channel) continue;
 
         input.onmidimessage = (msg) => {
@@ -441,13 +451,13 @@
       ctx.fillRect(0, 0, width, height);
 
       ctx.save();
-      // drawLissajousComplex(t, activeNotes.chords.map(n => n.midi));
-      // drawHarmonographComplex(t, activeNotes.chords.map(n => n.midi));
-      drawWireSphere(t, activeNotes.lead);
-      drawGegoNetModule(t, activeNotes.chords);
-      drawNoteVisuals(activeNotes.lead, t, 'sinewave', 1.2);
-      // drawNoteVisuals(activeNotes.arp, t, 'triangle', 1);
-      drawMoirePattern(t, activeNotes.arp);
+      drawLissajousComplex(t, activeNotes.lissajous.map(n => n.midi));
+      drawHarmonographComplex(t, activeNotes.harmonograph.map(n => n.midi));
+      drawWireSphere(t, activeNotes.sphere);
+      drawGegoNetModule(t, activeNotes.gego);
+      drawNoteVisuals(activeNotes.sinewave, t, 'sinewave', 1.2);
+      drawNoteVisuals(activeNotes.triangle, t, 'triangle', 1);
+      drawMoirePattern(t, activeNotes.moireCircles);
 
       ctx.restore();
 
