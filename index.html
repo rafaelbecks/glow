@@ -312,11 +312,10 @@
       const chordSig = notes.map(n => n.midi).sort().join('-');
       const velocityAvg = notes.reduce((acc, n) => acc + n.velocity, 0) / notes.length;
 
-      const nodeCount = 20 + notes.length * 15; // más notas = más nodos
-      const deformAmount = 10 + velocityAvg * 20; // más velocity = más deformación
+      const nodeCount = 5 + notes.length * 15; // más notas = más nodos
+      const deformAmount = 2 + velocityAvg * 3; // rebote más sutil
       const scaleFactor = 1 + velocityAvg * 1.2;
 
-      // Solo regenerar si el acorde cambió
       if (chordSig !== lastChordSig) {
         gegoNodes = [];
         gegoConnections = [];
@@ -331,7 +330,9 @@
         }
 
         for (let i = 0; i < gegoNodes.length; i++) {
-          for (let j = i + 1; j < gegoNodes.length; j++) {
+          const connections = [];
+          for (let j = 0; j < gegoNodes.length; j++) {
+            if (i === j) continue;
             const a = gegoNodes[i];
             const b = gegoNodes[j];
             const dx = a.x - b.x;
@@ -339,35 +340,40 @@
             const dz = a.z - b.z;
             const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
             if (dist < 0.7) {
-              gegoConnections.push([i, j]);
+              connections.push({ j, dist });
             }
           }
+
+          // Sort by distance, keep only 3 closest
+          connections.sort((a, b) => a.dist - b.dist);
+          connections.slice(0, 5).forEach(({ j }) => {
+            gegoConnections.push([i, j]);
+          });
         }
 
         lastChordSig = chordSig;
       }
 
-      // Rotación suave
       const angle = t * 0.2;
       const cos = Math.cos(angle);
       const sin = Math.sin(angle);
 
       ctx.save();
       ctx.translate(width / 2, height / 2);
+      ctx.lineWidth = 0.2; // más delgado
 
       gegoConnections.forEach(([i, j]) => {
         const a = gegoNodes[i];
         const b = gegoNodes[j];
 
-        let ax = a.x * 300;
-        let ay = a.y * 300 + Math.sin(t + a.offset) * deformAmount;
+        let ax = a.x * 100;
+        let ay = a.y * 100 + Math.sin(t + a.offset) * deformAmount;
         let az = a.z;
 
-        let bx = b.x * 300;
-        let by = b.y * 300 + Math.sin(t + b.offset) * deformAmount;
+        let bx = b.x * 100;
+        let by = b.y * 100 + Math.sin(t + b.offset) * deformAmount;
         let bz = b.z;
 
-        // Rotar en 2D (pseudo Y-axis)
         const axr = ax * cos - az * sin;
         const azr = ax * sin + az * cos;
 
@@ -377,7 +383,7 @@
         const opacity = 0.25 * (2 - azr - bzr);
         ctx.strokeStyle = `hsla(0, 0%, 100%, ${opacity})`;
         ctx.shadowColor = `rgba(255, 255, 255, ${opacity})`;
-        ctx.shadowBlur = 3;
+        // ctx.shadowBlur = 1;
 
         ctx.beginPath();
         ctx.moveTo(axr * azr * scaleFactor, ay * azr * scaleFactor);
@@ -387,6 +393,7 @@
 
       ctx.restore();
     }
+
 
 
     function noteOn(channel, midi, velocity) {
