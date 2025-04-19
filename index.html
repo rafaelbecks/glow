@@ -38,10 +38,22 @@
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     let width, height;
+    let currentBaseHue = Math.floor(Math.random() * 360);
+    let lastChordSignature = '';
 
     function resize() {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
+    }
+
+    function rotate3D(x, y, z, angleX, angleY) {
+      // Rotate around X axis
+      let y1 = y * Math.cos(angleX) - z * Math.sin(angleX);
+      let z1 = y * Math.sin(angleX) + z * Math.cos(angleX);
+      // Rotate around Y axis
+      let x1 = x * Math.cos(angleY) + z1 * Math.sin(angleY);
+      let z2 = -x * Math.sin(angleY) + z1 * Math.cos(angleY);
+      return [x1, y1, z2];
     }
 
     resize();
@@ -220,6 +232,76 @@
       ctx.restore();
     }
 
+    function drawWireSphere(t, notes) {
+      if (notes.length === 0) return;
+
+      ctx.save();
+      ctx.translate(width / 2, height / 2);
+
+      const baseRadius = 160;
+      const latLines = 12;
+      const lonLines = 20;
+
+      const velocityAvg = notes.reduce((acc, n) => acc + n.velocity, 0) / notes.length;
+      const sizeFactor = 1 + velocityAvg * 0.8;
+      const radius = baseRadius * sizeFactor;
+
+      const chordSize = notes.length;
+      const deformAmount = Math.min((chordSize - 1) / 9, 1) * 1.2;
+
+      // Create a unique signature of active MIDI notes
+      const chordSig = notes.map(n => n.midi).sort().join('-');
+
+      if (chordSig !== lastChordSignature) {
+        lastChordSignature = chordSig;
+        currentBaseHue = Math.floor(Math.random() * 360);
+      }
+
+      const hue = (currentBaseHue + chordSize * 20 + t * 5) % 360;
+
+      ctx.strokeStyle = `hsla(${hue}, 100%, 65%, 0.15)`;
+      ctx.shadowColor = `hsla(${hue}, 100%, 70%, 0.4)`;
+      ctx.shadowBlur = 5;
+      ctx.lineWidth = 1;
+
+      // Latitudes
+      for (let i = 1; i < latLines; i++) {
+        const phi = Math.PI * i / latLines;
+        const r = radius * Math.sin(phi);
+        const z = radius * Math.cos(phi);
+
+        ctx.beginPath();
+        for (let a = 0; a <= Math.PI * 2 + 0.01; a += 0.1) {
+          let [x, y1, z1] = rotate3D(r * Math.cos(a), r * Math.sin(a), z, t * 0.2, t * 0.3);
+          const deform = 1 + deformAmount * Math.sin(t + a + phi);
+          ctx.lineTo(x * deform, y1 * deform * 0.8 + z1 * 0.1 * deform);
+        }
+        ctx.stroke();
+      }
+
+      // Longitudes
+      for (let i = 0; i < lonLines; i++) {
+        const theta = Math.PI * 2 * i / lonLines;
+
+        ctx.beginPath();
+        for (let j = 0; j <= latLines; j++) {
+          const phi = Math.PI * j / latLines;
+          let [x, y1, z1] = rotate3D(
+            radius * Math.sin(phi) * Math.cos(theta),
+            radius * Math.sin(phi) * Math.sin(theta),
+            radius * Math.cos(phi),
+            t * 0.2,
+            t * 0.3
+          );
+          const deform = 1 + deformAmount * Math.sin(t + phi + theta);
+          ctx.lineTo(x * deform, y1 * deform * 0.8 + z1 * 0.1 * deform);
+        }
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
 
     function noteOn(channel, midi, velocity) {
       const list = activeNotes[channel];
@@ -267,7 +349,8 @@
 
       ctx.save();
       // drawLissajousComplex(t, activeNotes.chords.map(n => n.midi));
-      drawHarmonographComplex(t, activeNotes.chords.map(n => n.midi));
+      // drawHarmonographComplex(t, activeNotes.chords.map(n => n.midi));
+      drawWireSphere(t, activeNotes.chords);
       drawNoteVisuals(activeNotes.lead, t, 'sinewave', 1.2);
       // drawNoteVisuals(activeNotes.arp, t, 'triangle', 1);
       drawMoirePattern(t, activeNotes.arp);
