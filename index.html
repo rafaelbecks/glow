@@ -464,16 +464,30 @@
         const by = b.y + Math.sin(t * 0.001 + b.offset) * deformAmount;
 
         ctx.beginPath();
-        ctx.strokeStyle = `hsla(0, 0%, 100%, 0.2)`;
+        ctx.strokeStyle = `hsla(0, 0%, 100%, 0.4)`;
         ctx.moveTo(ax * radius * az * scale, ay * radius * az * scale);
         ctx.lineTo(bx * radius * bz * scale, by * radius * bz * scale);
         ctx.stroke();
       });
 
+      gegoShapeNodes.forEach((node) => {
+        const x = node.x * cos - node.z * sin;
+        const z = node.x * sin + node.z * cos;
+        const y = node.y + Math.sin(t * 0.001 + node.offset) * deformAmount;
+
+        const px = x * radius * z * scale;
+        const py = y * radius * z * scale;
+        const dotSize = 3 + velocityAvg * 3; // subtle but reactive
+
+        ctx.beginPath();
+        ctx.arc(px, py, dotSize, 0, Math.PI * 2);
+        ctx.strokeStyle = `hsla(0, 0%, 100%, 0.4)`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      });
+
       ctx.restore();
     }
-
-
 
     function noteOn(channel, midi, velocity) {
       const list = activeNotes[channel];
