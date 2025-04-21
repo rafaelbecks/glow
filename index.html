@@ -70,7 +70,8 @@
       triangle: [],
       moireCircles: [],
       gegoShape: [],
-      sotoGrid: []
+      sotoGrid: [],
+      sotoGridRotated: []
     };
 
     const SOTO_PALETTE = [
@@ -506,46 +507,102 @@
                square1.y >= square2.y + square2.size);
     }
 
-    function generateSotoSquares(notes, width, height, existingSquares) {
-      const baseSize = 40 * 2; // 2x bigger base
+
+    function drawStripedSquare(x, y, size, angleDeg, bgColor) {
+      const stripeWidth = 4;
+      const angle = angleDeg * Math.PI / 180;
+
+      // Diagonal of the square = size * sqrt(2)
+      const paddedSize = Math.ceil(size * Math.SQRT2);
+
+      const patternCanvas = document.createElement('canvas');
+      patternCanvas.width = paddedSize;
+      patternCanvas.height = paddedSize;
+      const pctx = patternCanvas.getContext('2d');
+
+      // Fill with background color
+      pctx.fillStyle = bgColor;
+      pctx.fillRect(0, 0, paddedSize, paddedSize);
+
+      // Erase diagonal stripes
+      pctx.globalCompositeOperation = 'destination-out';
+      pctx.save();
+      pctx.translate(paddedSize / 2, paddedSize / 2);
+      pctx.rotate(angle);
+      pctx.translate(-paddedSize / 2, -paddedSize / 2);
+
+      for (let i = -paddedSize; i < paddedSize * 2; i += stripeWidth * 2) {
+        pctx.fillRect(i, 0, stripeWidth, paddedSize);
+      }
+
+      pctx.restore();
+      pctx.globalCompositeOperation = 'source-over';
+
+      // Draw the central square portion, rotated
+      ctx.save();
+      ctx.translate(x + size / 2, y + size / 2); // center of square
+      ctx.rotate(angle);
+
+      // Clip to the visible square
+      ctx.beginPath();
+      ctx.rect(-size / 2, -size / 2, size, size);
+      ctx.clip();
+
+      // Draw pattern, centered
+      ctx.drawImage(
+        patternCanvas,
+        -paddedSize / 2,
+        -paddedSize / 2,
+        paddedSize,
+        paddedSize
+      );
+
+      ctx.restore();
+    }
+
+
+    function generateSotoSquares(notes, width, height, existingSquares, stripedMode = false) {
+      const baseSize = 40 * 2;
       const squares = [];
 
-      notes.forEach(({ midi, velocity }, idx) => {
-        // Only create a new square for a note that hasn't been assigned one yet
+      notes.forEach(({ midi, velocity }) => {
         if (!existingSquares.has(midi)) {
-          let size = baseSize * (1 + velocity * 3); // up to 6x base
-          let x, y;
-          let overlap;
+          const size = baseSize * (1 + velocity * 5);
+          let x, y, overlap;
+          let retries = 100;
 
-          // Try placing the square until it does not overlap with any existing square
           do {
             overlap = false;
             x = Math.random() * (width - size);
             y = Math.random() * (height - size);
 
-            // Check for overlap with all other squares
-            for (let existingSquare of existingSquares.values()) {
-              if (checkOverlap({ x, y, size }, existingSquare)) {
+            for (let s of existingSquares.values()) {
+              if (checkOverlap({ x, y, size }, s)) {
                 overlap = true;
-                break; // If overlap, break the loop and retry placement
+                break;
               }
             }
+
+            retries--;
+            if (retries <= 0) break;
           } while (overlap);
 
           const color = SOTO_PALETTE[midi % SOTO_PALETTE.length];
-          existingSquares.set(midi, { x, y, size, color });
+          const angle = stripedMode ? (Math.random() > 0.5 ? 35 : -35) : 0; // right or left
+
+          existingSquares.set(midi, { x, y, size, color, angle });
         }
 
-        // Push the square info from the Map to the squares array
         squares.push(existingSquares.get(midi));
       });
 
       return squares;
     }
 
+
     const existingSquares = new Map();
 
-    function drawSotoGridAnimation(t, notes) {
+    function drawSotoGridAnimation(t, notes, stripedMode = false) {
       if(notes.length === 0) return
       const stripeWidth = 3;
       const stripeCount = Math.ceil(width / stripeWidth);
@@ -571,10 +628,16 @@
       ctx.fillRect(0, solidY, width, solidHeight);
 
       // 3. Draw squares (MIDI rectangles)
-      const squares = generateSotoSquares(notes, width, height, existingSquares);
-      squares.forEach(({ x, y, size, color }) => {
-        ctx.fillStyle = color;
-        ctx.fillRect(x, y, size, size);
+      const squares = generateSotoSquares(notes, width, height, existingSquares, stripedMode);
+      squares.forEach(({ x, y, size, color, angle }) => {
+        if (!stripedMode) {
+          // Solid fill
+          ctx.fillStyle = color;
+          ctx.fillRect(x, y, size, size);
+        } else {
+          // Striped fill with angle
+          drawStripedSquare(x, y, size, angle, color);
+        }
       });
     }
 
@@ -608,6 +671,7 @@
         if (name.includes("bus 7")) channel = "moireCircles";
         if (name.includes("bus 8")) channel = "gegoShape";
         if (name.includes("bus 9")) channel = "sotoGrid";
+        if (name.includes("bus 10")) channel = "sotoGridRotated";
 
         if (!channel) continue;
 
@@ -641,7 +705,8 @@
       drawNoteVisuals(activeNotes.triangle, t, 'triangle', 1);
       drawMoirePattern(t, activeNotes.moireCircles);
       drawGegoShapeModule(t, activeNotes.gegoShape);
-      drawSotoGridAnimation(t, activeNotes.sotoGrid || []);
+      drawSotoGridAnimation(t, activeNotes.sotoGrid || [], false);
+      drawSotoGridAnimation(t, activeNotes.sotoGridRotated || [], true);
 
       ctx.restore();
 
