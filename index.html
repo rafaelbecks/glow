@@ -41,6 +41,7 @@
     let lastChordSignature = '';
     let gegoShapeNodes = [];
     let gegoShapeConnections = [];
+    const sotoSolidTop = Math.random() < 0.5;
 
     function resize() {
       width = canvas.width = window.innerWidth;
@@ -68,10 +69,19 @@
       sinewave: [],
       triangle: [],
       moireCircles: [],
-      gegoShape: []
+      gegoShape: [],
+      sotoGrid: []
     };
 
-
+    const SOTO_PALETTE = [
+      '#EF4136', // Red-orange
+      '#005BBB', // Blue
+      '#FCEE09', // Yellow
+      '#2E7D32', // Green
+      '#FFFFFF', // White
+      '#4A148C', // Purple
+      '#8B0000', // Dark red
+    ];
 
     const NOTE_ON = 0x90;
     const NOTE_OFF = 0x80;
@@ -489,6 +499,85 @@
       ctx.restore();
     }
 
+    function checkOverlap(square1, square2) {
+      return !(square1.x + square1.size <= square2.x ||
+               square1.x >= square2.x + square2.size ||
+               square1.y + square1.size <= square2.y ||
+               square1.y >= square2.y + square2.size);
+    }
+
+    function generateSotoSquares(notes, width, height, existingSquares) {
+      const baseSize = 40 * 2; // 2x bigger base
+      const squares = [];
+
+      notes.forEach(({ midi, velocity }, idx) => {
+        // Only create a new square for a note that hasn't been assigned one yet
+        if (!existingSquares.has(midi)) {
+          let size = baseSize * (1 + velocity * 3); // up to 6x base
+          let x, y;
+          let overlap;
+
+          // Try placing the square until it does not overlap with any existing square
+          do {
+            overlap = false;
+            x = Math.random() * (width - size);
+            y = Math.random() * (height - size);
+
+            // Check for overlap with all other squares
+            for (let existingSquare of existingSquares.values()) {
+              if (checkOverlap({ x, y, size }, existingSquare)) {
+                overlap = true;
+                break; // If overlap, break the loop and retry placement
+              }
+            }
+          } while (overlap);
+
+          const color = SOTO_PALETTE[midi % SOTO_PALETTE.length];
+          existingSquares.set(midi, { x, y, size, color });
+        }
+
+        // Push the square info from the Map to the squares array
+        squares.push(existingSquares.get(midi));
+      });
+
+      return squares;
+    }
+
+    const existingSquares = new Map();
+
+    function drawSotoGridAnimation(t, notes) {
+      if(notes.length === 0) return
+      const stripeWidth = 3;
+      const stripeCount = Math.ceil(width / stripeWidth);
+
+      const solidHeight = height * 0.2;
+      const moireHeight = height - solidHeight;
+      const solidY = sotoSolidTop ? 0 : height - solidHeight;
+
+      for (let i = 0; i < stripeCount; i += 2) {
+        const x = i * stripeWidth;
+        const offset = Math.sin(t * 0.5 + i * 0.2) * 3;
+
+        ctx.beginPath();
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = stripeWidth * 0.5;
+        ctx.moveTo(x + offset, 0);
+        ctx.lineTo(x + offset, height);
+        ctx.stroke();
+      }
+
+      // 2. Draw solid block (fixed position)
+      ctx.fillStyle = '#efe5da';
+      ctx.fillRect(0, solidY, width, solidHeight);
+
+      // 3. Draw squares (MIDI rectangles)
+      const squares = generateSotoSquares(notes, width, height, existingSquares);
+      squares.forEach(({ x, y, size, color }) => {
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, size, size);
+      });
+    }
+
     function noteOn(channel, midi, velocity) {
       const list = activeNotes[channel];
       if (!list.some(n => n.midi === midi)) {
@@ -500,6 +589,9 @@
       const list = activeNotes[channel];
       const index = list.findIndex(n => n.midi === midi);
       if (index !== -1) list.splice(index, 1);
+
+      // Remove the square for the note when it's turned off
+      existingSquares.delete(midi);
     }
 
     async function setupMIDI() {
@@ -515,6 +607,7 @@
         if (name.includes("bus 6")) channel = "triangle";
         if (name.includes("bus 7")) channel = "moireCircles";
         if (name.includes("bus 8")) channel = "gegoShape";
+        if (name.includes("bus 9")) channel = "sotoGrid";
 
         if (!channel) continue;
 
@@ -548,6 +641,7 @@
       drawNoteVisuals(activeNotes.triangle, t, 'triangle', 1);
       drawMoirePattern(t, activeNotes.moireCircles);
       drawGegoShapeModule(t, activeNotes.gegoShape);
+      drawSotoGridAnimation(t, activeNotes.sotoGrid || []);
 
       ctx.restore();
 
