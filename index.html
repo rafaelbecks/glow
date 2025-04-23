@@ -90,7 +90,7 @@
     const NOTE_OFF = 0x80;
 
     function pitchToColor(midi) {
-      const hue = (midi % 12) * 30;
+      const hue = (midi % 14) * 30;
       return `hsla(${hue}, 100%, 70%, 0.6)`;
     }
 
@@ -207,13 +207,59 @@
         } else if (type === 'sinewave') {
           ctx.beginPath();
           ctx.strokeStyle = color;
-          for (let i = -width / 2; i < width / 2; i += 5) {
-            const frequency = 0.01 + midi * 0.0005;
-            const yOffset = Math.sin((i + t * 100 + midi * 5) * frequency) * 40;
-            ctx.lineTo(i + width / 2, yOffset + height / 2);
+          const frequency = 0.01 + midi * 0.0005;
+          const amplitude = 30 + velocity * 70; // 📈 scale with velocity
+          const verticalOffset = (midi % 12) * 10 - 60; // 🎯 shift by pitch class
+          const phase = t * 2 + midi * 0.1;
+
+          ctx.beginPath();
+          ctx.strokeStyle = color;
+          for (let i = -width / 2; i <= width / 2; i += 2) {
+            const yOffset = Math.sin(i * frequency + phase) * amplitude;
+            ctx.lineTo(i + width / 2, height / 2 + yOffset + verticalOffset);
           }
           ctx.stroke();
+
+          // 🔁 mirrored version (optional, try without first)
+          // ctx.beginPath();
+          // ctx.strokeStyle = color;
+          // for (let i = -width / 2; i <= width / 2; i += 2) {
+          //   const yOffset = -Math.sin(i * frequency + phase) * amplitude;
+          //   ctx.lineTo(i + width / 2, height / 2 + yOffset - verticalOffset);
+          // }
+          // ctx.stroke();
         }
+      });
+    }
+
+    function drawNoteVisualsHarmonic(notes, t) {
+      if (!notes || notes.length === 0) return;
+
+      const rootMidi = Math.min(...notes.map(n => n.midi));
+      const rootFreq = 440 * Math.pow(2, (rootMidi - 69) / 12);
+      const baseFreq = 0.0035; // tighter by default
+
+      notes.forEach(({ midi, velocity, timestamp }) => {
+        const progress = (t - timestamp) / 1000;
+        if (progress > 3) return;
+
+        const freq = 440 * Math.pow(2, (midi - 69) / 12);
+        const ratio = freq / rootFreq;
+
+        const harmonicFreq = baseFreq * ratio * 6; // higher note = tighter wave
+        const amplitude = (10 + velocity * 80 / ratio) * 3 ; // velocity boosts height, inversely scaled by ratio
+
+        const phase = t * 2 + ratio * 4;
+
+        ctx.beginPath();
+        ctx.strokeStyle = pitchToColor(midi);
+        ctx.lineWidth = 1;
+
+        for (let i = -width / 2; i <= width / 2; i += 1) {
+          const yOffset = Math.sin(i * harmonicFreq + phase) * amplitude;
+          ctx.lineTo(i + width / 2, height / 2 + yOffset);
+        }
+        ctx.stroke();
       });
     }
 
@@ -827,7 +873,7 @@
       drawHarmonographComplex(t, activeNotes.harmonograph.map(n => n.midi));
       drawWireSphere(t, activeNotes.sphere);
       drawGegoNetModule(t, activeNotes.gegoNet);
-      drawNoteVisuals(activeNotes.sinewave, t, 'sinewave', 1.2);
+      drawNoteVisualsHarmonic(activeNotes.sinewave, t);
       drawNoteVisuals(activeNotes.triangle, t, 'triangle', 1);
       drawMoirePattern(t, activeNotes.moireCircles);
       drawGegoShapeModule(t, activeNotes.gegoShape);
