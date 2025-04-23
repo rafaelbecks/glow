@@ -482,10 +482,22 @@
         const bz = b.x * sin + b.z * cos;
         const by = b.y + Math.sin(t * 0.001 + b.offset) * deformAmount;
 
+        const x1 = ax * radius * az * scale;
+        const y1 = ay * radius * az * scale;
+        const x2 = bx * radius * bz * scale;
+        const y2 = by * radius * bz * scale;
+
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const r = 3 + velocityAvg * 3;
+        const ux = dx / dist;
+        const uy = dy / dist;
+
         ctx.beginPath();
         ctx.strokeStyle = `hsla(0, 0%, 100%, 0.4)`;
-        ctx.moveTo(ax * radius * az * scale, ay * radius * az * scale);
-        ctx.lineTo(bx * radius * bz * scale, by * radius * bz * scale);
+        ctx.moveTo(x1 + ux * r, y1 + uy * r);
+        ctx.lineTo(x2 - ux * r, y2 - uy * r);
         ctx.stroke();
       });
 
@@ -503,6 +515,30 @@
         ctx.strokeStyle = `hsla(0, 0%, 100%, 0.4)`;
         ctx.lineWidth = 0.5;
         ctx.stroke();
+      });
+
+      // Guarantee every node has at least one connection
+      gegoShapeNodes.forEach((node, i) => {
+        const hasConnection = gegoShapeConnections.some(([a, b]) => a === i || b === i);
+        if (!hasConnection) {
+          // Find closest node to connect to
+          let closest = -1;
+          let minDist = Infinity;
+          for (let j = 0; j < gegoShapeNodes.length; j++) {
+            if (i === j) continue;
+            const dx = node.x - gegoShapeNodes[j].x;
+            const dy = node.y - gegoShapeNodes[j].y;
+            const dz = node.z - gegoShapeNodes[j].z;
+            const dist = dx * dx + dy * dy + dz * dz;
+            if (dist < minDist) {
+              minDist = dist;
+              closest = j;
+            }
+          }
+          if (closest !== -1) {
+            gegoShapeConnections.push([i, closest]);
+          }
+        }
       });
 
       ctx.restore();
