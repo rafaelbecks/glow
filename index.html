@@ -73,7 +73,8 @@
       gegoShape: [],
       sotoGrid: [],
       sotoGridRotated: [],
-      scanlineGradients: []
+      scanlineGradients: [],
+      phyllotaxis: []
     };
 
     const SOTO_PALETTE = [
@@ -205,29 +206,7 @@
           drawOutlinedRotatingTriangle(x, y, (20 + velocity * 12) * 2.5, t + midi * 0.2, color);
           drawOutlinedRotatingTriangle(width - x, height - y, (20 + velocity * 12) * 2.5, t + midi * 0.2, color);
         } else if (type === 'sinewave') {
-          ctx.beginPath();
-          ctx.strokeStyle = color;
-          const frequency = 0.01 + midi * 0.0005;
-          const amplitude = 30 + velocity * 70; // 📈 scale with velocity
-          const verticalOffset = (midi % 12) * 10 - 60; // 🎯 shift by pitch class
-          const phase = t * 2 + midi * 0.1;
 
-          ctx.beginPath();
-          ctx.strokeStyle = color;
-          for (let i = -width / 2; i <= width / 2; i += 2) {
-            const yOffset = Math.sin(i * frequency + phase) * amplitude;
-            ctx.lineTo(i + width / 2, height / 2 + yOffset + verticalOffset);
-          }
-          ctx.stroke();
-
-          // 🔁 mirrored version (optional, try without first)
-          // ctx.beginPath();
-          // ctx.strokeStyle = color;
-          // for (let i = -width / 2; i <= width / 2; i += 2) {
-          //   const yOffset = -Math.sin(i * frequency + phase) * amplitude;
-          //   ctx.lineTo(i + width / 2, height / 2 + yOffset - verticalOffset);
-          // }
-          // ctx.stroke();
         }
       });
     }
@@ -811,6 +790,45 @@
       ctx.restore();
     }
 
+    function drawPhyllotaxisModule(t, notes, dotsPerNote = 20 ) {
+      if (!notes || notes.length === 0) return;
+
+      const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+      const centerX = width / 2;
+      const centerY = height / 2;
+
+      const scale = 12;
+      const baseSize = 3;
+      const maxSize = 9;
+      const rotationSpeed = 0.15;
+
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.rotate(t * rotationSpeed);
+
+      const totalDots = notes.length * dotsPerNote;
+
+      notes.forEach((note, noteIndex) => {
+        for (let j = 0; j < dotsPerNote; j++) {
+          const i = noteIndex * dotsPerNote + j;
+          const angle = i * goldenAngle;
+          const radius = scale * Math.sqrt(i + 1);
+          const x = Math.cos(angle) * radius;
+          const y = Math.sin(angle) * radius;
+
+          const size = baseSize + (i / totalDots) * (maxSize - baseSize);
+          const hue = (note.midi * 12 + j * 10 + t * 20) % 360;
+
+          ctx.beginPath();
+          ctx.fillStyle = `hsla(${hue}, 100%, 70%, 0.8)`;
+          ctx.arc(x, y, size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+
+      ctx.restore();
+    }
+
 
     function noteOn(channel, midi, velocity) {
       const list = activeNotes[channel];
@@ -844,6 +862,7 @@
         if (name.includes("bus 9")) channel = "sotoGrid";
         if (name.includes("bus 10")) channel = "sotoGridRotated";
         if (name.includes("bus 11")) channel = "scanlineGradients";
+        if (name.includes("bus 12")) channel = "phyllotaxis";
 
         if (!channel) continue;
 
@@ -886,6 +905,7 @@
         '#ffe9ec', // make sure it's pure black
         ['#558dff', '#dd44aa', '#44ffee', '#ffs0000']
       );
+      drawPhyllotaxisModule(t, activeNotes.phyllotaxis);
       ctx.restore();
 
       requestAnimationFrame(draw);
