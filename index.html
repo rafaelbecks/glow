@@ -43,8 +43,8 @@
     let gegoShapeConnections = [];
     const sotoSolidTop = Math.random() < 0.5;
     const existingSquares = new Map();
-    let lastMolaChord = '';
-    let molaPattern = [];
+    let lastWovenChord = '';
+    let wovenPattern = [];
 
     function resize() {
       width = canvas.width = window.innerWidth;
@@ -77,7 +77,8 @@
       sotoGridRotated: [],
       scanlineGradients: [],
       phyllotaxis: [],
-      molaMaze: []
+      wovenNet: [],
+      polygons: []
     };
 
     const SOTO_PALETTE = [
@@ -832,27 +833,27 @@
       ctx.restore();
     }
 
-    function drawMolaMaze(t, notes) {
+    function drawWovenNet(t, notes) {
       if (!notes || notes.length === 0) return;
 
       const chordSig = notes.map(n => n.midi).sort().join('-');
 
-      if (chordSig !== lastMolaChord) {
-        molaPattern = generateMolaPattern(notes);
-        lastMolaChord = chordSig;
+      if (chordSig !== lastWovenChord) {
+        wovenPattern = generateWovenPattern(notes);
+        lastWovenChord = chordSig;
       }
 
       ctx.save();
       ctx.translate(width / 2, height / 2);
 
-      molaPattern.forEach(({ x, y, size, color }) => {
+      wovenPattern.forEach(({ x, y, size, color }) => {
         drawWobblyRect(x, y, size, color);
       });
 
       ctx.restore();
     }
 
-    function generateMolaPattern(notes) {
+    function generateWovenPattern(notes) {
       const gridSize = 5 + notes.length * 2;
       const spacing = 30;
       const pattern = [];
@@ -861,7 +862,7 @@
 
       // Randomize note order for more visual variation
       const shuffledNotes = [...notes].sort(() => Math.random() - 0.5);
-      const baseColor = notes.length > 3 ? 'vibrant' : 'mono';
+      const baseColor = notes.length > 1 ? 'vibrant' : 'mono';
       let noteIndex = 0;
 
       for (let i = -gridSize; i <= gridSize; i++) {
@@ -900,6 +901,82 @@
       ctx.stroke();
     }
 
+    let lastPolySig = '';
+    let polygonShapes = [];
+
+    const POLYGON_COLORS = ['#f93822', '#fcdc4d', '#00a6a6', '#90be6d', '#f94144', '#ff006e', '#8338ec'];
+
+    function drawStackedPolygons(t, notes) {
+      if (!notes || notes.length === 0) return;
+
+      const sig = notes.map(n => n.midi).sort().join('-');
+      if (sig !== lastPolySig) {
+        polygonShapes = generatePolygonShapes(notes);
+        lastPolySig = sig;
+      }
+
+      ctx.save();
+      ctx.translate(width / 2, height / 2);
+
+      polygonShapes.forEach(shape => drawWobblyContour(shape, t));
+
+      ctx.restore();
+    }
+
+    function generatePolygonShapes(notes) {
+      const shapeCount = Math.max(3, notes.length); // fewer shapes for a cleaner look
+      const maxSize = 220;
+      const spacing = 40;
+      const shapes = [];
+
+      for (let i = 0; i < shapeCount; i++) {
+        const layers = Math.floor(2 + Math.random() * 3);
+        const size = maxSize - i * spacing;
+        const angleOffset = Math.random() * Math.PI;
+
+        const shape = {
+          layers: [],
+          baseAngle: angleOffset,
+          color: POLYGON_COLORS[i % POLYGON_COLORS.length]
+        };
+
+        for (let j = 0; j < layers; j++) {
+          shape.layers.push({
+            radius: size - j * 12,
+            jitter: 4 + j * 1.5,
+            sides: 6 + Math.floor(Math.random() * 3)
+          });
+        }
+
+        shapes.push(shape);
+      }
+
+      return shapes;
+    }
+
+    function drawWobblyContour(shape, t) {
+      shape.layers.forEach((layer, idx) => {
+        const { radius, jitter, sides } = layer;
+        const angleStep = (Math.PI * 2) / sides;
+        ctx.beginPath();
+
+        for (let i = 0; i <= sides; i++) {
+          const angle = angleStep * i + shape.baseAngle;
+          const r = radius + (Math.random() - 0.5) * jitter;
+          const x = Math.cos(angle) * r;
+          const y = Math.sin(angle) * r;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+
+        ctx.closePath();
+        ctx.strokeStyle = shape.color;
+        ctx.lineWidth = 2;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = shape.color;
+        ctx.stroke();
+      });
+    }
 
     function noteOn(channel, midi, velocity) {
       const list = activeNotes[channel];
@@ -934,7 +1011,8 @@
         if (name.includes("bus 10")) channel = "sotoGridRotated";
         if (name.includes("bus 11")) channel = "scanlineGradients";
         if (name.includes("bus 12")) channel = "phyllotaxis";
-        if (name.includes("bus 13")) channel = "molaMaze";
+        if (name.includes("bus 13")) channel = "wovenNet";
+        if (name.includes("bus 14")) channel = "polygons";
 
         if (!channel) continue;
 
@@ -978,7 +1056,8 @@
         ['#558dff', '#dd44aa', '#44ffee', '#ffs0000']
       );
       drawPhyllotaxisModule(t, activeNotes.phyllotaxis);
-      drawMolaMaze(t, activeNotes.molaMaze);
+      drawWovenNet(t, activeNotes.wovenNet);
+      drawStackedPolygons(t, activeNotes.polygons);
 
       ctx.restore();
 
