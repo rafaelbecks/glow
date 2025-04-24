@@ -1002,23 +1002,24 @@
       ctx.fillRect(0, 0, width, height);
 
       ctx.save();
+      drawGradientTexture(
+        t,
+        activeNotes.scanlineGradients,
+        ['#4444ff', '#ffeeaa', '#ff77cc']
+      )
+      drawSotoGridAnimation(t, activeNotes.sotoGrid || [], false);
+      drawSotoGridAnimation(t, activeNotes.sotoGridRotated || [], true);
+      drawMoirePattern(t, activeNotes.moireCircles);
+      drawWovenNet(t, activeNotes.wovenNet);
+
       drawLissajousComplex(t, activeNotes.lissajous.map(n => n.midi));
       drawHarmonographComplex(t, activeNotes.harmonograph.map(n => n.midi));
       drawWireSphere(t, activeNotes.sphere);
       drawGegoNetModule(t, activeNotes.gegoNet);
       drawNoteVisualsHarmonic(activeNotes.sinewave, t);
       drawNoteVisuals(activeNotes.triangle, t, 'triangle', 1);
-      drawMoirePattern(t, activeNotes.moireCircles);
       drawGegoShapeModule(t, activeNotes.gegoShape);
-      drawSotoGridAnimation(t, activeNotes.sotoGrid || [], false);
-      drawSotoGridAnimation(t, activeNotes.sotoGridRotated || [], true);
-      drawGradientTexture(
-        t,
-        activeNotes.scanlineGradients,
-        ['#4444ff', '#ffeeaa', '#ff77cc']
-      )
       drawPhyllotaxisModule(t, activeNotes.phyllotaxis);
-      drawWovenNet(t, activeNotes.wovenNet);
       drawStackedPolygons(t, activeNotes.polygons);
 
       ctx.restore();
