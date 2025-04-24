@@ -711,88 +711,52 @@
       });
     }
 
-    let scanlineBursts = [];
+    function drawMorphingGradient(t, notes, colors = ['#ee77aa', '#558dff']) {
+      const noteCount = notes?.length || 0;
 
-    function drawGradientScanline(t, notes, direction = 'vertical', baseColor = '#ffffff', accentColors = ['#ee77aa', '#558dff', '#c0ffee']) {
-      const scanlines = 300;
-      const useVertical = direction === 'vertical';
+      // Animate only when notes are playing
+      const movement = noteCount > 0 ? t * 0.2 : 0;
 
-      // 1. Update burst memory if notes are active
-      if (notes && notes.length > 0) {
-        const accentDensity = notes.length;
-        const avgVelocity = notes.reduce((acc, n) => acc + n.velocity, 0) / notes.length;
-        const scaleFactor = 1 + avgVelocity * 1.5;
+      const gradient = ctx.createLinearGradient(
+        Math.sin(movement) * width * 0.5,
+        0,
+        Math.cos(movement) * width * 0.5 + width,
+        height
+      );
 
-        for (let i = 0; i < scanlines; i++) {
-          const pos = i / scanlines;
-          if (Math.random() < accentDensity * 0.05) {
-            const envelope = Math.sin((pos - 0.5) * Math.PI);
-            const heightMod = height * 0.5 * envelope * scaleFactor * (0.3 + Math.random() * 0.7);
-            const color = accentColors[Math.floor(Math.random() * accentColors.length)];
-            scanlineBursts.push({
-              direction,
-              pos,
-              heightMod,
-              color,
-              alpha: 1.0
-            });
-          }
-        }
-      }
+      colors.forEach((color, i) => {
+        const stop = i / (colors.length - 1);
+        gradient.addColorStop(stop, color);
+      });
 
-      // 2. Stop if no notes and no bursts to show
-      if ((!notes || notes.length === 0) && scanlineBursts.length === 0) return;
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+    }
 
+
+    function drawScanlineOverlay(t, density = 150, strength = 0.5) {
       ctx.save();
-      ctx.translate(width / 2, height / 2);
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.shadowBlur = 0;
-      ctx.shadowColor = 'transparent';
-      ctx.strokeStyle = baseColor; // enforce it globally for the base
+      ctx.strokeStyle = `rgba(255, 255, 255, ${strength})`;
+      ctx.lineWidth = 1;
 
+      for (let i = 0; i < density; i++) {
+        const y = (i / density) * height;
+        const offset = Math.sin(t + i * 0.25) * 0.4;
 
-      // 4. Draw and fade bursts
-      scanlineBursts = scanlineBursts.filter(burst => burst.alpha > 0.01);
-      for (let burst of scanlineBursts) {
-        const x = (burst.pos - 0.5) * width;
-        const y = (burst.pos - 0.5) * height;
         ctx.beginPath();
-        ctx.strokeStyle = hexToRgba(burst.color, burst.alpha);
-        ctx.lineWidth = 1.4;
-        if (burst.direction === 'vertical') {
-          ctx.moveTo(x, -burst.heightMod / 2);
-          ctx.lineTo(x, burst.heightMod / 2);
-        } else {
-          ctx.moveTo(-burst.heightMod / 2, y);
-          ctx.lineTo(burst.heightMod / 2, y);
-        }
+        ctx.moveTo(0, y + offset);
+        ctx.lineTo(width, y + offset);
         ctx.stroke();
-
-        burst.alpha *= 0.93; // fade speed
-      }
-
-      // 3. Draw base lines only when notes are active
-      if (notes && notes.length > 0) {
-        for (let i = 0; i < scanlines; i++) {
-          const pos = i / scanlines;
-          const x = (pos - 0.5) * width;
-          const y = (pos - 0.5) * height;
-
-          ctx.beginPath();
-          ctx.lineWidth = 0.6;
-          if (useVertical) {
-            ctx.moveTo(x, -height / 2);
-            ctx.lineTo(x, height / 2);
-          } else {
-            ctx.moveTo(-width / 2, y);
-            ctx.lineTo(width / 2, y);
-          }
-          ctx.stroke();
-        }
       }
 
       ctx.restore();
     }
+
+    function drawGradientTexture(t, notes, colors = ['#ee77aa', '#558dff']) {
+      drawMorphingGradient(t, notes, colors);
+      drawScanlineOverlay(t);
+    }
+
 
     function drawPhyllotaxisModule(t, notes, dotsPerNote = 20 ) {
       if (!notes || notes.length === 0) return;
@@ -1048,13 +1012,11 @@
       drawGegoShapeModule(t, activeNotes.gegoShape);
       drawSotoGridAnimation(t, activeNotes.sotoGrid || [], false);
       drawSotoGridAnimation(t, activeNotes.sotoGridRotated || [], true);
-      drawGradientScanline(
+      drawGradientTexture(
         t,
         activeNotes.scanlineGradients,
-        'vertical',
-        '#ffe9ec', // make sure it's pure black
-        ['#558dff', '#dd44aa', '#44ffee', '#ffs0000']
-      );
+        ['#4444ff', '#ffeeaa', '#ff77cc']
+      )
       drawPhyllotaxisModule(t, activeNotes.phyllotaxis);
       drawWovenNet(t, activeNotes.wovenNet);
       drawStackedPolygons(t, activeNotes.polygons);
