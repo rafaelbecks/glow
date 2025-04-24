@@ -753,6 +753,7 @@
     }
 
     function drawGradientTexture(t, notes, colors = ['#ee77aa', '#558dff']) {
+      if (!notes || notes.length === 0) return;
       drawMorphingGradient(t, notes, colors);
       drawScanlineOverlay(t);
     }
