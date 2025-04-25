@@ -1,0 +1,21 @@
+{
+  "name": "glow",
+  "version": "0.1.0",
+  "description": "G.L.O.W. – Geometric Light Oscillation Workstation",
+  "author": "Rafael Becerra",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "lit": "^3.1.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.0.0-beta.14",
+    "@tauri-apps/api": "^2.0.0-beta.14",
+    "typescript": "^5.3.3",
+    "vite": "^5.2.0"
+  }
+}
