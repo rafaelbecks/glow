@@ -1,10 +1,11 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GLOW Visualizer - Live MIDI</title>
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GLOW Visualizer - Live MIDI</title>
+<style>
     body, html {
       margin: 0;
       padding: 0;
@@ -31,9 +32,13 @@
   </style>
 </head>
 <body>
-  <button id="startButton">Start Visualizer</button>
-  <canvas id="canvas"></canvas>
-  <script>
+<label style="position: absolute; top: 10px; left: 10px; color: white; z-index: 10;">
+<input id="colorToggle" type="checkbox"/> Color Mode
+    </label>
+
+<button id="startButton">Start Visualizer</button>
+<canvas id="canvas"></canvas>
+<script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     let width, height;
@@ -78,7 +83,8 @@
       scanlineGradients: [],
       phyllotaxis: [],
       wovenNet: [],
-      polygons: []
+      polygons: [],
+      whitneyLines: []
     };
 
     const SOTO_PALETTE = [
@@ -943,6 +949,46 @@
       });
     }
 
+    function drawWhitneyLines(t, notes, useColor = false) {
+      if (notes.length === 0) return;
+
+      const notesToUse = notes.map(n => n.midi)
+
+      const cx = width / 2;
+      const cy = height / 2;
+      const r = 250;
+      const totalLines = notesToUse.length * 10;
+
+      ctx.save();
+      ctx.translate(cx, cy);
+
+      for (let i = 0; i < totalLines; i++) {
+        const angle = t * 0.5 + i * (Math.PI * 2 / totalLines);
+        const x = Math.cos(angle) * r;
+        const y = Math.sin(angle) * r;
+
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(x, y);
+
+        if (useColor) {
+          const note = notesToUse[i % notesToUse.length];
+          ctx.strokeStyle = pitchToColor(note);
+          ctx.shadowColor = ctx.strokeStyle;
+        } else {
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+          ctx.shadowColor = 'white';
+        }
+
+        ctx.lineWidth = 0.8;
+        ctx.shadowBlur = 15;
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+
     function noteOn(channel, midi, velocity) {
       const list = activeNotes[channel];
       if (!list.some(n => n.midi === midi)) {
@@ -978,6 +1024,7 @@
         if (name.includes("bus 12")) channel = "phyllotaxis";
         if (name.includes("bus 13")) channel = "wovenNet";
         if (name.includes("bus 14")) channel = "polygons";
+        if (name.includes("bus 15")) channel = "whitneyLines";
 
         if (!channel) continue;
 
@@ -1022,11 +1069,13 @@
       drawGegoShapeModule(t, activeNotes.gegoShape);
       drawPhyllotaxisModule(t, activeNotes.phyllotaxis);
       drawStackedPolygons(t, activeNotes.polygons);
+      drawWhitneyLines(t, activeNotes.whitneyLines, document.getElementById('colorToggle').checked);
 
       ctx.restore();
 
       requestAnimationFrame(draw);
     }
-  </script>
+
+</script>
 </body>
 </html>
