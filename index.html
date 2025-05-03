@@ -4,9 +4,6 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<script src="
-https://cdn.jsdelivr.net/npm/ccapture.js-npmfixed@1.1.0/build/CCapture.all.min.js
-"></script>
 <title>GLOW Visualizer - Live MIDI</title>
 <style>
     body, html {
@@ -36,15 +33,11 @@ https://cdn.jsdelivr.net/npm/ccapture.js-npmfixed@1.1.0/build/CCapture.all.min.j
 </head>
 <body>
 <label style="position: absolute; top: 10px; left: 10px; color: white; z-index: 10;">
-<input id="colorToggle" type="checkbox"/> Color Mode
-    </label>
-    <button id="recordButton">record</button>
-    <button id="stopButton" style="display:none">record</button>
-
+    <input id="colorToggle" type="checkbox"/> Color Mode
+</label>
 <button id="startButton">Start Visualizer</button>
 <canvas id="canvas"></canvas>
 <script>
-    const capturer = new CCapture( { format: 'webm', framerate: 30 } );
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     let width, height;
@@ -1050,20 +1043,6 @@ https://cdn.jsdelivr.net/npm/ccapture.js-npmfixed@1.1.0/build/CCapture.all.min.j
       requestAnimationFrame(draw);
     });
 
-    const recordButton =  document.getElementById('recordButton');
-    recordButton.addEventListener('click', async () => {
-      stopButton.style.display = 'block'
-      recordButton.style.display = 'none';
-      capturer.start();
-    });
-
-    const stopButton = document.getElementById('stopButton');
-    stopButton.addEventListener('click', async () => {
-      recordButton.style.display = 'block';
-      stopButton.style.display = 'none'
-      capturer.stop();
-      capturer.save();
-    })
     function draw(time) {
       const t = time / 1000;
       ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
@@ -1094,7 +1073,6 @@ https://cdn.jsdelivr.net/npm/ccapture.js-npmfixed@1.1.0/build/CCapture.all.min.j
       ctx.restore();
 
       requestAnimationFrame(draw);
-      capturer.capture( canvas );
     }
 
 </script>
