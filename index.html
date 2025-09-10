@@ -60,7 +60,7 @@
     let lastTabletY = 0;
     let tabletStrokes = []; // Store strokes for periodic clearing
     let lastClearTime = 0;
-    const CLEAR_INTERVAL = 5000; // Clear canvas every 5 seconds (adjustable)
+    const CLEAR_INTERVAL = 30 * 1000; // Clear canvas every 5 seconds (adjustable)
 
     function resize() {
       width = canvas.width = window.innerWidth;
