@@ -1,0 +1,28 @@
+{
+  "name": "GLOW - Geometric Light Oscillation Workstation",
+  "short_name": "GLOW",
+  "description": "A geometric light oscillation workstation for creating beautiful visual patterns",
+  "start_url": "/",
+  "display": "fullscreen",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "glow-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "glow-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["entertainment", "graphics", "art"],
+  "lang": "en",
+  "scope": "/",
+  "prefer_related_applications": false
+}
