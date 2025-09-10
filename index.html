@@ -34,6 +34,9 @@
 <body>
 <label style="position: absolute; top: 10px; left: 10px; color: white; z-index: 10;">
     <input id="colorToggle" type="checkbox"/> Color Mode
+    <button id="readTabletData">Connect Tablet</button>
+    <button id="clearTablet">Clear Drawing</button>
+    <input id="tabletWidth" type="range" min="1" max="20" value="4" style="width: 100px;"/>
 </label>
 <button id="startButton">Start Visualizer</button>
 <canvas id="canvas"></canvas>
@@ -49,6 +52,15 @@
     const existingSquares = new Map();
     let lastWovenChord = '';
     let wovenPattern = [];
+
+    // Tablet drawing variables
+    let tabletDrawer = null;
+    let isDrawing = false;
+    let lastTabletX = 0;
+    let lastTabletY = 0;
+    let tabletStrokes = []; // Store strokes for periodic clearing
+    let lastClearTime = 0;
+    const CLEAR_INTERVAL = 5000; // Clear canvas every 5 seconds (adjustable)
 
     function resize() {
       width = canvas.width = window.innerWidth;
@@ -987,6 +999,150 @@
       ctx.restore();
     }
 
+    // Tablet drawing functions
+    function createTabletDrawer(canvas, options = {}) {
+      const ctx = canvas.getContext("2d");
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+
+      let drawing = false;
+      let lastX = 0;
+      let lastY = 0;
+      let currentStroke = null;
+
+      // Default settings, overridable via options
+      let baseLineWidth = options.lineWidth || 4;
+
+      function getRandomColor() {
+        // Use existing color patterns - either SOTO_PALETTE or random hue
+        if (Math.random() < 0.5) {
+          // Use SOTO_PALETTE colors
+          return SOTO_PALETTE[Math.floor(Math.random() * SOTO_PALETTE.length)];
+        } else {
+          // Use random hue like pitchToColor function
+          const hue = Math.floor(Math.random() * 360);
+          return `hsla(${hue}, 100%, 70%, 1)`;
+        }
+      }
+
+      function setLineWidth(newWidth) {
+        baseLineWidth = newWidth;
+      }
+
+      function startDrawing(x, y) {
+        drawing = true;
+        lastX = x;
+        lastY = y;
+        
+        // Start a new stroke
+        currentStroke = {
+          points: [{ x, y, timestamp: performance.now() }],
+          color: getRandomColor(),
+          lineWidth: baseLineWidth
+        };
+      }
+
+      function stopDrawing() {
+        drawing = false;
+        if (currentStroke && currentStroke.points.length > 1) {
+          // Add completed stroke to the strokes array
+          tabletStrokes.push(currentStroke);
+        }
+        currentStroke = null;
+        ctx.beginPath(); // reset path
+      }
+
+      function draw(x, y, pressure = 0.5, tiltX = 0, tiltY = 0) {
+        if (!drawing || !currentStroke) return;
+
+        // Pressure scales the line width
+        const lineWidth = baseLineWidth * (0.5 + pressure);
+        currentStroke.lineWidth = lineWidth;
+
+        // Add point to current stroke
+        currentStroke.points.push({ x, y, timestamp: performance.now() });
+
+        // Draw the current stroke
+        ctx.strokeStyle = currentStroke.color;
+        ctx.lineWidth = lineWidth;
+        ctx.shadowColor = currentStroke.color;
+        ctx.shadowBlur = lineWidth * 2;
+
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+
+        lastX = x;
+        lastY = y;
+      }
+
+      function drawStrokes() {
+        // Draw all stored strokes
+        tabletStrokes.forEach(stroke => {
+          ctx.save();
+          ctx.strokeStyle = stroke.color;
+          ctx.lineWidth = stroke.lineWidth;
+          ctx.shadowColor = stroke.color;
+          ctx.shadowBlur = stroke.lineWidth * 2;
+
+          ctx.beginPath();
+          for (let i = 1; i < stroke.points.length; i++) {
+            const prev = stroke.points[i - 1];
+            const curr = stroke.points[i];
+            ctx.moveTo(prev.x, prev.y);
+            ctx.lineTo(curr.x, curr.y);
+          }
+          ctx.stroke();
+          ctx.restore();
+        });
+      }
+
+      function clearStrokes() {
+        tabletStrokes = [];
+      }
+
+      // Expose API
+      return {
+        setLineWidth,
+        startDrawing,
+        stopDrawing,
+        draw,
+        drawStrokes,
+        clearStrokes,
+        clear: () => {
+          tabletStrokes = [];
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        },
+      };
+    }
+
+    function handleTabletData(x, y, pressure, tiltX, tiltY) {
+      if (!tabletDrawer) return;
+
+      // Convert tablet coordinates to canvas coordinates
+      // Assuming tablet coordinates are in the range 0-32767 (16-bit)
+      const canvasX = (x / 32767) * width;
+      const canvasY = (y / 32767) * height;
+      
+      // Normalize pressure from 0-65535 to 0-1
+      const normalizedPressure = pressure / 65535;
+
+      // Check if pen is in range (pressure > 0 means pen is touching)
+      if (normalizedPressure > 0) {
+        if (!isDrawing) {
+          tabletDrawer.startDrawing(canvasX, canvasY);
+          isDrawing = true;
+        }
+        tabletDrawer.draw(canvasX, canvasY, normalizedPressure, tiltX, tiltY);
+      } else {
+        if (isDrawing) {
+          tabletDrawer.stopDrawing();
+          isDrawing = false;
+        }
+      }
+    }
+
 
     function noteOn(channel, midi, velocity) {
       const list = activeNotes[channel];
@@ -1038,16 +1194,25 @@
 
     async function connectUgeeQ6() {
         const filters = [{ vendorId: 0x28BD, productId: 0x2901 }];
-        const [device] = await navigator.hid.requestDevice({ filters });
+
+  
+        const device = await navigator.hid.requestDevice({ filters });
+
+        const reportedDevice = device[device.length - 1];
         if (!device) {
           console.error("No UGEE Q6 found");
           return;
         }
 
-        await device.open();
-        console.log(`Connected to ${device.productName}`);
+        try {
+          await reportedDevice.open();
+          console.log(`Connected to ${device.productName}`);
+        } catch (error) {
+          console.error("Error connecting to UGEE Q6", error);
+        }
 
-        device.addEventListener("inputreport", e => {
+
+        reportedDevice.addEventListener("inputreport", e => {
           if (e.reportId !== 0x07) return;
 
           const dv = new DataView(e.data.buffer);
@@ -1067,16 +1232,48 @@
           const tiltX = dv.getInt8(7);          // bits 56–63
           const tiltY = dv.getInt8(8);          // bits 64–71
 
-          console.log({ tipSwitch, barrel, eraser, invert, inRange, x, y, pressure, tiltX, tiltY });
+          console.log({ x, y, pressure, tiltX, tiltY });
+          
+          // Handle tablet drawing
+          handleTabletData(x, y, pressure, tiltX, tiltY);
         });
       }
 
-      connectUgeeQ6();
-
 
     const startButton = document.getElementById('startButton');
+    const readTabletData = document.getElementById('readTabletData');
+    const clearTablet = document.getElementById('clearTablet');
+    const tabletWidth = document.getElementById('tabletWidth');
 
-    
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'c') {
+        if (tabletDrawer) {
+          tabletDrawer.clear();
+        }
+      }
+    });
+
+    // Initialize tablet drawer
+    tabletDrawer = createTabletDrawer(canvas, {
+      lineWidth: 4
+    });
+
+    readTabletData.addEventListener('click', async () => {
+      await connectUgeeQ6();
+    });
+
+    clearTablet.addEventListener('click', () => {
+      if (tabletDrawer) {
+        tabletDrawer.clear();
+      }
+    });
+
+    tabletWidth.addEventListener('input', (e) => {
+      if (tabletDrawer) {
+        tabletDrawer.setLineWidth(parseInt(e.target.value));
+      }
+    });
+
     startButton.addEventListener('click', async () => {
       startButton.style.display = 'none';
       await setupMIDI();
@@ -1085,6 +1282,13 @@
 
     function draw(time) {
       const t = time / 1000;
+      
+      // Check if it's time to clear tablet strokes
+      if (tabletDrawer && time - lastClearTime > CLEAR_INTERVAL) {
+        tabletDrawer.clearStrokes();
+        lastClearTime = time;
+      }
+      
       ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
       ctx.fillRect(0, 0, width, height);
 
@@ -1109,6 +1313,11 @@
       drawPhyllotaxisModule(t, activeNotes.phyllotaxis);
       drawStackedPolygons(t, activeNotes.polygons);
       drawWhitneyLines(t, activeNotes.whitneyLines, document.getElementById('colorToggle').checked);
+
+      // Draw tablet strokes
+      if (tabletDrawer) {
+        tabletDrawer.drawStrokes();
+      }
 
       ctx.restore();
 
