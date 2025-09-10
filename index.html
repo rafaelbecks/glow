@@ -1036,7 +1036,47 @@
       }
     }
 
+    async function connectUgeeQ6() {
+        const filters = [{ vendorId: 0x28BD, productId: 0x2901 }];
+        const [device] = await navigator.hid.requestDevice({ filters });
+        if (!device) {
+          console.error("No UGEE Q6 found");
+          return;
+        }
+
+        await device.open();
+        console.log(`Connected to ${device.productName}`);
+
+        device.addEventListener("inputreport", e => {
+          if (e.reportId !== 0x07) return;
+
+          const dv = new DataView(e.data.buffer);
+
+          // Buttons (first byte)
+          const buttons = dv.getUint8(0);
+          const tipSwitch = buttons & 0x01; // bit 0
+          const barrel = (buttons >> 1) & 0x01; // bit 1
+          const eraser = (buttons >> 2) & 0x01; // bit 2
+          const invert = (buttons >> 3) & 0x01; // bit 3
+          const inRange = (buttons >> 5) & 0x01; // bit 5
+
+          // Position + pressure + tilt
+          const x = dv.getUint16(1, true);  // bits 8–23
+          const y = dv.getUint16(3, true);  // bits 24–39
+          const pressure = dv.getUint16(5, true);  // bits 40–55
+          const tiltX = dv.getInt8(7);          // bits 56–63
+          const tiltY = dv.getInt8(8);          // bits 64–71
+
+          console.log({ tipSwitch, barrel, eraser, invert, inRange, x, y, pressure, tiltX, tiltY });
+        });
+      }
+
+      connectUgeeQ6();
+
+
     const startButton = document.getElementById('startButton');
+
+    
     startButton.addEventListener('click', async () => {
       startButton.style.display = 'none';
       await setupMIDI();
