@@ -7,6 +7,9 @@ export class GlowLogo extends HTMLElement {
     this.animationId = 0;
     this.svgData = null;
     this.svgPaths = [];
+    this.isHovered = false;
+    this.letterColors = ['white', 'white', 'white', 'white']; // G, L, O, W
+    this.baseHues = [0, 0, 0, 0]; // Base hues for each letter
   }
 
   async connectedCallback() {
@@ -14,6 +17,10 @@ export class GlowLogo extends HTMLElement {
     this.appendChild(this.canvas);
     this.ctx = this.canvas.getContext('2d');
     window.addEventListener('resize', this.resize.bind(this));
+    
+    // Add hover event listeners
+    this.canvas.addEventListener('mouseenter', this.handleMouseEnter.bind(this));
+    this.canvas.addEventListener('mouseleave', this.handleMouseLeave.bind(this));
     
     // Load SVG data
     await this.loadSVG();
@@ -26,6 +33,30 @@ export class GlowLogo extends HTMLElement {
       cancelAnimationFrame(this.animationId);
     }
     window.removeEventListener('resize', this.resize.bind(this));
+  }
+
+  handleMouseEnter() {
+    this.isHovered = true;
+    this.generateRandomHues();
+  }
+
+  handleMouseLeave() {
+    this.isHovered = false;
+    this.letterColors = ['white', 'white', 'white', 'white'];
+    this.baseHues = [0, 0, 0, 0];
+  }
+
+  generateRandomHues() {
+    // Generate random base hues for each letter (0-360 degrees)
+    this.baseHues = this.baseHues.map(() => {
+      return Math.floor(Math.random() * 360);
+    });
+  }
+
+  getHueColor(baseHue, t) {
+    // Animate hue over time like harmonograph
+    const hue = (baseHue + t * 20) % 360;
+    return `hsla(${hue}, 100%, 70%, 1)`;
   }
 
   async loadSVG() {
@@ -67,6 +98,11 @@ export class GlowLogo extends HTMLElement {
     const { width, height } = this.canvas;
     this.ctx.clearRect(0, 0, width, height);
 
+    // Update letter colors based on hover state and time
+    if (this.isHovered) {
+      this.letterColors = this.baseHues.map(baseHue => this.getHueColor(baseHue, this.t));
+    }
+
     // Set up Vectrex-style rendering
     this.ctx.strokeStyle = 'white';
     this.ctx.fillStyle = 'white';
@@ -101,13 +137,20 @@ export class GlowLogo extends HTMLElement {
     this.ctx.scale(scale, scale);
     this.ctx.translate(-this.svgViewBox.x, -this.svgViewBox.y);
 
-    this.svgPaths.forEach((path) => {
+    this.svgPaths.forEach((path, index) => {
       this.ctx.beginPath();
-      this.ctx.strokeStyle = 'white';
-      this.ctx.fillStyle = 'white';
+      // Use individual letter colors (G, L, W) - skip O which is drawn separately
+      const colorIndex = index < 3 ? index : 2; // Map to G, L, W
+      this.ctx.strokeStyle = this.letterColors[colorIndex];
+      this.ctx.fillStyle = this.letterColors[colorIndex];
       this.ctx.lineWidth = 1 / scale; // Thinner lines
       this.ctx.lineCap = 'round';
       this.ctx.lineJoin = 'round';
+      
+      // Always add glow effect
+      this.ctx.shadowColor = this.letterColors[colorIndex];
+      this.ctx.shadowBlur = 10;
+      
       this.ctx.stroke(new Path2D(path.getAttribute('d')));
     });
 
@@ -120,8 +163,12 @@ export class GlowLogo extends HTMLElement {
     const centerY = canvasHeight / 2;
     const r = Math.min(canvasWidth, canvasHeight) * 0.35;
     
-    this.ctx.strokeStyle = 'white';
+    this.ctx.strokeStyle = this.letterColors[2]; // O is at index 2
     this.ctx.lineWidth = 1;
+    
+    // Always add glow effect
+    this.ctx.shadowColor = this.letterColors[2];
+    this.ctx.shadowBlur = 10;
 
     // Whitney-style rotating radial lines
     const numLines = 40;
@@ -157,7 +204,13 @@ export class GlowLogo extends HTMLElement {
     const h = height * 0.8;
     const strokeWidth = width * 0.1;
     
+    this.ctx.strokeStyle = this.letterColors[0]; // G is at index 0
     this.ctx.lineWidth = strokeWidth;
+    
+    // Always add glow effect
+    this.ctx.shadowColor = this.letterColors[0];
+    this.ctx.shadowBlur = 15;
+    
     this.ctx.beginPath();
     
     // G shape: vertical line, horizontal top, vertical right, horizontal bottom, small horizontal inside
@@ -177,7 +230,13 @@ export class GlowLogo extends HTMLElement {
     const h = height * 0.8;
     const strokeWidth = width * 0.1;
     
+    this.ctx.strokeStyle = this.letterColors[1]; // L is at index 1
     this.ctx.lineWidth = strokeWidth;
+    
+    // Always add glow effect
+    this.ctx.shadowColor = this.letterColors[1];
+    this.ctx.shadowBlur = 15;
+    
     this.ctx.beginPath();
     
     // L shape: vertical line, horizontal bottom
@@ -193,7 +252,13 @@ export class GlowLogo extends HTMLElement {
     const h = height * 0.8;
     const strokeWidth = width * 0.1;
     
+    this.ctx.strokeStyle = this.letterColors[3]; // W is at index 3
     this.ctx.lineWidth = strokeWidth;
+    
+    // Always add glow effect
+    this.ctx.shadowColor = this.letterColors[3];
+    this.ctx.shadowBlur = 15;
+    
     this.ctx.beginPath();
     
     // W shape: two V shapes side by side
