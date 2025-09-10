@@ -82,23 +82,17 @@ export class GLOWVisualizer {
       this.uiManager.hideLogoContainer();
       this.uiManager.showControls();
       
-      if (this.uiManager.statusVisible) {
-        this.uiManager.showStatus('Connecting to MIDI devices...', 'info');
-      }
+      this.uiManager.showStatus('Connecting to MIDI devices...', 'info');
       
       await this.midiManager.setupMIDI();
       
-      if (this.uiManager.statusVisible) {
-        this.uiManager.showStatus('Starting visualizer...', 'success');
-      }
+      this.uiManager.showStatus('Starting visualizer...', 'success');
       this.isRunning = true;
       this.animate();
       
     } catch (error) {
       console.error('Failed to start visualizer:', error);
-      if (this.uiManager.statusVisible) {
-        this.uiManager.showStatus('Failed to start. Check console for details.', 'error');
-      }
+      this.uiManager.showStatus('Failed to start. Check console for details.', 'error');
       this.uiManager.showStartButton();
       this.uiManager.showSettingsButton();
       this.uiManager.hideControls();
@@ -107,40 +101,28 @@ export class GLOWVisualizer {
 
   async connectTablet() {
     try {
-      if (this.uiManager.statusVisible) {
-        this.uiManager.showStatus('Connecting to tablet...', 'info');
-      }
+      this.uiManager.showStatus('Connecting to tablet...', 'info');
       const success = await this.tabletManager.connectUgeeQ6();
       
       if (success) {
-        if (this.uiManager.statusVisible) {
-          this.uiManager.showStatus('Tablet connected successfully!', 'success');
-        }
+        this.uiManager.showStatus('Tablet connected successfully!', 'success');
       } else {
-        if (this.uiManager.statusVisible) {
-          this.uiManager.showStatus('No tablet found or connection failed.', 'error');
-        }
+        this.uiManager.showStatus('No tablet found or connection failed.', 'error');
       }
     } catch (error) {
       console.error('Tablet connection error:', error);
-      if (this.uiManager.statusVisible) {
-        this.uiManager.showStatus('Tablet connection failed.', 'error');
-      }
+      this.uiManager.showStatus('Tablet connection failed.', 'error');
     }
   }
 
   clearTablet() {
     this.tabletManager.clear();
-    if (this.uiManager.statusVisible) {
-      this.uiManager.showStatus('Tablet drawing cleared.', 'info');
-    }
+    this.uiManager.showStatus('Tablet drawing cleared.', 'info');
   }
 
   clearCanvas() {
     this.canvasDrawer.clear();
-    if (this.uiManager.statusVisible) {
-      this.uiManager.showStatus('Canvas cleared.', 'info');
-    }
+    this.uiManager.showStatus('Canvas cleared.', 'info');
   }
 
   setTabletWidth(width) {

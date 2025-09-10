@@ -62,11 +62,6 @@ export class UIManager {
       if (e.key === 'c') {
         this.triggerCallback('clearCanvas');
       }
-      // Ctrl+Option+Y to toggle status
-      if (e.ctrlKey && e.altKey && e.key === 'y') {
-        e.preventDefault();
-        this.toggleStatus();
-      }
     });
 
     // Window resize
@@ -120,6 +115,8 @@ export class UIManager {
 
   // Add status indicator
   showStatus(message, type = 'info') {
+    if (!this.statusVisible) return;
+    
     // Create or update status element
     let statusEl = document.getElementById('status');
     if (!statusEl) {
@@ -142,7 +139,6 @@ export class UIManager {
     statusEl.textContent = message;
     statusEl.style.color = type === 'error' ? '#ff6b6b' : 
                           type === 'success' ? '#51cf66' : 'white';
-    this.statusVisible = true;
   }
 
   hideStatus() {
@@ -153,13 +149,6 @@ export class UIManager {
     this.statusVisible = false;
   }
 
-  toggleStatus() {
-    if (this.statusVisible) {
-      this.hideStatus();
-    } else {
-      this.showStatus('Status visible - use Ctrl+Option+Y to toggle', 'info');
-    }
-  }
 
   toggleControls() {
     if (this.controlsVisible) {
