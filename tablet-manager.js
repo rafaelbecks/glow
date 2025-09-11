@@ -19,10 +19,17 @@ export class TabletManager {
     this.baseLineWidth = options.lineWidth || SETTINGS.TABLET.DEFAULT_LINE_WIDTH;
     this.clearInterval = options.clearInterval || SETTINGS.TABLET.CLEAR_INTERVAL;
     this.backgroundBleeding = options.backgroundBleeding !== undefined ? options.backgroundBleeding : SETTINGS.TABLET.BACKGROUND_BLEEDING;
+    this.canvasLayerOrder = options.canvasLayerOrder || SETTINGS.TABLET.CANVAS_LAYER_ORDER;
     
     // Device references - track all connected devices
     this.devices = [];
     this.activeDevice = null;
+    
+  // Initialize canvas layer order
+  this.updateCanvasZIndex();
+  
+  // Initialize tablet canvas dimensions
+  this.resizeCanvas();
   }
 
   // Color generation methods
@@ -44,6 +51,28 @@ export class TabletManager {
 
   setBackgroundBleeding(enabled) {
     this.backgroundBleeding = enabled;
+  }
+
+  setCanvasLayerOrder(layer) {
+    this.canvasLayerOrder = layer;
+    this.updateCanvasZIndex();
+  }
+
+  updateCanvasZIndex() {
+    if (this.canvas) {
+      if (this.canvasLayerOrder === 'front') {
+        this.canvas.style.zIndex = '2';
+      } else {
+        this.canvas.style.zIndex = '0';
+      }
+    }
+  }
+
+  resizeCanvas() {
+    if (this.canvas) {
+      this.canvas.width = window.innerWidth;
+      this.canvas.height = window.innerHeight;
+    }
   }
 
   startDrawing(x, y) {
@@ -83,7 +112,7 @@ export class TabletManager {
     this.ctx.strokeStyle = this.currentStroke.color;
     this.ctx.lineWidth = lineWidth;
     this.ctx.shadowColor = this.currentStroke.color;
-    this.ctx.shadowBlur = lineWidth * 2;
+    this.ctx.shadowBlur = lineWidth * 0.5;
 
     this.ctx.beginPath();
     this.ctx.moveTo(this.lastX, this.lastY);
@@ -94,26 +123,6 @@ export class TabletManager {
     this.lastY = y;
   }
 
-  drawStrokes() {
-    // Draw all stored strokes
-    this.strokes.forEach(stroke => {
-      this.ctx.save();
-      this.ctx.strokeStyle = stroke.color;
-      this.ctx.lineWidth = stroke.lineWidth;
-      this.ctx.shadowColor = stroke.color;
-      this.ctx.shadowBlur = stroke.lineWidth * 2;
-
-      this.ctx.beginPath();
-      for (let i = 1; i < stroke.points.length; i++) {
-        const prev = stroke.points[i - 1];
-        const curr = stroke.points[i];
-        this.ctx.moveTo(prev.x, prev.y);
-        this.ctx.lineTo(curr.x, curr.y);
-      }
-      this.ctx.stroke();
-      this.ctx.restore();
-    });
-  }
 
   clearStrokes() {
     this.strokes = [];
@@ -123,6 +132,7 @@ export class TabletManager {
     this.strokes = [];
     this.currentStroke = null;
     this.drawing = false;
+    // Clear the tablet canvas completely (no background bleeding)
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
@@ -179,11 +189,11 @@ export class TabletManager {
 
     // Buttons (first byte)
     const buttons = dv.getUint8(0);
-    const tipSwitch = buttons & 0x01; // bit 0
-    const barrel = (buttons >> 1) & 0x01; // bit 1
-    const eraser = (buttons >> 2) & 0x01; // bit 2
-    const invert = (buttons >> 3) & 0x01; // bit 3
-    const inRange = (buttons >> 5) & 0x01; // bit 5
+    // const tipSwitch = buttons & 0x01; // bit 0
+    // const barrel = (buttons >> 1) & 0x01; // bit 1
+    // const eraser = (buttons >> 2) & 0x01; // bit 2
+    // const invert = (buttons >> 3) & 0x01; // bit 3
+    // const inRange = (buttons >> 5) & 0x01; // bit 5
 
     // Position + pressure + tilt
     const x = dv.getUint16(1, true);  // bits 8–23

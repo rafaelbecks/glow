@@ -92,9 +92,10 @@ export class UIManager {
 
     // Keyboard shortcuts
     window.addEventListener('keydown', (e) => {
+      console.log(e.key);
       if (e.key === 'c') {
         this.triggerCallback('clearCanvas');
-      } else if (e.key === 'p' || e.key === 'P') {
+      } else if (e.key === 'c' || e.key === 'C') {
         this.triggerCallback('togglePanel');
       } else if (e.key >= '1' && e.key <= '4') {
         const trackId = parseInt(e.key);

@@ -26,11 +26,12 @@ import {
 export class GLOWVisualizer {
   constructor() {
     this.canvas = document.getElementById('canvas');
+    this.tabletCanvas = document.getElementById('tabletCanvas');
     this.canvasDrawer = new CanvasDrawer(this.canvas);
     this.trackManager = new TrackManager();
     this.midiManager = new MIDIManager(this.trackManager);
     this.sidePanel = new SidePanel(this.trackManager);
-    this.tabletManager = new TabletManager(this.canvas);
+    this.tabletManager = new TabletManager(this.tabletCanvas);
     this.tabletPanel = new TabletPanel(this.tabletManager);
     this.uiManager = new UIManager();
     this.visualizerStarted = false;
@@ -62,7 +63,13 @@ export class GLOWVisualizer {
 
   initialize() {
     // Initial canvas setup
-    this.canvasDrawer.resize();    
+    this.canvasDrawer.resize();
+    this.resizeTabletCanvas();
+  }
+
+  resizeTabletCanvas() {
+    // Resize tablet canvas to match main canvas
+    this.tabletManager.resizeCanvas();
   }
 
   setupEventHandlers() {
@@ -84,6 +91,7 @@ export class GLOWVisualizer {
     this.tabletPanel.on('tabletWidthChange', (width) => this.setTabletWidth(width));
     this.tabletPanel.on('colorModeChange', (enabled) => this.setColorMode(enabled));
     this.tabletPanel.on('backgroundBleedingChange', (enabled) => this.setBackgroundBleeding(enabled));
+    this.tabletPanel.on('canvasLayerChange', (layer) => this.setCanvasLayer(layer));
   }
 
   async start() {
@@ -136,8 +144,7 @@ export class GLOWVisualizer {
   }
 
   clearCanvas() {
-    this.canvasDrawer.clear(this.tabletManager.backgroundBleeding);
-    this.tabletManager.clearStrokes();
+    this.tabletManager.clear();
     this.uiManager.showStatus('Canvas cleared.', 'info');
   }
 
@@ -147,6 +154,7 @@ export class GLOWVisualizer {
 
   handleResize() {
     this.canvasDrawer.resize();
+    this.resizeTabletCanvas();
   }
 
   toggleSidePanel() {
@@ -171,6 +179,11 @@ export class GLOWVisualizer {
     this.tabletManager.setBackgroundBleeding(enabled);
   }
 
+  setCanvasLayer(layer) {
+    // Update the canvas layer order in the tablet manager
+    this.tabletManager.setCanvasLayerOrder(layer);
+  }
+
   animate() {
     if (!this.isRunning) return;
 
@@ -181,7 +194,7 @@ export class GLOWVisualizer {
     this.midiManager.cleanupOldNotes();
 
     // Clear canvas with fade effect
-    this.canvasDrawer.clear(this.tabletManager.backgroundBleeding);
+    this.canvasDrawer.clear();
 
     // Get all active notes based on track assignments
     const activeNotes = this.midiManager.getActiveNotesForTracks();
@@ -192,8 +205,6 @@ export class GLOWVisualizer {
     // Update side panel activity indicators
     this.sidePanel.updateActivityIndicators(activeNotes);
 
-    // Draw tablet strokes
-    this.tabletManager.drawStrokes();
 
     // Check for periodic tablet clearing
     this.tabletManager.checkAndClearStrokes(time);

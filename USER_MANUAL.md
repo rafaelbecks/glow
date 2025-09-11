@@ -101,17 +101,9 @@ G.L.O.W. draws inspiration from the pioneers of geometric and kinetic art:
 
 Each visual pattern is designed to honor these artistic traditions while providing modern, real-time control for contemporary musicians and artists.
 
----
-
-*G.L.O.W. - Where music meets geometry, and sound becomes light.*
-
----
-
-## Repository & Credits
+## Repository
 
 **G.L.O.W.** is an open-source project built by **Rafael Becerra**
 
 - **GitHub Repository**: [https://github.com/rafaelbecks/glow](https://github.com/rafaelbecks/glow)
 - **Live Demo**: [https://glow-visualizer.netlify.app/](https://glow-visualizer.netlify.app/)
-
-Built with modern web technologies and inspired by early computer graphics aesthetics.

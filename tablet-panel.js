@@ -82,6 +82,28 @@ export class TabletPanel {
               Background Bleeding
             </label>
           </div>
+          
+          <div class="tablet-config-group">
+            <label>
+              <ion-icon name="layers-outline"></ion-icon>
+              Canvas Layer
+            </label>
+            <div class="radio-container">
+              <label class="radio-option">
+                <input id="canvasLayerFront" type="radio" name="canvasLayer" value="front" checked/>
+                <span class="radio-mark"></span>
+                Front
+              </label>
+              <label class="radio-option">
+                <input id="canvasLayerBack" type="radio" name="canvasLayer" value="back"/>
+                <span class="radio-mark"></span>
+                Back
+              </label>
+            </div>
+            <div class="setting-description">
+              Choose whether tablet drawing appears in front of or behind luminodes
+            </div>
+          </div>
         </div>
       </div>
     `;
@@ -106,6 +128,8 @@ export class TabletPanel {
     const tabletWidthSlider = this.panel.querySelector('#tabletWidth');
     const colorToggle = this.panel.querySelector('#colorToggle');
     const backgroundBleedingToggle = this.panel.querySelector('#backgroundBleedingToggle');
+    const canvasLayerFront = this.panel.querySelector('#canvasLayerFront');
+    const canvasLayerBack = this.panel.querySelector('#canvasLayerBack');
 
     if (readTabletBtn) {
       readTabletBtn.addEventListener('click', () => {
@@ -136,6 +160,22 @@ export class TabletPanel {
     if (backgroundBleedingToggle) {
       backgroundBleedingToggle.addEventListener('change', (e) => {
         this.triggerCallback('backgroundBleedingChange', e.target.checked);
+      });
+    }
+
+    if (canvasLayerFront) {
+      canvasLayerFront.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          this.triggerCallback('canvasLayerChange', 'front');
+        }
+      });
+    }
+
+    if (canvasLayerBack) {
+      canvasLayerBack.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          this.triggerCallback('canvasLayerChange', 'back');
+        }
       });
     }
   }
@@ -203,6 +243,21 @@ export class TabletPanel {
     const checkbox = this.panel.querySelector('#backgroundBleedingToggle');
     if (checkbox) {
       checkbox.checked = enabled;
+    }
+  }
+
+  // Update canvas layer from external source
+  updateCanvasLayer(layer) {
+    const frontRadio = this.panel.querySelector('#canvasLayerFront');
+    const backRadio = this.panel.querySelector('#canvasLayerBack');
+    if (frontRadio && backRadio) {
+      if (layer === 'front') {
+        frontRadio.checked = true;
+        backRadio.checked = false;
+      } else if (layer === 'back') {
+        frontRadio.checked = false;
+        backRadio.checked = true;
+      }
     }
   }
 
