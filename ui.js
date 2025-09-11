@@ -10,8 +10,8 @@ export class UIManager {
   initializeElements() {
     this.elements = {
       startButton: document.getElementById('startButton'),
-      settingsButton: document.getElementById('settingsButton'),
-      controls: document.getElementById('controls'),
+      panelToggleButton: document.getElementById('panelToggleButton'),
+      tabletPanelToggleButton: document.getElementById('tabletPanelToggleButton'),
       readTabletData: document.getElementById('readTabletData'),
       clearTablet: document.getElementById('clearTablet'),
       tabletWidth: document.getElementById('tabletWidth'),
@@ -20,7 +20,6 @@ export class UIManager {
     };
     
     this.statusVisible = false;
-    this.controlsVisible = false;
   }
 
   setupEventListeners() {
@@ -30,11 +29,17 @@ export class UIManager {
         this.triggerCallback('startVisualizer');
       });
     }
+    // Panel toggle button
+    if (this.elements.panelToggleButton) {
+      this.elements.panelToggleButton.addEventListener('click', () => {
+        this.triggerCallback('togglePanel');
+      });
+    }
 
-    // Settings button
-    if (this.elements.settingsButton) {
-      this.elements.settingsButton.addEventListener('click', () => {
-        this.toggleControls();
+    // Tablet panel toggle button
+    if (this.elements.tabletPanelToggleButton) {
+      this.elements.tabletPanelToggleButton.addEventListener('click', () => {
+        this.triggerCallback('toggleTabletPanel');
       });
     }
 
@@ -61,6 +66,17 @@ export class UIManager {
     window.addEventListener('keydown', (e) => {
       if (e.key === 'c') {
         this.triggerCallback('clearCanvas');
+      } else if (e.key === 'p' || e.key === 'P') {
+        this.triggerCallback('togglePanel');
+      } else if (e.key >= '1' && e.key <= '4') {
+        const trackId = parseInt(e.key);
+        if (e.ctrlKey || e.metaKey) {
+          if (e.shiftKey) {
+            this.triggerCallback('toggleSolo', trackId);
+          } else {
+            this.triggerCallback('toggleMute', trackId);
+          }
+        }
       }
     });
 
@@ -149,41 +165,6 @@ export class UIManager {
     this.statusVisible = false;
   }
 
-
-  toggleControls() {
-    if (this.controlsVisible) {
-      this.hideControls();
-    } else {
-      this.showControls();
-    }
-  }
-
-  showControls() {
-    if (this.elements.controls) {
-      this.elements.controls.style.display = 'flex';
-      this.controlsVisible = true;
-    }
-  }
-
-  hideControls() {
-    if (this.elements.controls) {
-      this.elements.controls.style.display = 'none';
-      this.controlsVisible = false;
-    }
-  }
-
-  showSettingsButton() {
-    if (this.elements.settingsButton) {
-      this.elements.settingsButton.style.display = 'block';
-    }
-  }
-
-  hideSettingsButton() {
-    if (this.elements.settingsButton) {
-      this.elements.settingsButton.style.display = 'none';
-    }
-  }
-
   showLogoContainer() {
     if (this.elements.logoContainer) {
       this.elements.logoContainer.style.display = 'flex';
@@ -193,6 +174,42 @@ export class UIManager {
   hideLogoContainer() {
     if (this.elements.logoContainer) {
       this.elements.logoContainer.style.display = 'none';
+    }
+  }
+
+  showPanelToggleButton() {
+    if (this.elements.panelToggleButton) {
+      this.elements.panelToggleButton.style.display = 'flex';
+    }
+  }
+
+  hidePanelToggleButton() {
+    if (this.elements.panelToggleButton) {
+      this.elements.panelToggleButton.style.display = 'none';
+    }
+  }
+
+  setPanelToggleActive(active) {
+    if (this.elements.panelToggleButton) {
+      this.elements.panelToggleButton.classList.toggle('active', active);
+    }
+  }
+
+  showTabletPanelToggleButton() {
+    if (this.elements.tabletPanelToggleButton) {
+      this.elements.tabletPanelToggleButton.style.display = 'flex';
+    }
+  }
+
+  hideTabletPanelToggleButton() {
+    if (this.elements.tabletPanelToggleButton) {
+      this.elements.tabletPanelToggleButton.style.display = 'none';
+    }
+  }
+
+  setTabletPanelToggleActive(active) {
+    if (this.elements.tabletPanelToggleButton) {
+      this.elements.tabletPanelToggleButton.classList.toggle('active', active);
     }
   }
 }

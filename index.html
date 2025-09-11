@@ -10,25 +10,26 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="controls" id="controls" style="display: none;">
-        <label>
-            <input id="colorToggle" type="checkbox"/> Color Mode
-        </label>
-        <button id="readTabletData">Connect Tablet</button>
-        <button id="clearTablet">Clear Drawing</button>
-        <label>
-            Tablet Width: <input id="tabletWidth" type="range" min="1" max="20" value="4"/>
-        </label>
-    </div>
-    
     <div id="logoContainer">
         <glow-logo></glow-logo>
-        <button id="startButton">Start</button>
+        <button id="startButton">
+            <ion-icon name="play-outline"></ion-icon>
+            Start
+        </button>
     </div>
-    <button id="settingsButton" class="settings-button" style="display: none;">⚙️</button>
+    <button id="panelToggleButton" class="panel-toggle-btn" style="display: none;">
+      <ion-icon name="musical-notes-outline"></ion-icon>
+    </button>
+    <button id="tabletPanelToggleButton" class="tablet-panel-toggle-btn" style="display: none;">
+      <ion-icon name="tablet-landscape-outline"></ion-icon>
+    </button>
     <canvas id="canvas"></canvas>
     
     <script type="module" src="glow-logo.js"></script>
     <script type="module" src="main.js"></script>
+    
+    <!-- Ionicons -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 </body>
 </html>

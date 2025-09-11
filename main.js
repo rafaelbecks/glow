@@ -1,6 +1,9 @@
 // Main application bootstrap and orchestration
 import { SETTINGS, UTILS } from './settings.js';
 import { MIDIManager } from './midi.js';
+import { TrackManager } from './track-manager.js';
+import { SidePanel } from './side-panel.js';
+import { TabletPanel } from './tablet-panel.js';
 import { TabletManager } from './tablet-manager.js';
 import { CanvasDrawer } from './canvas-drawer.js';
 import { UIManager } from './ui.js';
@@ -25,8 +28,11 @@ export class GLOWVisualizer {
   constructor() {
     this.canvas = document.getElementById('canvas');
     this.canvasDrawer = new CanvasDrawer(this.canvas);
-    this.midiManager = new MIDIManager();
+    this.trackManager = new TrackManager();
+    this.midiManager = new MIDIManager(this.trackManager);
+    this.sidePanel = new SidePanel(this.trackManager);
     this.tabletManager = new TabletManager(this.canvas);
+    this.tabletPanel = new TabletPanel(this.tabletManager);
     this.uiManager = new UIManager();
     this.visualizerStarted = false;
     
@@ -58,10 +64,7 @@ export class GLOWVisualizer {
 
   initialize() {
     // Initial canvas setup
-    this.canvasDrawer.resize();
-    
-    // Show settings button initially (no drawing active)
-    this.uiManager.showSettingsButton();
+    this.canvasDrawer.resize();    
   }
 
   setupEventHandlers() {
@@ -72,15 +75,25 @@ export class GLOWVisualizer {
     this.uiManager.on('clearCanvas', () => this.clearCanvas());
     this.uiManager.on('tabletWidthChange', (width) => this.setTabletWidth(width));
     this.uiManager.on('resize', () => this.handleResize());
+    this.uiManager.on('togglePanel', () => this.toggleSidePanel());
+    this.uiManager.on('toggleTabletPanel', () => this.toggleTabletPanel());
+    this.uiManager.on('toggleMute', (trackId) => this.trackManager.toggleMute(trackId));
+    this.uiManager.on('toggleSolo', (trackId) => this.trackManager.toggleSolo(trackId));
+    
+    // Tablet panel events
+    this.tabletPanel.on('connectTablet', () => this.connectTablet());
+    this.tabletPanel.on('clearTablet', () => this.clearTablet());
+    this.tabletPanel.on('tabletWidthChange', (width) => this.setTabletWidth(width));
+    this.tabletPanel.on('colorModeChange', (enabled) => this.setColorMode(enabled));
   }
 
   async start() {
     try {
       this.visualizerStarted = true;
       this.uiManager.hideStartButton();
-      this.uiManager.hideSettingsButton();
       this.uiManager.hideLogoContainer();
-      this.uiManager.showControls();
+      this.uiManager.showPanelToggleButton();
+      this.uiManager.showTabletPanelToggleButton();
       
       this.uiManager.showStatus('Connecting to MIDI devices...', 'info');
       
@@ -90,12 +103,13 @@ export class GLOWVisualizer {
       this.isRunning = true;
       this.animate();
       
+      // Initialize side panel after MIDI setup
+      this.sidePanel.renderTracks();
+      
     } catch (error) {
       console.error('Failed to start visualizer:', error);
       this.uiManager.showStatus('Failed to start. Check console for details.', 'error');
       this.uiManager.showStartButton();
-      this.uiManager.showSettingsButton();
-      this.uiManager.hideControls();
     }
   }
 
@@ -133,6 +147,23 @@ export class GLOWVisualizer {
     this.canvasDrawer.resize();
   }
 
+  toggleSidePanel() {
+    this.sidePanel.toggle();
+    this.uiManager.setPanelToggleActive(this.sidePanel.isPanelVisible());
+  }
+
+  toggleTabletPanel() {
+    this.tabletPanel.toggle();
+    this.uiManager.setTabletPanelToggleActive(this.tabletPanel.isPanelVisible());
+  }
+
+  setColorMode(enabled) {
+    // Update the color mode in the UI manager
+    if (this.uiManager.elements.colorToggle) {
+      this.uiManager.elements.colorToggle.checked = enabled;
+    }
+  }
+
   animate() {
     if (!this.isRunning) return;
 
@@ -145,11 +176,14 @@ export class GLOWVisualizer {
     // Clear canvas with fade effect
     this.canvasDrawer.clear();
 
-    // Get all active notes
-    const activeNotes = this.midiManager.getAllActiveNotes();
+    // Get all active notes based on track assignments
+    const activeNotes = this.midiManager.getActiveNotesForTracks();
 
     // Draw all luminodes
     this.drawLuminodes(t, activeNotes);
+
+    // Update side panel activity indicators
+    this.sidePanel.updateActivityIndicators(activeNotes);
 
     // Draw tablet strokes
     this.tabletManager.drawStrokes();
@@ -168,15 +202,10 @@ export class GLOWVisualizer {
 
     // Update settings button and logo visibility based on drawing activity
     if (isDrawingActive) {
-      this.uiManager.hideSettingsButton();
       this.uiManager.hideLogoContainer();
     } else if (!this.visualizerStarted) {
-      // Only show logo and settings when visualizer hasn't been started
-      this.uiManager.showSettingsButton();
       this.uiManager.showLogoContainer();
     } else {
-      // Visualizer started but no drawing - only show settings button
-      this.uiManager.showSettingsButton();
       this.uiManager.hideLogoContainer();
     }
 
@@ -212,6 +241,15 @@ export class GLOWVisualizer {
     }
   }
 
+  // Debug method to check MIDI devices
+  debugMidiDevices() {
+    console.log('=== MIDI Debug Info ===');
+    console.log('Legacy system devices:', this.midiManager.getDeviceInfo());
+    console.log('Track system devices:', this.midiManager.getAllMidiDevices());
+    console.log('TrackManager devices:', this.trackManager.getAvailableMidiDevices());
+    console.log('Current tracks:', this.trackManager.getTracks());
+  }
+
   // Cleanup method
   destroy() {
     this.stop();
@@ -222,4 +260,7 @@ export class GLOWVisualizer {
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
   window.glowVisualizer = new GLOWVisualizer();
+  
+  // Expose debug method globally
+  window.debugMidi = () => window.glowVisualizer.debugMidiDevices();
 });

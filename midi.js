@@ -2,7 +2,8 @@
 import { SETTINGS, MIDI_CHANNELS } from './settings.js';
 
 export class MIDIManager {
-  constructor() {
+  constructor(trackManager = null) {
+    this.trackManager = trackManager;
     this.activeNotes = {
       lissajous: [],
       harmonograph: [],
@@ -22,6 +23,8 @@ export class MIDIManager {
     };
     
     this.inputs = new Map();
+    this.deviceToChannelMap = new Map(); // Maps device ID to channel name
+    this.trackInputs = new Map(); // Maps device ID to input for track system
   }
 
   noteOn(channel, midi, velocity) {
@@ -69,20 +72,35 @@ export class MIDIManager {
           }
         }
 
-        if (!channel) continue;
+        // Store input reference (even if no channel match for track system)
+        if (channel) {
+          this.inputs.set(channel, input);
+          this.deviceToChannelMap.set(input.id, channel);
+        }
 
-        // Store input reference
-        this.inputs.set(channel, input);
+        // Register ALL devices with track manager (regardless of channel match)
+        if (this.trackManager) {
+          this.trackInputs.set(input.id, input);
+          this.trackManager.addMidiDevice(input.id, input);
+        }
 
-        // Set up message handler
+        // Set up unified message handler
         input.onmidimessage = (msg) => {
-          this.handleMIDIMessage(channel, msg);
+          // Handle legacy bus-based system
+          if (channel) {
+            this.handleMIDIMessage(channel, msg);
+          }
+          
+          // Handle track-based system
+          if (this.trackManager) {
+            this.handleTrackMIDIMessage(input.id, msg);
+          }
         };
 
-        console.log(`Connected MIDI device: ${input.name} -> ${channel}`);
+        console.log(`Connected MIDI device: ${input.name}${channel ? ` -> ${channel}` : ' (no channel match)'}`);
       }
 
-      console.log(`MIDI setup complete. Connected ${this.inputs.size} devices.`);
+      console.log(`MIDI setup complete. Connected ${this.inputs.size} devices for legacy system, ${access.inputs.size} total devices available for tracks.`);
     } catch (error) {
       console.error('Error setting up MIDI:', error);
       throw error;
@@ -97,6 +115,26 @@ export class MIDIManager {
       this.noteOn(channel, data1, data2);
     } else if (cmd === SETTINGS.MIDI.NOTE_OFF || (cmd === SETTINGS.MIDI.NOTE_ON && data2 === 0)) {
       this.noteOff(channel, data1);
+    }
+  }
+
+  handleTrackMIDIMessage(deviceId, msg) {
+    const [status, data1, data2] = msg.data;
+    const cmd = status & 0xf0;
+    
+    // Find which track this device is assigned to
+    if (!this.trackManager) return;
+    
+    const tracks = this.trackManager.getTracks();
+    const assignedTrack = tracks.find(track => track.midiDevice === deviceId);
+    
+    if (!assignedTrack || !assignedTrack.luminode) return;
+    
+    // Route the MIDI message to the assigned luminode
+    if (cmd === SETTINGS.MIDI.NOTE_ON && data2 > 0) {
+      this.noteOn(assignedTrack.luminode, data1, data2);
+    } else if (cmd === SETTINGS.MIDI.NOTE_OFF || (cmd === SETTINGS.MIDI.NOTE_ON && data2 === 0)) {
+      this.noteOff(assignedTrack.luminode, data1);
     }
   }
 
@@ -122,5 +160,52 @@ export class MIDIManager {
       };
     });
     return info;
+  }
+
+  // Get active notes based on track assignments
+  getActiveNotesForTracks() {
+    if (!this.trackManager) {
+      return this.activeNotes;
+    }
+
+    const activeTracks = this.trackManager.getActiveTracks();
+    const trackBasedNotes = {};
+
+    // Initialize all luminode channels
+    Object.keys(this.activeNotes).forEach(channel => {
+      trackBasedNotes[channel] = [];
+    });
+
+    // Populate notes for active tracks
+    activeTracks.forEach(track => {
+      if (track.luminode && track.midiDevice) {
+        // Get notes for the assigned luminode directly
+        if (this.activeNotes[track.luminode]) {
+          trackBasedNotes[track.luminode] = [...this.activeNotes[track.luminode]];
+        }
+      }
+    });
+
+    return trackBasedNotes;
+  }
+
+  // Get active notes for a specific device
+  getActiveNotesForDevice(deviceId) {
+    const channel = this.deviceToChannelMap.get(deviceId);
+    return channel ? this.activeNotes[channel] || [] : [];
+  }
+
+  // Get all available MIDI devices (for debugging)
+  getAllMidiDevices() {
+    const devices = [];
+    this.trackInputs.forEach((input, deviceId) => {
+      devices.push({
+        id: deviceId,
+        name: input.name,
+        manufacturer: input.manufacturer,
+        state: input.state
+      });
+    });
+    return devices;
   }
 }
