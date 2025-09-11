@@ -30,6 +30,43 @@ canvas {
     font-family: "Inconsolata", monospace;
 }
 
+.canvas-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.canvas-message h3 {
+    color: white;
+    font-size: 18px;
+    font-weight: 300;
+    margin: 0;
+    font-style: italic;
+    letter-spacing: 1px;
+    font-family: "Inconsolata", monospace;
+    text-align: center;
+    opacity: 0.8;
+}
+
+.canvas-message h3 strong {
+    color: #51cf66;
+    font-weight: 600;
+}
+
+.canvas-message h3 span {
+    text-shadow: 
+        0 0 8px rgba(255, 255, 255, 0.6),
+        0 0 16px rgba(255, 255, 255, 0.4),
+        0 0 24px rgba(255, 255, 255, 0.3),
+        0 0 32px rgba(255, 255, 255, 0.2);
+}
+
 #startButton {
     padding: 8px 20px;
     font-size: 14px;

@@ -16,6 +16,7 @@ export class UIManager {
       infoModal: document.getElementById('infoModal'),
       infoModalClose: document.getElementById('infoModalClose'),
       infoModalBody: document.getElementById('infoModalBody'),
+      canvasMessage: document.getElementById('canvasMessage'),
       readTabletData: document.getElementById('readTabletData'),
       clearTablet: document.getElementById('clearTablet'),
       tabletWidth: document.getElementById('tabletWidth'),
@@ -279,6 +280,18 @@ export class UIManager {
   hideInfoModal() {
     if (this.elements.infoModal) {
       this.elements.infoModal.classList.remove('show');
+    }
+  }
+
+  showCanvasMessage() {
+    if (this.elements.canvasMessage) {
+      this.elements.canvasMessage.style.display = 'flex';
+    }
+  }
+
+  hideCanvasMessage() {
+    if (this.elements.canvasMessage) {
+      this.elements.canvasMessage.style.display = 'none';
     }
   }
 }

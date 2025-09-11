@@ -95,6 +95,7 @@ export class GLOWVisualizer {
       this.uiManager.showPanelToggleButton();
       this.uiManager.showTabletPanelToggleButton();
       this.uiManager.showInfoButton();
+      this.uiManager.showCanvasMessage();
       
       this.uiManager.showStatus('Connecting to MIDI devices...', 'info');
       
@@ -200,6 +201,11 @@ export class GLOWVisualizer {
     const hasActiveNotes = Object.values(activeNotes).some(notes => notes.length > 0);
     const hasTabletStrokes = this.tabletManager.strokes.length > 0;
     const isDrawingActive = hasActiveNotes || hasTabletStrokes;
+
+    // Hide canvas message when first drawing appears
+    if (isDrawingActive) {
+      this.uiManager.hideCanvasMessage();
+    }
 
     // Update settings button and logo visibility based on drawing activity
     if (isDrawingActive) {
