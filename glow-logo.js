@@ -116,10 +116,7 @@ export class GlowLogo extends HTMLElement {
       
       // Draw Whitney-style O in the center
       this.drawWhitneyO(width, height);
-    } else {
-      // Fallback: draw simple letters
-      this.drawFallbackLetters(width, height);
-    }
+    } 
 
     this.animationId = requestAnimationFrame(this.render.bind(this));
   }
@@ -182,93 +179,6 @@ export class GlowLogo extends HTMLElement {
       );
       this.ctx.stroke();
     }
-  }
-
-  drawFallbackLetters(canvasWidth, canvasHeight) {
-    const centerX = canvasWidth / 2;
-    const centerY = canvasHeight / 2;
-    const letterWidth = canvasWidth / 4;
-    const letterHeight = canvasHeight * 0.8;
-
-    // Draw G, L, W (skip O)
-    this.drawG(centerX - letterWidth * 1.5, centerY, letterWidth, letterHeight);
-    this.drawL(centerX - letterWidth * 0.5, centerY, letterWidth, letterHeight);
-    this.drawW(centerX + letterWidth * 1.5, centerY, letterWidth, letterHeight);
-    
-    // Draw Whitney O in center
-    this.drawWhitneyO(canvasWidth, canvasHeight);
-  }
-
-  drawG(x, y, width, height) {
-    const w = width * 0.8;
-    const h = height * 0.8;
-    const strokeWidth = width * 0.1;
-    
-    this.ctx.strokeStyle = this.letterColors[0]; // G is at index 0
-    this.ctx.lineWidth = strokeWidth;
-    
-    // Always add glow effect
-    this.ctx.shadowColor = this.letterColors[0];
-    this.ctx.shadowBlur = 15;
-    
-    this.ctx.beginPath();
-    
-    // G shape: vertical line, horizontal top, vertical right, horizontal bottom, small horizontal inside
-    this.ctx.moveTo(x - w/2, y - h/2);
-    this.ctx.lineTo(x - w/2, y + h/2);
-    this.ctx.lineTo(x + w/2, y + h/2);
-    this.ctx.lineTo(x + w/2, y);
-    this.ctx.lineTo(x, y);
-    this.ctx.moveTo(x - w/2, y - h/2);
-    this.ctx.lineTo(x + w/2, y - h/2);
-    
-    this.ctx.stroke();
-  }
-
-  drawL(x, y, width, height) {
-    const w = width * 0.8;
-    const h = height * 0.8;
-    const strokeWidth = width * 0.1;
-    
-    this.ctx.strokeStyle = this.letterColors[1]; // L is at index 1
-    this.ctx.lineWidth = strokeWidth;
-    
-    // Always add glow effect
-    this.ctx.shadowColor = this.letterColors[1];
-    this.ctx.shadowBlur = 15;
-    
-    this.ctx.beginPath();
-    
-    // L shape: vertical line, horizontal bottom
-    this.ctx.moveTo(x - w/2, y - h/2);
-    this.ctx.lineTo(x - w/2, y + h/2);
-    this.ctx.lineTo(x + w/2, y + h/2);
-    
-    this.ctx.stroke();
-  }
-
-  drawW(x, y, width, height) {
-    const w = width * 0.8;
-    const h = height * 0.8;
-    const strokeWidth = width * 0.1;
-    
-    this.ctx.strokeStyle = this.letterColors[3]; // W is at index 3
-    this.ctx.lineWidth = strokeWidth;
-    
-    // Always add glow effect
-    this.ctx.shadowColor = this.letterColors[3];
-    this.ctx.shadowBlur = 15;
-    
-    this.ctx.beginPath();
-    
-    // W shape: two V shapes side by side
-    this.ctx.moveTo(x - w/2, y - h/2);
-    this.ctx.lineTo(x - w/4, y + h/2);
-    this.ctx.lineTo(x, y - h/4);
-    this.ctx.lineTo(x + w/4, y + h/2);
-    this.ctx.lineTo(x + w/2, y - h/2);
-    
-    this.ctx.stroke();
   }
 }
 

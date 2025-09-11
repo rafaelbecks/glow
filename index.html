@@ -5,6 +5,9 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>GLOW - Geometric Light Oscillation Workstation</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌀</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@200..900&display=swap" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#000000">
     <link rel="stylesheet" href="styles.css">
@@ -12,21 +15,41 @@
 <body>
     <div id="logoContainer">
         <glow-logo></glow-logo>
+        <h3>Geometric Light Oscillation Workstation</h3>
         <button id="startButton">
             <ion-icon name="play-outline"></ion-icon>
             Start
         </button>
     </div>
     <button id="panelToggleButton" class="panel-toggle-btn" style="display: none;">
-      <ion-icon name="musical-notes-outline"></ion-icon>
+      <ion-icon name="cube-outline"></ion-icon>
     </button>
     <button id="tabletPanelToggleButton" class="tablet-panel-toggle-btn" style="display: none;">
-      <ion-icon name="tablet-landscape-outline"></ion-icon>
+      <ion-icon name="color-filter-outline"></ion-icon>
+    </button>
+    <button id="infoButton" class="info-toggle-btn" style="display: none;">
+      <ion-icon name="triangle-outline"></ion-icon>
     </button>
     <canvas id="canvas"></canvas>
     
+    <!-- Info Modal -->
+    <div id="infoModal" class="info-modal">
+        <div class="info-modal-content">
+            <div class="info-modal-header">
+                <h2>G.L.O.W.</h2>
+                <button id="infoModalClose" class="info-modal-close">
+                    <ion-icon name="close-outline"></ion-icon>
+                </button>
+            </div>
+            <div id="infoModalBody" class="info-modal-body">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+    
     <script type="module" src="glow-logo.js"></script>
     <script type="module" src="main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     
     <!-- Ionicons -->
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>

@@ -12,6 +12,10 @@ export class UIManager {
       startButton: document.getElementById('startButton'),
       panelToggleButton: document.getElementById('panelToggleButton'),
       tabletPanelToggleButton: document.getElementById('tabletPanelToggleButton'),
+      infoButton: document.getElementById('infoButton'),
+      infoModal: document.getElementById('infoModal'),
+      infoModalClose: document.getElementById('infoModalClose'),
+      infoModalBody: document.getElementById('infoModalBody'),
       readTabletData: document.getElementById('readTabletData'),
       clearTablet: document.getElementById('clearTablet'),
       tabletWidth: document.getElementById('tabletWidth'),
@@ -40,6 +44,29 @@ export class UIManager {
     if (this.elements.tabletPanelToggleButton) {
       this.elements.tabletPanelToggleButton.addEventListener('click', () => {
         this.triggerCallback('toggleTabletPanel');
+      });
+    }
+
+    // Info button
+    if (this.elements.infoButton) {
+      this.elements.infoButton.addEventListener('click', () => {
+        this.showInfoModal();
+      });
+    }
+
+    // Info modal close button
+    if (this.elements.infoModalClose) {
+      this.elements.infoModalClose.addEventListener('click', () => {
+        this.hideInfoModal();
+      });
+    }
+
+    // Close modal when clicking outside
+    if (this.elements.infoModal) {
+      this.elements.infoModal.addEventListener('click', (e) => {
+        if (e.target === this.elements.infoModal) {
+          this.hideInfoModal();
+        }
       });
     }
 
@@ -210,6 +237,48 @@ export class UIManager {
   setTabletPanelToggleActive(active) {
     if (this.elements.tabletPanelToggleButton) {
       this.elements.tabletPanelToggleButton.classList.toggle('active', active);
+    }
+  }
+
+  showInfoButton() {
+    if (this.elements.infoButton) {
+      this.elements.infoButton.style.display = 'flex';
+    }
+  }
+
+  hideInfoButton() {
+    if (this.elements.infoButton) {
+      this.elements.infoButton.style.display = 'none';
+    }
+  }
+
+  async showInfoModal() {
+    if (this.elements.infoModal && this.elements.infoModalBody) {
+      // Load and parse the markdown content
+      try {
+        const response = await fetch('USER_MANUAL.md');
+        const markdownContent = await response.text();
+        
+        // Use marked to convert markdown to HTML
+        if (typeof marked !== 'undefined') {
+          const htmlContent = marked.parse(markdownContent);
+          this.elements.infoModalBody.innerHTML = htmlContent;
+        } else {
+          // Fallback if marked is not loaded
+          this.elements.infoModalBody.innerHTML = '<p>Error loading content. Please refresh the page.</p>';
+        }
+      } catch (error) {
+        console.error('Error loading user manual:', error);
+        this.elements.infoModalBody.innerHTML = '<p>Error loading content. Please check if USER_MANUAL.md exists.</p>';
+      }
+      
+      this.elements.infoModal.classList.add('show');
+    }
+  }
+
+  hideInfoModal() {
+    if (this.elements.infoModal) {
+      this.elements.infoModal.classList.remove('show');
     }
   }
 }

@@ -94,6 +94,7 @@ export class GLOWVisualizer {
       this.uiManager.hideLogoContainer();
       this.uiManager.showPanelToggleButton();
       this.uiManager.showTabletPanelToggleButton();
+      this.uiManager.showInfoButton();
       
       this.uiManager.showStatus('Connecting to MIDI devices...', 'info');
       
