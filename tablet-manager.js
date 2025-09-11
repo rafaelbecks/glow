@@ -19,8 +19,9 @@ export class TabletManager {
     this.baseLineWidth = options.lineWidth || SETTINGS.TABLET.DEFAULT_LINE_WIDTH;
     this.clearInterval = options.clearInterval || SETTINGS.TABLET.CLEAR_INTERVAL;
     
-    // Device reference
-    this.device = null;
+    // Device references - track all connected devices
+    this.devices = [];
+    this.activeDevice = null;
   }
 
   // Color generation methods
@@ -133,15 +134,30 @@ export class TabletManager {
         return false;
       }
 
-      this.device = devices[devices.length - 1];
-      await this.device.open();
-      console.log(`Connected to ${this.device.productName}`);
+      // Connect to all devices instead of just the last one
+      this.devices = [];
+      for (const device of devices) {
+        try {
+          await device.open();
+          console.log(`Connected to ${device.productName}`);
+          
+          // Set up input event listener for each device
+          device.addEventListener("inputreport", (e) => {
+            this.handleTabletInput(e, device);
+          });
+          
+          this.devices.push(device);
+        } catch (deviceError) {
+          console.warn(`Failed to connect to device ${device.productName}:`, deviceError);
+        }
+      }
 
-      // Set up input event listener
-      this.device.addEventListener("inputreport", (e) => {
-        this.handleTabletInput(e);
-      });
+      if (this.devices.length === 0) {
+        console.error("No devices could be connected");
+        return false;
+      }
 
+      console.log(`Connected to ${this.devices.length} tablet device(s)`);
       return true;
     } catch (error) {
       console.error("Error connecting to UGEE Q6", error);
@@ -149,7 +165,7 @@ export class TabletManager {
     }
   }
 
-  handleTabletInput(e) {
+  handleTabletInput(e, device) {
     if (e.reportId !== SETTINGS.TABLET.REPORT_ID) return;
 
     const dv = new DataView(e.data.buffer);
@@ -169,8 +185,24 @@ export class TabletManager {
     const tiltX = dv.getInt8(7);          // bits 56–63
     const tiltY = dv.getInt8(8);          // bits 64–71
 
-    // Handle tablet drawing
-    this.handleTabletData(x, y, pressure, tiltX, tiltY);
+    // Normalize pressure from 0-65535 to 0-1
+    const normalizedPressure = pressure / SETTINGS.TABLET.PRESSURE_MAX;
+
+    // Only process data if this device is active or if we need to determine the active device
+    if (this.activeDevice === null || this.activeDevice === device) {
+      // If we have pressure data (pen is touching), this becomes the active device
+      if (normalizedPressure > 0) {
+        if (this.activeDevice !== device) {
+          console.log(`Switching active device to: ${device.productName}`);
+          this.activeDevice = device;
+        }
+        // Handle tablet drawing
+        this.handleTabletData(x, y, pressure, tiltX, tiltY);
+      } else if (this.activeDevice === device) {
+        // If the active device reports no pressure, handle the stop drawing
+        this.handleTabletData(x, y, pressure, tiltX, tiltY);
+      }
+    }
   }
 
   handleTabletData(x, y, pressure, tiltX, tiltY) {
@@ -205,12 +237,19 @@ export class TabletManager {
     }
   }
 
+  // Reset active device (useful for debugging or manual switching)
+  resetActiveDevice() {
+    this.activeDevice = null;
+    console.log('Active device reset - next device with pressure data will become active');
+  }
+
   // Get current state for debugging
   getState() {
     return {
       drawing: this.drawing,
       strokeCount: this.strokes.length,
-      device: this.device ? this.device.productName : 'Not connected',
+      devices: this.devices.map(d => d.productName),
+      activeDevice: this.activeDevice ? this.activeDevice.productName : 'None',
       lineWidth: this.baseLineWidth
     };
   }
