@@ -1,5 +1,5 @@
 // Tablet/HID device management and drawing
-import { SETTINGS, UTILS } from './settings.js';
+import { SETTINGS } from './settings.js';
 
 export class TabletManager {
   constructor(canvas, options = {}) {
@@ -18,6 +18,7 @@ export class TabletManager {
     // Configuration
     this.baseLineWidth = options.lineWidth || SETTINGS.TABLET.DEFAULT_LINE_WIDTH;
     this.clearInterval = options.clearInterval || SETTINGS.TABLET.CLEAR_INTERVAL;
+    this.backgroundBleeding = options.backgroundBleeding !== undefined ? options.backgroundBleeding : SETTINGS.TABLET.BACKGROUND_BLEEDING;
     
     // Device references - track all connected devices
     this.devices = [];
@@ -39,6 +40,10 @@ export class TabletManager {
   // Drawing control methods
   setLineWidth(newWidth) {
     this.baseLineWidth = newWidth;
+  }
+
+  setBackgroundBleeding(enabled) {
+    this.backgroundBleeding = enabled;
   }
 
   startDrawing(x, y) {
@@ -116,6 +121,8 @@ export class TabletManager {
 
   clear() {
     this.strokes = [];
+    this.currentStroke = null;
+    this.drawing = false;
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 

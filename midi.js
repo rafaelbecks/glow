@@ -15,7 +15,6 @@ export class MIDIManager {
       gegoShape: [],
       sotoGrid: [],
       sotoGridRotated: [],
-      scanlineGradients: [],
       phyllotaxis: [],
       wovenNet: [],
       polygons: [],

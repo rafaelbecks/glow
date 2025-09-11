@@ -20,7 +20,6 @@ import {
   WovenNetLuminode,
   SinewaveLuminode,
   TriangleLuminode,
-  ScanlineGradientsLuminode,
   PolygonsLuminode
 } from './luminodes/index.js';
 
@@ -51,7 +50,6 @@ export class GLOWVisualizer {
       wovenNet: new WovenNetLuminode(this.canvasDrawer),
       sinewave: new SinewaveLuminode(this.canvasDrawer),
       triangle: new TriangleLuminode(this.canvasDrawer),
-      scanlineGradients: new ScanlineGradientsLuminode(this.canvasDrawer),
       polygons: new PolygonsLuminode(this.canvasDrawer)
     };
 
@@ -85,6 +83,7 @@ export class GLOWVisualizer {
     this.tabletPanel.on('clearTablet', () => this.clearTablet());
     this.tabletPanel.on('tabletWidthChange', (width) => this.setTabletWidth(width));
     this.tabletPanel.on('colorModeChange', (enabled) => this.setColorMode(enabled));
+    this.tabletPanel.on('backgroundBleedingChange', (enabled) => this.setBackgroundBleeding(enabled));
   }
 
   async start() {
@@ -137,7 +136,8 @@ export class GLOWVisualizer {
   }
 
   clearCanvas() {
-    this.canvasDrawer.clear();
+    this.canvasDrawer.clear(this.tabletManager.backgroundBleeding);
+    this.tabletManager.clearStrokes();
     this.uiManager.showStatus('Canvas cleared.', 'info');
   }
 
@@ -166,6 +166,11 @@ export class GLOWVisualizer {
     }
   }
 
+  setBackgroundBleeding(enabled) {
+    // Update the background bleeding setting in the tablet manager
+    this.tabletManager.setBackgroundBleeding(enabled);
+  }
+
   animate() {
     if (!this.isRunning) return;
 
@@ -176,7 +181,7 @@ export class GLOWVisualizer {
     this.midiManager.cleanupOldNotes();
 
     // Clear canvas with fade effect
-    this.canvasDrawer.clear();
+    this.canvasDrawer.clear(this.tabletManager.backgroundBleeding);
 
     // Get all active notes based on track assignments
     const activeNotes = this.midiManager.getActiveNotesForTracks();
@@ -215,9 +220,6 @@ export class GLOWVisualizer {
     } else {
       this.uiManager.hideLogoContainer();
     }
-
-    // Background gradient
-    this.luminodes.scanlineGradients.draw(t, activeNotes.scanlineGradients, ['#4444ff', '#ffeeaa', '#ff77cc']);
 
     // Soto grid animations
     this.luminodes.sotoGrid.draw(t, activeNotes.sotoGrid || [], false);

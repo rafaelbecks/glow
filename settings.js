@@ -115,7 +115,8 @@ export const SETTINGS = {
     PRESSURE_MAX: 65535,
     VENDOR_ID: 0x28BD,
     PRODUCT_ID: 0x2901,
-    REPORT_ID: 0x07
+    REPORT_ID: 0x07,
+    BACKGROUND_BLEEDING: true // Enable/disable background color bleeding effect
   },
 
   // Animation settings

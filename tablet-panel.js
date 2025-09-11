@@ -70,6 +70,18 @@ export class TabletPanel {
               Color Mode
             </label>
           </div>
+          
+          <div class="tablet-config-group">
+            <label>
+              <ion-icon name="brush-outline"></ion-icon>
+              Background Effects
+            </label>
+            <label class="checkbox-container">
+              <input id="backgroundBleedingToggle" type="checkbox" checked/>
+              <span class="checkmark"></span>
+              Background Bleeding
+            </label>
+          </div>
         </div>
       </div>
     `;
@@ -93,6 +105,7 @@ export class TabletPanel {
     const clearTabletBtn = this.panel.querySelector('#clearTablet');
     const tabletWidthSlider = this.panel.querySelector('#tabletWidth');
     const colorToggle = this.panel.querySelector('#colorToggle');
+    const backgroundBleedingToggle = this.panel.querySelector('#backgroundBleedingToggle');
 
     if (readTabletBtn) {
       readTabletBtn.addEventListener('click', () => {
@@ -117,6 +130,12 @@ export class TabletPanel {
     if (colorToggle) {
       colorToggle.addEventListener('change', (e) => {
         this.triggerCallback('colorModeChange', e.target.checked);
+      });
+    }
+
+    if (backgroundBleedingToggle) {
+      backgroundBleedingToggle.addEventListener('change', (e) => {
+        this.triggerCallback('backgroundBleedingChange', e.target.checked);
       });
     }
   }
@@ -174,6 +193,14 @@ export class TabletPanel {
   // Update color mode from external source
   updateColorMode(enabled) {
     const checkbox = this.panel.querySelector('#colorToggle');
+    if (checkbox) {
+      checkbox.checked = enabled;
+    }
+  }
+
+  // Update background bleeding from external source
+  updateBackgroundBleeding(enabled) {
+    const checkbox = this.panel.querySelector('#backgroundBleedingToggle');
     if (checkbox) {
       checkbox.checked = enabled;
     }

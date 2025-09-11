@@ -298,7 +298,6 @@ export class SidePanel {
       'wovenNet': 'Woven Net',
       'sinewave': 'Sine Wave',
       'triangle': 'Triangle',
-      'scanlineGradients': 'Scanline Gradients',
       'polygons': 'Polygons'
     };
     return nameMap[name] || name;
