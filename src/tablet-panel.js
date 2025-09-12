@@ -1,21 +1,21 @@
 // Tablet configuration panel component
 export class TabletPanel {
-  constructor(tabletManager) {
-    this.tabletManager = tabletManager;
-    this.isVisible = false;
-    this.panel = null;
-    this.callbacks = {};
-    
-    this.initializePanel();
-    this.setupEventListeners();
+  constructor (tabletManager) {
+    this.tabletManager = tabletManager
+    this.isVisible = false
+    this.panel = null
+    this.callbacks = {}
+
+    this.initializePanel()
+    this.setupEventListeners()
   }
 
-  initializePanel() {
+  initializePanel () {
     // Create the tablet panel container
-    this.panel = document.createElement('div');
-    this.panel.id = 'tabletPanel';
-    this.panel.className = 'tablet-panel';
-    
+    this.panel = document.createElement('div')
+    this.panel.id = 'tabletPanel'
+    this.panel.className = 'tablet-panel'
+
     // Create panel content
     this.panel.innerHTML = `
       <div class="tablet-panel-header">
@@ -134,213 +134,213 @@ export class TabletPanel {
           </div>
         </div>
       </div>
-    `;
-    
+    `
+
     // Add to DOM
-    document.body.appendChild(this.panel);
-    
+    document.body.appendChild(this.panel)
+
     // Initially hidden
-    this.hide();
+    this.hide()
   }
 
-  setupEventListeners() {
+  setupEventListeners () {
     // Toggle panel visibility
-    const toggleBtn = this.panel.querySelector('#toggleTabletPanel');
+    const toggleBtn = this.panel.querySelector('#toggleTabletPanel')
     toggleBtn.addEventListener('click', () => {
-      this.toggle();
-    });
+      this.toggle()
+    })
 
     // Tablet controls
-    const readTabletBtn = this.panel.querySelector('#readTabletData');
-    const clearTabletBtn = this.panel.querySelector('#clearTablet');
-    const tabletWidthSlider = this.panel.querySelector('#tabletWidth');
-    const colorToggle = this.panel.querySelector('#colorToggle');
-    const backgroundBleedingToggle = this.panel.querySelector('#backgroundBleedingToggle');
-    const canvasLayerFront = this.panel.querySelector('#canvasLayerFront');
-    const canvasLayerBack = this.panel.querySelector('#canvasLayerBack');
-    const geometricModeToggle = this.panel.querySelector('#geometricModeToggle');
-    const shapeDetectionThreshold = this.panel.querySelector('#shapeDetectionThreshold');
+    const readTabletBtn = this.panel.querySelector('#readTabletData')
+    const clearTabletBtn = this.panel.querySelector('#clearTablet')
+    const tabletWidthSlider = this.panel.querySelector('#tabletWidth')
+    const colorToggle = this.panel.querySelector('#colorToggle')
+    const backgroundBleedingToggle = this.panel.querySelector('#backgroundBleedingToggle')
+    const canvasLayerFront = this.panel.querySelector('#canvasLayerFront')
+    const canvasLayerBack = this.panel.querySelector('#canvasLayerBack')
+    const geometricModeToggle = this.panel.querySelector('#geometricModeToggle')
+    const shapeDetectionThreshold = this.panel.querySelector('#shapeDetectionThreshold')
 
     if (readTabletBtn) {
       readTabletBtn.addEventListener('click', () => {
-        this.triggerCallback('connectTablet');
-      });
+        this.triggerCallback('connectTablet')
+      })
     }
 
     if (clearTabletBtn) {
       clearTabletBtn.addEventListener('click', () => {
-        this.triggerCallback('clearTablet');
-      });
+        this.triggerCallback('clearTablet')
+      })
     }
 
     if (tabletWidthSlider) {
       tabletWidthSlider.addEventListener('input', (e) => {
-        const value = parseInt(e.target.value);
-        this.updateRangeValue(value);
-        this.triggerCallback('tabletWidthChange', value);
-      });
+        const value = parseInt(e.target.value)
+        this.updateRangeValue(value)
+        this.triggerCallback('tabletWidthChange', value)
+      })
     }
 
     if (colorToggle) {
       colorToggle.addEventListener('change', (e) => {
-        this.triggerCallback('colorModeChange', e.target.checked);
-      });
+        this.triggerCallback('colorModeChange', e.target.checked)
+      })
     }
 
     if (backgroundBleedingToggle) {
       backgroundBleedingToggle.addEventListener('change', (e) => {
-        this.triggerCallback('backgroundBleedingChange', e.target.checked);
-      });
+        this.triggerCallback('backgroundBleedingChange', e.target.checked)
+      })
     }
 
     if (canvasLayerFront) {
       canvasLayerFront.addEventListener('change', (e) => {
         if (e.target.checked) {
-          this.triggerCallback('canvasLayerChange', 'front');
+          this.triggerCallback('canvasLayerChange', 'front')
         }
-      });
+      })
     }
 
     if (canvasLayerBack) {
       canvasLayerBack.addEventListener('change', (e) => {
         if (e.target.checked) {
-          this.triggerCallback('canvasLayerChange', 'back');
+          this.triggerCallback('canvasLayerChange', 'back')
         }
-      });
+      })
     }
 
     if (geometricModeToggle) {
       geometricModeToggle.addEventListener('change', (e) => {
-        this.toggleGeometricSettings(e.target.checked);
-        this.triggerCallback('geometricModeChange', e.target.checked);
-      });
+        this.toggleGeometricSettings(e.target.checked)
+        this.triggerCallback('geometricModeChange', e.target.checked)
+      })
     }
 
     if (shapeDetectionThreshold) {
       shapeDetectionThreshold.addEventListener('input', (e) => {
-        const value = parseFloat(e.target.value);
-        this.updateRangeValue(value, 'shapeDetectionThreshold');
-        this.triggerCallback('shapeDetectionThresholdChange', value);
-      });
+        const value = parseFloat(e.target.value)
+        this.updateRangeValue(value, 'shapeDetectionThreshold')
+        this.triggerCallback('shapeDetectionThresholdChange', value)
+      })
     }
   }
 
   // Callback system
-  on(event, callback) {
+  on (event, callback) {
     if (!this.callbacks[event]) {
-      this.callbacks[event] = [];
+      this.callbacks[event] = []
     }
-    this.callbacks[event].push(callback);
+    this.callbacks[event].push(callback)
   }
 
-  triggerCallback(event, data) {
+  triggerCallback (event, data) {
     if (this.callbacks[event]) {
-      this.callbacks[event].forEach(callback => callback(data));
+      this.callbacks[event].forEach(callback => callback(data))
     }
   }
 
   // Panel visibility
-  show() {
-    this.panel.classList.add('visible');
-    this.isVisible = true;
+  show () {
+    this.panel.classList.add('visible')
+    this.isVisible = true
   }
 
-  hide() {
-    this.panel.classList.remove('visible');
-    this.isVisible = false;
+  hide () {
+    this.panel.classList.remove('visible')
+    this.isVisible = false
   }
 
-  toggle() {
+  toggle () {
     if (this.isVisible) {
-      this.hide();
+      this.hide()
     } else {
-      this.show();
+      this.show()
     }
   }
 
   // Update range value display
-  updateRangeValue(value, selector = null) {
+  updateRangeValue (value, selector = null) {
     if (selector) {
-      const rangeValue = this.panel.querySelector(`#${selector}`).parentElement.querySelector('.range-value');
+      const rangeValue = this.panel.querySelector(`#${selector}`).parentElement.querySelector('.range-value')
       if (rangeValue) {
-        rangeValue.textContent = value.toFixed(1);
+        rangeValue.textContent = value.toFixed(1)
       }
     } else {
-      const rangeValue = this.panel.querySelector('.range-value');
+      const rangeValue = this.panel.querySelector('.range-value')
       if (rangeValue) {
-        rangeValue.textContent = value;
+        rangeValue.textContent = value
       }
     }
   }
 
   // Toggle geometric settings visibility
-  toggleGeometricSettings(enabled) {
-    const geometricSettings = this.panel.querySelector('#geometricSettings');
+  toggleGeometricSettings (enabled) {
+    const geometricSettings = this.panel.querySelector('#geometricSettings')
     if (geometricSettings) {
-      geometricSettings.style.display = enabled ? 'block' : 'none';
+      geometricSettings.style.display = enabled ? 'block' : 'none'
     }
   }
 
   // Update tablet width from external source
-  updateTabletWidth(value) {
-    const slider = this.panel.querySelector('#tabletWidth');
+  updateTabletWidth (value) {
+    const slider = this.panel.querySelector('#tabletWidth')
     if (slider) {
-      slider.value = value;
-      this.updateRangeValue(value);
+      slider.value = value
+      this.updateRangeValue(value)
     }
   }
 
   // Update color mode from external source
-  updateColorMode(enabled) {
-    const checkbox = this.panel.querySelector('#colorToggle');
+  updateColorMode (enabled) {
+    const checkbox = this.panel.querySelector('#colorToggle')
     if (checkbox) {
-      checkbox.checked = enabled;
+      checkbox.checked = enabled
     }
   }
 
   // Update background bleeding from external source
-  updateBackgroundBleeding(enabled) {
-    const checkbox = this.panel.querySelector('#backgroundBleedingToggle');
+  updateBackgroundBleeding (enabled) {
+    const checkbox = this.panel.querySelector('#backgroundBleedingToggle')
     if (checkbox) {
-      checkbox.checked = enabled;
+      checkbox.checked = enabled
     }
   }
 
   // Update canvas layer from external source
-  updateCanvasLayer(layer) {
-    const frontRadio = this.panel.querySelector('#canvasLayerFront');
-    const backRadio = this.panel.querySelector('#canvasLayerBack');
+  updateCanvasLayer (layer) {
+    const frontRadio = this.panel.querySelector('#canvasLayerFront')
+    const backRadio = this.panel.querySelector('#canvasLayerBack')
     if (frontRadio && backRadio) {
       if (layer === 'front') {
-        frontRadio.checked = true;
-        backRadio.checked = false;
+        frontRadio.checked = true
+        backRadio.checked = false
       } else if (layer === 'back') {
-        frontRadio.checked = false;
-        backRadio.checked = true;
+        frontRadio.checked = false
+        backRadio.checked = true
       }
     }
   }
 
   // Update geometric mode from external source
-  updateGeometricMode(enabled) {
-    const checkbox = this.panel.querySelector('#geometricModeToggle');
+  updateGeometricMode (enabled) {
+    const checkbox = this.panel.querySelector('#geometricModeToggle')
     if (checkbox) {
-      checkbox.checked = enabled;
-      this.toggleGeometricSettings(enabled);
+      checkbox.checked = enabled
+      this.toggleGeometricSettings(enabled)
     }
   }
 
   // Update shape detection threshold from external source
-  updateShapeDetectionThreshold(value) {
-    const slider = this.panel.querySelector('#shapeDetectionThreshold');
+  updateShapeDetectionThreshold (value) {
+    const slider = this.panel.querySelector('#shapeDetectionThreshold')
     if (slider) {
-      slider.value = value;
-      this.updateRangeValue(value, 'shapeDetectionThreshold');
+      slider.value = value
+      this.updateRangeValue(value, 'shapeDetectionThreshold')
     }
   }
 
   // Public API
-  isPanelVisible() {
-    return this.isVisible;
+  isPanelVisible () {
+    return this.isVisible
   }
 }

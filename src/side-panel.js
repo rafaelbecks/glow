@@ -1,21 +1,21 @@
 // Side panel UI component for track management
 export class SidePanel {
-  constructor(trackManager) {
-    this.trackManager = trackManager;
-    this.isVisible = false;
-    this.panel = null;
-    this.callbacks = {};
-    
-    this.initializePanel();
-    this.setupEventListeners();
+  constructor (trackManager) {
+    this.trackManager = trackManager
+    this.isVisible = false
+    this.panel = null
+    this.callbacks = {}
+
+    this.initializePanel()
+    this.setupEventListeners()
   }
 
-  initializePanel() {
+  initializePanel () {
     // Create the side panel container
-    this.panel = document.createElement('div');
-    this.panel.id = 'sidePanel';
-    this.panel.className = 'side-panel';
-    
+    this.panel = document.createElement('div')
+    this.panel.id = 'sidePanel'
+    this.panel.className = 'side-panel'
+
     // Create panel content
     this.panel.innerHTML = `
       <div class="side-panel-header">
@@ -29,90 +29,90 @@ export class SidePanel {
           <!-- Tracks will be dynamically generated -->
         </div>
       </div>
-    `;
-    
+    `
+
     // Add to DOM
-    document.body.appendChild(this.panel);
-    
+    document.body.appendChild(this.panel)
+
     // Initially hidden
-    this.hide();
+    this.hide()
   }
 
-  setupEventListeners() {
+  setupEventListeners () {
     // Toggle panel visibility
-    const toggleBtn = this.panel.querySelector('#togglePanel');
+    const toggleBtn = this.panel.querySelector('#togglePanel')
     toggleBtn.addEventListener('click', () => {
-      this.toggle();
-    });
+      this.toggle()
+    })
 
     // Track manager events
     this.trackManager.on('trackUpdated', (data) => {
-      this.updateTrackUI(data.trackId, data.track);
-    });
+      this.updateTrackUI(data.trackId, data.track)
+    })
 
     this.trackManager.on('midiDeviceAdded', (data) => {
-      console.log(`SidePanel: MIDI device added - ${data.device.name}`);
-      this.updateMidiDeviceDropdowns();
-    });
+      console.log(`SidePanel: MIDI device added - ${data.device.name}`)
+      this.updateMidiDeviceDropdowns()
+    })
 
     this.trackManager.on('midiDeviceRemoved', (data) => {
-      this.updateMidiDeviceDropdowns();
-    });
+      this.updateMidiDeviceDropdowns()
+    })
 
     this.trackManager.on('tracksReset', () => {
-      this.renderTracks();
-    });
+      this.renderTracks()
+    })
   }
 
   // Callback system
-  on(event, callback) {
+  on (event, callback) {
     if (!this.callbacks[event]) {
-      this.callbacks[event] = [];
+      this.callbacks[event] = []
     }
-    this.callbacks[event].push(callback);
+    this.callbacks[event].push(callback)
   }
 
-  triggerCallback(event, data) {
+  triggerCallback (event, data) {
     if (this.callbacks[event]) {
-      this.callbacks[event].forEach(callback => callback(data));
+      this.callbacks[event].forEach(callback => callback(data))
     }
   }
 
   // Panel visibility
-  show() {
-    this.panel.classList.add('visible');
-    this.isVisible = true;
-    this.renderTracks();
+  show () {
+    this.panel.classList.add('visible')
+    this.isVisible = true
+    this.renderTracks()
   }
 
-  hide() {
-    this.panel.classList.remove('visible');
-    this.isVisible = false;
+  hide () {
+    this.panel.classList.remove('visible')
+    this.isVisible = false
   }
 
-  toggle() {
+  toggle () {
     if (this.isVisible) {
-      this.hide();
+      this.hide()
     } else {
-      this.show();
+      this.show()
     }
   }
 
   // Render all tracks
-  renderTracks() {
-    const tracksContainer = this.panel.querySelector('#tracksContainer');
-    const tracks = this.trackManager.getTracks();
-    
-    tracksContainer.innerHTML = tracks.map(track => this.createTrackHTML(track)).join('');
-    
+  renderTracks () {
+    const tracksContainer = this.panel.querySelector('#tracksContainer')
+    const tracks = this.trackManager.getTracks()
+
+    tracksContainer.innerHTML = tracks.map(track => this.createTrackHTML(track)).join('')
+
     // Add event listeners to track elements
-    this.attachTrackEventListeners();
+    this.attachTrackEventListeners()
   }
 
-  createTrackHTML(track) {
-    const midiDevices = this.trackManager.getAvailableMidiDevices();
-    const luminodes = this.trackManager.getAvailableLuminodes();
-    
+  createTrackHTML (track) {
+    const midiDevices = this.trackManager.getAvailableMidiDevices()
+    const luminodes = this.trackManager.getAvailableLuminodes()
+
     return `
       <div class="track-tile" data-track-id="${track.id}">
         <div class="track-header">
@@ -138,7 +138,7 @@ export class SidePanel {
             </label>
             <select class="midi-device-select" data-track-id="${track.id}">
               <option value="">Select Device</option>
-              ${midiDevices.map(device => 
+              ${midiDevices.map(device =>
                 `<option value="${device.id}" ${track.midiDevice === device.id ? 'selected' : ''}>
                   ${device.name}
                 </option>`
@@ -164,7 +164,7 @@ export class SidePanel {
             </label>
             <select class="luminode-select" data-track-id="${track.id}">
               <option value="">Select Luminode</option>
-              ${luminodes.map(luminode => 
+              ${luminodes.map(luminode =>
                 `<option value="${luminode}" ${track.luminode === luminode ? 'selected' : ''}>
                   ${this.normalizeLuminodeName(luminode)}
                 </option>`
@@ -173,138 +173,138 @@ export class SidePanel {
           </div>
         </div>
       </div>
-    `;
+    `
   }
 
-  attachTrackEventListeners() {
-    const trackTiles = this.panel.querySelectorAll('.track-tile');
-    
+  attachTrackEventListeners () {
+    const trackTiles = this.panel.querySelectorAll('.track-tile')
+
     trackTiles.forEach(tile => {
-      const trackId = parseInt(tile.dataset.trackId);
-      
+      const trackId = parseInt(tile.dataset.trackId)
+
       // Mute/Solo buttons
-      const muteBtn = tile.querySelector('.mute-btn');
-      const soloBtn = tile.querySelector('.solo-btn');
-      
+      const muteBtn = tile.querySelector('.mute-btn')
+      const soloBtn = tile.querySelector('.solo-btn')
+
       muteBtn.addEventListener('click', () => {
-        this.trackManager.toggleMute(trackId);
-      });
-      
+        this.trackManager.toggleMute(trackId)
+      })
+
       soloBtn.addEventListener('click', () => {
-        this.trackManager.toggleSolo(trackId);
-      });
-      
+        this.trackManager.toggleSolo(trackId)
+      })
+
       // MIDI device selection
-      const midiSelect = tile.querySelector('.midi-device-select');
+      const midiSelect = tile.querySelector('.midi-device-select')
       midiSelect.addEventListener('change', (e) => {
-        this.trackManager.setMidiDevice(trackId, e.target.value || null);
-      });
-      
+        this.trackManager.setMidiDevice(trackId, e.target.value || null)
+      })
+
       // Luminode selection
-      const luminodeSelect = tile.querySelector('.luminode-select');
+      const luminodeSelect = tile.querySelector('.luminode-select')
       luminodeSelect.addEventListener('change', (e) => {
-        this.trackManager.setLuminode(trackId, e.target.value || null);
-      });
-    });
+        this.trackManager.setLuminode(trackId, e.target.value || null)
+      })
+    })
   }
 
-  updateTrackUI(trackId, track) {
-    const trackTile = this.panel.querySelector(`[data-track-id="${trackId}"]`);
-    if (!trackTile) return;
-    
+  updateTrackUI (trackId, track) {
+    const trackTile = this.panel.querySelector(`[data-track-id="${trackId}"]`)
+    if (!trackTile) return
+
     // Update mute/solo button states
-    const muteBtn = trackTile.querySelector('.mute-btn');
-    const soloBtn = trackTile.querySelector('.solo-btn');
-    
-    muteBtn.classList.toggle('active', track.muted);
-    soloBtn.classList.toggle('active', track.solo);
-    
+    const muteBtn = trackTile.querySelector('.mute-btn')
+    const soloBtn = trackTile.querySelector('.solo-btn')
+
+    muteBtn.classList.toggle('active', track.muted)
+    soloBtn.classList.toggle('active', track.solo)
+
     // Update dropdown selections
-    const midiSelect = trackTile.querySelector('.midi-device-select');
-    const luminodeSelect = trackTile.querySelector('.luminode-select');
-    
-    midiSelect.value = track.midiDevice || '';
-    luminodeSelect.value = track.luminode || '';
+    const midiSelect = trackTile.querySelector('.midi-device-select')
+    const luminodeSelect = trackTile.querySelector('.luminode-select')
+
+    midiSelect.value = track.midiDevice || ''
+    luminodeSelect.value = track.luminode || ''
   }
 
-  updateMidiDeviceDropdowns() {
-    const tracks = this.trackManager.getTracks();
-    const midiDevices = this.trackManager.getAvailableMidiDevices();
-    
-    console.log(`SidePanel: Updating dropdowns with ${midiDevices.length} devices:`, midiDevices.map(d => d.name));
-    
+  updateMidiDeviceDropdowns () {
+    const tracks = this.trackManager.getTracks()
+    const midiDevices = this.trackManager.getAvailableMidiDevices()
+
+    console.log(`SidePanel: Updating dropdowns with ${midiDevices.length} devices:`, midiDevices.map(d => d.name))
+
     tracks.forEach(track => {
-      const trackTile = this.panel.querySelector(`[data-track-id="${track.id}"]`);
-      if (!trackTile) return;
-      
-      const midiSelect = trackTile.querySelector('.midi-device-select');
-      const currentValue = midiSelect.value;
-      
+      const trackTile = this.panel.querySelector(`[data-track-id="${track.id}"]`)
+      if (!trackTile) return
+
+      const midiSelect = trackTile.querySelector('.midi-device-select')
+      const currentValue = midiSelect.value
+
       // Update options
       midiSelect.innerHTML = `
         <option value="">Select Device</option>
-        ${midiDevices.map(device => 
+        ${midiDevices.map(device =>
           `<option value="${device.id}">${device.name}</option>`
         ).join('')}
-      `;
-      
+      `
+
       // Restore selection if still valid
       if (currentValue && midiDevices.find(d => d.id === currentValue)) {
-        midiSelect.value = currentValue;
+        midiSelect.value = currentValue
       } else {
-        midiSelect.value = '';
-        this.trackManager.setMidiDevice(track.id, null);
+        midiSelect.value = ''
+        this.trackManager.setMidiDevice(track.id, null)
       }
-    });
+    })
   }
 
   // Update activity indicators
-  updateActivityIndicators(activeNotes) {
-    const tracks = this.trackManager.getTracks();
-    
+  updateActivityIndicators (activeNotes) {
+    const tracks = this.trackManager.getTracks()
+
     tracks.forEach(track => {
-      const indicator = this.panel.querySelector(`#activity-${track.id}`);
+      const indicator = this.panel.querySelector(`#activity-${track.id}`)
       if (indicator) {
-        const hasActivity = track.luminode && activeNotes[track.luminode] && activeNotes[track.luminode].length > 0;
-        indicator.classList.toggle('active', hasActivity);
+        const hasActivity = track.luminode && activeNotes[track.luminode] && activeNotes[track.luminode].length > 0
+        indicator.classList.toggle('active', hasActivity)
       }
-    });
+    })
   }
 
   // Get track color from Soto palette
-  getTrackColor(trackId) {
+  getTrackColor (trackId) {
     const colors = [
       '#EF4136', // Red-orange
       '#005BBB', // Blue
       '#FCEE09', // Yellow
-      '#2E7D32'  // Green
-    ];
-    return colors[(trackId - 1) % colors.length];
+      '#2E7D32' // Green
+    ]
+    return colors[(trackId - 1) % colors.length]
   }
 
   // Normalize luminode names for display
-  normalizeLuminodeName(name) {
+  normalizeLuminodeName (name) {
     const nameMap = {
-      'lissajous': 'Lissajous',
-      'harmonograph': 'Harmonograph',
-      'sphere': 'Sphere',
-      'gegoNet': 'Gego Net',
-      'gegoShape': 'Gego Shape',
-      'sotoGrid': 'Soto Grid',
-      'sotoGridRotated': 'Soto Grid Rotated',
-      'whitneyLines': 'Whitney Lines',
-      'phyllotaxis': 'Phyllotaxis',
-      'moireCircles': 'Moire Circles',
-      'wovenNet': 'Woven Net',
-      'sinewave': 'Sine Wave',
-      'triangle': 'Triangle',
-      'polygons': 'Polygons'
-    };
-    return nameMap[name] || name;
+      lissajous: 'Lissajous',
+      harmonograph: 'Harmonograph',
+      sphere: 'Sphere',
+      gegoNet: 'Gego Net',
+      gegoShape: 'Gego Shape',
+      sotoGrid: 'Soto Grid',
+      sotoGridRotated: 'Soto Grid Rotated',
+      whitneyLines: 'Whitney Lines',
+      phyllotaxis: 'Phyllotaxis',
+      moireCircles: 'Moire Circles',
+      wovenNet: 'Woven Net',
+      sinewave: 'Sine Wave',
+      triangle: 'Triangle',
+      polygons: 'Polygons'
+    }
+    return nameMap[name] || name
   }
 
   // Public API
-  isPanelVisible() {
-    return this.isVisible;
+  isPanelVisible () {
+    return this.isVisible
   }
 }

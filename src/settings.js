@@ -22,7 +22,7 @@ export const SETTINGS = {
       '#2E7D32', // Green
       '#FFFFFF', // White
       '#4A148C', // Purple
-      '#8B0000', // Dark red
+      '#8B0000' // Dark red
     ],
     POLYGON_COLORS: ['#f93822', '#fcdc4d', '#00a6a6', '#90be6d', '#f94144', '#ff006e', '#8338ec']
   },
@@ -125,12 +125,12 @@ export const SETTINGS = {
     FADE_DURATION: 2000, // 2 seconds
     MAX_AGE: 3000 // 3 seconds
   }
-};
+}
 
 // MIDI channel mappings
 export const MIDI_CHANNELS = {
   'bus 1': 'lissajous',
-  'bus 2': 'harmonograph', 
+  'bus 2': 'harmonograph',
   'bus 3': 'sphere',
   'bus 4': 'gegoNet',
   'bus 5': 'sinewave',
@@ -144,29 +144,29 @@ export const MIDI_CHANNELS = {
   'bus 13': 'wovenNet',
   'bus 14': 'polygons',
   'bus 15': 'whitneyLines'
-};
+}
 
 // Utility functions
 export const UTILS = {
   pitchToColor: (midi) => {
-    const hue = (midi % 14) * 30;
-    return `hsla(${hue}, 100%, 70%, 0.6)`;
+    const hue = (midi % 14) * 30
+    return `hsla(${hue}, 100%, 70%, 0.6)`
   },
 
   hexToRgba: (hex, alpha = 1) => {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    const r = parseInt(hex.slice(1, 3), 16)
+    const g = parseInt(hex.slice(3, 5), 16)
+    const b = parseInt(hex.slice(5, 7), 16)
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`
   },
 
   rotate3D: (x, y, z, angleX, angleY) => {
     // Rotate around X axis
-    let y1 = y * Math.cos(angleX) - z * Math.sin(angleX);
-    let z1 = y * Math.sin(angleX) + z * Math.cos(angleX);
+    const y1 = y * Math.cos(angleX) - z * Math.sin(angleX)
+    const z1 = y * Math.sin(angleX) + z * Math.cos(angleX)
     // Rotate around Y axis
-    let x1 = x * Math.cos(angleY) + z1 * Math.sin(angleY);
-    let z2 = -x * Math.sin(angleY) + z1 * Math.cos(angleY);
-    return [x1, y1, z2];
+    const x1 = x * Math.cos(angleY) + z1 * Math.sin(angleY)
+    const z2 = -x * Math.sin(angleY) + z1 * Math.cos(angleY)
+    return [x1, y1, z2]
   }
-};
+}

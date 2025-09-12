@@ -1,5 +1,10 @@
 # G.L.O.W. (Geometric Light Oscillation Workstation)
 
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+![Web MIDI API](https://img.shields.io/badge/Web%20MIDI%20API-supported-green)
+![Web HID API](https://img.shields.io/badge/Web%20HID%20API-supported-green)
+[![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
+
 A generative visual playground for sound-reactive geometry
 
 G.L.O.W. is a lightweight, modular, MIDI and HID reactive visual engine that draws inspiration from early computer graphics, kinetic art, geometric abstraction, and pioneers like Jesús Rafael Soto, Gego and John Whitney. It allows musicians, performers, and artists to visualize sound through structured, evolving geometries in real time.
