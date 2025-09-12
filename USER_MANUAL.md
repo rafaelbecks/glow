@@ -6,15 +6,8 @@
 
 ## What is G.L.O.W.?
 
-G.L.O.W. is a real-time visual instrument that transforms your music into beautiful, geometric light patterns. Inspired by pioneers of kinetic art like Jesús Rafael Soto, Gego, and John Whitney, it creates structured, evolving geometries that dance with your sound in real time.
+G.L.O.W. is a real-time visual instrument that transforms your music into geometric light patterns. Inspired by pioneers of kinetic art like Jesús Rafael Soto, Gego, and John Whitney, it creates structured, evolving geometries that renders with your sound (MIDI input) in real time.
 
-Perfect for:
-- **Musicians** performing live or in the studio
-- **Visual artists** creating interactive installations
-- **Performers** adding dynamic visuals to their shows
-- **Anyone** who wants to see their music come to life
-
----
 
 ## Getting Started
 
@@ -22,7 +15,7 @@ Perfect for:
 1. **Open the application** in Chrome browser
 2. **Click "Start Visualizer"** to initialize MIDI
 3. **Connect your MIDI device** (keyboard, controller, etc.)
-4. **Start playing** and watch the magic happen!
+4. **Map a track with a visual pattern (luminodes)** and watch the geometry unfold!
 
 ### System Requirements
 - Modern web browser (Chrome recommended)
@@ -50,7 +43,7 @@ Choose from 15 unique visual patterns, each inspired by geometric art:
 - **Sine Waves** - Pure harmonic visualizations
 
 **3D Geometry:**
-- **Sphere** - Wireframe sphere with 3D rotation
+- **Sphere** - Wireframe sphere with 3D rotation and deformation
 - **Polygons** - Stacked shapes with organic deformation
 
 **Art-Inspired Patterns:**
@@ -74,7 +67,6 @@ Choose from 15 unique visual patterns, each inspired by geometric art:
 - **🎛️ Track Panel** - Open the track management interface
 - **⚙️ Settings** - Access advanced controls and preferences
 - **C** - Clear the canvas
-- **Ctrl+Option+Y** - Toggle status messages
 
 ### Track Management
 1. **Open the track panel** by clicking the 🎛️ button
