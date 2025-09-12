@@ -122,7 +122,6 @@ export class TabletPanel {
           
           <div class="tablet-config-group" id="geometricSettings" style="display: none;">
             <label>
-              <ion-icon name="tune-outline"></ion-icon>
               Detection Sensitivity
             </label>
             <div class="range-container">

@@ -61,7 +61,7 @@ export class GlowLogo extends HTMLElement {
 
   async loadSVG() {
     try {
-      const response = await fetch('glow-logo.svg');
+      const response = await fetch('assets/glow-logo.svg');
       const svgText = await response.text();
       const parser = new DOMParser();
       const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');

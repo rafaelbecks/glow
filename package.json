@@ -1,0 +1,16 @@
+{
+  "name": "glow",
+  "version": "1.0.0",
+  "description": "Geometric Light Oscillation Workstation",
+  "type": "module",
+  "scripts": {
+    "start": "python3 -m http.server 8000"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  },
+  "keywords": ["visualization", "midi", "canvas", "geometry", "art"],
+  "author": "Rafael Becerra",
+  "license": "MIT"
+}
+

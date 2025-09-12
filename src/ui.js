@@ -258,7 +258,7 @@ export class UIManager {
     if (this.elements.infoModal && this.elements.infoModalBody) {
       // Load and parse the markdown content
       try {
-        const response = await fetch('USER_MANUAL.md');
+        const response = await fetch('../USER_MANUAL.md');
         const markdownContent = await response.text();
         
         // Use marked to convert markdown to HTML
