@@ -92,6 +92,8 @@ export class GLOWVisualizer {
     this.tabletPanel.on('colorModeChange', (enabled) => this.setColorMode(enabled));
     this.tabletPanel.on('backgroundBleedingChange', (enabled) => this.setBackgroundBleeding(enabled));
     this.tabletPanel.on('canvasLayerChange', (layer) => this.setCanvasLayer(layer));
+    this.tabletPanel.on('geometricModeChange', (enabled) => this.setGeometricMode(enabled));
+    this.tabletPanel.on('shapeDetectionThresholdChange', (threshold) => this.setShapeDetectionThreshold(threshold));
   }
 
   async start() {
@@ -182,6 +184,16 @@ export class GLOWVisualizer {
   setCanvasLayer(layer) {
     // Update the canvas layer order in the tablet manager
     this.tabletManager.setCanvasLayerOrder(layer);
+  }
+
+  setGeometricMode(enabled) {
+    // Update the geometric mode in the tablet manager
+    this.tabletManager.setGeometricMode(enabled);
+  }
+
+  setShapeDetectionThreshold(threshold) {
+    // Update the shape detection threshold in the tablet manager
+    this.tabletManager.setShapeDetectionThreshold(threshold);
   }
 
   animate() {

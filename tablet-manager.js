@@ -1,5 +1,6 @@
 // Tablet/HID device management and drawing
 import { SETTINGS } from './settings.js';
+import { GeometricUtils } from './geometric-utils.js';
 
 export class TabletManager {
   constructor(canvas, options = {}) {
@@ -20,6 +21,11 @@ export class TabletManager {
     this.clearInterval = options.clearInterval || SETTINGS.TABLET.CLEAR_INTERVAL;
     this.backgroundBleeding = options.backgroundBleeding !== undefined ? options.backgroundBleeding : SETTINGS.TABLET.BACKGROUND_BLEEDING;
     this.canvasLayerOrder = options.canvasLayerOrder || SETTINGS.TABLET.CANVAS_LAYER_ORDER;
+    
+    // Geometric drawing settings
+    this.geometricMode = options.geometricMode || false;
+    this.shapeDetectionThreshold = options.shapeDetectionThreshold || 0.8; // 0-1, higher = more strict
+    this.minPointsForShape = options.minPointsForShape || 3;
     
     // Device references - track all connected devices
     this.devices = [];
@@ -58,6 +64,14 @@ export class TabletManager {
     this.updateCanvasZIndex();
   }
 
+  setGeometricMode(enabled) {
+    this.geometricMode = enabled;
+  }
+
+  setShapeDetectionThreshold(threshold) {
+    this.shapeDetectionThreshold = Math.max(0, Math.min(1, threshold));
+  }
+
   updateCanvasZIndex() {
     if (this.canvas) {
       if (this.canvasLayerOrder === 'front') {
@@ -91,6 +105,20 @@ export class TabletManager {
   stopDrawing() {
     this.drawing = false;
     if (this.currentStroke && this.currentStroke.points.length > 1) {
+      // Check for geometric shapes if geometric mode is enabled
+      if (this.geometricMode) {
+        const detectedShape = GeometricUtils.detectGeometricShape(this.currentStroke.points, {
+          shapeDetectionThreshold: this.shapeDetectionThreshold,
+          minPointsForShape: this.minPointsForShape
+        });
+        if (detectedShape) {
+          this.currentStroke.geometricShape = detectedShape;
+          // Clear the canvas and redraw all strokes with geometric shapes
+          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+          this.redrawAllStrokes();
+        }
+      }
+      
       // Add completed stroke to the strokes array
       this.strokes.push(this.currentStroke);
     }
@@ -108,7 +136,14 @@ export class TabletManager {
     // Add point to current stroke
     this.currentStroke.points.push({ x, y, timestamp: performance.now() });
 
-    // Draw the current stroke
+    // If geometric mode is enabled, don't draw freehand - wait for shape detection
+    if (this.geometricMode) {
+      this.lastX = x;
+      this.lastY = y;
+      return;
+    }
+
+    // Draw the current stroke (freehand mode)
     this.ctx.strokeStyle = this.currentStroke.color;
     this.ctx.lineWidth = lineWidth;
     this.ctx.shadowColor = this.currentStroke.color;
@@ -134,6 +169,32 @@ export class TabletManager {
     this.drawing = false;
     // Clear the tablet canvas completely (no background bleeding)
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  }
+
+
+  // Redraw all strokes, using geometric shapes when available
+  redrawAllStrokes() {
+    for (const stroke of this.strokes) {
+      if (stroke.geometricShape) {
+        GeometricUtils.renderGeometricShape(this.ctx, stroke);
+      } else {
+        // Draw freehand stroke
+        this.ctx.strokeStyle = stroke.color;
+        this.ctx.lineWidth = stroke.lineWidth;
+        this.ctx.shadowColor = stroke.color;
+        this.ctx.shadowBlur = stroke.lineWidth * 0.5;
+        this.ctx.beginPath();
+        
+        if (stroke.points.length > 0) {
+          this.ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+          for (let i = 1; i < stroke.points.length; i++) {
+            this.ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+          }
+        }
+        
+        this.ctx.stroke();
+      }
+    }
   }
 
   // HID device connection
@@ -267,7 +328,9 @@ export class TabletManager {
       strokeCount: this.strokes.length,
       devices: this.devices.map(d => d.productName),
       activeDevice: this.activeDevice ? this.activeDevice.productName : 'None',
-      lineWidth: this.baseLineWidth
+      lineWidth: this.baseLineWidth,
+      geometricMode: this.geometricMode,
+      shapeDetectionThreshold: this.shapeDetectionThreshold
     };
   }
 }

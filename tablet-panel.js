@@ -104,6 +104,35 @@ export class TabletPanel {
               Choose whether tablet drawing appears in front of or behind luminodes
             </div>
           </div>
+          
+          <div class="tablet-config-group">
+            <label>
+              <ion-icon name="shapes-outline"></ion-icon>
+              Geometric Drawing
+            </label>
+            <label class="checkbox-container">
+              <input id="geometricModeToggle" type="checkbox"/>
+              <span class="checkmark"></span>
+              Enable Shape Detection
+            </label>
+            <div class="setting-description">
+              Automatically convert strokes to geometric shapes (lines, circles, rectangles, triangles)
+            </div>
+          </div>
+          
+          <div class="tablet-config-group" id="geometricSettings" style="display: none;">
+            <label>
+              <ion-icon name="tune-outline"></ion-icon>
+              Detection Sensitivity
+            </label>
+            <div class="range-container">
+              <input id="shapeDetectionThreshold" type="range" min="0.1" max="1.0" step="0.1" value="0.8"/>
+              <span class="range-value">0.8</span>
+            </div>
+            <div class="setting-description">
+              Higher values require more precise shapes (0.1 = loose, 1.0 = very strict)
+            </div>
+          </div>
         </div>
       </div>
     `;
@@ -130,6 +159,8 @@ export class TabletPanel {
     const backgroundBleedingToggle = this.panel.querySelector('#backgroundBleedingToggle');
     const canvasLayerFront = this.panel.querySelector('#canvasLayerFront');
     const canvasLayerBack = this.panel.querySelector('#canvasLayerBack');
+    const geometricModeToggle = this.panel.querySelector('#geometricModeToggle');
+    const shapeDetectionThreshold = this.panel.querySelector('#shapeDetectionThreshold');
 
     if (readTabletBtn) {
       readTabletBtn.addEventListener('click', () => {
@@ -178,6 +209,21 @@ export class TabletPanel {
         }
       });
     }
+
+    if (geometricModeToggle) {
+      geometricModeToggle.addEventListener('change', (e) => {
+        this.toggleGeometricSettings(e.target.checked);
+        this.triggerCallback('geometricModeChange', e.target.checked);
+      });
+    }
+
+    if (shapeDetectionThreshold) {
+      shapeDetectionThreshold.addEventListener('input', (e) => {
+        const value = parseFloat(e.target.value);
+        this.updateRangeValue(value, 'shapeDetectionThreshold');
+        this.triggerCallback('shapeDetectionThresholdChange', value);
+      });
+    }
   }
 
   // Callback system
@@ -214,10 +260,25 @@ export class TabletPanel {
   }
 
   // Update range value display
-  updateRangeValue(value) {
-    const rangeValue = this.panel.querySelector('.range-value');
-    if (rangeValue) {
-      rangeValue.textContent = value;
+  updateRangeValue(value, selector = null) {
+    if (selector) {
+      const rangeValue = this.panel.querySelector(`#${selector}`).parentElement.querySelector('.range-value');
+      if (rangeValue) {
+        rangeValue.textContent = value.toFixed(1);
+      }
+    } else {
+      const rangeValue = this.panel.querySelector('.range-value');
+      if (rangeValue) {
+        rangeValue.textContent = value;
+      }
+    }
+  }
+
+  // Toggle geometric settings visibility
+  toggleGeometricSettings(enabled) {
+    const geometricSettings = this.panel.querySelector('#geometricSettings');
+    if (geometricSettings) {
+      geometricSettings.style.display = enabled ? 'block' : 'none';
     }
   }
 
@@ -258,6 +319,24 @@ export class TabletPanel {
         frontRadio.checked = false;
         backRadio.checked = true;
       }
+    }
+  }
+
+  // Update geometric mode from external source
+  updateGeometricMode(enabled) {
+    const checkbox = this.panel.querySelector('#geometricModeToggle');
+    if (checkbox) {
+      checkbox.checked = enabled;
+      this.toggleGeometricSettings(enabled);
+    }
+  }
+
+  // Update shape detection threshold from external source
+  updateShapeDetectionThreshold(value) {
+    const slider = this.panel.querySelector('#shapeDetectionThreshold');
+    if (slider) {
+      slider.value = value;
+      this.updateRangeValue(value, 'shapeDetectionThreshold');
     }
   }
 
