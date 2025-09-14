@@ -31,6 +31,7 @@ export class GLOWVisualizer {
     this.trackManager = new TrackManager()
     this.midiManager = new MIDIManager(this.trackManager)
     this.sidePanel = new SidePanel(this.trackManager)
+    this.sidePanel.setSettings(SETTINGS)
     this.tabletManager = new TabletManager(this.tabletCanvas)
     this.tabletPanel = new TabletPanel(this.tabletManager)
     this.uiManager = new UIManager()
@@ -82,6 +83,8 @@ export class GLOWVisualizer {
     this.uiManager.on('resize', () => this.handleResize())
     this.uiManager.on('togglePanel', () => this.toggleSidePanel())
     this.uiManager.on('toggleTabletPanel', () => this.toggleTabletPanel())
+    this.uiManager.on('openFile', () => this.openFile())
+    this.uiManager.on('saveFile', () => this.saveFile())
     this.uiManager.on('toggleMute', (trackId) => this.trackManager.toggleMute(trackId))
     this.uiManager.on('toggleSolo', (trackId) => this.trackManager.toggleSolo(trackId))
 
@@ -94,6 +97,9 @@ export class GLOWVisualizer {
     this.tabletPanel.on('canvasLayerChange', (layer) => this.setCanvasLayer(layer))
     this.tabletPanel.on('geometricModeChange', (enabled) => this.setGeometricMode(enabled))
     this.tabletPanel.on('shapeDetectionThresholdChange', (threshold) => this.setShapeDetectionThreshold(threshold))
+
+    // Side panel events
+    this.sidePanel.on('luminodeConfigChange', (data) => this.updateLuminodeConfig(data))
   }
 
   async start () {
@@ -103,6 +109,8 @@ export class GLOWVisualizer {
       this.uiManager.hideLogoContainer()
       this.uiManager.showPanelToggleButton()
       this.uiManager.showTabletPanelToggleButton()
+      this.uiManager.showOpenButton()
+      this.uiManager.showSaveButton()
       this.uiManager.showInfoButton()
       this.uiManager.showCanvasMessage()
 
@@ -166,6 +174,17 @@ export class GLOWVisualizer {
   toggleTabletPanel () {
     this.tabletPanel.toggle()
     this.uiManager.setTabletPanelToggleActive(this.tabletPanel.isPanelVisible())
+    this.uiManager.setTabletPanelVisible(this.tabletPanel.isPanelVisible())
+  }
+
+  openFile () {
+    console.log('Open file functionality - to be implemented')
+    this.uiManager.showStatus('Open file functionality - to be implemented', 'info')
+  }
+
+  saveFile () {
+    console.log('Save file functionality - to be implemented')
+    this.uiManager.showStatus('Save file functionality - to be implemented', 'info')
   }
 
   setColorMode (enabled) {
@@ -193,6 +212,37 @@ export class GLOWVisualizer {
   setShapeDetectionThreshold (threshold) {
     // Update the shape detection threshold in the tablet manager
     this.tabletManager.setShapeDetectionThreshold(threshold)
+  }
+
+  updateLuminodeConfig (data) {
+    const { trackId, luminode, param, value } = data
+    
+    // Map luminode names to settings keys
+    const luminodeMapping = {
+      'lissajous': 'LISSAJOUS',
+      'sphere': 'SPHERE',
+      'harmonograph': 'HARMONOGRAPH',
+      'gegoNet': 'GEGO_NET',
+      'gegoShape': 'GEGO_SHAPE',
+      'sotoGrid': 'SOTO_GRID',
+      'sotoGridRotated': 'SOTO_GRID',
+      'whitneyLines': 'WHITNEY_LINES',
+      'phyllotaxis': 'PHYLLOTAXIS',
+      'moireCircles': 'MOIRE_CIRCLES',
+      'wovenNet': 'WOVEN_NET',
+      'sinewave': 'SINEWAVE',
+      'triangle': 'TRIANGLE',
+      'polygons': 'POLYGONS'
+    }
+    
+    const settingsKey = luminodeMapping[luminode]
+    if (settingsKey && SETTINGS.MODULES[settingsKey]) {
+      const moduleConfig = SETTINGS.MODULES[settingsKey]
+      if (moduleConfig.hasOwnProperty(param)) {
+        moduleConfig[param] = value
+        console.log(`Updated ${luminode} ${param} to ${value}`)
+      }
+    }
   }
 
   animate () {

@@ -267,8 +267,6 @@ ion-icon {
 .track-tile:hover {
     background: rgba(255, 255, 255, 0.08);
     border-color: rgba(255, 255, 255, 0.2);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .track-header {
@@ -344,10 +342,7 @@ ion-icon {
     justify-content: center;
     transition: all 0.2s ease;
     text-transform: uppercase;
-}
-
-.mute-btn ion-icon, .solo-btn ion-icon {
-    font-size: 12px;
+    font-family: 'Inconsolata', monospace;
 }
 
 .mute-btn:hover, .solo-btn:hover {
@@ -374,10 +369,16 @@ ion-icon {
     gap: 8px;
 }
 
+.assignment-row {
+  display: flex;
+  gap: 12px;
+}
+
 .assignment-group {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
 }
 
 .assignment-group label {
@@ -396,6 +397,141 @@ ion-icon {
     opacity: 0.8;
 }
 
+/* Luminode Configuration Styles */
+.luminode-config {
+  margin-top: 12px;
+  padding: 0 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  border-left: 3px solid #51cf66;
+}
+
+.config-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+  height: 32px;
+}
+
+.config-header:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.config-header h4 {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.config-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+  padding-bottom: 12px;
+}
+
+.config-control {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.config-control label {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 9px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.config-slider {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.config-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: #51cf66;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.config-slider::-webkit-slider-thumb:hover {
+  background: #69db7c;
+  transform: scale(1.1);
+}
+
+.config-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: #51cf66;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.config-slider::-moz-range-thumb:hover {
+  background: #69db7c;
+  transform: scale(1.1);
+}
+
+.slider-value {
+  color: #51cf66;
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 30px;
+  text-align: right;
+  font-family: "Inconsolata", monospace;
+}
+
+.config-number {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  color: white;
+  font-size: 11px;
+  padding: 6px 8px;
+  font-family: "Inconsolata", monospace;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.config-number:focus {
+  border-color: #51cf66;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.config-number:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
 .luminode-icon {
     width: 10px;
     height: 10px;
@@ -407,12 +543,15 @@ ion-icon {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.2);
     color: #ffffff;
-    padding: 6px 10px;
+    padding: 6px 8px;
     border-radius: 4px;
     font-size: 11px;
     font-family: inherit;
     cursor: pointer;
     transition: all 0.2s ease;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
 }
 
 .midi-device-select:hover, .luminode-select:hover {
@@ -479,6 +618,58 @@ ion-icon {
     opacity: 0.7;
 }
 
+.open-toggle-btn {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    color: white;
+    border-radius: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s ease;
+    z-index: 1000;
+}
+
+.open-toggle-btn:hover {
+    opacity: 0.7;
+}
+
+.open-toggle-btn ion-icon {
+    font-size: 18px;
+}
+
+.save-toggle-btn {
+    position: fixed;
+    top: 10px;
+    left: 40px;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    color: white;
+    border-radius: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s ease;
+    z-index: 1000;
+}
+
+.save-toggle-btn:hover {
+    opacity: 0.7;
+}
+
+.save-toggle-btn ion-icon {
+    font-size: 18px;
+}
+
 .info-toggle-btn {
     position: fixed;
     top: 10px;
@@ -522,6 +713,7 @@ ion-icon {
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
 }
 
+/* When tablet panel is visible alone, it should be at the right edge */
 .tablet-panel.visible {
     right: 0;
 }

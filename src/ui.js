@@ -12,6 +12,8 @@ export class UIManager {
       startButton: document.getElementById('startButton'),
       panelToggleButton: document.getElementById('panelToggleButton'),
       tabletPanelToggleButton: document.getElementById('tabletPanelToggleButton'),
+      openButton: document.getElementById('openButton'),
+      saveButton: document.getElementById('saveButton'),
       infoButton: document.getElementById('infoButton'),
       infoModal: document.getElementById('infoModal'),
       infoModalClose: document.getElementById('infoModalClose'),
@@ -25,6 +27,8 @@ export class UIManager {
     }
 
     this.statusVisible = false
+    this.sidePanelVisible = false
+    this.tabletPanelVisible = false
   }
 
   setupEventListeners () {
@@ -45,6 +49,20 @@ export class UIManager {
     if (this.elements.tabletPanelToggleButton) {
       this.elements.tabletPanelToggleButton.addEventListener('click', () => {
         this.triggerCallback('toggleTabletPanel')
+      })
+    }
+
+    // Open button
+    if (this.elements.openButton) {
+      this.elements.openButton.addEventListener('click', () => {
+        this.triggerCallback('openFile')
+      })
+    }
+
+    // Save button
+    if (this.elements.saveButton) {
+      this.elements.saveButton.addEventListener('click', () => {
+        this.triggerCallback('saveFile')
       })
     }
 
@@ -243,6 +261,30 @@ export class UIManager {
     }
   }
 
+  showOpenButton () {
+    if (this.elements.openButton) {
+      this.elements.openButton.style.display = 'flex'
+    }
+  }
+
+  hideOpenButton () {
+    if (this.elements.openButton) {
+      this.elements.openButton.style.display = 'none'
+    }
+  }
+
+  showSaveButton () {
+    if (this.elements.saveButton) {
+      this.elements.saveButton.style.display = 'flex'
+    }
+  }
+
+  hideSaveButton () {
+    if (this.elements.saveButton) {
+      this.elements.saveButton.style.display = 'none'
+    }
+  }
+
   showInfoButton () {
     if (this.elements.infoButton) {
       this.elements.infoButton.style.display = 'flex'
@@ -294,6 +336,30 @@ export class UIManager {
   hideCanvasMessage () {
     if (this.elements.canvasMessage) {
       this.elements.canvasMessage.style.display = 'none'
+    }
+  }
+
+  // Canvas resizing methods
+  setSidePanelVisible (visible) {
+    this.sidePanelVisible = visible
+    this.updateCanvasSize()
+  }
+
+  setTabletPanelVisible (visible) {
+    this.tabletPanelVisible = visible
+    this.updateCanvasSize()
+  }
+
+  updateCanvasSize () {
+    const body = document.body
+    body.classList.remove('side-panel-visible', 'tablet-panel-visible', 'both-panels-visible')
+    
+    if (this.sidePanelVisible && this.tabletPanelVisible) {
+      body.classList.add('both-panels-visible')
+    } else if (this.sidePanelVisible) {
+      body.classList.add('side-panel-visible')
+    } else if (this.tabletPanelVisible) {
+      body.classList.add('tablet-panel-visible')
     }
   }
 }

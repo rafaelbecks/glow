@@ -104,6 +104,18 @@ export const SETTINGS = {
       ROTATION_SPEED: 0.5,
       LINE_WIDTH: 0.8,
       SHADOW_BLUR: 15
+    },
+    SINEWAVE: {
+      AMPLITUDE: 100,
+      FREQUENCY: 1,
+      PHASE_SPEED: 0.5,
+      LINE_WIDTH: 1.5
+    },
+    TRIANGLE: {
+      SIZE: 100,
+      ROTATION_SPEED: 0.8,
+      LINE_WIDTH: 1.2,
+      OPACITY: 0.7
     }
   },
 

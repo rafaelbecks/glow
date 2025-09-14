@@ -32,7 +32,7 @@ export class SinewaveLuminode {
 
       this.ctx.beginPath()
       this.ctx.strokeStyle = UTILS.pitchToColor(midi)
-      this.ctx.lineWidth = 1
+      this.ctx.lineWidth = SETTINGS.MODULES.SINEWAVE.LINE_WIDTH
 
       for (let i = -this.dimensions.width / 2; i <= this.dimensions.width / 2; i += 1) {
         const yOffset = Math.sin(i * harmonicFreq + phase) * amplitude

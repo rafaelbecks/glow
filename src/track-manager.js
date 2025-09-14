@@ -11,7 +11,7 @@ export class TrackManager {
     this.availableLuminodes = [
       'lissajous', 'harmonograph', 'sphere', 'gegoNet', 'gegoShape',
       'sotoGrid', 'sotoGridRotated', 'whitneyLines', 'phyllotaxis',
-      'moireCircles', 'wovenNet', 'sinewave', 'triangle', 'scanlineGradients', 'polygons'
+      'moireCircles', 'wovenNet', 'sinewave', 'triangle', 'polygons'
     ]
 
     this.availableMidiDevices = new Map()
