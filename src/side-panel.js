@@ -1,13 +1,20 @@
-// Side panel UI component for track management
+// Unified side panel UI component with tabs for track management and tablet configuration
 import { getLuminodeConfig, hasLuminodeConfig } from './luminode-configs.js'
+import { TabletControls } from './tablet-controls.js'
 
 export class SidePanel {
-  constructor (trackManager) {
+  constructor (trackManager, tabletManager, uiManager = null) {
     this.trackManager = trackManager
+    this.tabletManager = tabletManager
+    this.uiManager = uiManager
     this.isVisible = false
     this.panel = null
     this.callbacks = {}
     this.settings = null
+    this.activeTab = 'tracks' // Default to tracks tab
+
+    // Initialize tablet controls component
+    this.tabletControls = new TabletControls(tabletManager)
 
     this.initializePanel()
     this.setupEventListeners()
@@ -19,17 +26,36 @@ export class SidePanel {
     this.panel.id = 'sidePanel'
     this.panel.className = 'side-panel'
 
-    // Create panel content
+    // Create panel content with tabs
     this.panel.innerHTML = `
       <div class="side-panel-header">
-        <h3>TRACKS</h3>
+        <div class="panel-tabs">
+          <button class="tab-btn active" data-tab="tracks">
+            <ion-icon name="cube-outline"></ion-icon>
+            <span>TRACKS</span>
+          </button>
+          <button class="tab-btn" data-tab="tablet">
+            <ion-icon name="color-filter-outline"></ion-icon>
+            <span>TABLET</span>
+          </button>
+        </div>
         <button id="togglePanel" class="toggle-panel-btn">
           <ion-icon name="close-outline"></ion-icon>
         </button>
       </div>
       <div class="side-panel-content">
-        <div id="tracksContainer" class="tracks-container">
-          <!-- Tracks will be dynamically generated -->
+        <!-- Tracks Tab Content -->
+        <div id="tracksTab" class="tab-content active">
+          <div id="tracksContainer" class="tracks-container">
+            <!-- Tracks will be dynamically generated -->
+          </div>
+        </div>
+        
+        <!-- Tablet Tab Content -->
+        <div id="tabletTab" class="tab-content">
+          <div id="tabletControlsContainer">
+            <!-- Tablet controls will be dynamically generated -->
+          </div>
         </div>
       </div>
     `
@@ -46,6 +72,27 @@ export class SidePanel {
     const toggleBtn = this.panel.querySelector('#togglePanel')
     toggleBtn.addEventListener('click', () => {
       this.toggle()
+    })
+
+    // Click outside to close panel
+    document.addEventListener('click', (e) => {
+      if (this.isVisible && !this.panel.contains(e.target) && !e.target.closest('.panel-toggle-btn')) {
+        this.hide()
+      }
+    })
+
+    // Prevent panel clicks from closing the panel
+    this.panel.addEventListener('click', (e) => {
+      e.stopPropagation()
+    })
+
+    // Tab switching
+    const tabBtns = this.panel.querySelectorAll('.tab-btn')
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const tab = e.currentTarget.dataset.tab
+        this.switchTab(tab)
+      })
     })
 
     // Track manager events
@@ -65,6 +112,9 @@ export class SidePanel {
     this.trackManager.on('tracksReset', () => {
       this.renderTracks()
     })
+
+    // Setup tablet controls event listeners
+    this.setupTabletControlsEventListeners()
   }
 
   // Callback system
@@ -81,6 +131,59 @@ export class SidePanel {
     }
   }
 
+  // Setup tablet controls event listeners
+  setupTabletControlsEventListeners () {
+    // Forward tablet control events to the main callback system
+    this.tabletControls.on('connectTablet', (data) => {
+      this.triggerCallback('connectTablet', data)
+    })
+    this.tabletControls.on('clearTablet', (data) => {
+      this.triggerCallback('clearTablet', data)
+    })
+    this.tabletControls.on('tabletWidthChange', (data) => {
+      this.triggerCallback('tabletWidthChange', data)
+    })
+    this.tabletControls.on('colorModeChange', (data) => {
+      this.triggerCallback('colorModeChange', data)
+    })
+    this.tabletControls.on('backgroundBleedingChange', (data) => {
+      this.triggerCallback('backgroundBleedingChange', data)
+    })
+    this.tabletControls.on('canvasLayerChange', (data) => {
+      this.triggerCallback('canvasLayerChange', data)
+    })
+    this.tabletControls.on('geometricModeChange', (data) => {
+      this.triggerCallback('geometricModeChange', data)
+    })
+    this.tabletControls.on('shapeDetectionThresholdChange', (data) => {
+      this.triggerCallback('shapeDetectionThresholdChange', data)
+    })
+  }
+
+  // Tab switching
+  switchTab (tabName) {
+    // Update active tab button
+    const tabBtns = this.panel.querySelectorAll('.tab-btn')
+    tabBtns.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tabName)
+    })
+
+    // Update active tab content
+    const tabContents = this.panel.querySelectorAll('.tab-content')
+    tabContents.forEach(content => {
+      content.classList.toggle('active', content.id === `${tabName}Tab`)
+    })
+
+    this.activeTab = tabName
+
+    // If switching to tracks tab, render tracks
+    if (tabName === 'tracks') {
+      this.renderTracks()
+    } else if (tabName === 'tablet') {
+      this.renderTabletControls()
+    }
+  }
+
   // Panel visibility
   show () {
     this.panel.classList.add('visible')
@@ -91,6 +194,10 @@ export class SidePanel {
   hide () {
     this.panel.classList.remove('visible')
     this.isVisible = false
+    // Update UI state
+    if (this.uiManager) {
+      this.uiManager.setPanelToggleActive(false)
+    }
   }
 
   toggle () {
@@ -117,6 +224,15 @@ export class SidePanel {
         this.updateLuminodeConfig(track.id, track.luminode)
       }
     })
+  }
+
+  // Render tablet controls
+  renderTabletControls () {
+    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    if (tabletControlsContainer) {
+      tabletControlsContainer.innerHTML = this.tabletControls.createTabletControlsHTML()
+      this.tabletControls.setupEventListeners(tabletControlsContainer)
+    }
   }
 
   createTrackHTML (track) {
@@ -511,6 +627,49 @@ export class SidePanel {
       'polygons': 'POLYGONS'
     }
     return luminodeMapping[luminode] || luminode.toUpperCase()
+  }
+
+  // Tablet-related methods (delegated to TabletControls component)
+  updateTabletWidth (value) {
+    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    if (tabletControlsContainer) {
+      this.tabletControls.updateTabletWidth(value, tabletControlsContainer)
+    }
+  }
+
+  updateColorMode (enabled) {
+    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    if (tabletControlsContainer) {
+      this.tabletControls.updateColorMode(enabled, tabletControlsContainer)
+    }
+  }
+
+  updateBackgroundBleeding (enabled) {
+    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    if (tabletControlsContainer) {
+      this.tabletControls.updateBackgroundBleeding(enabled, tabletControlsContainer)
+    }
+  }
+
+  updateCanvasLayer (layer) {
+    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    if (tabletControlsContainer) {
+      this.tabletControls.updateCanvasLayer(layer, tabletControlsContainer)
+    }
+  }
+
+  updateGeometricMode (enabled) {
+    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    if (tabletControlsContainer) {
+      this.tabletControls.updateGeometricMode(enabled, tabletControlsContainer)
+    }
+  }
+
+  updateShapeDetectionThreshold (value) {
+    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    if (tabletControlsContainer) {
+      this.tabletControls.updateShapeDetectionThreshold(value, tabletControlsContainer)
+    }
   }
 
   // Public API

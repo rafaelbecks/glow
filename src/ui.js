@@ -11,7 +11,6 @@ export class UIManager {
     this.elements = {
       startButton: document.getElementById('startButton'),
       panelToggleButton: document.getElementById('panelToggleButton'),
-      tabletPanelToggleButton: document.getElementById('tabletPanelToggleButton'),
       openButton: document.getElementById('openButton'),
       saveButton: document.getElementById('saveButton'),
       infoButton: document.getElementById('infoButton'),
@@ -28,7 +27,6 @@ export class UIManager {
 
     this.statusVisible = false
     this.sidePanelVisible = false
-    this.tabletPanelVisible = false
   }
 
   setupEventListeners () {
@@ -45,12 +43,6 @@ export class UIManager {
       })
     }
 
-    // Tablet panel toggle button
-    if (this.elements.tabletPanelToggleButton) {
-      this.elements.tabletPanelToggleButton.addEventListener('click', () => {
-        this.triggerCallback('toggleTabletPanel')
-      })
-    }
 
     // Open button
     if (this.elements.openButton) {
@@ -243,23 +235,6 @@ export class UIManager {
     }
   }
 
-  showTabletPanelToggleButton () {
-    if (this.elements.tabletPanelToggleButton) {
-      this.elements.tabletPanelToggleButton.style.display = 'flex'
-    }
-  }
-
-  hideTabletPanelToggleButton () {
-    if (this.elements.tabletPanelToggleButton) {
-      this.elements.tabletPanelToggleButton.style.display = 'none'
-    }
-  }
-
-  setTabletPanelToggleActive (active) {
-    if (this.elements.tabletPanelToggleButton) {
-      this.elements.tabletPanelToggleButton.classList.toggle('active', active)
-    }
-  }
 
   showOpenButton () {
     if (this.elements.openButton) {
@@ -345,21 +320,13 @@ export class UIManager {
     this.updateCanvasSize()
   }
 
-  setTabletPanelVisible (visible) {
-    this.tabletPanelVisible = visible
-    this.updateCanvasSize()
-  }
 
   updateCanvasSize () {
     const body = document.body
-    body.classList.remove('side-panel-visible', 'tablet-panel-visible', 'both-panels-visible')
+    body.classList.remove('side-panel-visible')
     
-    if (this.sidePanelVisible && this.tabletPanelVisible) {
-      body.classList.add('both-panels-visible')
-    } else if (this.sidePanelVisible) {
+    if (this.sidePanelVisible) {
       body.classList.add('side-panel-visible')
-    } else if (this.tabletPanelVisible) {
-      body.classList.add('tablet-panel-visible')
     }
   }
 }

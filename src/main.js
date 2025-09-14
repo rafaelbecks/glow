@@ -3,7 +3,6 @@ import { SETTINGS, UTILS } from './settings.js'
 import { MIDIManager } from './midi.js'
 import { TrackManager } from './track-manager.js'
 import { SidePanel } from './side-panel.js'
-import { TabletPanel } from './tablet-panel.js'
 import { TabletManager } from './tablet-manager.js'
 import { CanvasDrawer } from './canvas-drawer.js'
 import { UIManager } from './ui.js'
@@ -30,11 +29,10 @@ export class GLOWVisualizer {
     this.canvasDrawer = new CanvasDrawer(this.canvas)
     this.trackManager = new TrackManager()
     this.midiManager = new MIDIManager(this.trackManager)
-    this.sidePanel = new SidePanel(this.trackManager)
-    this.sidePanel.setSettings(SETTINGS)
     this.tabletManager = new TabletManager(this.tabletCanvas)
-    this.tabletPanel = new TabletPanel(this.tabletManager)
     this.uiManager = new UIManager()
+    this.sidePanel = new SidePanel(this.trackManager, this.tabletManager, this.uiManager)
+    this.sidePanel.setSettings(SETTINGS)
     this.visualizerStarted = false
 
     // Initialize luminodes
@@ -82,24 +80,21 @@ export class GLOWVisualizer {
     this.uiManager.on('tabletWidthChange', (width) => this.setTabletWidth(width))
     this.uiManager.on('resize', () => this.handleResize())
     this.uiManager.on('togglePanel', () => this.toggleSidePanel())
-    this.uiManager.on('toggleTabletPanel', () => this.toggleTabletPanel())
     this.uiManager.on('openFile', () => this.openFile())
     this.uiManager.on('saveFile', () => this.saveFile())
     this.uiManager.on('toggleMute', (trackId) => this.trackManager.toggleMute(trackId))
     this.uiManager.on('toggleSolo', (trackId) => this.trackManager.toggleSolo(trackId))
 
-    // Tablet panel events
-    this.tabletPanel.on('connectTablet', () => this.connectTablet())
-    this.tabletPanel.on('clearTablet', () => this.clearTablet())
-    this.tabletPanel.on('tabletWidthChange', (width) => this.setTabletWidth(width))
-    this.tabletPanel.on('colorModeChange', (enabled) => this.setColorMode(enabled))
-    this.tabletPanel.on('backgroundBleedingChange', (enabled) => this.setBackgroundBleeding(enabled))
-    this.tabletPanel.on('canvasLayerChange', (layer) => this.setCanvasLayer(layer))
-    this.tabletPanel.on('geometricModeChange', (enabled) => this.setGeometricMode(enabled))
-    this.tabletPanel.on('shapeDetectionThresholdChange', (threshold) => this.setShapeDetectionThreshold(threshold))
-
-    // Side panel events
+    // Side panel events (now includes both tracks and tablet functionality)
     this.sidePanel.on('luminodeConfigChange', (data) => this.updateLuminodeConfig(data))
+    this.sidePanel.on('connectTablet', () => this.connectTablet())
+    this.sidePanel.on('clearTablet', () => this.clearTablet())
+    this.sidePanel.on('tabletWidthChange', (width) => this.setTabletWidth(width))
+    this.sidePanel.on('colorModeChange', (enabled) => this.setColorMode(enabled))
+    this.sidePanel.on('backgroundBleedingChange', (enabled) => this.setBackgroundBleeding(enabled))
+    this.sidePanel.on('canvasLayerChange', (layer) => this.setCanvasLayer(layer))
+    this.sidePanel.on('geometricModeChange', (enabled) => this.setGeometricMode(enabled))
+    this.sidePanel.on('shapeDetectionThresholdChange', (threshold) => this.setShapeDetectionThreshold(threshold))
   }
 
   async start () {
@@ -108,7 +103,6 @@ export class GLOWVisualizer {
       this.uiManager.hideStartButton()
       this.uiManager.hideLogoContainer()
       this.uiManager.showPanelToggleButton()
-      this.uiManager.showTabletPanelToggleButton()
       this.uiManager.showOpenButton()
       this.uiManager.showSaveButton()
       this.uiManager.showInfoButton()
@@ -171,11 +165,6 @@ export class GLOWVisualizer {
     this.uiManager.setPanelToggleActive(this.sidePanel.isPanelVisible())
   }
 
-  toggleTabletPanel () {
-    this.tabletPanel.toggle()
-    this.uiManager.setTabletPanelToggleActive(this.tabletPanel.isPanelVisible())
-    this.uiManager.setTabletPanelVisible(this.tabletPanel.isPanelVisible())
-  }
 
   openFile () {
     console.log('Open file functionality - to be implemented')
