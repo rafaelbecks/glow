@@ -4,9 +4,13 @@ body, html {
     overflow: hidden;
     background-color: #000;
     font-family: sans-serif;
+    cursor: url('../assets/cursor.svg') 4 4, auto;
 }
+  
+
 canvas {
     display: block;
+    cursor: url('../assets/cursor.svg') 4 4, auto;
 }
 
 #canvas {
@@ -169,6 +173,29 @@ canvas {
 }
 .settings-button:hover {
     opacity: 0.7;
+}
+
+/* Custom cursor for pointer elements */
+button, 
+.controls button,
+.settings-button,
+.panel-toggle-btn,
+.tablet-panel-toggle-btn,
+.open-toggle-btn,
+.save-toggle-btn,
+.info-toggle-btn,
+.toggle-panel-btn,
+.mute-btn,
+.solo-btn,
+.tablet-action-btn,
+#startButton,
+input[type="checkbox"],
+input[type="radio"],
+select,
+.mid-device-select,
+.luminode-select,
+.config-header {
+    cursor: url('../assets/cursor.svg') 4 4, auto !important;
 }
 
 /* Icon styles */
