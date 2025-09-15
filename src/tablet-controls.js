@@ -108,7 +108,7 @@ export class TabletControls {
             Enable Shape Detection
           </label>
           <div class="setting-description">
-            Automatically convert strokes to geometric shapes (lines, circles, rectangles, triangles)
+            Automatically convert strokes to lines
           </div>
         </div>
         

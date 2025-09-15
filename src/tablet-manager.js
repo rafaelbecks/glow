@@ -25,7 +25,7 @@ export class TabletManager {
     // Geometric drawing settings
     this.geometricMode = options.geometricMode || false
     this.shapeDetectionThreshold = options.shapeDetectionThreshold || 0.8 // 0-1, higher = more strict
-    this.minPointsForShape = options.minPointsForShape || 3
+    this.minPointsForShape = options.minPointsForShape || 2
 
     // Device references - track all connected devices
     this.devices = []
@@ -136,14 +136,7 @@ export class TabletManager {
     // Add point to current stroke
     this.currentStroke.points.push({ x, y, timestamp: performance.now() })
 
-    // If geometric mode is enabled, don't draw freehand - wait for shape detection
-    if (this.geometricMode) {
-      this.lastX = x
-      this.lastY = y
-      return
-    }
-
-    // Draw the current stroke (freehand mode)
+    // Always draw the freehand line while drawing, regardless of geometric mode
     this.ctx.strokeStyle = this.currentStroke.color
     this.ctx.lineWidth = lineWidth
     this.ctx.shadowColor = this.currentStroke.color
