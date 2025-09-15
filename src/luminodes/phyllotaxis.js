@@ -38,10 +38,8 @@ export class PhyllotaxisLuminode {
         const y = Math.sin(angle) * radius
 
         const size = baseSize + (i / totalDots) * (maxSize - baseSize)
-        const hue = (note.midi * 12 + j * 10 + t * 20) % 360
-
         this.ctx.beginPath()
-        this.ctx.fillStyle = `hsla(${hue}, 100%, 70%, 0.8)`
+        this.ctx.fillStyle = UTILS.pitchToColor(note.midi)
         this.ctx.arc(x, y, size, 0, Math.PI * 2)
         this.ctx.fill()
       }

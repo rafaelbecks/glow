@@ -65,7 +65,8 @@ Choose from 15 unique visual patterns, each inspired by geometric art:
 
 ### Main Controls
 - **🎛️ Track Panel** - Open the track management interface
-- **⚙️ Settings** - Access advanced controls and preferences
+- **🎨 Canvas Tab** - Adjust canvas and color settings
+- **⚙️ Tablet Tab** - Configure drawing tablet settings
 - **C** - Clear the canvas
 
 ### Track Management
@@ -74,6 +75,23 @@ Choose from 15 unique visual patterns, each inspired by geometric art:
 3. **Choose visual effects** for each track
 4. **Use M to mute** or **S to solo** tracks
 5. **Solo overrides mute** - soloed tracks will always play
+6. **Multiple tracks can share the same MIDI device** - perfect for layering different visual effects
+
+### Canvas & Color Settings
+Access the **🎨 Canvas tab** to customize your visual experience:
+
+**Canvas Settings:**
+- **Clear Alpha** - Controls the ghostly trail effect (0-1)
+- **Background Color** - Change the canvas background color
+
+**Color Palettes:**
+- **Soto Palette** - Main color scheme for geometric luminodes
+- **Polygon Colors** - Specific colors for polygon shapes
+
+**Pitch to Color Generator:**
+- **Hue Factor** - Adjust how MIDI notes map to colors (1-100)
+- **Real-time preview** - See how different notes will be colored
+- **Affects 8 luminodes** - Harmonograph, Lissajous, Sinewave, Triangle, Woven Net, Whitney Lines, Moire Circles, Phyllotaxis
 
 ### Drawing Tablet Support
 - **Connect a drawing tablet** for pressure-sensitive control

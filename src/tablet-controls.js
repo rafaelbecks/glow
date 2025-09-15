@@ -61,11 +61,6 @@ export class TabletControls {
             <ion-icon name="color-filter-outline"></ion-icon>
             Visual Mode
           </label>
-          <label class="checkbox-container">
-            <input id="colorToggle" type="checkbox"/>
-            <span class="checkmark"></span>
-            Color Mode
-          </label>
         </div>
         
         <div class="tablet-config-group">
@@ -138,7 +133,6 @@ export class TabletControls {
     const readTabletBtn = container.querySelector('#readTabletData')
     const clearTabletBtn = container.querySelector('#clearTablet')
     const tabletWidthSlider = container.querySelector('#tabletWidth')
-    const colorToggle = container.querySelector('#colorToggle')
     const backgroundBleedingToggle = container.querySelector('#backgroundBleedingToggle')
     const canvasLayerFront = container.querySelector('#canvasLayerFront')
     const canvasLayerBack = container.querySelector('#canvasLayerBack')
@@ -165,11 +159,6 @@ export class TabletControls {
       })
     }
 
-    if (colorToggle) {
-      colorToggle.addEventListener('change', (e) => {
-        this.triggerCallback('colorModeChange', e.target.checked)
-      })
-    }
 
     if (backgroundBleedingToggle) {
       backgroundBleedingToggle.addEventListener('change', (e) => {
@@ -241,13 +230,6 @@ export class TabletControls {
     }
   }
 
-  // Update color mode from external source
-  updateColorMode (enabled, container) {
-    const checkbox = container.querySelector('#colorToggle')
-    if (checkbox) {
-      checkbox.checked = enabled
-    }
-  }
 
   // Update background bleeding from external source
   updateBackgroundBleeding (enabled, container) {

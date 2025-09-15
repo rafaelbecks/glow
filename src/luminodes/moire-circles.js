@@ -27,10 +27,8 @@ export class MoireCirclesLuminode {
       const angleOffset = Math.sin(t * speed * (i + 1)) * 0.4
       const circleCount = baseCount + Math.floor((midi % 6) * 1.5)
       const sizeMultiplier = 1 + velocity * 1.5
-      const hue = (midi % 12) * 30
-
-      this.ctx.strokeStyle = `hsla(${hue}, 100%, 70%, 0.15)`
-      this.ctx.shadowColor = `hsla(${hue}, 100%, 70%, 0.8)`
+      this.ctx.strokeStyle = UTILS.pitchToColor(midi)
+      this.ctx.shadowColor = UTILS.pitchToColor(midi)
       this.ctx.shadowBlur = 15
       this.ctx.lineWidth = 1
 

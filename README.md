@@ -17,10 +17,10 @@ Play with it: https://glow-visualizer.netlify.app/
 
 **Core Modules:**
 - **Main Script**: Application orchestration and animation loop
-- **MIDI Manager**: Device connections and note tracking
+- **MIDI Manager**: Device connections and note tracking with multi-device support
 - **Track Manager**: MIDI channel routing and track management
+- **Side Panel**: Unified interface for tracks, tablet, and canvas settings
 - **Tablet Manager**: HID device support with geometric shape detection
-- **Tablet Panel**: Tablet configuration and geometric drawing controls
 - **Canvas Drawer**: Centralized drawing operations
 - **UI Manager**: Interface and event handling
 

@@ -21,7 +21,7 @@ export class MIDIManager {
       whitneyLines: []
     }
 
-    this.inputs = new Map()
+    this.inputs = new Map() // Maps channel to array of inputs
     this.deviceToChannelMap = new Map() // Maps device ID to channel name
     this.trackInputs = new Map() // Maps device ID to input for track system
   }
@@ -73,7 +73,11 @@ export class MIDIManager {
 
         // Store input reference (even if no channel match for track system)
         if (channel) {
-          this.inputs.set(channel, input)
+          // Support multiple devices per channel
+          if (!this.inputs.has(channel)) {
+            this.inputs.set(channel, [])
+          }
+          this.inputs.get(channel).push(input)
           this.deviceToChannelMap.set(input.id, channel)
         }
 
@@ -121,20 +125,24 @@ export class MIDIManager {
     const [status, data1, data2] = msg.data
     const cmd = status & 0xf0
 
-    // Find which track this device is assigned to
+    // Find which tracks this device is assigned to
     if (!this.trackManager) return
 
     const tracks = this.trackManager.getTracks()
-    const assignedTrack = tracks.find(track => track.midiDevice === deviceId)
+    const assignedTracks = tracks.filter(track => track.midiDevice === deviceId)
 
-    if (!assignedTrack || !assignedTrack.luminode) return
+    if (assignedTracks.length === 0) return
 
-    // Route the MIDI message to the assigned luminode
-    if (cmd === SETTINGS.MIDI.NOTE_ON && data2 > 0) {
-      this.noteOn(assignedTrack.luminode, data1, data2)
-    } else if (cmd === SETTINGS.MIDI.NOTE_OFF || (cmd === SETTINGS.MIDI.NOTE_ON && data2 === 0)) {
-      this.noteOff(assignedTrack.luminode, data1)
-    }
+    // Route the MIDI message to all assigned luminodes
+    assignedTracks.forEach(track => {
+      if (!track.luminode) return
+      
+      if (cmd === SETTINGS.MIDI.NOTE_ON && data2 > 0) {
+        this.noteOn(track.luminode, data1, data2)
+      } else if (cmd === SETTINGS.MIDI.NOTE_OFF || (cmd === SETTINGS.MIDI.NOTE_ON && data2 === 0)) {
+        this.noteOff(track.luminode, data1)
+      }
+    })
   }
 
   // Clean up old notes based on timestamp

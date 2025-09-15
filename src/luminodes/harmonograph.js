@@ -40,8 +40,7 @@ export class HarmonographLuminode {
         this.ctx.lineTo(x, y)
       }
 
-      const hue = (midi % 12) * 30
-      this.ctx.strokeStyle = `hsla(${hue}, 100%, 70%, 0.4)`
+      this.ctx.strokeStyle = UTILS.pitchToColor(midi)
       this.ctx.shadowColor = this.ctx.strokeStyle
       this.ctx.shadowBlur = SETTINGS.MODULES.HARMONOGRAPH.SHADOW_BLUR
       this.ctx.lineWidth = 1

@@ -84,7 +84,12 @@ export class SotoGridLuminode {
         this.existingSquares.set(midi, { x, y, size, color, angle })
       }
 
-      squares.push(this.existingSquares.get(midi))
+      // Always get the current color from palette for existing squares
+      const existingSquare = this.existingSquares.get(midi)
+      if (existingSquare) {
+        const currentColor = SETTINGS.COLORS.SOTO_PALETTE[midi % SETTINGS.COLORS.SOTO_PALETTE.length]
+        squares.push({ ...existingSquare, color: currentColor })
+      }
     })
 
     return squares

@@ -86,7 +86,8 @@ export const LUMINODE_CONFIGS = {
     { key: 'LINES_PER_NOTE', label: 'Lines Per Note', type: 'number', min: 5, max: 25, step: 1, default: 10 },
     { key: 'ROTATION_SPEED', label: 'Rotation Speed', type: 'slider', min: 0.1, max: 2, step: 0.1, default: 0.5 },
     { key: 'LINE_WIDTH', label: 'Line Width', type: 'slider', min: 0.3, max: 2, step: 0.1, default: 0.8 },
-    { key: 'SHADOW_BLUR', label: 'Shadow Blur', type: 'slider', min: 0, max: 30, step: 1, default: 15 }
+    { key: 'SHADOW_BLUR', label: 'Shadow Blur', type: 'slider', min: 0, max: 30, step: 1, default: 15 },
+    { key: 'USE_COLOR', label: 'Color Mode', type: 'checkbox', default: false }
   ],
   
   sinewave: [

@@ -90,11 +90,15 @@ export class GLOWVisualizer {
     this.sidePanel.on('connectTablet', () => this.connectTablet())
     this.sidePanel.on('clearTablet', () => this.clearTablet())
     this.sidePanel.on('tabletWidthChange', (width) => this.setTabletWidth(width))
-    this.sidePanel.on('colorModeChange', (enabled) => this.setColorMode(enabled))
     this.sidePanel.on('backgroundBleedingChange', (enabled) => this.setBackgroundBleeding(enabled))
     this.sidePanel.on('canvasLayerChange', (layer) => this.setCanvasLayer(layer))
     this.sidePanel.on('geometricModeChange', (enabled) => this.setGeometricMode(enabled))
     this.sidePanel.on('shapeDetectionThresholdChange', (threshold) => this.setShapeDetectionThreshold(threshold))
+    
+    // Canvas and color settings
+    this.sidePanel.on('canvasSettingChange', (data) => this.updateCanvasSetting(data))
+    this.sidePanel.on('colorPaletteChange', (data) => this.updateColorPalette(data))
+    this.sidePanel.on('pitchColorFactorChange', (data) => this.updatePitchColorFactor(data))
   }
 
   async start () {
@@ -176,12 +180,6 @@ export class GLOWVisualizer {
     this.uiManager.showStatus('Save file functionality - to be implemented', 'info')
   }
 
-  setColorMode (enabled) {
-    // Update the color mode in the UI manager
-    if (this.uiManager.elements.colorToggle) {
-      this.uiManager.elements.colorToggle.checked = enabled
-    }
-  }
 
   setBackgroundBleeding (enabled) {
     // Update the background bleeding setting in the tablet manager
@@ -201,6 +199,43 @@ export class GLOWVisualizer {
   setShapeDetectionThreshold (threshold) {
     // Update the shape detection threshold in the tablet manager
     this.tabletManager.setShapeDetectionThreshold(threshold)
+  }
+
+  updateCanvasSetting (data) {
+    const { setting, value } = data
+    
+    if (SETTINGS.CANVAS && SETTINGS.CANVAS.hasOwnProperty(setting)) {
+      SETTINGS.CANVAS[setting] = value
+      console.log(`Updated canvas setting ${setting} to ${value}`)
+      
+      // Apply the setting immediately
+      if (setting === 'CLEAR_ALPHA') {
+        this.canvasDrawer.setClearAlpha(value)
+      } else if (setting === 'BACKGROUND_COLOR') {
+        this.canvasDrawer.setBackgroundColor(value)
+      }
+    }
+  }
+
+  updateColorPalette (data) {
+    const { palette, index, color } = data
+    
+    if (SETTINGS.COLORS && SETTINGS.COLORS[palette.toUpperCase() + '_PALETTE']) {
+      const paletteKey = palette.toUpperCase() + '_PALETTE'
+      SETTINGS.COLORS[paletteKey][index] = color
+      console.log(`Updated ${palette} palette color at index ${index} to ${color}`)
+    }
+  }
+
+  updatePitchColorFactor (data) {
+    const { value } = data
+    
+    // Update the pitchToColor function in UTILS
+    if (UTILS.pitchToColor) {
+      // Store the factor for the pitchToColor function
+      UTILS.pitchColorFactor = value
+      console.log(`Updated pitch color factor to ${value}`)
+    }
   }
 
   updateLuminodeConfig (data) {
@@ -292,7 +327,9 @@ export class GLOWVisualizer {
     this.luminodes.gegoNet.draw(t, activeNotes.gegoNet)
     this.luminodes.gegoShape.draw(t, activeNotes.gegoShape)
     this.luminodes.phyllotaxis.draw(t, activeNotes.phyllotaxis)
-    this.luminodes.whitneyLines.draw(t, activeNotes.whitneyLines, this.uiManager.getColorMode())
+    // Get Whitney Lines color mode from settings
+    const whitneyColorMode = SETTINGS.MODULES.WHITNEY_LINES.USE_COLOR || false
+    this.luminodes.whitneyLines.draw(t, activeNotes.whitneyLines, whitneyColorMode)
 
     // Additional visual modules
     this.luminodes.moireCircles.draw(t, activeNotes.moireCircles)

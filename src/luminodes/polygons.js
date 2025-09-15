@@ -25,7 +25,12 @@ export class PolygonsLuminode {
     this.ctx.save()
     this.ctx.translate(this.dimensions.width / 2, this.dimensions.height / 2)
 
-    this.polygonShapes.forEach(shape => this.canvasDrawer.drawWobblyContour(shape, t))
+    this.polygonShapes.forEach((shape, index) => {
+      // Update color from current palette for existing shapes
+      const currentColor = SETTINGS.COLORS.POLYGON_COLORS[index % SETTINGS.COLORS.POLYGON_COLORS.length]
+      const updatedShape = { ...shape, color: currentColor }
+      this.canvasDrawer.drawWobblyContour(updatedShape, t)
+    })
 
     this.ctx.restore()
   }

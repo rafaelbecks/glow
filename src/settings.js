@@ -103,7 +103,8 @@ export const SETTINGS = {
       LINES_PER_NOTE: 10,
       ROTATION_SPEED: 0.5,
       LINE_WIDTH: 0.8,
-      SHADOW_BLUR: 15
+      SHADOW_BLUR: 15,
+      USE_COLOR: false
     },
     SINEWAVE: {
       AMPLITUDE: 100,
@@ -160,8 +161,11 @@ export const MIDI_CHANNELS = {
 
 // Utility functions
 export const UTILS = {
+  pitchColorFactor: 30, // Default factor, can be adjusted via UI
+  
   pitchToColor: (midi) => {
-    const hue = (midi % 14) * 30
+    const factor = UTILS.pitchColorFactor || 30
+    const hue = (midi % 14) * factor
     return `hsla(${hue}, 100%, 70%, 0.6)`
   },
 

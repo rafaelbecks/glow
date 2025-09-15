@@ -1,6 +1,7 @@
 // Unified side panel UI component with tabs for track management and tablet configuration
 import { getLuminodeConfig, hasLuminodeConfig } from './luminode-configs.js'
 import { TabletControls } from './tablet-controls.js'
+import { UTILS } from './settings.js'
 
 export class SidePanel {
   constructor (trackManager, tabletManager, uiManager = null) {
@@ -34,6 +35,10 @@ export class SidePanel {
             <ion-icon name="cube-outline"></ion-icon>
             <span>TRACKS</span>
           </button>
+          <button class="tab-btn" data-tab="canvas">
+            <ion-icon name="color-palette-outline"></ion-icon>
+            <span>CANVAS</span>
+          </button>
           <button class="tab-btn" data-tab="tablet">
             <ion-icon name="color-filter-outline"></ion-icon>
             <span>TABLET</span>
@@ -55,6 +60,13 @@ export class SidePanel {
         <div id="tabletTab" class="tab-content">
           <div id="tabletControlsContainer">
             <!-- Tablet controls will be dynamically generated -->
+          </div>
+        </div>
+        
+        <!-- Canvas Tab Content -->
+        <div id="canvasTab" class="tab-content">
+          <div id="canvasControlsContainer">
+            <!-- Canvas and color controls will be dynamically generated -->
           </div>
         </div>
       </div>
@@ -181,6 +193,8 @@ export class SidePanel {
       this.renderTracks()
     } else if (tabName === 'tablet') {
       this.renderTabletControls()
+    } else if (tabName === 'canvas') {
+      this.renderCanvasControls()
     }
   }
 
@@ -232,6 +246,15 @@ export class SidePanel {
     if (tabletControlsContainer) {
       tabletControlsContainer.innerHTML = this.tabletControls.createTabletControlsHTML()
       this.tabletControls.setupEventListeners(tabletControlsContainer)
+    }
+  }
+
+  // Render canvas and color controls
+  renderCanvasControls () {
+    const canvasControlsContainer = this.panel.querySelector('#canvasControlsContainer')
+    if (canvasControlsContainer) {
+      canvasControlsContainer.innerHTML = this.createCanvasControlsHTML()
+      this.setupCanvasControlsEventListeners(canvasControlsContainer)
     }
   }
 
@@ -423,6 +446,22 @@ export class SidePanel {
         })
       })
     })
+
+    // Checkbox controls
+    const checkboxInputs = configElement.querySelectorAll('.config-checkbox')
+    checkboxInputs.forEach(input => {
+      input.addEventListener('change', (e) => {
+        const value = e.target.checked
+        const param = e.target.dataset.param
+        
+        this.triggerCallback('luminodeConfigChange', {
+          trackId,
+          luminode: this.trackManager.getTrack(trackId).luminode,
+          param,
+          value
+        })
+      })
+    })
   }
 
   // Attach config toggle listener
@@ -577,6 +616,21 @@ export class SidePanel {
                  class="config-number">
         </div>
       `
+    } else if (param.type === 'checkbox') {
+      return `
+        <div class="config-control">
+          <label class="checkbox-container">
+            <input type="checkbox" 
+                   id="${controlId}" 
+                   ${param.value ? 'checked' : ''}
+                   data-track-id="${trackId}"
+                   data-param="${param.key}"
+                   class="config-checkbox">
+            <span class="checkmark"></span>
+            ${param.label}
+          </label>
+        </div>
+      `
     }
     
     return ''
@@ -670,6 +724,197 @@ export class SidePanel {
     if (tabletControlsContainer) {
       this.tabletControls.updateShapeDetectionThreshold(value, tabletControlsContainer)
     }
+  }
+
+  // Create canvas and color controls HTML
+  createCanvasControlsHTML () {
+    const settings = this.settings || {}
+    const canvasSettings = settings.CANVAS || { CLEAR_ALPHA: 0.1, BACKGROUND_COLOR: '#000' }
+    const colorSettings = settings.COLORS || { 
+      SOTO_PALETTE: ['#EF4136', '#005BBB', '#FCEE09', '#2E7D32', '#FFFFFF', '#4A148C', '#8B0000'],
+      POLYGON_COLORS: ['#f93822', '#fcdc4d', '#00a6a6', '#90be6d', '#f94144', '#ff006e', '#8338ec']
+    }
+    
+    // Get current pitch color factor from UTILS
+    const currentPitchFactor = UTILS.pitchColorFactor || 30
+
+    return `
+      <div class="canvas-controls">
+        <!-- Canvas Settings -->
+        <div class="control-section">
+          <h4>Canvas Settings</h4>
+          
+          <div class="control-group">
+            <label for="clearAlpha">Clear Alpha (Ghostly Effect)</label>
+            <div class="slider-container">
+              <input type="range" 
+                     id="clearAlpha" 
+                     min="0" 
+                     max="1" 
+                     step="0.01" 
+                     value="${canvasSettings.CLEAR_ALPHA}"
+                     class="config-slider">
+              <span class="slider-value">${canvasSettings.CLEAR_ALPHA}</span>
+            </div>
+          </div>
+          
+          <div class="control-group">
+            <label for="backgroundColor">Background Color</label>
+            <input type="color" 
+                   id="backgroundColor" 
+                   value="${canvasSettings.BACKGROUND_COLOR}"
+                   class="color-picker">
+          </div>
+        </div>
+
+        <!-- Color Palettes -->
+        <div class="control-section">
+          <h4>Color Palettes</h4>
+          
+          <div class="control-group">
+            <label>Soto Palette</label>
+            <div class="color-palette" id="sotoPalette">
+              ${colorSettings.SOTO_PALETTE.map((color, index) => `
+                <input type="color" 
+                       class="palette-color" 
+                       data-palette="soto" 
+                       data-index="${index}"
+                       value="${color}">
+              `).join('')}
+            </div>
+            <div class="setting-info">
+              <small>Used by: Soto Grid, Gego Net, Gego Shape, and other geometric luminodes</small>
+            </div>
+          </div>
+          
+          <div class="control-group">
+            <label>Polygon Colors</label>
+            <div class="color-palette" id="polygonPalette">
+              ${colorSettings.POLYGON_COLORS.map((color, index) => `
+                <input type="color" 
+                       class="palette-color" 
+                       data-palette="polygon" 
+                       data-index="${index}"
+                       value="${color}">
+              `).join('')}
+            </div>
+            <div class="setting-info">
+              <small>Used by: Polygons luminode for multi-layered shapes</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pitch to Color Generator -->
+        <div class="control-section">
+          <h4>Pitch to Color Generator</h4>
+          
+          <div class="control-group">
+            <label for="pitchColorFactor">Hue Factor</label>
+            <div class="slider-container">
+              <input type="range" 
+                     id="pitchColorFactor" 
+                     min="1" 
+                     max="100" 
+                     step="1" 
+                     value="${currentPitchFactor}"
+                     class="config-slider">
+              <span class="slider-value">${currentPitchFactor}</span>
+            </div>
+            <div class="setting-info">
+              <small>Affects: Sinewave, Triangle, Woven Net, Whitney Lines, Harmonograph, Lissajous, Moire Circles, Phyllotaxis</small>
+            </div>
+          </div>
+          
+          <div class="control-group">
+            <label>C Scale Example</label>
+            <div class="pitch-color-example" id="pitchColorExample">
+              <!-- Generated pitch colors will appear here -->
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  }
+
+  // Setup canvas controls event listeners
+  setupCanvasControlsEventListeners (container) {
+    // Clear alpha slider
+    const clearAlphaSlider = container.querySelector('#clearAlpha')
+    if (clearAlphaSlider) {
+      clearAlphaSlider.addEventListener('input', (e) => {
+        const value = parseFloat(e.target.value)
+        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
+        if (valueDisplay) {
+          valueDisplay.textContent = value
+        }
+        this.triggerCallback('canvasSettingChange', {
+          setting: 'CLEAR_ALPHA',
+          value
+        })
+      })
+    }
+
+    // Background color picker
+    const backgroundColorPicker = container.querySelector('#backgroundColor')
+    if (backgroundColorPicker) {
+      backgroundColorPicker.addEventListener('change', (e) => {
+        this.triggerCallback('canvasSettingChange', {
+          setting: 'BACKGROUND_COLOR',
+          value: e.target.value
+        })
+      })
+    }
+
+    // Palette color pickers
+    const paletteColors = container.querySelectorAll('.palette-color')
+    paletteColors.forEach(picker => {
+      picker.addEventListener('change', (e) => {
+        const palette = e.target.dataset.palette
+        const index = parseInt(e.target.dataset.index)
+        this.triggerCallback('colorPaletteChange', {
+          palette,
+          index,
+          color: e.target.value
+        })
+      })
+    })
+
+    // Pitch color factor slider
+    const pitchColorFactor = container.querySelector('#pitchColorFactor')
+    if (pitchColorFactor) {
+      pitchColorFactor.addEventListener('input', (e) => {
+        const value = parseInt(e.target.value)
+        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
+        if (valueDisplay) {
+          valueDisplay.textContent = value
+        }
+        this.updatePitchColorExample(value)
+        this.triggerCallback('pitchColorFactorChange', { value })
+      })
+    }
+
+    // Initialize pitch color example
+    this.updatePitchColorExample(30)
+  }
+
+  // Update pitch color example display
+  updatePitchColorExample (factor) {
+    const exampleContainer = document.querySelector('#pitchColorExample')
+    if (!exampleContainer) return
+
+    // C scale MIDI notes (C4 to C5)
+    const cScaleNotes = [60, 62, 64, 65, 67, 69, 71, 72] // C, D, E, F, G, A, B, C
+    const noteNames = ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C']
+
+    exampleContainer.innerHTML = cScaleNotes.map((note, index) => {
+      const hue = (note % 14) * factor
+      const color = `hsla(${hue}, 100%, 70%, 0.6)`
+      return `
+        <div class="pitch-color-item" style="background-color: ${color}">
+          <span>${noteNames[index]}</span>
+        </div>
+      `
+    }).join('')
   }
 
   // Public API

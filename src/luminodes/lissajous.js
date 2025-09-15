@@ -29,7 +29,9 @@ export class LissajousLuminode {
       this.ctx.lineTo(x, y)
     }
 
-    this.ctx.strokeStyle = 'hsla(' + (a + b) * 20 + ', 100%, 60%, 0.5)'
+    // Use the first note's MIDI value for color, or average if multiple notes
+    const midiValue = notes.length > 0 ? notes[0] : 60
+    this.ctx.strokeStyle = UTILS.pitchToColor(midiValue)
     this.ctx.shadowColor = this.ctx.strokeStyle
     this.ctx.shadowBlur = SETTINGS.MODULES.LISSAJOUS.SHADOW_BLUR
     this.ctx.lineWidth = SETTINGS.MODULES.LISSAJOUS.LINE_WIDTH
