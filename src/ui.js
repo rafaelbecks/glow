@@ -27,6 +27,7 @@ export class UIManager {
 
     this.statusVisible = false
     this.sidePanelVisible = false
+    this.iconsVisible = true
   }
 
   setupEventListeners () {
@@ -102,20 +103,13 @@ export class UIManager {
 
     // Keyboard shortcuts
     window.addEventListener('keydown', (e) => {
-      console.log(e.key)
       if (e.key === 'c') {
         this.triggerCallback('clearCanvas')
       } else if (e.key === 'c' || e.key === 'C') {
         this.triggerCallback('togglePanel')
-      } else if (e.key >= '1' && e.key <= '4') {
-        const trackId = parseInt(e.key)
-        if (e.ctrlKey || e.metaKey) {
-          if (e.shiftKey) {
-            this.triggerCallback('toggleSolo', trackId)
-          } else {
-            this.triggerCallback('toggleMute', trackId)
-          }
-        }
+      } else if (e.key === 'i') {
+        e.preventDefault()
+        this.toggleIcons()
       }
     })
 
@@ -328,5 +322,29 @@ export class UIManager {
     if (this.sidePanelVisible) {
       body.classList.add('side-panel-visible')
     }
+  }
+
+  // Icon visibility management
+  toggleIcons () {
+    this.iconsVisible = !this.iconsVisible
+    if (this.iconsVisible) {
+      this.showAllIcons()
+    } else {
+      this.hideAllIcons()
+    }
+  }
+
+  showAllIcons () {
+    this.showPanelToggleButton()
+    this.showOpenButton()
+    this.showSaveButton()
+    this.showInfoButton()
+  }
+
+  hideAllIcons () {
+    this.hidePanelToggleButton()
+    this.hideOpenButton()
+    this.hideSaveButton()
+    this.hideInfoButton()
   }
 }
