@@ -31,7 +31,7 @@ export class GLOWVisualizer {
     this.midiManager = new MIDIManager(this.trackManager)
     this.tabletManager = new TabletManager(this.tabletCanvas, { midiManager: this.midiManager })
     this.uiManager = new UIManager()
-    this.sidePanel = new SidePanel(this.trackManager, this.tabletManager, this.uiManager)
+    this.sidePanel = new SidePanel(this.trackManager, this.tabletManager, this.uiManager, this.midiManager)
     this.sidePanel.setSettings(SETTINGS)
     this.visualizerStarted = false
 
@@ -128,7 +128,7 @@ export class GLOWVisualizer {
       this.sidePanel.renderTracks()
       
       // Populate MIDI output device list
-      this.populateMidiOutputDevices()
+      await this.populateMidiOutputDevices()
     } catch (error) {
       console.error('Failed to start visualizer:', error)
       this.uiManager.showStatus('Failed to start. Check console for details.', 'error')
@@ -231,9 +231,9 @@ export class GLOWVisualizer {
     this.midiManager.setOctaveRange(range)
   }
 
-  populateMidiOutputDevices () {
+  async populateMidiOutputDevices () {
     // Get available MIDI devices from the MIDI manager
-    const devices = this.midiManager.getAvailableOutputDevices()
+    const devices = await this.midiManager.getAvailableOutputDevices()
     this.sidePanel.updateMidiOutputDevices(devices)
   }
 

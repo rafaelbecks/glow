@@ -4,10 +4,11 @@ import { TabletControls } from './tablet-controls.js'
 import { UTILS } from './settings.js'
 
 export class SidePanel {
-  constructor (trackManager, tabletManager, uiManager = null) {
+  constructor (trackManager, tabletManager, uiManager = null, midiManager = null) {
     this.trackManager = trackManager
     this.tabletManager = tabletManager
     this.uiManager = uiManager
+    this.midiManager = midiManager
     this.isVisible = false
     this.panel = null
     this.callbacks = {}
@@ -101,9 +102,9 @@ export class SidePanel {
     // Tab switching
     const tabBtns = this.panel.querySelectorAll('.tab-btn')
     tabBtns.forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', async (e) => {
         const tab = e.currentTarget.dataset.tab
-        this.switchTab(tab)
+        await this.switchTab(tab)
       })
     })
 
@@ -193,7 +194,7 @@ export class SidePanel {
   }
 
   // Tab switching
-  switchTab (tabName) {
+  async switchTab (tabName) {
     // Update active tab button
     const tabBtns = this.panel.querySelectorAll('.tab-btn')
     tabBtns.forEach(btn => {
@@ -212,7 +213,7 @@ export class SidePanel {
     if (tabName === 'tracks') {
       this.renderTracks()
     } else if (tabName === 'tablet') {
-      this.renderTabletControls()
+      await this.renderTabletControls()
     } else if (tabName === 'canvas') {
       this.renderCanvasControls()
     }
@@ -261,14 +262,14 @@ export class SidePanel {
   }
 
   // Render tablet controls
-  renderTabletControls () {
+  async renderTabletControls () {
     const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
     if (tabletControlsContainer) {
       tabletControlsContainer.innerHTML = this.tabletControls.createTabletControlsHTML()
       this.tabletControls.setupEventListeners(tabletControlsContainer)
       
       // Populate MIDI output devices when tablet controls are rendered
-      this.populateMidiOutputDevices()
+      await this.populateMidiOutputDevices()
     }
   }
 
@@ -914,11 +915,11 @@ export class SidePanel {
   }
 
   // Populate MIDI output devices
-  populateMidiOutputDevices () {
+  async populateMidiOutputDevices () {
     const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
-    if (tabletControlsContainer) {
-      // Get devices from track manager (which gets them from MIDI manager)
-      const devices = this.trackManager.getAvailableMidiDevices()
+    if (tabletControlsContainer && this.midiManager) {
+      // Get output devices from MIDI manager
+      const devices = await this.midiManager.getAvailableOutputDevices()
       this.tabletControls.updateMidiOutputDevices(devices, tabletControlsContainer)
     }
   }

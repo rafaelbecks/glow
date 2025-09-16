@@ -241,10 +241,18 @@ export class MIDIManager {
 
   async initializeOutput () {
     try {
+      if (!this.outputDevice) {
+        console.warn('No MIDI output device selected')
+        return
+      }
+      
       const access = await navigator.requestMIDIAccess()
       this.output = access.outputs.get(this.outputDevice)
       if (!this.output) {
         console.warn('MIDI output device not found:', this.outputDevice)
+        console.log('Available output devices:', Array.from(access.outputs.values()).map(d => ({ id: d.id, name: d.name })))
+      } else {
+        console.log('MIDI output device connected:', this.output.name)
       }
     } catch (error) {
       console.error('Error initializing MIDI output:', error)
@@ -291,7 +299,24 @@ export class MIDIManager {
   }
 
   // Get available output devices
-  getAvailableOutputDevices () {
-    return this.getAllMidiDevices() // Reuse the same device list
+  async getAvailableOutputDevices () {
+    try {
+      const access = await navigator.requestMIDIAccess()
+      const outputDevices = []
+      
+      for (const output of access.outputs.values()) {
+        outputDevices.push({
+          id: output.id,
+          name: output.name,
+          manufacturer: output.manufacturer,
+          state: output.state
+        })
+      }
+      
+      return outputDevices
+    } catch (error) {
+      console.error('Error getting MIDI output devices:', error)
+      return []
+    }
   }
 }
