@@ -24,6 +24,13 @@ export class MIDIManager {
     this.inputs = new Map() // Maps channel to array of inputs
     this.deviceToChannelMap = new Map() // Maps device ID to channel name
     this.trackInputs = new Map() // Maps device ID to input for track system
+    
+    // MIDI output for tablet
+    this.outputEnabled = false
+    this.outputDevice = null
+    this.output = null
+    this.currentNote = null
+    this.octaveRange = 3
   }
 
   noteOn (channel, midi, velocity) {
@@ -214,5 +221,77 @@ export class MIDIManager {
       })
     })
     return devices
+  }
+
+  // MIDI Output methods for tablet
+  setOutputEnabled (enabled) {
+    this.outputEnabled = enabled
+    if (!enabled && this.currentNote !== null) {
+      this.sendNoteOff()
+    }
+  }
+
+  setOutputDevice (deviceId) {
+    this.outputDevice = deviceId
+  }
+
+  setOctaveRange (range) {
+    this.octaveRange = Math.max(1, Math.min(4, range))
+  }
+
+  async initializeOutput () {
+    try {
+      const access = await navigator.requestMIDIAccess()
+      this.output = access.outputs.get(this.outputDevice)
+      if (!this.output) {
+        console.warn('MIDI output device not found:', this.outputDevice)
+      }
+    } catch (error) {
+      console.error('Error initializing MIDI output:', error)
+    }
+  }
+
+  sendNoteOn (note, velocity) {
+    if (!this.outputEnabled || !this.output) return
+
+    // Send note off for current note if different
+    if (this.currentNote !== null && this.currentNote !== note) {
+      this.sendNoteOff()
+    }
+
+    this.output.send([SETTINGS.MIDI.NOTE_ON, note, velocity])
+    this.currentNote = note
+  }
+
+  sendNoteOff () {
+    if (!this.outputEnabled || !this.output || this.currentNote === null) return
+
+    this.output.send([SETTINGS.MIDI.NOTE_OFF, this.currentNote, 0])
+    this.currentNote = null
+  }
+
+  mapPositionToNote (x, canvasWidth) {
+    if (!this.outputEnabled) return null
+
+    // Map X position to note (0-1 range to note range)
+    const normalizedX = x / canvasWidth
+    const noteRange = this.octaveRange * 12 // 12 notes per octave
+    const baseNote = 60 // Middle C (C4)
+    const note = Math.floor(normalizedX * noteRange) + baseNote
+
+    // Clamp to valid MIDI range
+    return Math.max(0, Math.min(127, note))
+  }
+
+  mapPressureToVelocity (pressure) {
+    if (!this.outputEnabled) return 0
+
+    // Map pressure (0-1) to velocity (0-127)
+    return Math.floor(pressure * SETTINGS.MIDI.VELOCITY_MAX)
+  }
+
+  // Get available output devices
+  getAvailableOutputDevices () {
+    return this.getAllMidiDevices() // Reuse the same device list
   }
 }

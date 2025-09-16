@@ -1,6 +1,7 @@
 // Tablet/HID device management and drawing
 import { SETTINGS } from './settings.js'
 import { GeometricUtils } from './geometric-utils.js'
+import { CanvasDrawer } from './canvas-drawer.js'
 
 export class TabletManager {
   constructor (canvas, options = {}) {
@@ -26,6 +27,16 @@ export class TabletManager {
     this.geometricMode = options.geometricMode || false
     this.shapeDetectionThreshold = options.shapeDetectionThreshold || 0.8 // 0-1, higher = more strict
     this.minPointsForShape = options.minPointsForShape || 2
+
+    // Geometric pencil mode settings
+    this.geometricPencilMode = options.geometricPencilMode || false
+    this.polygonSides = options.polygonSides || 3
+    this.fadeDuration = options.fadeDuration || 3000 // milliseconds
+    this.geometricShapes = [] // Array to store geometric shapes with timestamps
+    this.canvasDrawer = new CanvasDrawer(canvas)
+
+    // MIDI manager reference for output
+    this.midiManager = options.midiManager || null
 
     // Device references - track all connected devices
     this.devices = []
@@ -71,6 +82,19 @@ export class TabletManager {
   setShapeDetectionThreshold (threshold) {
     this.shapeDetectionThreshold = Math.max(0, Math.min(1, threshold))
   }
+
+  setGeometricPencilMode (enabled) {
+    this.geometricPencilMode = enabled
+  }
+
+  setPolygonSides (sides) {
+    this.polygonSides = Math.max(3, Math.min(10, sides))
+  }
+
+  setFadeDuration (duration) {
+    this.fadeDuration = Math.max(1000, Math.min(10000, duration)) // 1-10 seconds
+  }
+
 
   updateCanvasZIndex () {
     if (this.canvas) {
@@ -136,16 +160,33 @@ export class TabletManager {
     // Add point to current stroke
     this.currentStroke.points.push({ x, y, timestamp: performance.now() })
 
-    // Always draw the freehand line while drawing, regardless of geometric mode
-    this.ctx.strokeStyle = this.currentStroke.color
-    this.ctx.lineWidth = lineWidth
-    this.ctx.shadowColor = this.currentStroke.color
-    this.ctx.shadowBlur = lineWidth * 0.5
+    if (this.geometricPencilMode) {
+      // In geometric pencil mode, draw a polygon at the current position
+      const size = (lineWidth + 10) * 2 // Scale size based on pressure
+      const rotation = performance.now() * 0.001 // Rotate over time
+      const color = this.currentStroke.color
+      
+      // Store the shape for fade-out management
+      this.geometricShapes.push({
+        x, y, size, rotation, color, sides: this.polygonSides,
+        timestamp: performance.now(),
+        alpha: 1.0
+      })
+      
+      // Draw the polygon
+      this.canvasDrawer.drawOutlinedRotatingPolygon(x, y, size, rotation, color, this.polygonSides)
+    } else {
+      // Regular freehand drawing
+      this.ctx.strokeStyle = this.currentStroke.color
+      this.ctx.lineWidth = lineWidth
+      this.ctx.shadowColor = this.currentStroke.color
+      this.ctx.shadowBlur = lineWidth * 0.5
 
-    this.ctx.beginPath()
-    this.ctx.moveTo(this.lastX, this.lastY)
-    this.ctx.lineTo(x, y)
-    this.ctx.stroke()
+      this.ctx.beginPath()
+      this.ctx.moveTo(this.lastX, this.lastY)
+      this.ctx.lineTo(x, y)
+      this.ctx.stroke()
+    }
 
     this.lastX = x
     this.lastY = y
@@ -157,10 +198,58 @@ export class TabletManager {
 
   clear () {
     this.strokes = []
+    this.geometricShapes = []
     this.currentStroke = null
     this.drawing = false
     // Clear the tablet canvas completely (no background bleeding)
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+  }
+
+  // Update and fade out geometric shapes
+  updateGeometricShapes () {
+    if (!this.geometricPencilMode) return
+
+    const now = performance.now()
+    const shapesToRemove = []
+
+    // Update alpha and remove expired shapes
+    this.geometricShapes.forEach((shape, index) => {
+      const age = now - shape.timestamp
+      const fadeProgress = age / this.fadeDuration
+      
+      if (fadeProgress >= 1) {
+        shapesToRemove.push(index)
+      } else {
+        shape.alpha = 1 - fadeProgress
+        shape.rotation = shape.timestamp * 0.001 // Continue rotating
+      }
+    })
+
+    // Remove expired shapes (in reverse order to maintain indices)
+    shapesToRemove.reverse().forEach(index => {
+      this.geometricShapes.splice(index, 1)
+    })
+
+    // Redraw all shapes with updated alpha
+    this.redrawGeometricShapes()
+  }
+
+  // Redraw all geometric shapes with their current alpha values
+  redrawGeometricShapes () {
+    if (!this.geometricPencilMode) return
+
+    // Clear the canvas first
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+
+    // Redraw all geometric shapes
+    this.geometricShapes.forEach(shape => {
+      this.ctx.save()
+      this.ctx.globalAlpha = shape.alpha
+      this.canvasDrawer.drawOutlinedRotatingPolygon(
+        shape.x, shape.y, shape.size, shape.rotation, shape.color, shape.sides
+      )
+      this.ctx.restore()
+    })
   }
 
   // Redraw all strokes, using geometric shapes when available
@@ -290,10 +379,24 @@ export class TabletManager {
         this.drawing = true
       }
       this.draw(canvasX, canvasY, normalizedPressure, tiltX, tiltY)
+
+      // Handle MIDI output
+      if (this.midiManager) {
+        const note = this.midiManager.mapPositionToNote(canvasX, this.canvas.width)
+        const velocity = this.midiManager.mapPressureToVelocity(normalizedPressure)
+        if (note !== null) {
+          this.midiManager.sendNoteOn(note, velocity)
+        }
+      }
     } else {
       if (this.drawing) {
         this.stopDrawing()
         this.drawing = false
+
+        // Send MIDI note off when pen is lifted
+        if (this.midiManager) {
+          this.midiManager.sendNoteOff()
+        }
       }
     }
   }
@@ -317,11 +420,15 @@ export class TabletManager {
     return {
       drawing: this.drawing,
       strokeCount: this.strokes.length,
+      geometricShapeCount: this.geometricShapes.length,
       devices: this.devices.map(d => d.productName),
       activeDevice: this.activeDevice ? this.activeDevice.productName : 'None',
       lineWidth: this.baseLineWidth,
       geometricMode: this.geometricMode,
-      shapeDetectionThreshold: this.shapeDetectionThreshold
+      shapeDetectionThreshold: this.shapeDetectionThreshold,
+      geometricPencilMode: this.geometricPencilMode,
+      polygonSides: this.polygonSides,
+      fadeDuration: this.fadeDuration
     }
   }
 }

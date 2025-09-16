@@ -61,6 +61,36 @@ export class CanvasDrawer {
     this.ctx.restore()
   }
 
+  // Generic polygon drawing function for geometric pencil mode
+  drawOutlinedRotatingPolygon (x, y, size, angle, color, sides = 3) {
+    this.ctx.save()
+    this.ctx.translate(x, y)
+    this.ctx.rotate(angle)
+    this.ctx.beginPath()
+    
+    // Calculate polygon vertices
+    const angleStep = (Math.PI * 2) / sides
+    for (let i = 0; i < sides; i++) {
+      const vertexAngle = i * angleStep - Math.PI / 2 // Start from top
+      const vx = Math.cos(vertexAngle) * size
+      const vy = Math.sin(vertexAngle) * size
+      
+      if (i === 0) {
+        this.ctx.moveTo(vx, vy)
+      } else {
+        this.ctx.lineTo(vx, vy)
+      }
+    }
+    
+    this.ctx.closePath()
+    this.ctx.strokeStyle = color
+    this.ctx.shadowColor = color
+    this.ctx.shadowBlur = 20
+    this.ctx.lineWidth = 1
+    this.ctx.stroke()
+    this.ctx.restore()
+  }
+
   drawStripedSquare (x, y, size, angleDeg, bgColor) {
     const stripeWidth = 4
     const angle = angleDeg * Math.PI / 180
@@ -153,52 +183,6 @@ export class CanvasDrawer {
     })
   }
 
-  // Gradient and texture functions
-  drawMorphingGradient (t, notes, colors = ['#ee77aa', '#558dff']) {
-    const noteCount = notes?.length || 0
-
-    // Animate only when notes are playing
-    const movement = noteCount > 0 ? t * 0.2 : 0
-
-    const gradient = this.ctx.createLinearGradient(
-      Math.sin(movement) * this.width * 0.5,
-      0,
-      Math.cos(movement) * this.width * 0.5 + this.width,
-      this.height
-    )
-
-    colors.forEach((color, i) => {
-      const stop = i / (colors.length - 1)
-      gradient.addColorStop(stop, color)
-    })
-
-    this.ctx.fillStyle = gradient
-    this.ctx.fillRect(0, 0, this.width, this.height)
-  }
-
-  drawScanlineOverlay (t, density = 150, strength = 0.5) {
-    this.ctx.save()
-    this.ctx.strokeStyle = `rgba(255, 255, 255, ${strength})`
-    this.ctx.lineWidth = 1
-
-    for (let i = 0; i < density; i++) {
-      const y = (i / density) * this.height
-      const offset = Math.sin(t + i * 0.25) * 0.4
-
-      this.ctx.beginPath()
-      this.ctx.moveTo(0, y + offset)
-      this.ctx.lineTo(this.width, y + offset)
-      this.ctx.stroke()
-    }
-
-    this.ctx.restore()
-  }
-
-  drawGradientTexture (t, notes, colors = ['#ee77aa', '#558dff']) {
-    if (!notes || notes.length === 0) return
-    this.drawMorphingGradient(t, notes, colors)
-    this.drawScanlineOverlay(t)
-  }
 
   // Square overlap checking
   checkOverlap (square1, square2) {

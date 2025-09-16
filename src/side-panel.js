@@ -170,6 +170,32 @@ export class SidePanel {
     this.tabletControls.on('shapeDetectionThresholdChange', (data) => {
       this.triggerCallback('shapeDetectionThresholdChange', data)
     })
+
+    // Geometric pencil mode events
+    this.tabletControls.on('geometricPencilChange', (data) => {
+      this.triggerCallback('geometricPencilChange', data)
+    })
+
+    this.tabletControls.on('polygonSidesChange', (data) => {
+      this.triggerCallback('polygonSidesChange', data)
+    })
+
+    this.tabletControls.on('fadeDurationChange', (data) => {
+      this.triggerCallback('fadeDurationChange', data)
+    })
+
+    // MIDI output events
+    this.tabletControls.on('midiOutputChange', (data) => {
+      this.triggerCallback('midiOutputChange', data)
+    })
+
+    this.tabletControls.on('midiOutputDeviceChange', (data) => {
+      this.triggerCallback('midiOutputDeviceChange', data)
+    })
+
+    this.tabletControls.on('octaveRangeChange', (data) => {
+      this.triggerCallback('octaveRangeChange', data)
+    })
   }
 
   // Tab switching
@@ -246,6 +272,9 @@ export class SidePanel {
     if (tabletControlsContainer) {
       tabletControlsContainer.innerHTML = this.tabletControls.createTabletControlsHTML()
       this.tabletControls.setupEventListeners(tabletControlsContainer)
+      
+      // Populate MIDI output devices when tablet controls are rendered
+      this.populateMidiOutputDevices()
     }
   }
 
@@ -723,6 +752,67 @@ export class SidePanel {
     const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
     if (tabletControlsContainer) {
       this.tabletControls.updateShapeDetectionThreshold(value, tabletControlsContainer)
+    }
+  }
+
+  // Update geometric pencil mode settings
+  updateGeometricPencil (enabled) {
+    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    if (tabletControlsContainer) {
+      this.tabletControls.updateGeometricPencil(enabled, tabletControlsContainer)
+    }
+  }
+
+  updatePolygonSides (sides) {
+    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    if (tabletControlsContainer) {
+      this.tabletControls.updatePolygonSides(sides, tabletControlsContainer)
+    }
+  }
+
+  updateFadeDuration (duration) {
+    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    if (tabletControlsContainer) {
+      this.tabletControls.updateFadeDuration(duration, tabletControlsContainer)
+    }
+  }
+
+  // Update MIDI output settings
+  updateMidiOutput (enabled) {
+    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    if (tabletControlsContainer) {
+      this.tabletControls.updateMidiOutput(enabled, tabletControlsContainer)
+    }
+  }
+
+  updateMidiOutputDevices (devices) {
+    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    if (tabletControlsContainer) {
+      this.tabletControls.updateMidiOutputDevices(devices, tabletControlsContainer)
+    }
+  }
+
+  updateMidiOutputDevice (deviceId) {
+    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    if (tabletControlsContainer) {
+      this.tabletControls.updateMidiOutputDevice(deviceId, tabletControlsContainer)
+    }
+  }
+
+  updateOctaveRange (range) {
+    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    if (tabletControlsContainer) {
+      this.tabletControls.updateOctaveRange(range, tabletControlsContainer)
+    }
+  }
+
+  // Populate MIDI output devices
+  populateMidiOutputDevices () {
+    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    if (tabletControlsContainer) {
+      // Get devices from track manager (which gets them from MIDI manager)
+      const devices = this.trackManager.getAvailableMidiDevices()
+      this.tabletControls.updateMidiOutputDevices(devices, tabletControlsContainer)
     }
   }
 

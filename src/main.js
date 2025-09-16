@@ -29,7 +29,7 @@ export class GLOWVisualizer {
     this.canvasDrawer = new CanvasDrawer(this.canvas)
     this.trackManager = new TrackManager()
     this.midiManager = new MIDIManager(this.trackManager)
-    this.tabletManager = new TabletManager(this.tabletCanvas)
+    this.tabletManager = new TabletManager(this.tabletCanvas, { midiManager: this.midiManager })
     this.uiManager = new UIManager()
     this.sidePanel = new SidePanel(this.trackManager, this.tabletManager, this.uiManager)
     this.sidePanel.setSettings(SETTINGS)
@@ -94,6 +94,12 @@ export class GLOWVisualizer {
     this.sidePanel.on('canvasLayerChange', (layer) => this.setCanvasLayer(layer))
     this.sidePanel.on('geometricModeChange', (enabled) => this.setGeometricMode(enabled))
     this.sidePanel.on('shapeDetectionThresholdChange', (threshold) => this.setShapeDetectionThreshold(threshold))
+    this.sidePanel.on('geometricPencilChange', (enabled) => this.setGeometricPencilMode(enabled))
+    this.sidePanel.on('polygonSidesChange', (sides) => this.setPolygonSides(sides))
+    this.sidePanel.on('fadeDurationChange', (duration) => this.setFadeDuration(duration))
+    this.sidePanel.on('midiOutputChange', (enabled) => this.setMidiOutputEnabled(enabled))
+    this.sidePanel.on('midiOutputDeviceChange', (deviceId) => this.setMidiOutputDevice(deviceId))
+    this.sidePanel.on('octaveRangeChange', (range) => this.setOctaveRange(range))
     
     // Canvas and color settings
     this.sidePanel.on('canvasSettingChange', (data) => this.updateCanvasSetting(data))
@@ -122,6 +128,9 @@ export class GLOWVisualizer {
 
       // Initialize side panel after MIDI setup
       this.sidePanel.renderTracks()
+      
+      // Populate MIDI output device list
+      this.populateMidiOutputDevices()
     } catch (error) {
       console.error('Failed to start visualizer:', error)
       this.uiManager.showStatus('Failed to start. Check console for details.', 'error')
@@ -199,6 +208,44 @@ export class GLOWVisualizer {
   setShapeDetectionThreshold (threshold) {
     // Update the shape detection threshold in the tablet manager
     this.tabletManager.setShapeDetectionThreshold(threshold)
+  }
+
+  setGeometricPencilMode (enabled) {
+    // Update the geometric pencil mode in the tablet manager
+    this.tabletManager.setGeometricPencilMode(enabled)
+  }
+
+  setPolygonSides (sides) {
+    // Update the polygon sides in the tablet manager
+    this.tabletManager.setPolygonSides(sides)
+  }
+
+  setFadeDuration (duration) {
+    // Update the fade duration in the tablet manager (convert seconds to milliseconds)
+    this.tabletManager.setFadeDuration(duration * 1000)
+  }
+
+  setMidiOutputEnabled (enabled) {
+    // Update the MIDI output enabled state in the MIDI manager
+    this.midiManager.setOutputEnabled(enabled)
+  }
+
+  setMidiOutputDevice (deviceId) {
+    // Update the MIDI output device in the MIDI manager
+    this.midiManager.setOutputDevice(deviceId)
+    // Reinitialize MIDI output with the new device
+    this.midiManager.initializeOutput()
+  }
+
+  setOctaveRange (range) {
+    // Update the octave range in the MIDI manager
+    this.midiManager.setOctaveRange(range)
+  }
+
+  populateMidiOutputDevices () {
+    // Get available MIDI devices from the MIDI manager
+    const devices = this.midiManager.getAvailableOutputDevices()
+    this.sidePanel.updateMidiOutputDevices(devices)
   }
 
   updateCanvasSetting (data) {
@@ -292,6 +339,9 @@ export class GLOWVisualizer {
 
     // Check for periodic tablet clearing
     this.tabletManager.checkAndClearStrokes(time)
+
+    // Update geometric shapes fade-out
+    this.tabletManager.updateGeometricShapes()
 
     this.animationId = requestAnimationFrame(() => this.animate())
   }

@@ -100,7 +100,46 @@ export class TabletControls {
         <div class="tablet-config-group">
           <label>
             <ion-icon name="shapes-outline"></ion-icon>
-            Geometric Drawing
+            Geometric Pencil Mode
+          </label>
+          <label class="checkbox-container">
+            <input id="geometricPencilToggle" type="checkbox"/>
+            <span class="checkmark"></span>
+            Enable Geometric Pencil
+          </label>
+          <div class="setting-description">
+            Draw rotating polygons instead of strokes
+          </div>
+        </div>
+        
+        <div class="tablet-config-group" id="geometricPencilSettings" style="display: none;">
+          <label>
+            Polygon Sides
+          </label>
+          <div class="range-container">
+            <input id="polygonSides" type="range" min="3" max="10" value="3"/>
+            <span class="range-value">3</span>
+          </div>
+          <div class="setting-description">
+            Number of sides for the polygon (3=triangle, 4=square, etc.)
+          </div>
+          
+          <label>
+            Fade Duration (seconds)
+          </label>
+          <div class="range-container">
+            <input id="fadeDuration" type="range" min="1" max="10" step="0.5" value="3"/>
+            <span class="range-value">3.0</span>
+          </div>
+          <div class="setting-description">
+            How long shapes stay visible before fading out
+          </div>
+        </div>
+        
+        <div class="tablet-config-group">
+          <label>
+            <ion-icon name="shapes-outline"></ion-icon>
+            Shape Detection
           </label>
           <label class="checkbox-container">
             <input id="geometricModeToggle" type="checkbox"/>
@@ -124,6 +163,47 @@ export class TabletControls {
             Higher values require more precise shapes (0.1 = loose, 1.0 = very strict)
           </div>
         </div>
+        
+        <div class="tablet-config-group">
+          <label>
+            <ion-icon name="musical-notes-outline"></ion-icon>
+            MIDI Output
+          </label>
+          <label class="checkbox-container">
+            <input id="midiOutputToggle" type="checkbox"/>
+            <span class="checkmark"></span>
+            Enable MIDI Output
+          </label>
+          <div class="setting-description">
+            Send MIDI notes based on pencil position and pressure
+          </div>
+        </div>
+        
+        <div class="tablet-config-group" id="midiOutputSettings" style="display: none;">
+          <div class="assignment-group">
+            <label>
+              <ion-icon name="musical-notes-outline"></ion-icon>
+              MIDI Device
+            </label>
+            <select id="midiOutputDevice" class="midi-device-select">
+              <option value="">Select Device</option>
+            </select>
+          </div>
+          <div class="setting-description">
+            Choose which MIDI device to send notes to
+          </div>
+          
+          <label>
+            Octave Range
+          </label>
+          <div class="range-container">
+            <input id="octaveRange" type="range" min="1" max="4" value="3"/>
+            <span class="range-value">3</span>
+          </div>
+          <div class="setting-description">
+            Number of octaves to map X position to (1-4 octaves)
+          </div>
+        </div>
       </div>
     `
   }
@@ -136,6 +216,12 @@ export class TabletControls {
     const backgroundBleedingToggle = container.querySelector('#backgroundBleedingToggle')
     const canvasLayerFront = container.querySelector('#canvasLayerFront')
     const canvasLayerBack = container.querySelector('#canvasLayerBack')
+    const geometricPencilToggle = container.querySelector('#geometricPencilToggle')
+    const polygonSides = container.querySelector('#polygonSides')
+    const fadeDuration = container.querySelector('#fadeDuration')
+    const midiOutputToggle = container.querySelector('#midiOutputToggle')
+    const midiOutputDevice = container.querySelector('#midiOutputDevice')
+    const octaveRange = container.querySelector('#octaveRange')
     const geometricModeToggle = container.querySelector('#geometricModeToggle')
     const shapeDetectionThreshold = container.querySelector('#shapeDetectionThreshold')
 
@@ -182,6 +268,50 @@ export class TabletControls {
       })
     }
 
+    if (geometricPencilToggle) {
+      geometricPencilToggle.addEventListener('change', (e) => {
+        this.toggleGeometricPencilSettings(e.target.checked, container)
+        this.triggerCallback('geometricPencilChange', e.target.checked)
+      })
+    }
+
+    if (polygonSides) {
+      polygonSides.addEventListener('input', (e) => {
+        const value = parseInt(e.target.value)
+        this.updateRangeValue(value, container, 'polygonSides')
+        this.triggerCallback('polygonSidesChange', value)
+      })
+    }
+
+    if (fadeDuration) {
+      fadeDuration.addEventListener('input', (e) => {
+        const value = parseFloat(e.target.value)
+        this.updateRangeValue(value, container, 'fadeDuration')
+        this.triggerCallback('fadeDurationChange', value)
+      })
+    }
+
+    if (midiOutputToggle) {
+      midiOutputToggle.addEventListener('change', (e) => {
+        this.toggleMidiOutputSettings(e.target.checked, container)
+        this.triggerCallback('midiOutputChange', e.target.checked)
+      })
+    }
+
+    if (midiOutputDevice) {
+      midiOutputDevice.addEventListener('change', (e) => {
+        this.triggerCallback('midiOutputDeviceChange', e.target.value)
+      })
+    }
+
+    if (octaveRange) {
+      octaveRange.addEventListener('input', (e) => {
+        const value = parseInt(e.target.value)
+        this.updateRangeValue(value, container, 'octaveRange')
+        this.triggerCallback('octaveRangeChange', value)
+      })
+    }
+
     if (geometricModeToggle) {
       geometricModeToggle.addEventListener('change', (e) => {
         this.toggleGeometricSettings(e.target.checked, container)
@@ -210,6 +340,22 @@ export class TabletControls {
       if (rangeValue) {
         rangeValue.textContent = value
       }
+    }
+  }
+
+  // Toggle geometric pencil settings visibility
+  toggleGeometricPencilSettings (enabled, container) {
+    const geometricPencilSettings = container.querySelector('#geometricPencilSettings')
+    if (geometricPencilSettings) {
+      geometricPencilSettings.style.display = enabled ? 'block' : 'none'
+    }
+  }
+
+  // Toggle MIDI output settings visibility
+  toggleMidiOutputSettings (enabled, container) {
+    const midiOutputSettings = container.querySelector('#midiOutputSettings')
+    if (midiOutputSettings) {
+      midiOutputSettings.style.display = enabled ? 'block' : 'none'
     }
   }
 
@@ -260,6 +406,76 @@ export class TabletControls {
     if (checkbox) {
       checkbox.checked = enabled
       this.toggleGeometricSettings(enabled, container)
+    }
+  }
+
+  // Update geometric pencil mode from external source
+  updateGeometricPencil (enabled, container) {
+    const checkbox = container.querySelector('#geometricPencilToggle')
+    if (checkbox) {
+      checkbox.checked = enabled
+      this.toggleGeometricPencilSettings(enabled, container)
+    }
+  }
+
+  // Update polygon sides from external source
+  updatePolygonSides (value, container) {
+    const slider = container.querySelector('#polygonSides')
+    if (slider) {
+      slider.value = value
+      this.updateRangeValue(value, container, 'polygonSides')
+    }
+  }
+
+  // Update fade duration from external source
+  updateFadeDuration (value, container) {
+    const slider = container.querySelector('#fadeDuration')
+    if (slider) {
+      slider.value = value
+      this.updateRangeValue(value, container, 'fadeDuration')
+    }
+  }
+
+  // Update MIDI output mode from external source
+  updateMidiOutput (enabled, container) {
+    const checkbox = container.querySelector('#midiOutputToggle')
+    if (checkbox) {
+      checkbox.checked = enabled
+      this.toggleMidiOutputSettings(enabled, container)
+    }
+  }
+
+  // Update MIDI output device list
+  updateMidiOutputDevices (devices, container) {
+    const select = container.querySelector('#midiOutputDevice')
+    if (select) {
+      // Clear existing options except the first one
+      select.innerHTML = '<option value="">Select MIDI Device</option>'
+      
+      // Add device options
+      devices.forEach(device => {
+        const option = document.createElement('option')
+        option.value = device.id
+        option.textContent = device.name
+        select.appendChild(option)
+      })
+    }
+  }
+
+  // Update selected MIDI output device
+  updateMidiOutputDevice (deviceId, container) {
+    const select = container.querySelector('#midiOutputDevice')
+    if (select) {
+      select.value = deviceId
+    }
+  }
+
+  // Update octave range from external source
+  updateOctaveRange (value, container) {
+    const slider = container.querySelector('#octaveRange')
+    if (slider) {
+      slider.value = value
+      this.updateRangeValue(value, container, 'octaveRange')
     }
   }
 
