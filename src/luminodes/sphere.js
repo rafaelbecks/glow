@@ -10,14 +10,13 @@ export class SphereLuminode {
     this.lastChordSignature = ''
   }
 
-  draw (t, notes) {
+  draw (t, notes, layout = { x: 0, y: 0, rotation: 0 }) {
     if (notes.length === 0) return
 
     // Update dimensions in case canvas was resized
     this.dimensions = this.canvasDrawer.getDimensions()
 
-    this.ctx.save()
-    this.ctx.translate(this.dimensions.width / 2, this.dimensions.height / 2)
+    this.canvasDrawer.applyLayoutTransform(layout)
 
     const baseRadius = SETTINGS.MODULES.SPHERE.BASE_RADIUS
     const latLines = SETTINGS.MODULES.SPHERE.LAT_LINES
@@ -80,6 +79,6 @@ export class SphereLuminode {
       this.ctx.stroke()
     }
 
-    this.ctx.restore()
+    this.canvasDrawer.restoreLayoutTransform()
   }
 }

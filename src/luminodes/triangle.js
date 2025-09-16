@@ -8,11 +8,14 @@ export class TriangleLuminode {
     this.dimensions = canvasDrawer.getDimensions()
   }
 
-  draw (t, notes, type = 'triangle', radiusScale = 1, spread = 300) {
+  draw (t, notes, type = 'triangle', radiusScale = 1, spread = 300, layout = { x: 0, y: 0, rotation: 0 }) {
     if (notes.length === 0) return
 
     // Update dimensions in case canvas was resized
     this.dimensions = this.canvasDrawer.getDimensions()
+
+    // Note: Triangle luminode doesn't use layout transforms as it has its own positioning logic
+    // for scattered triangle placement across the canvas
 
     notes.forEach(({ midi, velocity, timestamp }) => {
       const progress = (t - timestamp) / 1000

@@ -11,7 +11,7 @@ export class GegoNetLuminode {
     this.lastChordSig = ''
   }
 
-  draw (t, notes) {
+  draw (t, notes, layout = { x: 0, y: 0, rotation: 0 }) {
     if (!notes || notes.length === 0) return
 
     // Update dimensions in case canvas was resized
@@ -66,8 +66,7 @@ export class GegoNetLuminode {
     const cos = Math.cos(angle)
     const sin = Math.sin(angle)
 
-    this.ctx.save()
-    this.ctx.translate(this.dimensions.width / 2, this.dimensions.height / 2)
+    this.canvasDrawer.applyLayoutTransform(layout)
     this.ctx.lineWidth = 0.2
 
     this.gegoConnections.forEach(([i, j]) => {
@@ -98,6 +97,6 @@ export class GegoNetLuminode {
       this.ctx.stroke()
     })
 
-    this.ctx.restore()
+    this.canvasDrawer.restoreLayoutTransform()
   }
 }

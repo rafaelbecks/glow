@@ -8,7 +8,7 @@ export class WhitneyLinesLuminode {
     this.dimensions = canvasDrawer.getDimensions()
   }
 
-  draw (t, notes, useColor = false) {
+  draw (t, notes, useColor = false, layout = { x: 0, y: 0, rotation: 0 }) {
     if (notes.length === 0) return
 
     // Update dimensions in case canvas was resized
@@ -20,8 +20,7 @@ export class WhitneyLinesLuminode {
     const r = SETTINGS.MODULES.WHITNEY_LINES.RADIUS
     const totalLines = notesToUse.length * SETTINGS.MODULES.WHITNEY_LINES.LINES_PER_NOTE
 
-    this.ctx.save()
-    this.ctx.translate(cx, cy)
+    this.canvasDrawer.applyLayoutTransform(layout)
 
     for (let i = 0; i < totalLines; i++) {
       const angle = t * SETTINGS.MODULES.WHITNEY_LINES.ROTATION_SPEED + i * (Math.PI * 2 / totalLines)
@@ -46,6 +45,6 @@ export class WhitneyLinesLuminode {
       this.ctx.stroke()
     }
 
-    this.ctx.restore()
+    this.canvasDrawer.restoreLayoutTransform()
   }
 }

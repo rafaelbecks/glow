@@ -158,12 +158,6 @@ export class SidePanel {
     this.tabletControls.on('colorModeChange', (data) => {
       this.triggerCallback('colorModeChange', data)
     })
-    this.tabletControls.on('backgroundBleedingChange', (data) => {
-      this.triggerCallback('backgroundBleedingChange', data)
-    })
-    this.tabletControls.on('canvasLayerChange', (data) => {
-      this.triggerCallback('canvasLayerChange', data)
-    })
     this.tabletControls.on('geometricModeChange', (data) => {
       this.triggerCallback('geometricModeChange', data)
     })
@@ -351,6 +345,77 @@ export class SidePanel {
               </select>
             </div>
           </div>
+          
+          ${track.luminode !== 'triangle' ? `
+          <div class="assignment-row">
+            <div class="assignment-group layout-controls">
+              <label>
+                <svg class="layout-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <style>.cls-1{fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:2px;}</style>
+                  </defs>
+                  <g data-name="Layer 2" id="Layer_2">
+                    <g data-name="E449, Sine, sound, wave" id="E449_Sine_sound_wave">
+                      <rect class="cls-1" x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                      <circle class="cls-1" cx="9" cy="9" r="2"></circle>
+                      <circle class="cls-1" cx="15" cy="15" r="2"></circle>
+                      <line class="cls-1" x1="9" y1="9" x2="15" y2="15"></line>
+                    </g>
+                  </g>
+                </svg>
+                Layout
+              </label>
+              <div class="layout-controls-grid">
+                <div class="layout-control-row">
+                  <div class="layout-control">
+                    <span class="layout-label">X</span>
+                    <div class="slider-container">
+                      <input type="range" 
+                             class="layout-slider" 
+                             data-track-id="${track.id}" 
+                             data-axis="x"
+                             min="-500" 
+                             max="500" 
+                             step="10" 
+                             value="${track.layout.x}">
+                      <span class="slider-value">${track.layout.x}</span>
+                    </div>
+                  </div>
+                  <div class="layout-control">
+                    <span class="layout-label">Y</span>
+                    <div class="slider-container">
+                      <input type="range" 
+                             class="layout-slider" 
+                             data-track-id="${track.id}" 
+                             data-axis="y"
+                             min="-500" 
+                             max="500" 
+                             step="10" 
+                             value="${track.layout.y}">
+                      <span class="slider-value">${track.layout.y}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="layout-control-row">
+                  <div class="layout-control">
+                    <span class="layout-label">R</span>
+                    <div class="slider-container">
+                      <input type="range" 
+                             class="layout-slider" 
+                             data-track-id="${track.id}" 
+                             data-axis="rotation"
+                             min="-180" 
+                             max="180" 
+                             step="5" 
+                             value="${track.layout.rotation}">
+                      <span class="slider-value">${track.layout.rotation}°</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          ` : ''}
         </div>
         
         <!-- Luminode Configuration Section -->
@@ -390,6 +455,24 @@ export class SidePanel {
       luminodeSelect.addEventListener('change', (e) => {
         this.trackManager.setLuminode(trackId, e.target.value || null)
         this.updateLuminodeConfig(trackId, e.target.value)
+        // Re-render the track to show/hide layout controls based on luminode
+        this.renderTracks()
+      })
+
+      // Layout controls
+      const layoutSliders = tile.querySelectorAll('.layout-slider')
+      layoutSliders.forEach(slider => {
+        slider.addEventListener('input', (e) => {
+          const axis = e.target.dataset.axis
+          const value = parseFloat(e.target.value)
+          const valueDisplay = e.target.parentElement.querySelector('.slider-value')
+          
+          if (valueDisplay) {
+            valueDisplay.textContent = axis === 'rotation' ? `${value}°` : value
+          }
+          
+          this.trackManager.setLayout(trackId, { [axis]: value })
+        })
       })
 
       // Configuration controls
@@ -414,6 +497,18 @@ export class SidePanel {
 
     midiSelect.value = track.midiDevice || ''
     luminodeSelect.value = track.luminode || ''
+
+    // Update layout controls (only if they exist - not for triangle luminode)
+    const layoutSliders = trackTile.querySelectorAll('.layout-slider')
+    layoutSliders.forEach(slider => {
+      const axis = slider.dataset.axis
+      const value = track.layout[axis] || 0
+      slider.value = value
+      const valueDisplay = slider.parentElement.querySelector('.slider-value')
+      if (valueDisplay) {
+        valueDisplay.textContent = axis === 'rotation' ? `${value}°` : value
+      }
+    })
 
     // Update luminode configuration
     this.updateLuminodeConfig(trackId, track.luminode)
@@ -598,12 +693,37 @@ export class SidePanel {
       value: currentValues[param.key] !== undefined ? currentValues[param.key] : param.default
     }))
     
+    // Group controls into rows of 2
+    const controlRows = []
+    for (let i = 0; i < config.length; i += 2) {
+      const rowControls = config.slice(i, i + 2)
+      controlRows.push(rowControls)
+    }
+
     return `
       <div class="config-header" data-track-id="${trackId}">
-        <h4>${this.normalizeLuminodeName(luminode)} Config</h4>
+        <label>
+          <svg class="config-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <style>.cls-1{fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:2px;}</style>
+            </defs>
+            <g data-name="Layer 2" id="Layer_2">
+              <g data-name="E449, Sine, sound, wave" id="E449_Sine_sound_wave">
+                <circle class="cls-1" cx="12" cy="12" r="3"></circle>
+                <path class="cls-1" d="M12 1v6m0 6v6m11-7h-6m-6 0H1m15.5-4.5L16 8l-2.5 2.5M8 16l-2.5 2.5L3 16m4.5-4.5L8 8l2.5-2.5"></path>
+              </g>
+            </g>
+          </svg>
+          ${this.normalizeLuminodeName(luminode)} Config
+        </label>
       </div>
-      <div class="config-controls" id="config-controls-${trackId}" style="display: none;">
-        ${config.map(param => this.createConfigControl(param, trackId)).join('')}
+      <div class="config-controls" id="config-controls-${trackId}" style="display: block;">
+        ${controlRows.map(rowControls => `
+          <div class="config-control-row">
+            ${rowControls.map(param => this.createConfigControl(param, trackId)).join('')}
+            ${rowControls.length === 1 ? '<div class="config-control-spacer"></div>' : ''}
+          </div>
+        `).join('')}
       </div>
     `
   }
@@ -727,19 +847,6 @@ export class SidePanel {
     }
   }
 
-  updateBackgroundBleeding (enabled) {
-    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
-    if (tabletControlsContainer) {
-      this.tabletControls.updateBackgroundBleeding(enabled, tabletControlsContainer)
-    }
-  }
-
-  updateCanvasLayer (layer) {
-    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
-    if (tabletControlsContainer) {
-      this.tabletControls.updateCanvasLayer(layer, tabletControlsContainer)
-    }
-  }
 
   updateGeometricMode (enabled) {
     const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')

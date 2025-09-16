@@ -10,7 +10,7 @@ export class WovenNetLuminode {
     this.lastWovenChord = ''
   }
 
-  draw (t, notes) {
+  draw (t, notes, layout = { x: 0, y: 0, rotation: 0 }) {
     if (!notes || notes.length === 0) return
 
     // Update dimensions in case canvas was resized
@@ -23,14 +23,13 @@ export class WovenNetLuminode {
       this.lastWovenChord = chordSig
     }
 
-    this.ctx.save()
-    this.ctx.translate(this.dimensions.width / 2, this.dimensions.height / 2)
+    this.canvasDrawer.applyLayoutTransform(layout)
 
     this.wovenPattern.forEach(({ x, y, size, color }) => {
       this.canvasDrawer.drawWobblyRect(x, y, size, color)
     })
 
-    this.ctx.restore()
+    this.canvasDrawer.restoreLayoutTransform()
   }
 
   generateWovenPattern (notes) {

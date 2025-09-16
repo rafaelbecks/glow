@@ -129,8 +129,6 @@ export const SETTINGS = {
     VENDOR_ID: 0x28BD,
     PRODUCT_ID: 0x2901,
     REPORT_ID: 0x07,
-    BACKGROUND_BLEEDING: true, // Enable/disable background color bleeding effect
-    CANVAS_LAYER_ORDER: 'front' // 'front' or 'back' - whether tablet canvas is in front or behind luminodes
   },
 
   // Animation settings

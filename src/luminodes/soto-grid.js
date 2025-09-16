@@ -10,7 +10,7 @@ export class SotoGridLuminode {
     this.sotoSolidTop = Math.random() < 0.5
   }
 
-  draw (t, notes, stripedMode = false) {
+  draw (t, notes, stripedMode = false, layout = { x: 0, y: 0, rotation: 0 }) {
     if (notes.length === 0) return
 
     // Update dimensions in case canvas was resized
@@ -18,6 +18,9 @@ export class SotoGridLuminode {
 
     const stripeWidth = SETTINGS.MODULES.SOTO_GRID.STRIPE_WIDTH
     const stripeCount = Math.ceil(this.dimensions.width / stripeWidth)
+
+    this.canvasDrawer.applyLayoutTransform(layout)
+    this.ctx.translate(-this.dimensions.width / 2, -this.dimensions.height / 2)
 
     const solidHeight = this.dimensions.height * SETTINGS.MODULES.SOTO_GRID.SOLID_HEIGHT_RATIO
     const moireHeight = this.dimensions.height - solidHeight
@@ -50,6 +53,8 @@ export class SotoGridLuminode {
         this.canvasDrawer.drawStripedSquare(x, y, size, angle, color)
       }
     })
+
+    this.canvasDrawer.restoreLayoutTransform()
   }
 
   generateSotoSquares (notes, stripedMode = false) {

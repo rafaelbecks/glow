@@ -10,7 +10,7 @@ export class PolygonsLuminode {
     this.lastPolySig = ''
   }
 
-  draw (t, notes) {
+  draw (t, notes, layout = { x: 0, y: 0, rotation: 0 }) {
     if (!notes || notes.length === 0) return
 
     // Update dimensions in case canvas was resized
@@ -22,8 +22,7 @@ export class PolygonsLuminode {
       this.lastPolySig = sig
     }
 
-    this.ctx.save()
-    this.ctx.translate(this.dimensions.width / 2, this.dimensions.height / 2)
+    this.canvasDrawer.applyLayoutTransform(layout)
 
     this.polygonShapes.forEach((shape, index) => {
       // Update color from current palette for existing shapes
@@ -32,7 +31,7 @@ export class PolygonsLuminode {
       this.canvasDrawer.drawWobblyContour(updatedShape, t)
     })
 
-    this.ctx.restore()
+    this.canvasDrawer.restoreLayoutTransform()
   }
 
   generatePolygonShapes (notes) {

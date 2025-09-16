@@ -90,8 +90,6 @@ export class GLOWVisualizer {
     this.sidePanel.on('connectTablet', () => this.connectTablet())
     this.sidePanel.on('clearTablet', () => this.clearTablet())
     this.sidePanel.on('tabletWidthChange', (width) => this.setTabletWidth(width))
-    this.sidePanel.on('backgroundBleedingChange', (enabled) => this.setBackgroundBleeding(enabled))
-    this.sidePanel.on('canvasLayerChange', (layer) => this.setCanvasLayer(layer))
     this.sidePanel.on('geometricModeChange', (enabled) => this.setGeometricMode(enabled))
     this.sidePanel.on('shapeDetectionThresholdChange', (threshold) => this.setShapeDetectionThreshold(threshold))
     this.sidePanel.on('geometricPencilChange', (enabled) => this.setGeometricPencilMode(enabled))
@@ -190,15 +188,6 @@ export class GLOWVisualizer {
   }
 
 
-  setBackgroundBleeding (enabled) {
-    // Update the background bleeding setting in the tablet manager
-    this.tabletManager.setBackgroundBleeding(enabled)
-  }
-
-  setCanvasLayer (layer) {
-    // Update the canvas layer order in the tablet manager
-    this.tabletManager.setCanvasLayerOrder(layer)
-  }
 
   setGeometricMode (enabled) {
     // Update the geometric mode in the tablet manager
@@ -346,6 +335,19 @@ export class GLOWVisualizer {
     this.animationId = requestAnimationFrame(() => this.animate())
   }
 
+  getTrackLayouts () {
+    const layouts = {}
+    const tracks = this.trackManager.getTracks()
+    
+    tracks.forEach(track => {
+      if (track.luminode) {
+        layouts[track.luminode] = track.layout || { x: 0, y: 0, rotation: 0 }
+      }
+    })
+    
+    return layouts
+  }
+
   drawLuminodes (t, activeNotes) {
     // Check if any drawing is active
     const hasActiveNotes = Object.values(activeNotes).some(notes => notes.length > 0)
@@ -366,27 +368,30 @@ export class GLOWVisualizer {
       this.uiManager.hideLogoContainer()
     }
 
+    // Get track layouts for positioning
+    const trackLayouts = this.getTrackLayouts()
+
     // Soto grid animations
-    this.luminodes.sotoGrid.draw(t, activeNotes.sotoGrid || [], false)
-    this.luminodes.sotoGridRotated.draw(t, activeNotes.sotoGridRotated || [], true)
+    this.luminodes.sotoGrid.draw(t, activeNotes.sotoGrid || [], false, trackLayouts.sotoGrid)
+    this.luminodes.sotoGridRotated.draw(t, activeNotes.sotoGridRotated || [], true, trackLayouts.sotoGridRotated)
 
     // Core visual modules
-    this.luminodes.lissajous.draw(t, activeNotes.lissajous.map(n => n.midi))
-    this.luminodes.harmonograph.draw(t, activeNotes.harmonograph)
-    this.luminodes.sphere.draw(t, activeNotes.sphere)
-    this.luminodes.gegoNet.draw(t, activeNotes.gegoNet)
-    this.luminodes.gegoShape.draw(t, activeNotes.gegoShape)
-    this.luminodes.phyllotaxis.draw(t, activeNotes.phyllotaxis)
+    this.luminodes.lissajous.draw(t, activeNotes.lissajous.map(n => n.midi), trackLayouts.lissajous)
+    this.luminodes.harmonograph.draw(t, activeNotes.harmonograph, trackLayouts.harmonograph)
+    this.luminodes.sphere.draw(t, activeNotes.sphere, trackLayouts.sphere)
+    this.luminodes.gegoNet.draw(t, activeNotes.gegoNet, trackLayouts.gegoNet)
+    this.luminodes.gegoShape.draw(t, activeNotes.gegoShape, trackLayouts.gegoShape)
+    this.luminodes.phyllotaxis.draw(t, activeNotes.phyllotaxis, SETTINGS.MODULES.PHYLLOTAXIS.DOTS_PER_NOTE, trackLayouts.phyllotaxis)
     // Get Whitney Lines color mode from settings
     const whitneyColorMode = SETTINGS.MODULES.WHITNEY_LINES.USE_COLOR || false
-    this.luminodes.whitneyLines.draw(t, activeNotes.whitneyLines, whitneyColorMode)
+    this.luminodes.whitneyLines.draw(t, activeNotes.whitneyLines, whitneyColorMode, trackLayouts.whitneyLines)
 
     // Additional visual modules
-    this.luminodes.moireCircles.draw(t, activeNotes.moireCircles)
-    this.luminodes.wovenNet.draw(t, activeNotes.wovenNet)
-    this.luminodes.sinewave.draw(t, activeNotes.sinewave)
-    this.luminodes.triangle.draw(t, activeNotes.triangle, 'triangle', 1)
-    this.luminodes.polygons.draw(t, activeNotes.polygons)
+    this.luminodes.moireCircles.draw(t, activeNotes.moireCircles, trackLayouts.moireCircles)
+    this.luminodes.wovenNet.draw(t, activeNotes.wovenNet, trackLayouts.wovenNet)
+    this.luminodes.sinewave.draw(t, activeNotes.sinewave, trackLayouts.sinewave)
+    this.luminodes.triangle.draw(t, activeNotes.triangle, 'triangle', 1, 300, trackLayouts.triangle)
+    this.luminodes.polygons.draw(t, activeNotes.polygons, trackLayouts.polygons)
   }
 
   stop () {

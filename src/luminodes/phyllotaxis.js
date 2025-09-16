@@ -8,7 +8,7 @@ export class PhyllotaxisLuminode {
     this.dimensions = canvasDrawer.getDimensions()
   }
 
-  draw (t, notes, dotsPerNote = SETTINGS.MODULES.PHYLLOTAXIS.DOTS_PER_NOTE) {
+  draw (t, notes, dotsPerNote = SETTINGS.MODULES.PHYLLOTAXIS.DOTS_PER_NOTE, layout = { x: 0, y: 0, rotation: 0 }) {
     if (!notes || notes.length === 0) return
 
     // Update dimensions in case canvas was resized
@@ -23,8 +23,7 @@ export class PhyllotaxisLuminode {
     const maxSize = SETTINGS.MODULES.PHYLLOTAXIS.MAX_SIZE
     const rotationSpeed = SETTINGS.MODULES.PHYLLOTAXIS.ROTATION_SPEED
 
-    this.ctx.save()
-    this.ctx.translate(centerX, centerY)
+    this.canvasDrawer.applyLayoutTransform(layout)
     this.ctx.rotate(t * rotationSpeed)
 
     const totalDots = notes.length * dotsPerNote
@@ -45,6 +44,6 @@ export class PhyllotaxisLuminode {
       }
     })
 
-    this.ctx.restore()
+    this.canvasDrawer.restoreLayoutTransform()
   }
 }

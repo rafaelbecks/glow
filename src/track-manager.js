@@ -2,10 +2,10 @@
 export class TrackManager {
   constructor () {
     this.tracks = [
-      { id: 1, name: 'Track 1', muted: false, solo: false, midiDevice: null, luminode: 'lissajous' },
-      { id: 2, name: 'Track 2', muted: false, solo: false, midiDevice: null, luminode: 'harmonograph' },
-      { id: 3, name: 'Track 3', muted: false, solo: false, midiDevice: null, luminode: 'sphere' },
-      { id: 4, name: 'Track 4', muted: false, solo: false, midiDevice: null, luminode: 'gegoNet' }
+      { id: 1, name: 'Track 1', muted: false, solo: false, midiDevice: null, luminode: 'lissajous', layout: { x: 0, y: 0, rotation: 0 } },
+      { id: 2, name: 'Track 2', muted: false, solo: false, midiDevice: null, luminode: 'harmonograph', layout: { x: 0, y: 0, rotation: 0 } },
+      { id: 3, name: 'Track 3', muted: false, solo: false, midiDevice: null, luminode: 'sphere', layout: { x: 0, y: 0, rotation: 0 } },
+      { id: 4, name: 'Track 4', muted: false, solo: false, midiDevice: null, luminode: 'gegoNet', layout: { x: 0, y: 0, rotation: 0 } }
     ]
 
     this.availableLuminodes = [
@@ -84,6 +84,14 @@ export class TrackManager {
     const track = this.getTrack(trackId)
     if (track) {
       track.luminode = luminode
+      this.triggerCallback('trackUpdated', { trackId, track })
+    }
+  }
+
+  setLayout (trackId, layoutUpdates) {
+    const track = this.getTrack(trackId)
+    if (track) {
+      track.layout = { ...track.layout, ...layoutUpdates }
       this.triggerCallback('trackUpdated', { trackId, track })
     }
   }

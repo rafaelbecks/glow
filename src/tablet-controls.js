@@ -56,46 +56,6 @@ export class TabletControls {
           </button>
         </div>
         
-        <div class="tablet-config-group">
-          <label>
-            <ion-icon name="color-filter-outline"></ion-icon>
-            Visual Mode
-          </label>
-        </div>
-        
-        <div class="tablet-config-group">
-          <label>
-            <ion-icon name="brush-outline"></ion-icon>
-            Background Effects
-          </label>
-          <label class="checkbox-container">
-            <input id="backgroundBleedingToggle" type="checkbox" checked/>
-            <span class="checkmark"></span>
-            Background Bleeding
-          </label>
-        </div>
-        
-        <div class="tablet-config-group">
-          <label>
-            <ion-icon name="layers-outline"></ion-icon>
-            Canvas Layer
-          </label>
-          <div class="radio-container">
-            <label class="radio-option">
-              <input id="canvasLayerFront" type="radio" name="canvasLayer" value="front" checked/>
-              <span class="radio-mark"></span>
-              Front
-            </label>
-            <label class="radio-option">
-              <input id="canvasLayerBack" type="radio" name="canvasLayer" value="back"/>
-              <span class="radio-mark"></span>
-              Back
-            </label>
-          </div>
-          <div class="setting-description">
-            Choose whether tablet drawing appears in front of or behind luminodes
-          </div>
-        </div>
         
         <div class="tablet-config-group">
           <label>
@@ -213,9 +173,6 @@ export class TabletControls {
     const readTabletBtn = container.querySelector('#readTabletData')
     const clearTabletBtn = container.querySelector('#clearTablet')
     const tabletWidthSlider = container.querySelector('#tabletWidth')
-    const backgroundBleedingToggle = container.querySelector('#backgroundBleedingToggle')
-    const canvasLayerFront = container.querySelector('#canvasLayerFront')
-    const canvasLayerBack = container.querySelector('#canvasLayerBack')
     const geometricPencilToggle = container.querySelector('#geometricPencilToggle')
     const polygonSides = container.querySelector('#polygonSides')
     const fadeDuration = container.querySelector('#fadeDuration')
@@ -246,27 +203,6 @@ export class TabletControls {
     }
 
 
-    if (backgroundBleedingToggle) {
-      backgroundBleedingToggle.addEventListener('change', (e) => {
-        this.triggerCallback('backgroundBleedingChange', e.target.checked)
-      })
-    }
-
-    if (canvasLayerFront) {
-      canvasLayerFront.addEventListener('change', (e) => {
-        if (e.target.checked) {
-          this.triggerCallback('canvasLayerChange', 'front')
-        }
-      })
-    }
-
-    if (canvasLayerBack) {
-      canvasLayerBack.addEventListener('change', (e) => {
-        if (e.target.checked) {
-          this.triggerCallback('canvasLayerChange', 'back')
-        }
-      })
-    }
 
     if (geometricPencilToggle) {
       geometricPencilToggle.addEventListener('change', (e) => {
@@ -377,28 +313,6 @@ export class TabletControls {
   }
 
 
-  // Update background bleeding from external source
-  updateBackgroundBleeding (enabled, container) {
-    const checkbox = container.querySelector('#backgroundBleedingToggle')
-    if (checkbox) {
-      checkbox.checked = enabled
-    }
-  }
-
-  // Update canvas layer from external source
-  updateCanvasLayer (layer, container) {
-    const frontRadio = container.querySelector('#canvasLayerFront')
-    const backRadio = container.querySelector('#canvasLayerBack')
-    if (frontRadio && backRadio) {
-      if (layer === 'front') {
-        frontRadio.checked = true
-        backRadio.checked = false
-      } else if (layer === 'back') {
-        frontRadio.checked = false
-        backRadio.checked = true
-      }
-    }
-  }
 
   // Update geometric mode from external source
   updateGeometricMode (enabled, container) {

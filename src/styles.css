@@ -216,8 +216,8 @@ ion-icon {
 .side-panel {
     position: fixed;
     top: 0;
-    right: -360px;
-    width: 360px;
+    right: -390px;
+    width: 390px;
     height: 100vh;
     background: #151515;
     border-left: 1px solid #333;
@@ -303,6 +303,7 @@ ion-icon {
 .side-panel-content {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .tab-content {
@@ -551,12 +552,11 @@ ion-icon {
 
 /* Luminode Configuration Styles */
 .luminode-config {
-  margin-top: 12px;
-  padding: 0 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 4px;
-  border-left: 3px solid #51cf66;
+  margin-top: 8px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
 }
 
 .config-header {
@@ -564,33 +564,53 @@ ion-icon {
   align-items: center;
   margin-bottom: 0;
   cursor: pointer;
-  padding: 0;
-  border-radius: 3px;
+  padding: 4px 0;
+  border-radius: 0;
   transition: background-color 0.2s ease;
-  height: 32px;
+  height: 24px;
 }
 
-.config-header h4 {
+.config-header label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin: 0;
   color: rgba(255, 255, 255, 0.7);
   font-size: 10px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  cursor: pointer;
+}
+
+.config-icon {
+  width: 10px;
+  height: 10px;
+  opacity: 0.8;
 }
 
 .config-controls {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 12px;
-  padding-bottom: 12px;
+  gap: 6px;
+  margin-top: 8px;
+  padding-bottom: 8px;
+}
+
+.config-control-row {
+  display: flex;
+  gap: 8px;
 }
 
 .config-control {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex: 1;
+}
+
+.config-control-spacer {
+  flex: 1;
 }
 
 .config-control label {
@@ -678,6 +698,95 @@ ion-icon {
 
 .config-number:hover {
   border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Layout Controls */
+.layout-controls {
+  margin-top: 8px;
+}
+
+.layout-controls-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.layout-control-row {
+  display: flex;
+  gap: 8px;
+}
+
+.layout-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.layout-label {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 9px;
+  font-weight: 600;
+  min-width: 12px;
+  text-align: center;
+}
+
+.layout-icon {
+  width: 10px;
+  height: 10px;
+  opacity: 0.8;
+}
+
+.layout-slider {
+  flex: 1;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.layout-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  background: #51cf66;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.layout-slider::-webkit-slider-thumb:hover {
+  background: #69db7c;
+  transform: scale(1.1);
+}
+
+.layout-slider::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  background: #51cf66;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.layout-slider::-moz-range-thumb:hover {
+  background: #69db7c;
+  transform: scale(1.1);
+}
+
+.layout-slider::-webkit-slider-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+.layout-slider::-moz-range-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  height: 3px;
 }
 
 .luminode-icon {

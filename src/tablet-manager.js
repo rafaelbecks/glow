@@ -20,8 +20,6 @@ export class TabletManager {
     // Configuration
     this.baseLineWidth = options.lineWidth || SETTINGS.TABLET.DEFAULT_LINE_WIDTH
     this.clearInterval = options.clearInterval || SETTINGS.TABLET.CLEAR_INTERVAL
-    this.backgroundBleeding = options.backgroundBleeding !== undefined ? options.backgroundBleeding : SETTINGS.TABLET.BACKGROUND_BLEEDING
-    this.canvasLayerOrder = options.canvasLayerOrder || SETTINGS.TABLET.CANVAS_LAYER_ORDER
 
     // Geometric drawing settings
     this.geometricMode = options.geometricMode || false
@@ -42,8 +40,6 @@ export class TabletManager {
     this.devices = []
     this.activeDevice = null
 
-    // Initialize canvas layer order
-    this.updateCanvasZIndex()
 
     // Initialize tablet canvas dimensions
     this.resizeCanvas()
@@ -66,14 +62,6 @@ export class TabletManager {
     this.baseLineWidth = newWidth
   }
 
-  setBackgroundBleeding (enabled) {
-    this.backgroundBleeding = enabled
-  }
-
-  setCanvasLayerOrder (layer) {
-    this.canvasLayerOrder = layer
-    this.updateCanvasZIndex()
-  }
 
   setGeometricMode (enabled) {
     this.geometricMode = enabled
@@ -96,15 +84,6 @@ export class TabletManager {
   }
 
 
-  updateCanvasZIndex () {
-    if (this.canvas) {
-      if (this.canvasLayerOrder === 'front') {
-        this.canvas.style.zIndex = '2'
-      } else {
-        this.canvas.style.zIndex = '0'
-      }
-    }
-  }
 
   resizeCanvas () {
     if (this.canvas) {
@@ -201,7 +180,7 @@ export class TabletManager {
     this.geometricShapes = []
     this.currentStroke = null
     this.drawing = false
-    // Clear the tablet canvas completely (no background bleeding)
+    // Clear the tablet canvas completely
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
   }
 

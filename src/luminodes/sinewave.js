@@ -8,7 +8,7 @@ export class SinewaveLuminode {
     this.dimensions = canvasDrawer.getDimensions()
   }
 
-  draw (t, notes) {
+  draw (t, notes, layout = { x: 0, y: 0, rotation: 0 }) {
     if (!notes || notes.length === 0) return
 
     // Update dimensions in case canvas was resized
@@ -17,6 +17,8 @@ export class SinewaveLuminode {
     const rootMidi = Math.min(...notes.map(n => n.midi))
     const rootFreq = 440 * Math.pow(2, (rootMidi - 69) / 12)
     const baseFreq = 0.0035
+
+    this.canvasDrawer.applyLayoutTransform(layout)
 
     notes.forEach(({ midi, velocity, timestamp }) => {
       const progress = (t - timestamp) / 1000
@@ -36,9 +38,11 @@ export class SinewaveLuminode {
 
       for (let i = -this.dimensions.width / 2; i <= this.dimensions.width / 2; i += 1) {
         const yOffset = Math.sin(i * harmonicFreq + phase) * amplitude
-        this.ctx.lineTo(i + this.dimensions.width / 2, this.dimensions.height / 2 + yOffset)
+        this.ctx.lineTo(i, yOffset)
       }
       this.ctx.stroke()
     })
+
+    this.canvasDrawer.restoreLayoutTransform()
   }
 }

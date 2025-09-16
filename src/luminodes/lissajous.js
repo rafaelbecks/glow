@@ -8,7 +8,7 @@ export class LissajousLuminode {
     this.dimensions = canvasDrawer.getDimensions()
   }
 
-  draw (t, notes) {
+  draw (t, notes, layout = { x: 0, y: 0, rotation: 0 }) {
     if (notes.length === 0) return
 
     // Update dimensions in case canvas was resized
@@ -18,8 +18,7 @@ export class LissajousLuminode {
     const b = notes[1 % notes.length] % 7 + 1
     const delta = (notes[2 % notes.length] || notes[0]) * 0.1
 
-    this.ctx.save()
-    this.ctx.translate(this.dimensions.width / 2, this.dimensions.height / 2)
+    this.canvasDrawer.applyLayoutTransform(layout)
     this.ctx.rotate(Math.sin(t * 0.1) * 0.3)
     this.ctx.beginPath()
 
@@ -36,6 +35,6 @@ export class LissajousLuminode {
     this.ctx.shadowBlur = SETTINGS.MODULES.LISSAJOUS.SHADOW_BLUR
     this.ctx.lineWidth = SETTINGS.MODULES.LISSAJOUS.LINE_WIDTH
     this.ctx.stroke()
-    this.ctx.restore()
+    this.canvasDrawer.restoreLayoutTransform()
   }
 }

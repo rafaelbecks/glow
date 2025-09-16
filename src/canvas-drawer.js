@@ -201,4 +201,23 @@ export class CanvasDrawer {
   getDimensions () {
     return { width: this.width, height: this.height }
   }
+
+  // Layout positioning utility
+  // Usage in luminodes:
+  // 1. Call this.canvasDrawer.applyLayoutTransform(layout) at the start of drawing
+  // 2. Draw your luminode content (it will be positioned and rotated automatically)
+  // 3. Call this.canvasDrawer.restoreLayoutTransform() at the end
+  applyLayoutTransform (layout = { x: 0, y: 0, rotation: 0 }) {
+    this.ctx.save()
+    this.ctx.translate(
+      this.width / 2 + layout.x, 
+      this.height / 2 + layout.y
+    )
+    this.ctx.rotate(layout.rotation * Math.PI / 180)
+  }
+
+  // Restore layout transform
+  restoreLayoutTransform () {
+    this.ctx.restore()
+  }
 }
