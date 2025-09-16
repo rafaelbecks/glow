@@ -74,6 +74,7 @@ export class CanvasDrawer {
       const vertexAngle = i * angleStep - Math.PI / 2 // Start from top
       const vx = Math.cos(vertexAngle) * size
       const vy = Math.sin(vertexAngle) * size
+
       
       if (i === 0) {
         this.ctx.moveTo(vx, vy)
@@ -85,7 +86,6 @@ export class CanvasDrawer {
     this.ctx.closePath()
     this.ctx.strokeStyle = color
     this.ctx.shadowColor = color
-    this.ctx.shadowBlur = 20
     this.ctx.lineWidth = 1
     this.ctx.stroke()
     this.ctx.restore()

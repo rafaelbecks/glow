@@ -94,6 +94,7 @@ export class GLOWVisualizer {
     this.sidePanel.on('shapeDetectionThresholdChange', (threshold) => this.setShapeDetectionThreshold(threshold))
     this.sidePanel.on('geometricPencilChange', (enabled) => this.setGeometricPencilMode(enabled))
     this.sidePanel.on('polygonSidesChange', (sides) => this.setPolygonSides(sides))
+    this.sidePanel.on('polygonSizeChange', (size) => this.setPolygonSize(size))
     this.sidePanel.on('fadeDurationChange', (duration) => this.setFadeDuration(duration))
     this.sidePanel.on('midiOutputChange', (enabled) => this.setMidiOutputEnabled(enabled))
     this.sidePanel.on('midiOutputDeviceChange', (deviceId) => this.setMidiOutputDevice(deviceId))
@@ -208,6 +209,12 @@ export class GLOWVisualizer {
     // Update the polygon sides in the tablet manager
     this.tabletManager.setPolygonSides(sides)
   }
+
+  setPolygonSize (size) {
+    // Update the polygon size in the tablet manager
+    this.tabletManager.setPolygonSize(size)
+  }
+
 
   setFadeDuration (duration) {
     // Update the fade duration in the tablet manager (convert seconds to milliseconds)

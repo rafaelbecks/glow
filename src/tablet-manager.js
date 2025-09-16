@@ -29,6 +29,7 @@ export class TabletManager {
     // Geometric pencil mode settings
     this.geometricPencilMode = options.geometricPencilMode || false
     this.polygonSides = options.polygonSides || 3
+    this.polygonSize = options.polygonSize || 50 // Base size for polygons
     this.fadeDuration = options.fadeDuration || 3000 // milliseconds
     this.geometricShapes = [] // Array to store geometric shapes with timestamps
     this.canvasDrawer = new CanvasDrawer(canvas)
@@ -83,6 +84,15 @@ export class TabletManager {
     this.fadeDuration = Math.max(1000, Math.min(10000, duration)) // 1-10 seconds
   }
 
+  setPolygonSize (size) {
+    this.polygonSize = Math.max(20, Math.min(200, size)) // 20-200 pixels
+    // Redraw existing shapes with new size
+    if (this.geometricPencilMode && this.geometricShapes.length > 0) {
+      this.redrawGeometricShapes()
+    }
+  }
+
+
 
 
   resizeCanvas () {
@@ -103,6 +113,9 @@ export class TabletManager {
       color: this.getRandomColor(),
       lineWidth: this.baseLineWidth
     }
+    
+    // Hide cursor when drawing
+    this.canvas.style.cursor = 'none'
   }
 
   stopDrawing () {
@@ -126,6 +139,10 @@ export class TabletManager {
       this.strokes.push(this.currentStroke)
     }
     this.currentStroke = null
+    
+    // Restore cursor when drawing stops
+    this.canvas.style.cursor = 'url(\'../assets/cursor.svg\') 4 4, auto'
+
     this.ctx.beginPath() // reset path
   }
 
@@ -141,13 +158,14 @@ export class TabletManager {
 
     if (this.geometricPencilMode) {
       // In geometric pencil mode, draw a polygon at the current position
-      const size = (lineWidth + 10) * 2 // Scale size based on pressure
+      const size = this.polygonSize + (lineWidth * 3) // Base size + pressure scaling
       const rotation = performance.now() * 0.001 // Rotate over time
       const color = this.currentStroke.color
       
-      // Store the shape for fade-out management
+      
+      // Store the shape for fade-out management (store pressure for recalculation)
       this.geometricShapes.push({
-        x, y, size, rotation, color, sides: this.polygonSides,
+        x, y, baseSize: this.polygonSize, pressure: lineWidth, rotation, color, sides: this.polygonSides,
         timestamp: performance.now(),
         alpha: 1.0
       })
@@ -224,8 +242,10 @@ export class TabletManager {
     this.geometricShapes.forEach(shape => {
       this.ctx.save()
       this.ctx.globalAlpha = shape.alpha
+      // Recalculate size based on current polygon size setting
+      const currentSize = this.polygonSize
       this.canvasDrawer.drawOutlinedRotatingPolygon(
-        shape.x, shape.y, shape.size, shape.rotation, shape.color, shape.sides
+        shape.x, shape.y, currentSize, shape.rotation, shape.color, shape.sides
       )
       this.ctx.restore()
     })

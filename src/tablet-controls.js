@@ -94,6 +94,7 @@ export class TabletControls {
           <div class="setting-description">
             How long shapes stay visible before fading out
           </div>
+                  
         </div>
         
         <div class="tablet-config-group">
@@ -174,8 +175,6 @@ export class TabletControls {
     const clearTabletBtn = container.querySelector('#clearTablet')
     const tabletWidthSlider = container.querySelector('#tabletWidth')
     const geometricPencilToggle = container.querySelector('#geometricPencilToggle')
-    const polygonSides = container.querySelector('#polygonSides')
-    const fadeDuration = container.querySelector('#fadeDuration')
     const midiOutputToggle = container.querySelector('#midiOutputToggle')
     const midiOutputDevice = container.querySelector('#midiOutputDevice')
     const octaveRange = container.querySelector('#octaveRange')
@@ -211,21 +210,7 @@ export class TabletControls {
       })
     }
 
-    if (polygonSides) {
-      polygonSides.addEventListener('input', (e) => {
-        const value = parseInt(e.target.value)
-        this.updateRangeValue(value, container, 'polygonSides')
-        this.triggerCallback('polygonSidesChange', value)
-      })
-    }
 
-    if (fadeDuration) {
-      fadeDuration.addEventListener('input', (e) => {
-        const value = parseFloat(e.target.value)
-        this.updateRangeValue(value, container, 'fadeDuration')
-        this.triggerCallback('fadeDurationChange', value)
-      })
-    }
 
     if (midiOutputToggle) {
       midiOutputToggle.addEventListener('change', (e) => {
@@ -279,11 +264,50 @@ export class TabletControls {
     }
   }
 
+  // Set up event listeners for geometric pencil controls
+  setupGeometricPencilEventListeners (container) {
+    const polygonSides = container.querySelector('#polygonSides')
+    const fadeDuration = container.querySelector('#fadeDuration')
+    const polygonSize = container.querySelector('#polygonSize')
+
+    if (polygonSides && !polygonSides.hasAttribute('data-listener-attached')) {
+      polygonSides.addEventListener('input', (e) => {
+        const value = parseInt(e.target.value)
+        this.updateRangeValue(value, container, 'polygonSides')
+        this.triggerCallback('polygonSidesChange', value)
+      })
+      polygonSides.setAttribute('data-listener-attached', 'true')
+    }
+
+    if (fadeDuration && !fadeDuration.hasAttribute('data-listener-attached')) {
+      fadeDuration.addEventListener('input', (e) => {
+        const value = parseFloat(e.target.value)
+        this.updateRangeValue(value, container, 'fadeDuration')
+        this.triggerCallback('fadeDurationChange', value)
+      })
+      fadeDuration.setAttribute('data-listener-attached', 'true')
+    }
+
+    if (polygonSize && !polygonSize.hasAttribute('data-listener-attached')) {
+      polygonSize.addEventListener('input', (e) => {
+        const value = parseInt(e.target.value)
+        this.updateRangeValue(value, container, 'polygonSize')
+        this.triggerCallback('polygonSizeChange', value)
+      })
+      polygonSize.setAttribute('data-listener-attached', 'true')
+    }
+  }
+
   // Toggle geometric pencil settings visibility
   toggleGeometricPencilSettings (enabled, container) {
     const geometricPencilSettings = container.querySelector('#geometricPencilSettings')
     if (geometricPencilSettings) {
       geometricPencilSettings.style.display = enabled ? 'block' : 'none'
+      
+      // Set up event listeners for geometric pencil controls when they become visible
+      if (enabled) {
+        this.setupGeometricPencilEventListeners(container)
+      }
     }
   }
 
@@ -349,6 +373,16 @@ export class TabletControls {
       this.updateRangeValue(value, container, 'fadeDuration')
     }
   }
+
+  // Update polygon size from external source
+  updatePolygonSize (value, container) {
+    const slider = container.querySelector('#polygonSize')
+    if (slider) {
+      slider.value = value
+      this.updateRangeValue(value, container, 'polygonSize')
+    }
+  }
+
 
   // Update MIDI output mode from external source
   updateMidiOutput (enabled, container) {

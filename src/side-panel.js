@@ -878,6 +878,14 @@ export class SidePanel {
     }
   }
 
+  updatePolygonSize (size) {
+    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    if (tabletControlsContainer) {
+      this.tabletControls.updatePolygonSize(size, tabletControlsContainer)
+    }
+  }
+
+
   updateFadeDuration (duration) {
     const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
     if (tabletControlsContainer) {
