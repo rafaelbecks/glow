@@ -24,7 +24,7 @@ export class MIDIManager {
     this.inputs = new Map() // Maps channel to array of inputs
     this.deviceToChannelMap = new Map() // Maps device ID to channel name
     this.trackInputs = new Map() // Maps device ID to input for track system
-    
+
     // MIDI output for tablet
     this.outputEnabled = false
     this.outputDevice = null
@@ -143,7 +143,7 @@ export class MIDIManager {
     // Route the MIDI message to all assigned luminodes
     assignedTracks.forEach(track => {
       if (!track.luminode) return
-      
+
       if (cmd === SETTINGS.MIDI.NOTE_ON && data2 > 0) {
         this.noteOn(track.luminode, data1, data2)
       } else if (cmd === SETTINGS.MIDI.NOTE_OFF || (cmd === SETTINGS.MIDI.NOTE_ON && data2 === 0)) {
@@ -245,7 +245,7 @@ export class MIDIManager {
         console.warn('No MIDI output device selected')
         return
       }
-      
+
       const access = await navigator.requestMIDIAccess()
       this.output = access.outputs.get(this.outputDevice)
       if (!this.output) {
@@ -303,7 +303,7 @@ export class MIDIManager {
     try {
       const access = await navigator.requestMIDIAccess()
       const outputDevices = []
-      
+
       for (const output of access.outputs.values()) {
         outputDevices.push({
           id: output.id,
@@ -312,7 +312,7 @@ export class MIDIManager {
           state: output.state
         })
       }
-      
+
       return outputDevices
     } catch (error) {
       console.error('Error getting MIDI output devices:', error)

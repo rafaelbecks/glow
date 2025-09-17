@@ -1,5 +1,5 @@
 // Soto grid drawing module
-import { SETTINGS, UTILS } from '../settings.js'
+import { SETTINGS } from '../settings.js'
 
 export class SotoGridLuminode {
   constructor (canvasDrawer) {
@@ -23,7 +23,6 @@ export class SotoGridLuminode {
     this.ctx.translate(-this.dimensions.width / 2, -this.dimensions.height / 2)
 
     const solidHeight = this.dimensions.height * SETTINGS.MODULES.SOTO_GRID.SOLID_HEIGHT_RATIO
-    const moireHeight = this.dimensions.height - solidHeight
     const solidY = this.sotoSolidTop ? 0 : this.dimensions.height - solidHeight
 
     // Draw vertical stripes

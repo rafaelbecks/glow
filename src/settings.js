@@ -129,6 +129,13 @@ export const SETTINGS = {
     VENDOR_ID: 0x28BD,
     PRODUCT_ID: 0x2901,
     REPORT_ID: 0x07,
+    // WebSocket settings for Windows HID bridge
+    WEBSOCKET: {
+      DEFAULT_HOST: 'localhost',
+      DEFAULT_PORT: 5678,
+      RECONNECT_DELAY: 1000,
+      MAX_RECONNECT_ATTEMPTS: 10
+    }
   },
 
   // Animation settings
@@ -160,7 +167,7 @@ export const MIDI_CHANNELS = {
 // Utility functions
 export const UTILS = {
   pitchColorFactor: 30, // Default factor, can be adjusted via UI
-  
+
   pitchToColor: (midi) => {
     const factor = UTILS.pitchColorFactor || 30
     const hue = (midi % 14) * factor

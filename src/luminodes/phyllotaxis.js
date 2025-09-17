@@ -15,8 +15,6 @@ export class PhyllotaxisLuminode {
     this.dimensions = this.canvasDrawer.getDimensions()
 
     const goldenAngle = SETTINGS.MODULES.PHYLLOTAXIS.GOLDEN_ANGLE
-    const centerX = this.dimensions.width / 2
-    const centerY = this.dimensions.height / 2
 
     const scale = SETTINGS.MODULES.PHYLLOTAXIS.SCALE
     const baseSize = SETTINGS.MODULES.PHYLLOTAXIS.BASE_SIZE

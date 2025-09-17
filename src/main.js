@@ -99,7 +99,7 @@ export class GLOWVisualizer {
     this.sidePanel.on('midiOutputChange', (enabled) => this.setMidiOutputEnabled(enabled))
     this.sidePanel.on('midiOutputDeviceChange', (deviceId) => this.setMidiOutputDevice(deviceId))
     this.sidePanel.on('octaveRangeChange', (range) => this.setOctaveRange(range))
-    
+
     // Canvas and color settings
     this.sidePanel.on('canvasSettingChange', (data) => this.updateCanvasSetting(data))
     this.sidePanel.on('colorPaletteChange', (data) => this.updateColorPalette(data))
@@ -127,7 +127,7 @@ export class GLOWVisualizer {
 
       // Initialize side panel after MIDI setup
       this.sidePanel.renderTracks()
-      
+
       // Populate MIDI output device list
       await this.populateMidiOutputDevices()
     } catch (error) {
@@ -177,7 +177,6 @@ export class GLOWVisualizer {
     this.uiManager.setPanelToggleActive(this.sidePanel.isPanelVisible())
   }
 
-
   openFile () {
     console.log('Open file functionality - to be implemented')
     this.uiManager.showStatus('Open file functionality - to be implemented', 'info')
@@ -187,8 +186,6 @@ export class GLOWVisualizer {
     console.log('Save file functionality - to be implemented')
     this.uiManager.showStatus('Save file functionality - to be implemented', 'info')
   }
-
-
 
   setGeometricMode (enabled) {
     // Update the geometric mode in the tablet manager
@@ -214,7 +211,6 @@ export class GLOWVisualizer {
     // Update the polygon size in the tablet manager
     this.tabletManager.setPolygonSize(size)
   }
-
 
   setFadeDuration (duration) {
     // Update the fade duration in the tablet manager (convert seconds to milliseconds)
@@ -246,11 +242,11 @@ export class GLOWVisualizer {
 
   updateCanvasSetting (data) {
     const { setting, value } = data
-    
+
     if (SETTINGS.CANVAS && SETTINGS.CANVAS.hasOwnProperty(setting)) {
       SETTINGS.CANVAS[setting] = value
       console.log(`Updated canvas setting ${setting} to ${value}`)
-      
+
       // Apply the setting immediately
       if (setting === 'CLEAR_ALPHA') {
         this.canvasDrawer.setClearAlpha(value)
@@ -262,7 +258,7 @@ export class GLOWVisualizer {
 
   updateColorPalette (data) {
     const { palette, index, color } = data
-    
+
     if (SETTINGS.COLORS && SETTINGS.COLORS[palette.toUpperCase() + '_PALETTE']) {
       const paletteKey = palette.toUpperCase() + '_PALETTE'
       SETTINGS.COLORS[paletteKey][index] = color
@@ -272,7 +268,7 @@ export class GLOWVisualizer {
 
   updatePitchColorFactor (data) {
     const { value } = data
-    
+
     // Update the pitchToColor function in UTILS
     if (UTILS.pitchToColor) {
       // Store the factor for the pitchToColor function
@@ -282,26 +278,26 @@ export class GLOWVisualizer {
   }
 
   updateLuminodeConfig (data) {
-    const { trackId, luminode, param, value } = data
-    
+    const { luminode, param, value } = data
+
     // Map luminode names to settings keys
     const luminodeMapping = {
-      'lissajous': 'LISSAJOUS',
-      'sphere': 'SPHERE',
-      'harmonograph': 'HARMONOGRAPH',
-      'gegoNet': 'GEGO_NET',
-      'gegoShape': 'GEGO_SHAPE',
-      'sotoGrid': 'SOTO_GRID',
-      'sotoGridRotated': 'SOTO_GRID',
-      'whitneyLines': 'WHITNEY_LINES',
-      'phyllotaxis': 'PHYLLOTAXIS',
-      'moireCircles': 'MOIRE_CIRCLES',
-      'wovenNet': 'WOVEN_NET',
-      'sinewave': 'SINEWAVE',
-      'triangle': 'TRIANGLE',
-      'polygons': 'POLYGONS'
+      lissajous: 'LISSAJOUS',
+      sphere: 'SPHERE',
+      harmonograph: 'HARMONOGRAPH',
+      gegoNet: 'GEGO_NET',
+      gegoShape: 'GEGO_SHAPE',
+      sotoGrid: 'SOTO_GRID',
+      sotoGridRotated: 'SOTO_GRID',
+      whitneyLines: 'WHITNEY_LINES',
+      phyllotaxis: 'PHYLLOTAXIS',
+      moireCircles: 'MOIRE_CIRCLES',
+      wovenNet: 'WOVEN_NET',
+      sinewave: 'SINEWAVE',
+      triangle: 'TRIANGLE',
+      polygons: 'POLYGONS'
     }
-    
+
     const settingsKey = luminodeMapping[luminode]
     if (settingsKey && SETTINGS.MODULES[settingsKey]) {
       const moduleConfig = SETTINGS.MODULES[settingsKey]
@@ -345,13 +341,13 @@ export class GLOWVisualizer {
   getTrackLayouts () {
     const layouts = {}
     const tracks = this.trackManager.getTracks()
-    
+
     tracks.forEach(track => {
       if (track.luminode) {
         layouts[track.luminode] = track.layout || { x: 0, y: 0, rotation: 0 }
       }
     })
-    
+
     return layouts
   }
 

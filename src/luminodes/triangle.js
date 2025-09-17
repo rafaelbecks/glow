@@ -38,7 +38,7 @@ export class TriangleLuminode {
         const size = (SETTINGS.MODULES.TRIANGLE.SIZE + velocity * 12) * 0.25
         const rotation = t + midi * 0.2
         const opacity = SETTINGS.MODULES.TRIANGLE.OPACITY
-        
+
         this.ctx.save()
         this.ctx.globalAlpha = opacity
         this.canvasDrawer.drawOutlinedRotatingTriangle(x, y, size, rotation, color)

@@ -267,7 +267,7 @@ export class SidePanel {
     if (tabletControlsContainer) {
       tabletControlsContainer.innerHTML = this.tabletControls.createTabletControlsHTML()
       this.tabletControls.setupEventListeners(tabletControlsContainer)
-      
+
       // Populate MIDI output devices when tablet controls are rendered
       await this.populateMidiOutputDevices()
     }
@@ -347,7 +347,8 @@ export class SidePanel {
             </div>
           </div>
           
-          ${track.luminode !== 'triangle' ? `
+          ${track.luminode !== 'triangle'
+? `
           <div class="assignment-row">
             <div class="assignment-group layout-controls">
               <label>
@@ -416,7 +417,8 @@ export class SidePanel {
               </div>
             </div>
           </div>
-          ` : ''}
+          `
+: ''}
         </div>
         
         <!-- Luminode Configuration Section -->
@@ -467,11 +469,11 @@ export class SidePanel {
           const axis = e.target.dataset.axis
           const value = parseFloat(e.target.value)
           const valueDisplay = e.target.parentElement.querySelector('.slider-value')
-          
+
           if (valueDisplay) {
             valueDisplay.textContent = axis === 'rotation' ? `${value}°` : value
           }
-          
+
           this.trackManager.setLayout(trackId, { [axis]: value })
         })
       })
@@ -542,11 +544,11 @@ export class SidePanel {
         const value = parseFloat(e.target.value)
         const param = e.target.dataset.param
         const valueDisplay = e.target.parentElement.querySelector('.slider-value')
-        
+
         if (valueDisplay) {
           valueDisplay.textContent = value
         }
-        
+
         this.triggerCallback('luminodeConfigChange', {
           trackId,
           luminode: this.trackManager.getTrack(trackId).luminode,
@@ -562,7 +564,7 @@ export class SidePanel {
       input.addEventListener('input', (e) => {
         const value = parseFloat(e.target.value)
         const param = e.target.dataset.param
-        
+
         this.triggerCallback('luminodeConfigChange', {
           trackId,
           luminode: this.trackManager.getTrack(trackId).luminode,
@@ -578,7 +580,7 @@ export class SidePanel {
       input.addEventListener('change', (e) => {
         const value = e.target.checked
         const param = e.target.dataset.param
-        
+
         this.triggerCallback('luminodeConfigChange', {
           trackId,
           luminode: this.trackManager.getTrack(trackId).luminode,
@@ -602,10 +604,10 @@ export class SidePanel {
   // Toggle configuration controls visibility
   toggleConfigControls (trackId) {
     const controlsElement = this.panel.querySelector(`#config-controls-${trackId}`)
-    
+
     if (controlsElement) {
       const isVisible = controlsElement.style.display !== 'none'
-      
+
       if (isVisible) {
         controlsElement.style.display = 'none'
       } else {
@@ -677,7 +679,7 @@ export class SidePanel {
 
     // Get configuration parameters for this luminode
     const configParams = getLuminodeConfig(luminode)
-    
+
     // Get current values from settings or use defaults
     let currentValues = {}
     if (settings) {
@@ -687,13 +689,13 @@ export class SidePanel {
         currentValues = settingsModule[luminodeKey]
       }
     }
-    
+
     // Create config objects with current values or defaults
     const config = configParams.map(param => ({
       ...param,
       value: currentValues[param.key] !== undefined ? currentValues[param.key] : param.default
     }))
-    
+
     // Group controls into rows of 2
     const controlRows = []
     for (let i = 0; i < config.length; i += 2) {
@@ -732,7 +734,7 @@ export class SidePanel {
   // Create individual configuration control
   createConfigControl (param, trackId) {
     const controlId = `config-${trackId}-${param.key.toLowerCase()}`
-    
+
     if (param.type === 'slider') {
       return `
         <div class="config-control">
@@ -782,7 +784,7 @@ export class SidePanel {
         </div>
       `
     }
-    
+
     return ''
   }
 
@@ -815,20 +817,20 @@ export class SidePanel {
   // Map luminode names to settings keys
   getLuminodeSettingsKey (luminode) {
     const luminodeMapping = {
-      'lissajous': 'LISSAJOUS',
-      'sphere': 'SPHERE',
-      'harmonograph': 'HARMONOGRAPH',
-      'gegoNet': 'GEGO_NET',
-      'gegoShape': 'GEGO_SHAPE',
-      'sotoGrid': 'SOTO_GRID',
-      'sotoGridRotated': 'SOTO_GRID',
-      'whitneyLines': 'WHITNEY_LINES',
-      'phyllotaxis': 'PHYLLOTAXIS',
-      'moireCircles': 'MOIRE_CIRCLES',
-      'wovenNet': 'WOVEN_NET',
-      'sinewave': 'SINEWAVE',
-      'triangle': 'TRIANGLE',
-      'polygons': 'POLYGONS'
+      lissajous: 'LISSAJOUS',
+      sphere: 'SPHERE',
+      harmonograph: 'HARMONOGRAPH',
+      gegoNet: 'GEGO_NET',
+      gegoShape: 'GEGO_SHAPE',
+      sotoGrid: 'SOTO_GRID',
+      sotoGridRotated: 'SOTO_GRID',
+      whitneyLines: 'WHITNEY_LINES',
+      phyllotaxis: 'PHYLLOTAXIS',
+      moireCircles: 'MOIRE_CIRCLES',
+      wovenNet: 'WOVEN_NET',
+      sinewave: 'SINEWAVE',
+      triangle: 'TRIANGLE',
+      polygons: 'POLYGONS'
     }
     return luminodeMapping[luminode] || luminode.toUpperCase()
   }
@@ -847,7 +849,6 @@ export class SidePanel {
       this.tabletControls.updateColorMode(enabled, tabletControlsContainer)
     }
   }
-
 
   updateGeometricMode (enabled) {
     const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
@@ -884,7 +885,6 @@ export class SidePanel {
       this.tabletControls.updatePolygonSize(size, tabletControlsContainer)
     }
   }
-
 
   updateFadeDuration (duration) {
     const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
@@ -936,11 +936,11 @@ export class SidePanel {
   createCanvasControlsHTML () {
     const settings = this.settings || {}
     const canvasSettings = settings.CANVAS || { CLEAR_ALPHA: 0.1, BACKGROUND_COLOR: '#000' }
-    const colorSettings = settings.COLORS || { 
+    const colorSettings = settings.COLORS || {
       SOTO_PALETTE: ['#EF4136', '#005BBB', '#FCEE09', '#2E7D32', '#FFFFFF', '#4A148C', '#8B0000'],
       POLYGON_COLORS: ['#f93822', '#fcdc4d', '#00a6a6', '#90be6d', '#f94144', '#ff006e', '#8338ec']
     }
-    
+
     // Get current pitch color factor from UTILS
     const currentPitchFactor = UTILS.pitchColorFactor || 30
 

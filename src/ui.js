@@ -44,7 +44,6 @@ export class UIManager {
       })
     }
 
-
     // Open button
     if (this.elements.openButton) {
       this.elements.openButton.addEventListener('click', () => {
@@ -229,7 +228,6 @@ export class UIManager {
     }
   }
 
-
   showOpenButton () {
     if (this.elements.openButton) {
       this.elements.openButton.style.display = 'flex'
@@ -314,11 +312,10 @@ export class UIManager {
     this.updateCanvasSize()
   }
 
-
   updateCanvasSize () {
     const body = document.body
     body.classList.remove('side-panel-visible')
-    
+
     if (this.sidePanelVisible) {
       body.classList.add('side-panel-visible')
     }

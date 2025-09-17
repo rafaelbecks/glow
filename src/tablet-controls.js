@@ -28,10 +28,36 @@ export class TabletControls {
             <ion-icon name="tablet-landscape-outline"></ion-icon>
             Connection
           </label>
+          <div class="connection-mode-selector">
+            <label class="radio-container">
+              <input type="radio" name="connectionMode" value="webhid" checked>
+              <span class="radio-mark"></span>
+              WebHID (macOS/Linux)
+            </label>
+            <label class="radio-container">
+              <input type="radio" name="connectionMode" value="websocket">
+              <span class="radio-mark"></span>
+              WebSocket (Windows)
+            </label>
+          </div>
           <button id="readTabletData" class="tablet-action-btn">
             <ion-icon name="link-outline"></ion-icon>
             Connect Tablet
           </button>
+          <div id="websocketSettings" class="websocket-settings" style="display: none;">
+            <div class="input-group">
+              <label>Host:</label>
+              <input id="websocketHost" type="text" value="localhost" placeholder="localhost">
+            </div>
+            <div class="input-group">
+              <label>Port:</label>
+              <input id="websocketPort" type="number" value="5678" placeholder="5678">
+            </div>
+            <div class="connection-status" id="connectionStatus">
+              <span class="status-indicator"></span>
+              <span class="status-text">Disconnected</span>
+            </div>
+          </div>
         </div>
         
         <div class="tablet-config-group">
@@ -181,6 +207,13 @@ export class TabletControls {
     const geometricModeToggle = container.querySelector('#geometricModeToggle')
     const shapeDetectionThreshold = container.querySelector('#shapeDetectionThreshold')
 
+    // WebSocket controls
+    const connectionModeRadios = container.querySelectorAll('input[name="connectionMode"]')
+    const websocketSettings = container.querySelector('#websocketSettings')
+    const websocketHost = container.querySelector('#websocketHost')
+    const websocketPort = container.querySelector('#websocketPort')
+    const connectionStatus = container.querySelector('#connectionStatus')
+
     if (readTabletBtn) {
       readTabletBtn.addEventListener('click', () => {
         this.triggerCallback('connectTablet')
@@ -201,16 +234,12 @@ export class TabletControls {
       })
     }
 
-
-
     if (geometricPencilToggle) {
       geometricPencilToggle.addEventListener('change', (e) => {
         this.toggleGeometricPencilSettings(e.target.checked, container)
         this.triggerCallback('geometricPencilChange', e.target.checked)
       })
     }
-
-
 
     if (midiOutputToggle) {
       midiOutputToggle.addEventListener('change', (e) => {
@@ -245,6 +274,28 @@ export class TabletControls {
         const value = parseFloat(e.target.value)
         this.updateRangeValue(value, container, 'shapeDetectionThreshold')
         this.triggerCallback('shapeDetectionThresholdChange', value)
+      })
+    }
+
+    // WebSocket connection mode event listeners
+    if (connectionModeRadios.length > 0) {
+      connectionModeRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          this.toggleWebSocketSettings(e.target.value === 'websocket', container)
+          this.triggerCallback('connectionModeChange', e.target.value)
+        })
+      })
+    }
+
+    if (websocketHost) {
+      websocketHost.addEventListener('input', (e) => {
+        this.triggerCallback('websocketHostChange', e.target.value)
+      })
+    }
+
+    if (websocketPort) {
+      websocketPort.addEventListener('input', (e) => {
+        this.triggerCallback('websocketPortChange', parseInt(e.target.value))
       })
     }
   }
@@ -303,7 +354,7 @@ export class TabletControls {
     const geometricPencilSettings = container.querySelector('#geometricPencilSettings')
     if (geometricPencilSettings) {
       geometricPencilSettings.style.display = enabled ? 'block' : 'none'
-      
+
       // Set up event listeners for geometric pencil controls when they become visible
       if (enabled) {
         this.setupGeometricPencilEventListeners(container)
@@ -327,6 +378,76 @@ export class TabletControls {
     }
   }
 
+  // Toggle WebSocket settings visibility
+  toggleWebSocketSettings (enabled, container) {
+    const websocketSettings = container.querySelector('#websocketSettings')
+    if (websocketSettings) {
+      websocketSettings.style.display = enabled ? 'block' : 'none'
+    }
+  }
+
+  // Update connection status display
+  updateConnectionStatus (status, container) {
+    const statusElement = container.querySelector('#connectionStatus')
+    if (statusElement) {
+      const indicator = statusElement.querySelector('.status-indicator')
+      const text = statusElement.querySelector('.status-text')
+
+      if (indicator && text) {
+        // Remove existing status classes
+        indicator.className = 'status-indicator'
+
+        // Add new status class and update text
+        switch (status) {
+          case 'connected':
+            indicator.classList.add('connected')
+            text.textContent = 'Connected'
+            break
+          case 'connecting':
+            indicator.classList.add('connecting')
+            text.textContent = 'Connecting...'
+            break
+          case 'disconnected':
+            indicator.classList.add('disconnected')
+            text.textContent = 'Disconnected'
+            break
+          case 'error':
+            indicator.classList.add('error')
+            text.textContent = 'Connection Error'
+            break
+          default:
+            indicator.classList.add('disconnected')
+            text.textContent = 'Unknown'
+        }
+      }
+    }
+  }
+
+  // Update WebSocket host
+  updateWebSocketHost (host, container) {
+    const input = container.querySelector('#websocketHost')
+    if (input) {
+      input.value = host
+    }
+  }
+
+  // Update WebSocket port
+  updateWebSocketPort (port, container) {
+    const input = container.querySelector('#websocketPort')
+    if (input) {
+      input.value = port
+    }
+  }
+
+  // Update connection mode
+  updateConnectionMode (mode, container) {
+    const radios = container.querySelectorAll('input[name="connectionMode"]')
+    radios.forEach(radio => {
+      radio.checked = radio.value === mode
+    })
+    this.toggleWebSocketSettings(mode === 'websocket', container)
+  }
+
   // Update tablet width from external source
   updateTabletWidth (value, container) {
     const slider = container.querySelector('#tabletWidth')
@@ -335,8 +456,6 @@ export class TabletControls {
       this.updateRangeValue(value, container)
     }
   }
-
-
 
   // Update geometric mode from external source
   updateGeometricMode (enabled, container) {
@@ -383,7 +502,6 @@ export class TabletControls {
     }
   }
 
-
   // Update MIDI output mode from external source
   updateMidiOutput (enabled, container) {
     const checkbox = container.querySelector('#midiOutputToggle')
@@ -399,7 +517,7 @@ export class TabletControls {
     if (select) {
       // Clear existing options except the first one
       select.innerHTML = '<option value="">Select MIDI Device</option>'
-      
+
       // Add device options
       devices.forEach(device => {
         const option = document.createElement('option')

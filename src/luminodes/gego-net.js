@@ -1,5 +1,5 @@
 // Gego net drawing module
-import { SETTINGS, UTILS } from '../settings.js'
+import { SETTINGS } from '../settings.js'
 
 export class GegoNetLuminode {
   constructor (canvasDrawer) {

@@ -828,6 +828,143 @@ ion-icon {
     padding: 6px;
 }
 
+/* WebSocket Connection Styles */
+.connection-mode-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.radio-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 9px;
+    color: #888;
+}
+
+.radio-container input[type="radio"] {
+    display: none;
+}
+
+.radio-mark {
+    width: 12px;
+    height: 12px;
+    border: 1px solid #444;
+    border-radius: 50%;
+    position: relative;
+    transition: all 0.15s ease;
+}
+
+.radio-container input[type="radio"]:checked + .radio-mark {
+    border-color: #51cf66;
+    background: #51cf66;
+}
+
+.radio-container input[type="radio"]:checked + .radio-mark::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 4px;
+    height: 4px;
+    background: #000;
+    border-radius: 50%;
+}
+
+.websocket-settings {
+    margin-top: 8px;
+    padding: 8px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 2px;
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.input-group:last-child {
+    margin-bottom: 0;
+}
+
+.input-group label {
+    font-size: 8px;
+    color: #888;
+    min-width: 30px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.input-group input {
+    background: #333;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 3px 6px;
+    font-size: 9px;
+    font-family: inherit;
+    border-radius: 2px;
+    flex: 1;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #51cf66;
+    background: #3a3a3a;
+}
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid #333;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    transition: all 0.15s ease;
+}
+
+.status-indicator.connected {
+    background: #51cf66;
+    box-shadow: 0 0 4px rgba(81, 207, 102, 0.5);
+}
+
+.status-indicator.connecting {
+    background: #ffd43b;
+    animation: pulse 1s infinite;
+}
+
+.status-indicator.disconnected {
+    background: #666;
+}
+
+.status-indicator.error {
+    background: #ff6b6b;
+}
+
+.status-text {
+    font-size: 8px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
 /* Panel toggle button in main UI */
 .panel-toggle-btn {
     position: fixed;

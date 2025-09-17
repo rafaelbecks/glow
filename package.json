@@ -6,11 +6,16 @@
   "scripts": {
     "start": "python3 -m http.server 8000",
     "format": "standard --fix",
-    "lint": "standard"
+    "lint": "standard",
+    "hid-bridge": "node scripts/hid-bridge/index.js"
   },
   "devDependencies": {
     "esbuild": "^0.24.0",
     "standard": "^17.1.2"
+  },
+  "dependencies": {
+    "ws": "^8.14.2",
+    "node-hid": "^2.1.2"
   },
   "keywords": [
     "visualization",

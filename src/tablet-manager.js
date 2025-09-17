@@ -41,6 +41,13 @@ export class TabletManager {
     this.devices = []
     this.activeDevice = null
 
+    // WebSocket mode for Windows HID bridge
+    this.websocketMode = false
+    this.websocket = null
+    this.websocketHost = options.websocketHost || SETTINGS.TABLET.WEBSOCKET.DEFAULT_HOST
+    this.websocketPort = options.websocketPort || SETTINGS.TABLET.WEBSOCKET.DEFAULT_PORT
+    this.reconnectAttempts = 0
+    this.maxReconnectAttempts = SETTINGS.TABLET.WEBSOCKET.MAX_RECONNECT_ATTEMPTS
 
     // Initialize tablet canvas dimensions
     this.resizeCanvas()
@@ -62,7 +69,6 @@ export class TabletManager {
   setLineWidth (newWidth) {
     this.baseLineWidth = newWidth
   }
-
 
   setGeometricMode (enabled) {
     this.geometricMode = enabled
@@ -92,9 +98,6 @@ export class TabletManager {
     }
   }
 
-
-
-
   resizeCanvas () {
     if (this.canvas) {
       this.canvas.width = window.innerWidth
@@ -113,7 +116,7 @@ export class TabletManager {
       color: this.getRandomColor(),
       lineWidth: this.baseLineWidth
     }
-    
+
     // Hide cursor when drawing
     this.canvas.style.cursor = 'none'
   }
@@ -139,7 +142,7 @@ export class TabletManager {
       this.strokes.push(this.currentStroke)
     }
     this.currentStroke = null
-    
+
     // Restore cursor when drawing stops
     this.canvas.style.cursor = 'url(\'../assets/cursor.svg\') 4 4, auto'
 
@@ -161,15 +164,20 @@ export class TabletManager {
       const size = this.polygonSize + (lineWidth * 3) // Base size + pressure scaling
       const rotation = performance.now() * 0.001 // Rotate over time
       const color = this.currentStroke.color
-      
-      
+
       // Store the shape for fade-out management (store pressure for recalculation)
       this.geometricShapes.push({
-        x, y, baseSize: this.polygonSize, pressure: lineWidth, rotation, color, sides: this.polygonSides,
+        x,
+        y,
+        baseSize: this.polygonSize,
+        pressure: lineWidth,
+        rotation,
+        color,
+        sides: this.polygonSides,
         timestamp: performance.now(),
         alpha: 1.0
       })
-      
+
       // Draw the polygon
       this.canvasDrawer.drawOutlinedRotatingPolygon(x, y, size, rotation, color, this.polygonSides)
     } else {
@@ -213,7 +221,7 @@ export class TabletManager {
     this.geometricShapes.forEach((shape, index) => {
       const age = now - shape.timestamp
       const fadeProgress = age / this.fadeDuration
-      
+
       if (fadeProgress >= 1) {
         shapesToRemove.push(index)
       } else {
@@ -273,6 +281,116 @@ export class TabletManager {
 
         this.ctx.stroke()
       }
+    }
+  }
+
+  // WebSocket connection for Windows HID bridge
+  async connectWebSocket (host = null, port = null) {
+    if (host) this.websocketHost = host
+    if (port) this.websocketPort = port
+
+    const wsUrl = `ws://${this.websocketHost}:${this.websocketPort}`
+
+    try {
+      this.websocket = new WebSocket(wsUrl)
+      this.websocketMode = true
+      this.reconnectAttempts = 0
+
+      this.websocket.onopen = () => {
+        console.log(`✅ Connected to HID bridge at ${wsUrl}`)
+      }
+
+      this.websocket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data)
+          if (data.type === 'tabletData') {
+            this.handleWebSocketTabletData(data.data)
+          }
+        } catch (error) {
+          console.error('Error parsing WebSocket data:', error)
+        }
+      }
+
+      this.websocket.onclose = () => {
+        console.log('WebSocket connection closed')
+        this.websocketMode = false
+        this.attemptReconnect()
+      }
+
+      this.websocket.onerror = (error) => {
+        console.error('WebSocket error:', error)
+        this.websocketMode = false
+      }
+
+      return true
+    } catch (error) {
+      console.error('Failed to connect to WebSocket:', error)
+      return false
+    }
+  }
+
+  // Handle tablet data from WebSocket
+  handleWebSocketTabletData (data) {
+    const { x, y, pressure, tiltX, tiltY } = data
+
+    // Convert tablet coordinates to canvas coordinates
+    const canvasX = (x / SETTINGS.TABLET.COORDINATE_MAX) * this.canvas.width
+    const canvasY = (y / SETTINGS.TABLET.COORDINATE_MAX) * this.canvas.height
+
+    // Normalize pressure from 0-65535 to 0-1
+    const normalizedPressure = pressure / SETTINGS.TABLET.PRESSURE_MAX
+
+    // Handle drawing based on pressure
+    if (normalizedPressure > 0) {
+      if (!this.drawing) {
+        this.startDrawing(canvasX, canvasY)
+        this.drawing = true
+      }
+      this.draw(canvasX, canvasY, normalizedPressure, tiltX, tiltY)
+
+      // Handle MIDI output
+      if (this.midiManager) {
+        const note = this.midiManager.mapPositionToNote(canvasX, this.canvas.width)
+        const velocity = this.midiManager.mapPressureToVelocity(normalizedPressure)
+        if (note !== null) {
+          this.midiManager.sendNoteOn(note, velocity)
+        }
+      }
+    } else {
+      if (this.drawing) {
+        this.stopDrawing()
+        this.drawing = false
+
+        // Send MIDI note off when pen is lifted
+        if (this.midiManager) {
+          this.midiManager.sendNoteOff()
+        }
+      }
+    }
+  }
+
+  // Attempt to reconnect to WebSocket
+  attemptReconnect () {
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      this.reconnectAttempts++
+      console.log(`Attempting to reconnect... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`)
+
+      setTimeout(() => {
+        this.connectWebSocket()
+      }, SETTINGS.TABLET.WEBSOCKET.RECONNECT_DELAY)
+    } else {
+      console.error('Max reconnection attempts reached. Please check if HID bridge is running.')
+    }
+  }
+
+  // Disconnect WebSocket
+  disconnectWebSocket () {
+    if (this.websocket) {
+      this.websocket.close()
+      this.websocket = null
+      this.websocketMode = false
+      this.reconnectAttempts = 0
+      console.log('WebSocket disconnected')
     }
   }
 
@@ -427,7 +545,28 @@ export class TabletManager {
       shapeDetectionThreshold: this.shapeDetectionThreshold,
       geometricPencilMode: this.geometricPencilMode,
       polygonSides: this.polygonSides,
-      fadeDuration: this.fadeDuration
+      fadeDuration: this.fadeDuration,
+      websocketMode: this.websocketMode,
+      websocketConnected: this.websocket ? this.websocket.readyState === WebSocket.OPEN : false,
+      websocketHost: this.websocketHost,
+      websocketPort: this.websocketPort
+    }
+  }
+
+  // Check if using WebSocket mode
+  isWebSocketMode () {
+    return this.websocketMode
+  }
+
+  // Get WebSocket connection status
+  getWebSocketStatus () {
+    if (!this.websocket) return 'disconnected'
+    switch (this.websocket.readyState) {
+      case WebSocket.CONNECTING: return 'connecting'
+      case WebSocket.OPEN: return 'connected'
+      case WebSocket.CLOSING: return 'closing'
+      case WebSocket.CLOSED: return 'closed'
+      default: return 'unknown'
     }
   }
 }

@@ -15,8 +15,6 @@ export class WhitneyLinesLuminode {
     this.dimensions = this.canvasDrawer.getDimensions()
 
     const notesToUse = notes.map(n => n.midi)
-    const cx = this.dimensions.width / 2
-    const cy = this.dimensions.height / 2
     const r = SETTINGS.MODULES.WHITNEY_LINES.RADIUS
     const totalLines = notesToUse.length * SETTINGS.MODULES.WHITNEY_LINES.LINES_PER_NOTE
 

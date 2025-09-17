@@ -1,5 +1,5 @@
 // Canvas drawing operations and utilities
-import { SETTINGS, UTILS } from './settings.js'
+import { SETTINGS } from './settings.js'
 
 export class CanvasDrawer {
   constructor (canvas) {
@@ -67,7 +67,7 @@ export class CanvasDrawer {
     this.ctx.translate(x, y)
     this.ctx.rotate(angle)
     this.ctx.beginPath()
-    
+
     // Calculate polygon vertices
     const angleStep = (Math.PI * 2) / sides
     for (let i = 0; i < sides; i++) {
@@ -75,14 +75,13 @@ export class CanvasDrawer {
       const vx = Math.cos(vertexAngle) * size
       const vy = Math.sin(vertexAngle) * size
 
-      
       if (i === 0) {
         this.ctx.moveTo(vx, vy)
       } else {
         this.ctx.lineTo(vx, vy)
       }
     }
-    
+
     this.ctx.closePath()
     this.ctx.strokeStyle = color
     this.ctx.shadowColor = color
@@ -183,7 +182,6 @@ export class CanvasDrawer {
     })
   }
 
-
   // Square overlap checking
   checkOverlap (square1, square2) {
     return !(square1.x + square1.size <= square2.x ||
@@ -210,7 +208,7 @@ export class CanvasDrawer {
   applyLayoutTransform (layout = { x: 0, y: 0, rotation: 0 }) {
     this.ctx.save()
     this.ctx.translate(
-      this.width / 2 + layout.x, 
+      this.width / 2 + layout.x,
       this.height / 2 + layout.y
     )
     this.ctx.rotate(layout.rotation * Math.PI / 180)
