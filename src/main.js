@@ -139,23 +139,98 @@ export class GLOWVisualizer {
 
   async connectTablet () {
     try {
-      this.uiManager.showStatus('Connecting to tablet...', 'info')
-      const success = await this.tabletManager.connectUgeeQ6()
-
-      if (success) {
-        this.uiManager.showStatus('Tablet connected successfully!', 'success')
+      // Get the selected connection mode
+      const connectionMode = this.getConnectionMode()
+      
+      if (connectionMode === 'websocket') {
+        this.uiManager.showStatus('Connecting to tablet via WebSocket...', 'info')
+        this.updateConnectionStatus('connecting', 'WebSocket')
+        const host = this.getWebSocketHost()
+        const port = this.getWebSocketPort()
+        const success = await this.tabletManager.connectWebSocket(host, port)
+        
+        if (success) {
+          this.uiManager.showStatus('Tablet connected via WebSocket!', 'success')
+          this.updateConnectionStatus('connected', 'WebSocket')
+        } else {
+          this.uiManager.showStatus('WebSocket connection failed. Make sure the HID bridge is running.', 'error')
+          this.updateConnectionStatus('disconnected', 'WebSocket')
+        }
       } else {
-        this.uiManager.showStatus('No tablet found or connection failed.', 'error')
+        // Default to WebHID
+        this.uiManager.showStatus('Connecting to tablet via WebHID...', 'info')
+        this.updateConnectionStatus('connecting', 'WebHID')
+        const success = await this.tabletManager.connectUgeeQ6()
+
+        if (success) {
+          this.uiManager.showStatus('Tablet connected via WebHID!', 'success')
+          this.updateConnectionStatus('connected', 'WebHID')
+        } else {
+          this.uiManager.showStatus('WebHID connection failed. Try WebSocket mode for Windows.', 'error')
+          this.updateConnectionStatus('disconnected', 'WebHID')
+        }
       }
     } catch (error) {
       console.error('Tablet connection error:', error)
       this.uiManager.showStatus('Tablet connection failed.', 'error')
+      this.updateConnectionStatus('disconnected', 'Unknown')
     }
   }
 
   clearTablet () {
     this.tabletManager.clear()
     this.uiManager.showStatus('Tablet drawing cleared.', 'info')
+  }
+
+  // Get the selected connection mode from the UI
+  getConnectionMode () {
+    const webhidRadio = document.querySelector('input[name="connectionMode"][value="webhid"]')
+    const websocketRadio = document.querySelector('input[name="connectionMode"][value="websocket"]')
+    
+    if (websocketRadio && websocketRadio.checked) {
+      return 'websocket'
+    } else if (webhidRadio && webhidRadio.checked) {
+      return 'webhid'
+    }
+    
+    // Default to webhid if no radio is selected
+    return 'webhid'
+  }
+
+  // Get WebSocket host from the UI
+  getWebSocketHost () {
+    const hostInput = document.querySelector('#websocketHost')
+    return hostInput ? hostInput.value : 'localhost'
+  }
+
+  // Get WebSocket port from the UI
+  getWebSocketPort () {
+    const portInput = document.querySelector('#websocketPort')
+    return portInput ? parseInt(portInput.value) : 5678
+  }
+
+  // Update connection status display
+  updateConnectionStatus (status, mode) {
+    const statusElement = document.querySelector('#connectionStatus')
+    if (statusElement) {
+      const indicator = statusElement.querySelector('.status-indicator')
+      const text = statusElement.querySelector('.status-text')
+      
+      if (indicator && text) {
+        // Update status indicator color
+        indicator.className = 'status-indicator'
+        if (status === 'connected') {
+          indicator.classList.add('connected')
+          text.textContent = `Connected (${mode})`
+        } else if (status === 'connecting') {
+          indicator.classList.add('connecting')
+          text.textContent = `Connecting (${mode})...`
+        } else {
+          indicator.classList.add('disconnected')
+          text.textContent = 'Disconnected'
+        }
+      }
+    }
   }
 
   clearCanvas () {
