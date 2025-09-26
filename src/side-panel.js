@@ -804,7 +804,8 @@ export class SidePanel {
       wovenNet: 'Woven Net',
       sinewave: 'Sine Wave',
       triangle: 'Triangle',
-      polygons: 'Polygons'
+      polygons: 'Polygons',
+      noiseValley: 'Noise Valley'
     }
     return nameMap[name] || name
   }
@@ -830,7 +831,8 @@ export class SidePanel {
       wovenNet: 'WOVEN_NET',
       sinewave: 'SINEWAVE',
       triangle: 'TRIANGLE',
-      polygons: 'POLYGONS'
+      polygons: 'POLYGONS',
+      noiseValley: 'NOISE_VALLEY'
     }
     return luminodeMapping[luminode] || luminode.toUpperCase()
   }

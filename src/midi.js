@@ -18,7 +18,8 @@ export class MIDIManager {
       phyllotaxis: [],
       wovenNet: [],
       polygons: [],
-      whitneyLines: []
+      whitneyLines: [],
+      noiseValley: []
     }
 
     this.inputs = new Map() // Maps channel to array of inputs

@@ -19,7 +19,8 @@ import {
   WovenNetLuminode,
   SinewaveLuminode,
   TriangleLuminode,
-  PolygonsLuminode
+  PolygonsLuminode,
+  NoiseValleyLuminode
 } from './luminodes/index.js'
 
 export class GLOWVisualizer {
@@ -50,7 +51,8 @@ export class GLOWVisualizer {
       wovenNet: new WovenNetLuminode(this.canvasDrawer),
       sinewave: new SinewaveLuminode(this.canvasDrawer),
       triangle: new TriangleLuminode(this.canvasDrawer),
-      polygons: new PolygonsLuminode(this.canvasDrawer)
+      polygons: new PolygonsLuminode(this.canvasDrawer),
+      noiseValley: new NoiseValleyLuminode(this.canvasDrawer)
     }
 
     this.isRunning = false
@@ -295,7 +297,8 @@ export class GLOWVisualizer {
       wovenNet: 'WOVEN_NET',
       sinewave: 'SINEWAVE',
       triangle: 'TRIANGLE',
-      polygons: 'POLYGONS'
+      polygons: 'POLYGONS',
+      noiseValley: 'NOISE_VALLEY'
     }
 
     const settingsKey = luminodeMapping[luminode]
@@ -395,6 +398,10 @@ export class GLOWVisualizer {
     this.luminodes.sinewave.draw(t, activeNotes.sinewave, trackLayouts.sinewave)
     this.luminodes.triangle.draw(t, activeNotes.triangle, 'triangle', 1, 300, trackLayouts.triangle)
     this.luminodes.polygons.draw(t, activeNotes.polygons, trackLayouts.polygons)
+    
+    // Noise Valley (background layer)
+    const noiseValleyColorMode = SETTINGS.MODULES.NOISE_VALLEY.USE_COLOR || false
+    this.luminodes.noiseValley.draw(t, activeNotes.noiseValley || [], noiseValleyColorMode, trackLayouts.noiseValley)
   }
 
   stop () {

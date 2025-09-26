@@ -117,6 +117,17 @@ export const SETTINGS = {
       ROTATION_SPEED: 0.8,
       LINE_WIDTH: 1.2,
       OPACITY: 0.7
+    },
+    NOISE_VALLEY: {
+      SIZE: 0.8,
+      DENSITY: 40,
+      ROTATION_SPEED: 0.3,
+      DEFORMATION_STRENGTH: 0.5,
+      LINE_WIDTH: 0.8,
+      BASE_HUE: 0,
+      USE_COLOR: false,
+      HEIGHT_SCALE: 30,
+      PERSPECTIVE: 0.6
     }
   },
 
@@ -161,7 +172,8 @@ export const MIDI_CHANNELS = {
   'bus 12': 'phyllotaxis',
   'bus 13': 'wovenNet',
   'bus 14': 'polygons',
-  'bus 15': 'whitneyLines'
+  'bus 15': 'whitneyLines',
+  'bus 16': 'noiseValley'
 }
 
 // Utility functions
