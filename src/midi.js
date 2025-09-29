@@ -19,7 +19,8 @@ export class MIDIManager {
       wovenNet: [],
       polygons: [],
       whitneyLines: [],
-      noiseValley: []
+      noiseValley: [],
+      catenoid: []
     }
 
     this.inputs = new Map() // Maps channel to array of inputs

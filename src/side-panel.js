@@ -1,5 +1,5 @@
 // Unified side panel UI component with tabs for track management and tablet configuration
-import { getLuminodeConfig, hasLuminodeConfig } from './luminode-configs.js'
+import { getLuminodeConfig, hasLuminodeConfig, getLuminodeGroup, getLuminodesByGroup } from './luminode-configs.js'
 import { TabletControls } from './tablet-controls.js'
 import { UTILS } from './settings.js'
 
@@ -338,11 +338,7 @@ export class SidePanel {
               </label>
               <select class="luminode-select" data-track-id="${track.id}">
                 <option value="">Select Luminode</option>
-                ${luminodes.map(luminode =>
-                  `<option value="${luminode}" ${track.luminode === luminode ? 'selected' : ''}>
-                    ${this.normalizeLuminodeName(luminode)}
-                  </option>`
-                ).join('')}
+                ${this.createGroupedLuminodeOptions(track.luminode)}
               </select>
             </div>
           </div>
@@ -805,7 +801,8 @@ export class SidePanel {
       sinewave: 'Sine Wave',
       triangle: 'Triangle',
       polygons: 'Polygons',
-      noiseValley: 'Noise Valley'
+      noiseValley: 'Noise Valley',
+      catenoid: 'Catenoid'
     }
     return nameMap[name] || name
   }
@@ -813,6 +810,25 @@ export class SidePanel {
   // Set settings reference
   setSettings (settings) {
     this.settings = settings
+  }
+
+  // Create grouped luminode options for dropdown
+  createGroupedLuminodeOptions (selectedLuminode) {
+    const groupedLuminodes = getLuminodesByGroup()
+    let html = ''
+    
+    Object.entries(groupedLuminodes).forEach(([groupName, luminodes]) => {
+      html += `<optgroup label="${groupName}">`
+      luminodes.forEach(luminode => {
+        const isSelected = selectedLuminode === luminode ? 'selected' : ''
+        html += `<option value="${luminode}" ${isSelected}>
+          ${this.normalizeLuminodeName(luminode)}
+        </option>`
+      })
+      html += '</optgroup>'
+    })
+    
+    return html
   }
 
   // Map luminode names to settings keys
@@ -832,7 +848,8 @@ export class SidePanel {
       sinewave: 'SINEWAVE',
       triangle: 'TRIANGLE',
       polygons: 'POLYGONS',
-      noiseValley: 'NOISE_VALLEY'
+      noiseValley: 'NOISE_VALLEY',
+      catenoid: 'CATENOID'
     }
     return luminodeMapping[luminode] || luminode.toUpperCase()
   }

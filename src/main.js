@@ -20,7 +20,8 @@ import {
   SinewaveLuminode,
   TriangleLuminode,
   PolygonsLuminode,
-  NoiseValleyLuminode
+  NoiseValleyLuminode,
+  CatenoidLuminode
 } from './luminodes/index.js'
 
 export class GLOWVisualizer {
@@ -52,7 +53,8 @@ export class GLOWVisualizer {
       sinewave: new SinewaveLuminode(this.canvasDrawer),
       triangle: new TriangleLuminode(this.canvasDrawer),
       polygons: new PolygonsLuminode(this.canvasDrawer),
-      noiseValley: new NoiseValleyLuminode(this.canvasDrawer)
+      noiseValley: new NoiseValleyLuminode(this.canvasDrawer),
+      catenoid: new CatenoidLuminode(this.canvasDrawer)
     }
 
     this.isRunning = false
@@ -298,7 +300,8 @@ export class GLOWVisualizer {
       sinewave: 'SINEWAVE',
       triangle: 'TRIANGLE',
       polygons: 'POLYGONS',
-      noiseValley: 'NOISE_VALLEY'
+      noiseValley: 'NOISE_VALLEY',
+      catenoid: 'CATENOID'
     }
 
     const settingsKey = luminodeMapping[luminode]
@@ -402,6 +405,10 @@ export class GLOWVisualizer {
     // Noise Valley (background layer)
     const noiseValleyColorMode = SETTINGS.MODULES.NOISE_VALLEY.USE_COLOR || false
     this.luminodes.noiseValley.draw(t, activeNotes.noiseValley || [], noiseValleyColorMode, trackLayouts.noiseValley)
+    
+    // Catenoid (background layer)
+    const catenoidColorMode = SETTINGS.MODULES.CATENOID.USE_COLOR || false
+    this.luminodes.catenoid.draw(t, activeNotes.catenoid || [], catenoidColorMode, trackLayouts.catenoid)
   }
 
   stop () {

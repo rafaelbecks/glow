@@ -12,7 +12,7 @@ export class TrackManager {
       'lissajous', 'harmonograph', 'sphere', 'gegoNet', 'gegoShape',
       'sotoGrid', 'sotoGridRotated', 'whitneyLines', 'phyllotaxis',
       'moireCircles', 'wovenNet', 'sinewave', 'triangle', 'polygons',
-      'noiseValley'
+      'noiseValley', 'catenoid'
     ]
 
     this.availableMidiDevices = new Map()
