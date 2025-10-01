@@ -1,0 +1,343 @@
+/* Tablet Panel Styles - Now integrated into side panel */
+
+.tablet-config-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tablet-config-group {
+    background: #222;
+    border: 1px solid #333;
+    padding: 8px;
+    transition: all 0.15s ease;
+}
+
+.tablet-config-group:hover {
+    background: #2a2a2a;
+    border-color: #444;
+}
+
+.tablet-config-group label {
+    color: #888;
+    font-size: 9px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 6px;
+}
+
+.tablet-config-group label ion-icon {
+    font-size: 9px;
+    opacity: 0.8;
+}
+
+.tablet-action-btn {
+    background: #333;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 6px 8px;
+    cursor: pointer;
+    font-size: 10px;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s ease;
+    width: 100%;
+    justify-content: center;
+    border-radius: 2px;
+}
+
+.tablet-action-btn:hover {
+    background: #3a3a3a;
+    border-color: #555;
+}
+
+.tablet-action-btn.danger {
+    background: #2a1a1a;
+    border-color: #4a2a2a;
+    color: #ff6b6b;
+}
+
+.tablet-action-btn.danger:hover {
+    background: #3a2a2a;
+    border-color: #5a3a3a;
+}
+
+.range-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.range-container input[type="range"] {
+    flex: 1;
+    height: 3px;
+    background: #333;
+    border-radius: 1px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.range-container input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    background: #51cf66;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.range-container input[type="range"]::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    background: #51cf66;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.range-value {
+    color: #51cf66;
+    font-size: 9px;
+    font-weight: 600;
+    min-width: 16px;
+    text-align: center;
+    font-family: 'Inconsolata', monospace;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 10px;
+    color: #ccc;
+}
+
+.checkbox-container input[type="checkbox"] {
+    display: none;
+}
+
+.checkmark {
+    width: 12px;
+    height: 12px;
+    border: 1px solid #444;
+    border-radius: 2px;
+    background: #333;
+    position: relative;
+    transition: all 0.15s ease;
+}
+
+.checkbox-container input[type="checkbox"]:checked + .checkmark {
+    background: #51cf66;
+    border-color: #51cf66;
+}
+
+.checkbox-container input[type="checkbox"]:checked + .checkmark::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 0px;
+    width: 3px;
+    height: 6px;
+    border: solid white;
+    border-width: 0 1px 1px 0;
+    transform: rotate(45deg);
+}
+
+.radio-container {
+    display: flex;
+    gap: 12px;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 10px;
+    color: #ccc;
+}
+
+.radio-option input[type="radio"] {
+    display: none;
+}
+
+.radio-mark {
+    width: 12px;
+    height: 12px;
+    border: 1px solid #444;
+    border-radius: 50%;
+    background: #333;
+    position: relative;
+    transition: all 0.15s ease;
+}
+
+.radio-option input[type="radio"]:checked + .radio-mark {
+    border-color: #51cf66;
+}
+
+.radio-option input[type="radio"]:checked + .radio-mark::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    background-color: #51cf66;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.setting-description {
+    font-size: 9px;
+    color: #666;
+    margin-top: 3px;
+    line-height: 1.3;
+}
+
+/* WebSocket Connection Styles */
+.connection-mode-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.radio-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 9px;
+    color: #888;
+}
+
+.radio-container input[type="radio"] {
+    display: none;
+}
+
+.radio-mark {
+    width: 12px;
+    height: 12px;
+    border: 1px solid #444;
+    border-radius: 50%;
+    position: relative;
+    transition: all 0.15s ease;
+}
+
+.radio-container input[type="radio"]:checked + .radio-mark {
+    border-color: #51cf66;
+    background: #51cf66;
+}
+
+.radio-container input[type="radio"]:checked + .radio-mark::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 4px;
+    height: 4px;
+    background: #000;
+    border-radius: 50%;
+}
+
+.websocket-settings {
+    margin-top: 8px;
+    padding: 8px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 2px;
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.input-group:last-child {
+    margin-bottom: 0;
+}
+
+.input-group label {
+    font-size: 8px;
+    color: #888;
+    min-width: 30px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.input-group input {
+    background: #333;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 3px 6px;
+    font-size: 9px;
+    font-family: inherit;
+    border-radius: 2px;
+    flex: 1;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #51cf66;
+    background: #3a3a3a;
+}
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid #333;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    transition: all 0.15s ease;
+}
+
+.status-indicator.connected {
+    background: #51cf66;
+    box-shadow: 0 0 4px rgba(81, 207, 102, 0.5);
+}
+
+.status-indicator.connecting {
+    background: #ffd43b;
+    animation: pulse 1s infinite;
+}
+
+.status-indicator.disconnected {
+    background: #666;
+}
+
+.status-indicator.error {
+    background: #ff6b6b;
+}
+
+.status-text {
+    font-size: 8px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}

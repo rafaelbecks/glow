@@ -1,0 +1,259 @@
+/* UI Components - Logo, buttons, controls, messages */
+
+#logoContainer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+}
+
+#logoContainer h3 {
+    color: white;
+    font-size: 18px;
+    font-weight: 200;
+    margin: 10px 0;
+    font-style: italic;
+    letter-spacing: 1px;
+    font-family: "Inconsolata", monospace;
+}
+
+.canvas-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.canvas-message h3 {
+    color: white;
+    font-size: 18px;
+    font-weight: 300;
+    margin: 0;
+    font-style: italic;
+    letter-spacing: 1px;
+    font-family: "Inconsolata", monospace;
+    text-align: center;
+    opacity: 0.8;
+}
+
+.canvas-message h3 strong {
+    color: #51cf66;
+    font-weight: 600;
+}
+
+.canvas-message h3 span {
+    text-shadow: 
+        0 0 8px rgba(255, 255, 255, 0.6),
+        0 0 16px rgba(255, 255, 255, 0.4),
+        0 0 24px rgba(255, 255, 255, 0.3),
+        0 0 32px rgba(255, 255, 255, 0.2);
+}
+
+#startButton {
+    padding: 8px 20px;
+    font-size: 14px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    color: white;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#startButton ion-icon {
+    font-size: 16px;
+}
+
+#startButton:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.8);
+}
+
+.controls {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    color: white;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 600px;
+}
+
+.controls label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 5px 0;
+}
+
+.controls label ion-icon {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.controls button {
+    margin: 5px 5px 5px 0;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.controls button ion-icon {
+    font-size: 14px;
+}
+
+.controls button:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.controls input[type="range"] {
+    width: 100px;
+}
+
+.settings-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    color: white;
+    border-radius: 0;
+    cursor: pointer;
+    font-size: 18px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s ease;
+}
+
+.settings-button:hover {
+    opacity: 0.7;
+}
+
+/* Panel toggle button in main UI */
+.panel-toggle-btn {
+    position: fixed;
+    top: 10px;
+    right: 50px;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    color: white;
+    border-radius: 0;
+    cursor: pointer;
+    font-size: 16px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s ease;
+}
+
+.panel-toggle-btn:hover {
+    opacity: 0.7;
+}
+
+.open-toggle-btn {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    color: white;
+    border-radius: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s ease;
+    z-index: 1000;
+}
+
+.open-toggle-btn:hover {
+    opacity: 0.7;
+}
+
+.open-toggle-btn ion-icon {
+    font-size: 18px;
+}
+
+.save-toggle-btn {
+    position: fixed;
+    top: 10px;
+    left: 40px;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    color: white;
+    border-radius: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s ease;
+    z-index: 1000;
+}
+
+.save-toggle-btn:hover {
+    opacity: 0.7;
+}
+
+.save-toggle-btn ion-icon {
+    font-size: 18px;
+}
+
+.info-toggle-btn {
+    position: fixed;
+    top: 10px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    color: white;
+    border-radius: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s ease;
+    z-index: 1000;
+}
+
+.info-toggle-btn:hover {
+    opacity: 0.7;
+}
+
+.info-toggle-btn ion-icon {
+    font-size: 18px;
+}

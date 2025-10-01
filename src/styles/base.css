@@ -1,0 +1,98 @@
+/* Base styles and global elements */
+body, html {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #000;
+    font-family: sans-serif;
+    cursor: url('../assets/cursor.svg') 4 4, auto;
+}
+
+canvas {
+    display: block;
+    cursor: url('../assets/cursor.svg') 4 4, auto;
+}
+
+#canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}
+
+#tabletCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2; /* Default to front, will be adjustable */
+    pointer-events: none; /* Let events pass through to main canvas */
+}
+
+/* Custom cursor for pointer elements */
+button, 
+.controls button,
+.settings-button,
+.panel-toggle-btn,
+.open-toggle-btn,
+.save-toggle-btn,
+.info-toggle-btn,
+.toggle-panel-btn,
+.mute-btn,
+.solo-btn,
+.tablet-action-btn,
+#startButton,
+input[type="checkbox"],
+input[type="radio"],
+select,
+.mid-device-select,
+.luminode-select,
+.config-header {
+    cursor: url('../assets/cursor.svg') 4 4, auto !important;
+}
+
+/* Icon styles */
+ion-icon {
+    font-size: 20px;
+    color: inherit;
+}
+
+.settings-button ion-icon,
+.panel-toggle-btn ion-icon {
+    font-size: 18px;
+}
+
+.toggle-panel-btn ion-icon {
+    font-size: 16px;
+}
+
+/* Custom Scrollbar Styles */
+/* Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+::-webkit-scrollbar-corner {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);
+}

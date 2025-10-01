@@ -36,6 +36,11 @@ export class GLOWVisualizer {
     this.sidePanel = new SidePanel(this.trackManager, this.tabletManager, this.uiManager, this.midiManager)
     this.sidePanel.setSettings(SETTINGS)
     this.visualizerStarted = false
+    
+    // CRT overlay element
+    this.crtOverlay = null
+    this.crtModeEnabled = false
+    this.crtIntensity = 100
 
     // Initialize luminodes
     this.luminodes = {
@@ -68,6 +73,9 @@ export class GLOWVisualizer {
     // Initial canvas setup
     this.canvasDrawer.resize()
     this.resizeTabletCanvas()
+    
+    // Create CRT overlay
+    this.createCRTOverlay()
   }
 
   resizeTabletCanvas () {
@@ -256,6 +264,10 @@ export class GLOWVisualizer {
         this.canvasDrawer.setClearAlpha(value)
       } else if (setting === 'BACKGROUND_COLOR') {
         this.canvasDrawer.setBackgroundColor(value)
+      } else if (setting === 'CRT_MODE') {
+        this.toggleCRTMode(value)
+      } else if (setting === 'CRT_INTENSITY') {
+        this.setCRTIntensity(value)
       }
     }
   }
@@ -416,6 +428,58 @@ export class GLOWVisualizer {
     if (this.animationId) {
       cancelAnimationFrame(this.animationId)
     }
+  }
+
+  // Create CRT overlay element
+  createCRTOverlay () {
+    this.crtOverlay = document.createElement('div')
+    this.crtOverlay.className = 'crt-overlay'
+    this.crtOverlay.style.display = 'none'
+    document.body.appendChild(this.crtOverlay)
+  }
+
+  // Toggle CRT mode
+  toggleCRTMode (enabled) {
+    this.crtModeEnabled = enabled
+    
+    if (this.crtOverlay) {
+      if (enabled) {
+        this.crtOverlay.style.display = 'block'
+        this.crtOverlay.classList.add('active')
+        this.updateCRTIntensity()
+      } else {
+        this.crtOverlay.style.display = 'none'
+        this.crtOverlay.classList.remove('active')
+      }
+    }
+    
+    console.log(`CRT mode ${enabled ? 'enabled' : 'disabled'}`)
+  }
+
+  // Set CRT intensity
+  setCRTIntensity (intensity) {
+    this.crtIntensity = intensity
+    
+    if (this.crtOverlay && this.crtModeEnabled) {
+      this.updateCRTIntensity()
+    }
+    
+    console.log(`CRT intensity set to ${intensity}%`)
+  }
+
+  // Update CRT overlay with current intensity
+  updateCRTIntensity () {
+    if (!this.crtOverlay) return
+    
+    // Convert 80-200 range to 0-1 range, with 100 as baseline
+    const normalizedIntensity = (this.crtIntensity - 80) / 120 // 0-1 range
+    const intensity = Math.max(0.1, normalizedIntensity) // Minimum 0.1 for visibility
+    
+    // Update CSS custom properties for dynamic intensity
+    this.crtOverlay.style.setProperty('--crt-opacity', intensity * 1.2) // Base opacity (increased)
+    this.crtOverlay.style.setProperty('--scanline-opacity', intensity * 0.9) // Scanline opacity (increased)
+    this.crtOverlay.style.setProperty('--color-separation-opacity', intensity * 0.7) // Color separation opacity (increased)
+    this.crtOverlay.style.setProperty('--flicker-intensity', intensity) // Flicker intensity
   }
 
   // Debug method to check MIDI devices

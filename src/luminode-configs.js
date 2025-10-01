@@ -88,7 +88,7 @@ export const LUMINODE_CONFIGS = {
     group: '3D Geometry',
     config: [
       { key: 'RADIUS', label: 'Radius', type: 'slider', min: 30, max: 150, step: 5, default: 80 },
-      { key: 'HEIGHT', label: 'Height', type: 'slider', min: 100, max: 400, step: 10, default: 200 },
+      { key: 'HEIGHT', label: 'Height', type: 'slider', min: 100, max: 400, step: 10, default: 300 },
       { key: 'RINGS', label: 'Rings', type: 'number', min: 8, max: 32, step: 2, default: 16 },
       { key: 'SEGMENTS', label: 'Segments', type: 'number', min: 12, max: 48, step: 2, default: 24 },
       { key: 'SCALE', label: 'Scale', type: 'slider', min: 0.5, max: 2, step: 0.1, default: 1.0 },

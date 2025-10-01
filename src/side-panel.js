@@ -954,7 +954,7 @@ export class SidePanel {
   // Create canvas and color controls HTML
   createCanvasControlsHTML () {
     const settings = this.settings || {}
-    const canvasSettings = settings.CANVAS || { CLEAR_ALPHA: 0.1, BACKGROUND_COLOR: '#000' }
+    const canvasSettings = settings.CANVAS || { CLEAR_ALPHA: 0.1, BACKGROUND_COLOR: '#000', CRT_MODE: false, CRT_INTENSITY: 100 }
     const colorSettings = settings.COLORS || {
       SOTO_PALETTE: ['#EF4136', '#005BBB', '#FCEE09', '#2E7D32', '#FFFFFF', '#4A148C', '#8B0000'],
       POLYGON_COLORS: ['#f93822', '#fcdc4d', '#00a6a6', '#90be6d', '#f94144', '#ff006e', '#8338ec']
@@ -989,6 +989,43 @@ export class SidePanel {
                    id="backgroundColor" 
                    value="${canvasSettings.BACKGROUND_COLOR}"
                    class="color-picker">
+          </div>
+          
+          <div class="tablet-config-group">
+            <label>
+              <ion-icon name="tv-outline"></ion-icon>
+              CRT Mode
+            </label>
+            <label class="checkbox-container">
+              <input type="checkbox" 
+                     id="crtMode" 
+                     ${canvasSettings.CRT_MODE ? 'checked' : ''}
+                     class="config-checkbox">
+              <span class="checkmark"></span>
+              Enable CRT Effect
+            </label>
+            <div class="setting-description">
+              Adds vintage CRT monitor effect with scanlines and flickering
+            </div>
+          </div>
+          
+          <div class="tablet-config-group" id="crtIntensityGroup" style="${canvasSettings.CRT_MODE ? 'display: block;' : 'display: none;'}">
+            <label>
+              <ion-icon name="contrast-outline"></ion-icon>
+              CRT Intensity
+            </label>
+            <div class="range-container">
+              <input type="range" 
+                     id="crtIntensity" 
+                     min="80" 
+                     max="200" 
+                     step="5" 
+                     value="${canvasSettings.CRT_INTENSITY || 100}">
+              <span class="range-value">${canvasSettings.CRT_INTENSITY || 100}%</span>
+            </div>
+            <div class="setting-description">
+              Controls the strength of the CRT effect (80% = subtle, 200% = maximum)
+            </div>
           </div>
         </div>
 
@@ -1086,6 +1123,40 @@ export class SidePanel {
         this.triggerCallback('canvasSettingChange', {
           setting: 'BACKGROUND_COLOR',
           value: e.target.value
+        })
+      })
+    }
+
+    // CRT mode checkbox
+    const crtModeCheckbox = container.querySelector('#crtMode')
+    if (crtModeCheckbox) {
+      crtModeCheckbox.addEventListener('change', (e) => {
+        const isEnabled = e.target.checked
+        this.triggerCallback('canvasSettingChange', {
+          setting: 'CRT_MODE',
+          value: isEnabled
+        })
+        
+        // Show/hide intensity slider based on CRT mode
+        const intensityGroup = container.querySelector('#crtIntensityGroup')
+        if (intensityGroup) {
+          intensityGroup.style.display = isEnabled ? 'block' : 'none'
+        }
+      })
+    }
+
+    // CRT intensity slider
+    const crtIntensitySlider = container.querySelector('#crtIntensity')
+    if (crtIntensitySlider) {
+      crtIntensitySlider.addEventListener('input', (e) => {
+        const value = parseInt(e.target.value)
+        const valueDisplay = e.target.parentElement.querySelector('.range-value')
+        if (valueDisplay) {
+          valueDisplay.textContent = `${value}%`
+        }
+        this.triggerCallback('canvasSettingChange', {
+          setting: 'CRT_INTENSITY',
+          value
         })
       })
     }

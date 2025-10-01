@@ -3,7 +3,9 @@ export const SETTINGS = {
   // Canvas settings
   CANVAS: {
     CLEAR_ALPHA: 0.1,
-    BACKGROUND_COLOR: '#000'
+    BACKGROUND_COLOR: '#000',
+    CRT_MODE: false,
+    CRT_INTENSITY: 100
   },
 
   // MIDI settings
@@ -132,7 +134,7 @@ export const SETTINGS = {
     },
     CATENOID: {
       RADIUS: 80,
-      HEIGHT: 200,
+      HEIGHT: 300,
       RINGS: 16,
       SEGMENTS: 24,
       SCALE: 1.0,
