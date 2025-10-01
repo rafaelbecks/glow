@@ -33,8 +33,8 @@
     <button title="Open Project" id="openButton" class="open-toggle-btn" style="display: none;">
       <ion-icon title="Open Project" name="shapes-outline"></ion-icon>
     </button>
-    <button title="Save Project" id="saveButton" class="save-toggle-btn" style="display: none;">
-      <ion-icon title="Save Project" name="caret-down-circle-outline"></ion-icon>
+    <button title="Save Scene" id="saveButton" class="save-toggle-btn" style="display: none;">
+      <ion-icon title="Save Scene" name="caret-down-circle-outline"></ion-icon>
     </button>
     <button title="About" id="infoButton" class="info-toggle-btn" style="display: none;">
       <ion-icon name="triangle-outline"></ion-icon>
@@ -58,6 +58,34 @@
             </div>
             <div id="infoModalBody" class="info-modal-body">
                 <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Save Dialog -->
+    <div id="saveDialog" class="save-dialog">
+        <div class="save-dialog-content">
+            <div class="save-dialog-header">
+                <h3>Save Scene</h3>
+                <button id="saveDialogClose" class="save-dialog-close">
+                    <ion-icon name="close-outline"></ion-icon>
+                </button>
+            </div>
+            <div class="save-dialog-body">
+                <div class="scene-name-input">
+                    <input 
+                        type="text" 
+                        id="projectName" 
+                        placeholder="Enter scene name" 
+                        maxlength="50"
+                        autocomplete="off"
+                    />
+                    <span class="file-extension">.glow</span>
+                </div>
+            </div>
+            <div class="save-dialog-footer">
+                <button id="saveDialogCancel" class="btn-secondary">Cancel</button>
+                <button id="saveDialogSave" class="btn-primary">Save Scene</button>
             </div>
         </div>
     </div>

@@ -130,3 +130,157 @@
     border-top: 1px solid rgba(255, 255, 255, 0.2);
     margin: 20px 0;
 }
+
+/* Save Dialog Styles */
+.save-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.save-dialog.show {
+    display: flex;
+}
+
+.save-dialog-content {
+    background: #000;
+    border: 1px solid #fff;
+    border-radius: 0;
+    width: 280px;
+    height: 224px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.save-dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.save-dialog-header h3 {
+    color: #fff;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 300;
+    font-family: "Inconsolata", monospace;
+}
+
+.save-dialog-close {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 3px;
+    transition: background 0.2s ease;
+}
+
+.save-dialog-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.save-dialog-close ion-icon {
+    font-size: 20px;
+}
+
+.save-dialog-body {
+    padding: 20px;
+    color: #fff;
+    font-family: "Inconsolata", monospace;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.scene-name-input {
+    display: flex;
+    align-items: center;
+    background: #111;
+    border: 1px solid #333;
+    padding: 0;
+    margin-bottom: 20px;
+}
+
+.scene-name-input input {
+    flex: 1;
+    padding: 10px;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-family: "Inconsolata", monospace;
+    font-size: 14px;
+    outline: none;
+}
+
+.scene-name-input input:focus {
+    background: #1a1a1a;
+}
+
+.scene-name-input .file-extension {
+    padding: 10px 15px;
+    color: #51cf66;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: "Inconsolata", monospace;
+    background: #222;
+    border-left: 1px solid #333;
+}
+
+.save-dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-primary,
+.btn-secondary {
+    padding: 10px 20px;
+    border: 1px solid #fff;
+    background: #000;
+    color: #fff;
+    font-family: "Inconsolata", monospace;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 0;
+}
+
+.btn-primary {
+    background: #51cf66;
+    border-color: #51cf66;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #45b85a;
+    border-color: #45b85a;
+}
+
+.btn-primary:disabled {
+    background: #333;
+    border-color: #555;
+    color: #888;
+    cursor: not-allowed;
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.error-message {
+    color: #ff6b6b;
+    font-size: 12px;
+    margin-top: 5px;
+    font-family: "Inconsolata", monospace;
+}

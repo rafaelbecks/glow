@@ -6,6 +6,8 @@ import { SidePanel } from './side-panel.js'
 import { TabletManager } from './tablet-manager.js'
 import { CanvasDrawer } from './canvas-drawer.js'
 import { UIManager } from './ui.js'
+import { ProjectManager } from './project-manager.js'
+import { SaveDialog } from './save-dialog.js'
 import {
   LissajousLuminode,
   HarmonographLuminode,
@@ -35,6 +37,8 @@ export class GLOWVisualizer {
     this.uiManager = new UIManager()
     this.sidePanel = new SidePanel(this.trackManager, this.tabletManager, this.uiManager, this.midiManager)
     this.sidePanel.setSettings(SETTINGS)
+    this.projectManager = new ProjectManager(this)
+    this.saveDialog = new SaveDialog()
     this.visualizerStarted = false
     
     // CRT overlay element
@@ -66,6 +70,7 @@ export class GLOWVisualizer {
     this.animationId = null
 
     this.setupEventHandlers()
+    this.setupSaveDialog()
     this.initialize()
   }
 
@@ -117,6 +122,13 @@ export class GLOWVisualizer {
     this.sidePanel.on('colorPaletteChange', (data) => this.updateColorPalette(data))
     this.sidePanel.on('pitchColorFactorChange', (data) => this.updatePitchColorFactor(data))
   }
+
+  setupSaveDialog () {
+    // Save dialog event handlers
+    this.saveDialog.on('save', (data) => this.handleProjectSave(data))
+    this.saveDialog.setupEventListeners()
+  }
+
 
   async start () {
     try {
@@ -195,8 +207,24 @@ export class GLOWVisualizer {
   }
 
   saveFile () {
-    console.log('Save file functionality - to be implemented')
-    this.uiManager.showStatus('Save file functionality - to be implemented', 'info')
+    // Generate default scene name with unix timestamp
+    const timestamp = Math.floor(Date.now() / 1000)
+    const defaultName = `glow-scene-${timestamp}`
+    
+    this.saveDialog.setDefaultName(defaultName)
+    this.saveDialog.show()
+  }
+
+  handleProjectSave (data) {
+    const { projectName } = data
+    
+    try {
+      this.projectManager.downloadProject(projectName)
+      this.uiManager.showStatus(`Scene "${projectName}" saved successfully!`, 'success')
+    } catch (error) {
+      console.error('Error saving scene:', error)
+      this.uiManager.showStatus('Error saving scene. Check console for details.', 'error')
+    }
   }
 
   setGeometricMode (enabled) {

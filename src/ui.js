@@ -109,6 +109,9 @@ export class UIManager {
       } else if (e.key === 'i') {
         e.preventDefault()
         this.toggleIcons()
+      } else if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault()
+        this.triggerCallback('saveFile')
       }
     })
 
@@ -163,7 +166,8 @@ export class UIManager {
 
   // Add status indicator
   showStatus (message, type = 'info') {
-    if (!this.statusVisible) return
+    // Status messages disabled
+    return
 
     // Create or update status element
     let statusEl = document.getElementById('status')
