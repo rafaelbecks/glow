@@ -5,12 +5,12 @@ body, html {
     overflow: hidden;
     background-color: #000;
     font-family: sans-serif;
-    cursor: url('../assets/cursor.svg') 4 4, auto;
+    cursor: url('../../assets/cursor.svg') 4 4, auto;
 }
 
 canvas {
     display: block;
-    cursor: url('../assets/cursor.svg') 4 4, auto;
+    cursor: url('../../assets/cursor.svg') 4 4, auto;
 }
 
 #canvas {
@@ -47,7 +47,7 @@ select,
 .mid-device-select,
 .luminode-select,
 .config-header {
-    cursor: url('../assets/cursor.svg') 4 4, auto !important;
+    cursor: url('../../assets/cursor.svg') 4 4, auto !important;
 }
 
 /* Icon styles */
