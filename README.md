@@ -23,25 +23,46 @@ Play with it: https://glow-visualizer.netlify.app/
 - **Tablet Manager**: HID device support with geometric shape detection
 - **Canvas Drawer**: Centralized drawing operations
 - **UI Manager**: Interface and event handling
+- **Project Manager**: Scene saving and state management
 
 **Luminodes (`luminodes/`):**
 Individual drawing modules inspired by geometric art pioneers
 
+### Classic Patterns
 | Luminode | Description |
 |----------|-------------|
 | **Lissajous** | Harmonic curves with frequency relationships |
 | **Harmonograph** | Complex damped harmonic patterns |
+| **Sinewave** | Harmonic wave visualizations |
+| **Triangle** | Rotating triangular animations |
+| **Polygons** | Stacked multi-sided shapes with organic deformation |
+
+### 3D Geometry
+| Luminode | Description |
+|----------|-------------|
 | **Sphere** | 3D wireframe sphere with rotation and deformation |
+| **Noise Valley** | 3D terrain with noise-based height fields |
+| **Catenoid** | 3D minimal surface with parametric deformation |
+
+### Art-Inspired
+| Luminode | Description |
+|----------|-------------|
 | **Gego Net** | Dynamic node networks with organic connections |
 | **Gego Shape** | Geometric constructions with structural connections |
 | **Soto Grid** | Animated striped grids with moire effects |
 | **Whitney Lines** | Radial line patterns with rotational motion |
+
+### Natural Patterns
+| Luminode | Description |
+|----------|-------------|
 | **Phyllotaxis** | Spiral dot patterns based on golden angle |
 | **Moire Circles** | Concentric circles with interference patterns |
+
+### Abstract Structures
+| Luminode | Description |
+|----------|-------------|
 | **Woven Net** | Interlaced geometric mesh structures |
-| **Sinewave** | Harmonic wave visualizations |
-| **Triangle** | Rotating triangular animations |
-| **Polygons** | Stacked multi-sided shapes with organic deformation |
+
 
 ## Local Usage
 
@@ -88,6 +109,13 @@ G.L.O.W. draws inspiration from several pioneers of geometric and kinetic art:
 ## Browser Requirements
 
 - Modern browser with ES6 module support
-- Web MIDI API support
-- Web HID API support (for tablet functionality)
+- Web MIDI API support (for MIDI input/output)
+- Web HID API support (for tablet functionality on macOS/Linux)
 - Canvas 2D context support
+- File API support (for scene saving/loading)
+
+## Keyboard Shortcuts
+
+- `Cmd+S` / `Ctrl+S`: Save current scene
+- `C`: Clear canvas
+- `I`: Toggle UI icons visibility

@@ -21,6 +21,7 @@ G.L.O.W. is a real-time visual instrument that transforms your music into geomet
 - Modern web browser (Chrome recommended)
 - MIDI device (keyboard, controller, or software)
 - Optional: Drawing tablet for additional control
+- File API support (for scene saving/loading)
 
 ---
 
@@ -35,20 +36,24 @@ G.L.O.W. works like a digital audio workstation (DAW) with **4 independent track
 - **Mix and match** different visual patterns
 
 ### Visual Effects (Luminodes)
-Choose from 15 unique visual patterns, each inspired by geometric art:
+Choose from 16 unique visual patterns, each inspired by geometric art:
 
 **Classic Patterns:**
 - **Lissajous Curves** - Elegant harmonic relationships
 - **Harmonograph** - Complex patterns with natural damping
 - **Sine Waves** - Pure harmonic visualizations
+- **Triangle** - Rotating triangular animations
+- **Polygons** - Stacked multi-sided shapes with organic deformation
 
 **3D Geometry:**
 - **Sphere** - Wireframe sphere with 3D rotation and deformation
-- **Polygons** - Stacked shapes with organic deformation
+- **Noise Valley** - 3D terrain with noise-based height fields
+- **Catenoid** - 3D minimal surface with parametric deformation
 
 **Art-Inspired Patterns:**
 - **Soto Grid** - Inspired by kinetic artist Jesús Rafael Soto
 - **Gego Networks** - Based on Gego's wire sculptures
+- **Gego Shapes** - Geometric constructions with structural connections
 - **Whitney Lines** - Radial patterns from computer animation pioneer John Whitney
 
 **Natural Patterns:**
@@ -57,7 +62,6 @@ Choose from 15 unique visual patterns, each inspired by geometric art:
 
 **Abstract Structures:**
 - **Woven Net** - Interlaced geometric structures
-- **Triangle** - Rotating triangular animations
 
 ---
 
@@ -67,7 +71,9 @@ Choose from 15 unique visual patterns, each inspired by geometric art:
 - **🎛️ Track Panel** - Open the track management interface
 - **🎨 Canvas Tab** - Adjust canvas and color settings
 - **⚙️ Tablet Tab** - Configure drawing tablet settings
+- **💾 Save Scene** - Export your current configuration
 - **C** - Clear the canvas
+- **Cmd+S / Ctrl+S** - Quick save scene
 
 ### Track Management
 1. **Open the track panel** by clicking the 🎛️ button
@@ -91,12 +97,33 @@ Access the **🎨 Canvas tab** to customize your visual experience:
 **Pitch to Color Generator:**
 - **Hue Factor** - Adjust how MIDI notes map to colors (1-100)
 - **Real-time preview** - See how different notes will be colored
-- **Affects 8 luminodes** - Harmonograph, Lissajous, Sinewave, Triangle, Woven Net, Whitney Lines, Moire Circles, Phyllotaxis
+- **Affects multiple luminodes** - Harmonograph, Lissajous, Sinewave, Triangle, Woven Net, Whitney Lines, Moire Circles, Phyllotaxis, Noise Valley, Catenoid
 
 ### Drawing Tablet Support
 - **Connect a drawing tablet** for pressure-sensitive control
 - **Draw directly on screen** to influence visuals
 - **Pressure affects** visual intensity and parameters
+
+### Scene Management
+Save and share your visual configurations:
+
+**Saving Scenes:**
+1. **Click the Save Scene button** (💾) or press `Cmd+S` / `Ctrl+S`
+2. **Enter a scene name** in the dialog
+3. **Click "Save Scene"** to download a `.glow` file
+
+**What Gets Saved:**
+- **Track configurations** - MIDI device assignments and luminode mappings
+- **Luminode settings** - Only for active luminodes (optimized file size)
+- **Canvas settings** - Background color, clear alpha, CRT effects
+- **Color palettes** - Custom color schemes and pitch-to-color mapping
+- **Tablet settings** - Line width, geometric modes, connection preferences
+- **MIDI configuration** - Output device settings and octave ranges
+
+**Scene Files:**
+- **Format**: JSON files with `.glow` extension
+- **Naming**: Automatic unix timestamp naming (e.g., `glow-scene-1704096000.glow`)
+- **Size**: Optimized to only include active configurations
 
 ---
 
