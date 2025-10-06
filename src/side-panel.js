@@ -126,6 +126,10 @@ export class SidePanel {
       this.renderTracks()
     })
 
+    this.trackManager.on('trajectoryUpdated', (data) => {
+      this.updateTrajectoryUI(data.trackId, data.config)
+    })
+
     // Setup tablet controls event listeners
     this.setupTabletControlsEventListeners()
   }
@@ -413,6 +417,125 @@ export class SidePanel {
               </div>
             </div>
           </div>
+          
+          <!-- Trajectory Motion Controls -->
+          <div class="assignment-row">
+            <div class="assignment-group trajectory-controls">
+              <label>
+                <svg class="trajectory-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <style>.cls-1{fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:2px;}</style>
+                  </defs>
+                  <g data-name="Layer 2" id="Layer_2">
+                    <g data-name="E449, Sine, sound, wave" id="E449_Sine_sound_wave">
+                      <path class="cls-1" d="M3 12c0-1.657 1.343-3 3-3s3 1.343 3 3-1.343 3-3 3-3-1.343-3-3z"></path>
+                      <path class="cls-1" d="M21 12c0-1.657 1.343-3 3-3s3 1.343 3 3-1.343 3-3 3-3-1.343-3-3z"></path>
+                      <path class="cls-1" d="M12 3c0-1.657 1.343-3 3-3s3 1.343 3 3-1.343 3-3 3-3-1.343-3-3z"></path>
+                      <path class="cls-1" d="M12 21c0-1.657 1.343-3 3-3s3 1.343 3 3-1.343 3-3 3-3-1.343-3-3z"></path>
+                      <path class="cls-1" d="M6 6l12 12M18 6L6 18"></path>
+                    </g>
+                  </g>
+                </svg>
+                Trajectory Motion
+              </label>
+              <div class="trajectory-controls-grid">
+                <div class="trajectory-control-row">
+                  <div class="trajectory-control">
+                    <label class="checkbox-container">
+                      <input type="checkbox" 
+                             class="trajectory-enable" 
+                             data-track-id="${track.id}"
+                             ${this.getTrajectoryConfig(track.id).enabled ? 'checked' : ''}>
+                      <span class="checkmark"></span>
+                      Enable Motion
+                    </label>
+                  </div>
+                  <div class="trajectory-control">
+                    <span class="trajectory-label">Type</span>
+                    <select class="trajectory-type-select" data-track-id="${track.id}">
+                      ${this.createTrajectoryTypeOptions(track.id)}
+                    </select>
+                  </div>
+                </div>
+                <div class="trajectory-control-row">
+                  <div class="trajectory-control">
+                    <span class="trajectory-label">Rate</span>
+                    <div class="slider-container">
+                      <input type="range" 
+                             class="trajectory-slider" 
+                             data-track-id="${track.id}" 
+                             data-param="motionRate"
+                             min="0.01" 
+                             max="2.0" 
+                             step="0.01" 
+                             value="${this.getTrajectoryConfig(track.id).motionRate}">
+                      <span class="slider-value">${this.getTrajectoryConfig(track.id).motionRate}</span>
+                    </div>
+                  </div>
+                  <div class="trajectory-control">
+                    <span class="trajectory-label">Amplitude</span>
+                    <div class="slider-container">
+                      <input type="range" 
+                             class="trajectory-slider" 
+                             data-track-id="${track.id}" 
+                             data-param="amplitude"
+                             min="0" 
+                             max="200" 
+                             step="1" 
+                             value="${this.getTrajectoryConfig(track.id).amplitude}">
+                      <span class="slider-value">${this.getTrajectoryConfig(track.id).amplitude}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="trajectory-control-row">
+                  <div class="trajectory-control">
+                    <span class="trajectory-label">Ratio A</span>
+                    <div class="slider-container">
+                      <input type="range" 
+                             class="trajectory-slider" 
+                             data-track-id="${track.id}" 
+                             data-param="ratioA"
+                             min="0.1" 
+                             max="5.0" 
+                             step="0.1" 
+                             value="${this.getTrajectoryConfig(track.id).ratioA}">
+                      <span class="slider-value">${this.getTrajectoryConfig(track.id).ratioA}</span>
+                    </div>
+                  </div>
+                  <div class="trajectory-control">
+                    <span class="trajectory-label">Ratio B</span>
+                    <div class="slider-container">
+                      <input type="range" 
+                             class="trajectory-slider" 
+                             data-track-id="${track.id}" 
+                             data-param="ratioB"
+                             min="0.1" 
+                             max="5.0" 
+                             step="0.1" 
+                             value="${this.getTrajectoryConfig(track.id).ratioB}">
+                      <span class="slider-value">${this.getTrajectoryConfig(track.id).ratioB}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="trajectory-control-row">
+                  <div class="trajectory-control">
+                    <span class="trajectory-label">Ratio C</span>
+                    <div class="slider-container">
+                      <input type="range" 
+                             class="trajectory-slider" 
+                             data-track-id="${track.id}" 
+                             data-param="ratioC"
+                             min="0.1" 
+                             max="5.0" 
+                             step="0.1" 
+                             value="${this.getTrajectoryConfig(track.id).ratioC}">
+                      <span class="slider-value">${this.getTrajectoryConfig(track.id).ratioC}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
           `
 : ''}
         </div>
@@ -476,6 +599,9 @@ export class SidePanel {
 
       // Configuration controls
       this.attachConfigEventListeners(trackId)
+
+      // Trajectory controls
+      this.attachTrajectoryEventListeners(trackId)
     })
   }
 
@@ -526,6 +652,37 @@ export class SidePanel {
     } else {
       configElement.style.display = 'none'
     }
+  }
+
+  // Update trajectory UI controls
+  updateTrajectoryUI (trackId, config) {
+    const trackTile = this.panel.querySelector(`[data-track-id="${trackId}"]`)
+    if (!trackTile) return
+
+    // Update enable checkbox
+    const enableCheckbox = trackTile.querySelector('.trajectory-enable')
+    if (enableCheckbox) {
+      enableCheckbox.checked = config.enabled
+    }
+
+    // Update type selection
+    const typeSelect = trackTile.querySelector('.trajectory-type-select')
+    if (typeSelect) {
+      typeSelect.value = config.trajectoryType
+    }
+
+    // Update sliders
+    const trajectorySliders = trackTile.querySelectorAll('.trajectory-slider')
+    trajectorySliders.forEach(slider => {
+      const param = slider.dataset.param
+      if (config.hasOwnProperty(param)) {
+        slider.value = config[param]
+        const valueDisplay = slider.parentElement.querySelector('.slider-value')
+        if (valueDisplay) {
+          valueDisplay.textContent = config[param]
+        }
+      }
+    })
   }
 
   // Attach event listeners to configuration controls
@@ -595,6 +752,44 @@ export class SidePanel {
         this.toggleConfigControls(trackId)
       })
     }
+  }
+
+  // Attach trajectory control event listeners
+  attachTrajectoryEventListeners (trackId) {
+    const trackTile = this.panel.querySelector(`[data-track-id="${trackId}"]`)
+    if (!trackTile) return
+
+    // Trajectory enable checkbox
+    const enableCheckbox = trackTile.querySelector('.trajectory-enable')
+    if (enableCheckbox) {
+      enableCheckbox.addEventListener('change', (e) => {
+        this.trackManager.updateTrajectoryConfig(trackId, { enabled: e.target.checked })
+      })
+    }
+
+    // Trajectory type selection
+    const typeSelect = trackTile.querySelector('.trajectory-type-select')
+    if (typeSelect) {
+      typeSelect.addEventListener('change', (e) => {
+        this.trackManager.updateTrajectoryConfig(trackId, { trajectoryType: e.target.value })
+      })
+    }
+
+    // Trajectory sliders
+    const trajectorySliders = trackTile.querySelectorAll('.trajectory-slider')
+    trajectorySliders.forEach(slider => {
+      slider.addEventListener('input', (e) => {
+        const param = e.target.dataset.param
+        const value = parseFloat(e.target.value)
+        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
+
+        if (valueDisplay) {
+          valueDisplay.textContent = value
+        }
+
+        this.trackManager.updateTrajectoryConfig(trackId, { [param]: value })
+      })
+    })
   }
 
   // Toggle configuration controls visibility
@@ -854,6 +1049,20 @@ export class SidePanel {
     return luminodeMapping[luminode] || luminode.toUpperCase()
   }
 
+  // Trajectory control helper methods
+  getTrajectoryConfig (trackId) {
+    return this.trackManager.getTrajectoryConfig(trackId)
+  }
+
+  createTrajectoryTypeOptions (trackId) {
+    const currentType = this.getTrajectoryConfig(trackId).trajectoryType
+    const typeNames = this.trackManager.getTrajectoryTypeNames()
+    
+    return Object.entries(typeNames).map(([value, label]) => 
+      `<option value="${value}" ${currentType === value ? 'selected' : ''}>${label}</option>`
+    ).join('')
+  }
+
   // Tablet-related methods (delegated to TabletControls component)
   updateTabletWidth (value) {
     const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
@@ -954,7 +1163,7 @@ export class SidePanel {
   // Create canvas and color controls HTML
   createCanvasControlsHTML () {
     const settings = this.settings || {}
-    const canvasSettings = settings.CANVAS || { CLEAR_ALPHA: 0.1, BACKGROUND_COLOR: '#000', CRT_MODE: false, CRT_INTENSITY: 100 }
+    const canvasSettings = settings.CANVAS || { CLEAR_ALPHA: 0.5, BACKGROUND_COLOR: '#000', CRT_MODE: false, CRT_INTENSITY: 100 }
     const colorSettings = settings.COLORS || {
       SOTO_PALETTE: ['#EF4136', '#005BBB', '#FCEE09', '#2E7D32', '#FFFFFF', '#4A148C', '#8B0000'],
       POLYGON_COLORS: ['#f93822', '#fcdc4d', '#00a6a6', '#90be6d', '#f94144', '#ff006e', '#8338ec']

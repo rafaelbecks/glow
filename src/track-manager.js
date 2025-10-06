@@ -1,4 +1,6 @@
 // Track management system for DAW-style interface
+import { TrajectorySystem } from './trajectory-system.js'
+
 export class TrackManager {
   constructor () {
     this.tracks = [
@@ -7,6 +9,9 @@ export class TrackManager {
       { id: 3, name: 'Track 3', muted: false, solo: false, midiDevice: null, luminode: 'sphere', layout: { x: 0, y: 0, rotation: 0 } },
       { id: 4, name: 'Track 4', muted: false, solo: false, midiDevice: null, luminode: 'gegoNet', layout: { x: 0, y: 0, rotation: 0 } }
     ]
+
+    // Initialize trajectory system
+    this.trajectorySystem = new TrajectorySystem()
 
     this.availableLuminodes = [
       'lissajous', 'harmonograph', 'sphere', 'gegoNet', 'gegoShape',
@@ -95,6 +100,34 @@ export class TrackManager {
       track.layout = { ...track.layout, ...layoutUpdates }
       this.triggerCallback('trackUpdated', { trackId, track })
     }
+  }
+
+  // Trajectory management methods
+  getTrajectoryConfig (trackId) {
+    return this.trajectorySystem.getTrackConfig(trackId)
+  }
+
+  updateTrajectoryConfig (trackId, updates) {
+    const newConfig = this.trajectorySystem.updateTrackConfig(trackId, updates)
+    this.triggerCallback('trajectoryUpdated', { trackId, config: newConfig })
+    return newConfig
+  }
+
+  getTrajectoryPosition (trackId, time, basePosition = { x: 0, y: 0, z: 0 }) {
+    return this.trajectorySystem.getPosition(trackId, time, basePosition)
+  }
+
+  getTrajectoryTypes () {
+    return this.trajectorySystem.getTrajectoryTypes()
+  }
+
+  getTrajectoryTypeNames () {
+    return this.trajectorySystem.getTrajectoryTypeNames()
+  }
+
+  resetTrajectoryConfig (trackId) {
+    this.trajectorySystem.resetTrackConfig(trackId)
+    this.triggerCallback('trajectoryUpdated', { trackId, config: this.trajectorySystem.getTrackConfig(trackId) })
   }
 
   // MIDI device management

@@ -387,10 +387,24 @@ export class GLOWVisualizer {
   getTrackLayouts () {
     const layouts = {}
     const tracks = this.trackManager.getTracks()
+    const time = performance.now() / 1000
 
     tracks.forEach(track => {
       if (track.luminode) {
-        layouts[track.luminode] = track.layout || { x: 0, y: 0, rotation: 0 }
+        const baseLayout = track.layout || { x: 0, y: 0, rotation: 0 }
+        
+        // Apply trajectory motion to the layout
+        const trajectoryPosition = this.trackManager.getTrajectoryPosition(track.id, time, {
+          x: baseLayout.x,
+          y: baseLayout.y,
+          z: 0
+        })
+
+        layouts[track.luminode] = {
+          x: trajectoryPosition.x,
+          y: trajectoryPosition.y,
+          rotation: baseLayout.rotation
+        }
       }
     })
 

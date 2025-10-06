@@ -37,7 +37,14 @@ export class MIDIManager {
 
   noteOn (channel, midi, velocity) {
     const list = this.activeNotes[channel]
-    if (!list.some(n => n.midi === midi)) {
+    const existingNote = list.find(n => n.midi === midi)
+    
+    if (existingNote) {
+      // Update timestamp and velocity for existing note (key held down)
+      existingNote.timestamp = performance.now()
+      existingNote.velocity = velocity / SETTINGS.MIDI.VELOCITY_MAX
+    } else {
+      // Add new note
       list.push({
         midi,
         velocity: velocity / SETTINGS.MIDI.VELOCITY_MAX, // Normalize to 0-1
@@ -64,7 +71,7 @@ export class MIDIManager {
 
   async setupMIDI () {
     try {
-      const access = await navigator.requestMIDIAccess()
+      const access = await navigator.requestMIDIAccess({ sysex: false })
 
       for (const input of access.inputs.values()) {
         const name = input.name.toLowerCase()
@@ -248,7 +255,7 @@ export class MIDIManager {
         return
       }
 
-      const access = await navigator.requestMIDIAccess()
+      const access = await navigator.requestMIDIAccess({ sysex: false })
       this.output = access.outputs.get(this.outputDevice)
       if (!this.output) {
         console.warn('MIDI output device not found:', this.outputDevice)
@@ -303,7 +310,7 @@ export class MIDIManager {
   // Get available output devices
   async getAvailableOutputDevices () {
     try {
-      const access = await navigator.requestMIDIAccess()
+      const access = await navigator.requestMIDIAccess({ sysex: false })
       const outputDevices = []
 
       for (const output of access.outputs.values()) {

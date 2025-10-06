@@ -2,7 +2,7 @@
 export const SETTINGS = {
   // Canvas settings
   CANVAS: {
-    CLEAR_ALPHA: 0.1,
+    CLEAR_ALPHA: 0.4,
     BACKGROUND_COLOR: '#000',
     CRT_MODE: false,
     CRT_INTENSITY: 100
@@ -168,7 +168,7 @@ export const SETTINGS = {
   // Animation settings
   ANIMATION: {
     FADE_DURATION: 2000, // 2 seconds
-    MAX_AGE: 3000 // 3 seconds
+    MAX_AGE: 100000 // 100 seconds
   }
 }
 

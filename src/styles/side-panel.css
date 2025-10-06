@@ -582,6 +582,118 @@
     color: currentColor;
 }
 
+/* Trajectory Controls */
+.trajectory-controls {
+  margin-top: 8px;
+}
+
+.trajectory-controls-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.trajectory-control-row {
+  display: flex;
+  gap: 8px;
+}
+
+.trajectory-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.trajectory-label {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 9px;
+  font-weight: 600;
+  min-width: 12px;
+  text-align: center;
+}
+
+.trajectory-icon {
+  width: 10px;
+  height: 10px;
+  opacity: 0.8;
+  color: #4CAF50;
+}
+
+.trajectory-slider {
+  flex: 1;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.trajectory-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  background: #4CAF50;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.trajectory-slider::-webkit-slider-thumb:hover {
+  background: #66BB6A;
+  transform: scale(1.1);
+}
+
+.trajectory-slider::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  background: #4CAF50;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.trajectory-slider::-moz-range-thumb:hover {
+  background: #66BB6A;
+  transform: scale(1.1);
+}
+
+.trajectory-slider::-webkit-slider-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+.trajectory-slider::-moz-range-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  height: 3px;
+}
+
+.trajectory-type-select {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.trajectory-type-select:focus {
+  border-color: #4CAF50;
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.trajectory-type-select:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
 .midi-device-select, .luminode-select {
     background: #222;
     border: 1px solid #444;
