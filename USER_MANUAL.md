@@ -83,6 +83,34 @@ Choose from 16 unique visual patterns, each inspired by geometric art:
 5. **Solo overrides mute** - soloed tracks will always play
 6. **Multiple tracks can share the same MIDI device** - perfect for layering different visual effects
 
+### Trajectory Motion System
+Each track features spatial motion controls inspired by John Whitney's non-central motion principles:
+
+**Motion Controls (per track):**
+- **Enable Motion** - Toggle trajectory motion on/off (disabled by default)
+- **Type** - Choose from three motion patterns:
+  - **Whitney Oscillations** - Elegant coupled harmonic motion
+  - **Lissajous Curves** - Musical harmonic relationships
+  - **Precessing Orbit** - Non-central circular motion with moving centers
+- **Rate** - Motion speed (0.01 - 2.0x)
+- **Amplitude** - Spatial range (0 - 200 pixels)
+- **Ratio A/B/C** - Harmonic frequency relationships (0.1 - 5.0)
+
+**How to Use:**
+1. **Select a track** and choose a luminode
+2. **Check "Enable Motion"** to activate trajectory movement
+3. **Choose a trajectory type** from the dropdown
+4. **Adjust parameters** using the sliders:
+   - Higher **Rate** = faster motion
+   - Higher **Amplitude** = larger movement range
+   - Different **Ratios** = unique harmonic relationships
+5. **Experiment** with different combinations for unique motion patterns
+
+**Motion Examples:**
+- **Whitney Oscillations** with ratios 1:2:3 create elegant figure-8 patterns
+- **Lissajous Curves** with ratios 3:4 create complex harmonic loops
+- **Precessing Orbit** creates mesmerizing spiral-like motion
+
 ### Canvas & Color Settings
 Access the **🎨 Canvas tab** to customize your visual experience:
 
@@ -114,6 +142,7 @@ Save and share your visual configurations:
 
 **What Gets Saved:**
 - **Track configurations** - MIDI device assignments and luminode mappings
+- **Trajectory motion settings** - Motion types, rates, amplitudes, and ratios per track
 - **Luminode settings** - Only for active luminodes (optimized file size)
 - **Canvas settings** - Background color, clear alpha, CRT effects
 - **Color palettes** - Custom color schemes and pitch-to-color mapping
@@ -133,10 +162,10 @@ G.L.O.W. draws inspiration from the pioneers of geometric and kinetic art:
 
 - **Jesús Rafael Soto** - Venezuelan kinetic artist known for interactive installations
 - **Gego (Gertrud Goldschmidt)** - German-Venezuelan artist who created intricate wire sculptures
-- **John Whitney** - Father of computer animation and abstract geometric films
+- **John Whitney** - Father of computer animation and abstract geometric films, whose non-central motion principles inspired the trajectory system
 - **Early Computer Graphics** - The aesthetic of 1960s-80s computer art
 
-Each visual pattern is designed to honor these artistic traditions while providing modern, real-time control for contemporary musicians and artists.
+Each visual pattern is designed to honor these artistic traditions while providing modern, real-time control for contemporary musicians and artists. The trajectory motion system specifically implements Whitney's mathematical approach to harmonic motion, allowing luminodes to move through space with the same elegant precision found in his pioneering computer animations.
 
 ## Repository
 

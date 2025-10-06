@@ -18,7 +18,8 @@ Play with it: https://glow-visualizer.netlify.app/
 **Core Modules:**
 - **Main Script**: Application orchestration and animation loop
 - **MIDI Manager**: Device connections and note tracking with multi-device support
-- **Track Manager**: MIDI channel routing and track management
+- **Track Manager**: MIDI channel routing and track management with trajectory motion
+- **Trajectory System**: Whitney-style motion patterns for spatial animation
 - **Side Panel**: Unified interface for tracks, tablet, and canvas settings
 - **Tablet Manager**: HID device support with geometric shape detection
 - **Canvas Drawer**: Centralized drawing operations
@@ -63,6 +64,23 @@ Individual drawing modules inspired by geometric art pioneers
 |----------|-------------|
 | **Woven Net** | Interlaced geometric mesh structures |
 
+## Trajectory Motion System
+
+G.L.O.W. features a trajectory motion system inspired by John Whitney's non-central motion principles. Each track can have its luminodes move through space using mathematically precise motion patterns:
+
+### Motion Types
+| Trajectory | Description | Formula |
+|------------|-------------|---------|
+| **Whitney Oscillations** | Coupled harmonic motion with cos/sin combinations | `x = R1 * cos(a*t + φ1)`, `y = R2 * sin(b*t + φ2)` |
+| **Lissajous Curves** | Balanced harmonic motion perfect for musical coupling | `x = A * sin(a*t + δ1)`, `y = B * sin(b*t + δ2)` |
+| **Precessing Orbit** | Non-central motion with moving centers (nested circular orbits) | Moving center with orbiting elements |
+
+### Per-Track Controls
+- **Enable Motion** - Toggle trajectory motion on/off
+- **Motion Rate** - Speed control (0.01 - 2.0x)
+- **Amplitude** - Spatial range (0 - 200 pixels)
+- **Ratio A/B/C** - Harmonic frequency relationships (0.1 - 5.0)
+- **Trajectory Type** - Choose between Whitney, Lissajous, or Orbit patterns
 
 ## Local Usage
 
