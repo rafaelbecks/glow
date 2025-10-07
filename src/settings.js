@@ -126,7 +126,6 @@ export const SETTINGS = {
       ROTATION_SPEED: 0.3,
       DEFORMATION_STRENGTH: 0.5,
       LINE_WIDTH: 0.8,
-      GLOW_INTENSITY: 8,
       BASE_HUE: 0,
       USE_COLOR: false,
       HEIGHT_SCALE: 30,
@@ -141,7 +140,19 @@ export const SETTINGS = {
       ROTATION_SPEED: 0.3,
       DEFORMATION_STRENGTH: 0.5,
       LINE_WIDTH: 0.8,
-      GLOW_INTENSITY: 8,
+      BASE_HUE: 0,
+      USE_COLOR: false
+    },
+    LINE_CYLINDER: {
+      RADIUS: 100,
+      HEIGHT: 300,
+      LINES_PER_NOTE: 8,
+      SCALE: 1.5,
+      ROTATION_SPEED: 0.3,
+      ANIMATION_SPEED: 0.5,
+      SEPARATION_THRESHOLD: 0.1,
+      DEFORMATION_STRENGTH: 0.4,
+      LINE_WIDTH: 0.8,
       BASE_HUE: 0,
       USE_COLOR: false
     }
@@ -190,7 +201,8 @@ export const MIDI_CHANNELS = {
   'bus 14': 'polygons',
   'bus 15': 'whitneyLines',
   'bus 16': 'noiseValley',
-  'bus 17': 'catenoid'
+  'bus 17': 'catenoid',
+  'bus 18': 'lineCylinder'
 }
 
 // Utility functions

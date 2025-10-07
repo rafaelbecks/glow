@@ -23,7 +23,8 @@ import {
   TriangleLuminode,
   PolygonsLuminode,
   NoiseValleyLuminode,
-  CatenoidLuminode
+  CatenoidLuminode,
+  LineCylinderLuminode
 } from './luminodes/index.js'
 
 export class GLOWVisualizer {
@@ -63,7 +64,8 @@ export class GLOWVisualizer {
       triangle: new TriangleLuminode(this.canvasDrawer),
       polygons: new PolygonsLuminode(this.canvasDrawer),
       noiseValley: new NoiseValleyLuminode(this.canvasDrawer),
-      catenoid: new CatenoidLuminode(this.canvasDrawer)
+      catenoid: new CatenoidLuminode(this.canvasDrawer),
+      lineCylinder: new LineCylinderLuminode(this.canvasDrawer)
     }
 
     this.isRunning = false
@@ -341,7 +343,8 @@ export class GLOWVisualizer {
       triangle: 'TRIANGLE',
       polygons: 'POLYGONS',
       noiseValley: 'NOISE_VALLEY',
-      catenoid: 'CATENOID'
+      catenoid: 'CATENOID',
+      lineCylinder: 'LINE_CYLINDER'
     }
 
     const settingsKey = luminodeMapping[luminode]
@@ -463,6 +466,10 @@ export class GLOWVisualizer {
     // Catenoid (background layer)
     const catenoidColorMode = SETTINGS.MODULES.CATENOID.USE_COLOR || false
     this.luminodes.catenoid.draw(t, activeNotes.catenoid || [], catenoidColorMode, trackLayouts.catenoid)
+    
+    // Line Cylinder (background layer)
+    const lineCylinderColorMode = SETTINGS.MODULES.LINE_CYLINDER.USE_COLOR || false
+    this.luminodes.lineCylinder.draw(t, activeNotes.lineCylinder || [], lineCylinderColorMode, trackLayouts.lineCylinder)
   }
 
   stop () {

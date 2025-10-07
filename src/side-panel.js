@@ -533,6 +533,18 @@ export class SidePanel {
                     </div>
                   </div>
                 </div>
+                <div class="trajectory-control-row">
+                  <div class="trajectory-control">
+                    <label class="checkbox-container">
+                      <input type="checkbox" 
+                             class="trajectory-inversion" 
+                             data-track-id="${track.id}"
+                             ${this.getTrajectoryConfig(track.id).inversion ? 'checked' : ''}>
+                      <span class="checkmark"></span>
+                      Invert Motion
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -790,6 +802,14 @@ export class SidePanel {
         this.trackManager.updateTrajectoryConfig(trackId, { [param]: value })
       })
     })
+
+    // Trajectory inversion checkbox
+    const inversionCheckbox = trackTile.querySelector('.trajectory-inversion')
+    if (inversionCheckbox) {
+      inversionCheckbox.addEventListener('change', (e) => {
+        this.trackManager.updateTrajectoryConfig(trackId, { inversion: e.target.checked })
+      })
+    }
   }
 
   // Toggle configuration controls visibility
@@ -997,7 +1017,8 @@ export class SidePanel {
       triangle: 'Triangle',
       polygons: 'Polygons',
       noiseValley: 'Noise Valley',
-      catenoid: 'Catenoid'
+      catenoid: 'Catenoid',
+        lineCylinder: 'Line Cylinder'
     }
     return nameMap[name] || name
   }

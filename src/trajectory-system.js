@@ -19,7 +19,7 @@ export class TrajectorySystem {
     this.trackConfigs = new Map()
 
     // Available trajectory types
-    this.trajectoryTypes = ['whitney', 'lissajous', 'orbit']
+    this.trajectoryTypes = ['whitney', 'lissajous', 'orbit', 'xAxis', 'yAxis', 'triangle', 'circle']
 
     // Initialize default configurations for existing tracks
     this.initializeDefaultConfigs()
@@ -38,6 +38,7 @@ export class TrajectorySystem {
       offset: [0, 0, 0], // relative to layout base position
       phase: [0, Math.PI / 2, Math.PI / 4],
       amplitude: 100, // Increased amplitude for more visible motion
+      inversion: false, // Invert trajectory (multiply by -1)
     }
 
     // Initialize configs for tracks 1-4
@@ -63,6 +64,7 @@ export class TrajectorySystem {
       offset: [0, 0, 0],
       phase: [0, Math.PI / 2, Math.PI / 4],
       amplitude: 100, // Increased amplitude for more visible motion
+      inversion: false, // Invert trajectory (multiply by -1)
     }
   }
 
@@ -90,10 +92,13 @@ export class TrajectorySystem {
     // Calculate trajectory offset
     const trajectoryOffset = trajectoryFn(time * config.motionRate, config)
     
+    // Apply inversion if enabled
+    const multiplier = config.inversion ? -1 : 1
+    
     return {
-      x: basePosition.x + trajectoryOffset[0],
-      y: basePosition.y + trajectoryOffset[1],
-      z: basePosition.z + trajectoryOffset[2]
+      x: basePosition.x + (trajectoryOffset[0] * multiplier),
+      y: basePosition.y + (trajectoryOffset[1] * multiplier),
+      z: basePosition.z + (trajectoryOffset[2] * multiplier)
     }
   }
 
@@ -144,6 +149,62 @@ export class TrajectorySystem {
         center[2],
       ]
     },
+
+    /**
+     * Type 4 — X-axis movement
+     * Simple horizontal oscillation.
+     */
+    xAxis: (t, config) => {
+      const { ratioA, amplitude, phase, offset } = config
+      return [
+        offset[0] + amplitude * Math.sin(ratioA * t + phase[0]),
+        offset[1],
+        offset[2]
+      ]
+    },
+
+    /**
+     * Type 5 — Y-axis movement
+     * Simple vertical oscillation.
+     */
+    yAxis: (t, config) => {
+      const { ratioA, amplitude, phase, offset } = config
+      return [
+        offset[0],
+        offset[1] + amplitude * Math.sin(ratioA * t + phase[0]),
+        offset[2]
+      ]
+    },
+
+    /**
+     * Type 6 — Triangle wave movement
+     * Linear sawtooth motion in X and Y.
+     */
+    triangle: (t, config) => {
+      const { ratioA, ratioB, amplitude, phase, offset } = config
+      // Triangle wave function
+      const triangleWave = (x) => {
+        return 2 * Math.abs(2 * (x - Math.floor(x + 0.5))) - 1
+      }
+      return [
+        offset[0] + amplitude * triangleWave(ratioA * t + phase[0]),
+        offset[1] + amplitude * triangleWave(ratioB * t + phase[1]),
+        offset[2]
+      ]
+    },
+
+    /**
+     * Type 7 — Circle movement
+     * Perfect circular motion in XY plane.
+     */
+    circle: (t, config) => {
+      const { ratioA, amplitude, phase, offset } = config
+      return [
+        offset[0] + amplitude * Math.cos(ratioA * t + phase[0]),
+        offset[1] + amplitude * Math.sin(ratioA * t + phase[0]),
+        offset[2]
+      ]
+    },
   }
 
   // Get available trajectory types
@@ -156,7 +217,11 @@ export class TrajectorySystem {
     return {
       whitney: 'Whitney Oscillations',
       lissajous: 'Lissajous Curves',
-      orbit: 'Precessing Orbit'
+      orbit: 'Precessing Orbit',
+      xAxis: 'X-Axis Movement',
+      yAxis: 'Y-Axis Movement',
+      triangle: 'Triangle Wave',
+      circle: 'Circular Motion'
     }
   }
 
