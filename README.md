@@ -44,6 +44,7 @@ Individual drawing modules inspired by geometric art pioneers
 | **Sphere** | 3D wireframe sphere with rotation and deformation |
 | **Noise Valley** | 3D terrain with noise-based height fields |
 | **Catenoid** | 3D minimal surface with parametric deformation |
+| **Line Cylinder** | 3D cylinder with vertical lines that opens and closes |
 
 ### Art-Inspired
 | Luminode | Description |
@@ -74,13 +75,18 @@ G.L.O.W. features a trajectory motion system inspired by John Whitney's non-cent
 | **Whitney Oscillations** | Coupled harmonic motion with cos/sin combinations | `x = R1 * cos(a*t + φ1)`, `y = R2 * sin(b*t + φ2)` |
 | **Lissajous Curves** | Balanced harmonic motion perfect for musical coupling | `x = A * sin(a*t + δ1)`, `y = B * sin(b*t + δ2)` |
 | **Precessing Orbit** | Non-central motion with moving centers (nested circular orbits) | Moving center with orbiting elements |
+| **X-Axis Movement** | Simple horizontal oscillation | `x = A * sin(a*t + φ)` |
+| **Y-Axis Movement** | Simple vertical oscillation | `y = A * sin(a*t + φ)` |
+| **Triangle Wave** | Linear sawtooth motion in X and Y | Triangle wave function |
+| **Circular Motion** | Perfect circular motion in XY plane | `x = A * cos(a*t + φ)`, `y = A * sin(a*t + φ)` |
 
 ### Per-Track Controls
 - **Enable Motion** - Toggle trajectory motion on/off
 - **Motion Rate** - Speed control (0.01 - 2.0x)
 - **Amplitude** - Spatial range (0 - 200 pixels)
 - **Ratio A/B/C** - Harmonic frequency relationships (0.1 - 5.0)
-- **Trajectory Type** - Choose between Whitney, Lissajous, or Orbit patterns
+- **Trajectory Type** - Choose from 7 motion patterns (Whitney, Lissajous, Orbit, X-Axis, Y-Axis, Triangle, Circle)
+- **Invert Motion** - Mirror the trajectory for symmetric effects
 
 ## Local Usage
 

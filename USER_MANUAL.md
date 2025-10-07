@@ -36,7 +36,7 @@ G.L.O.W. works like a digital audio workstation (DAW) with **4 independent track
 - **Mix and match** different visual patterns
 
 ### Visual Effects (Luminodes)
-Choose from 16 unique visual patterns, each inspired by geometric art:
+Choose from 17 unique visual patterns, each inspired by geometric art:
 
 **Classic Patterns:**
 - **Lissajous Curves** - Elegant harmonic relationships
@@ -49,6 +49,7 @@ Choose from 16 unique visual patterns, each inspired by geometric art:
 - **Sphere** - Wireframe sphere with 3D rotation and deformation
 - **Noise Valley** - 3D terrain with noise-based height fields
 - **Catenoid** - 3D minimal surface with parametric deformation
+- **Line Cylinder** - 3D cylinder with vertical lines that opens and closes
 
 **Art-Inspired Patterns:**
 - **Soto Grid** - Inspired by kinetic artist Jesús Rafael Soto
@@ -88,13 +89,18 @@ Each track features spatial motion controls inspired by John Whitney's non-centr
 
 **Motion Controls (per track):**
 - **Enable Motion** - Toggle trajectory motion on/off (disabled by default)
-- **Type** - Choose from three motion patterns:
+- **Type** - Choose from seven motion patterns:
   - **Whitney Oscillations** - Elegant coupled harmonic motion
   - **Lissajous Curves** - Musical harmonic relationships
   - **Precessing Orbit** - Non-central circular motion with moving centers
+  - **X-Axis Movement** - Simple horizontal oscillation
+  - **Y-Axis Movement** - Simple vertical oscillation
+  - **Triangle Wave** - Linear sawtooth motion in X and Y
+  - **Circular Motion** - Perfect circular motion in XY plane
 - **Rate** - Motion speed (0.01 - 2.0x)
 - **Amplitude** - Spatial range (0 - 200 pixels)
 - **Ratio A/B/C** - Harmonic frequency relationships (0.1 - 5.0)
+- **Invert Motion** - Mirror the trajectory for symmetric effects
 
 **How to Use:**
 1. **Select a track** and choose a luminode
@@ -110,6 +116,11 @@ Each track features spatial motion controls inspired by John Whitney's non-centr
 - **Whitney Oscillations** with ratios 1:2:3 create elegant figure-8 patterns
 - **Lissajous Curves** with ratios 3:4 create complex harmonic loops
 - **Precessing Orbit** creates mesmerizing spiral-like motion
+- **X-Axis Movement** creates smooth horizontal sweeps
+- **Y-Axis Movement** creates vertical bouncing effects
+- **Triangle Wave** creates sharp, angular motion patterns
+- **Circular Motion** creates perfect orbital movement
+- **Invert Motion** enables symmetric effects - try two luminodes with the same trajectory but one inverted!
 
 ### Canvas & Color Settings
 Access the **🎨 Canvas tab** to customize your visual experience:
@@ -125,7 +136,7 @@ Access the **🎨 Canvas tab** to customize your visual experience:
 **Pitch to Color Generator:**
 - **Hue Factor** - Adjust how MIDI notes map to colors (1-100)
 - **Real-time preview** - See how different notes will be colored
-- **Affects multiple luminodes** - Harmonograph, Lissajous, Sinewave, Triangle, Woven Net, Whitney Lines, Moire Circles, Phyllotaxis, Noise Valley, Catenoid
+- **Affects multiple luminodes** - Harmonograph, Lissajous, Sinewave, Triangle, Woven Net, Whitney Lines, Moire Circles, Phyllotaxis, Noise Valley, Catenoid, Line Cylinder
 
 ### Drawing Tablet Support
 - **Connect a drawing tablet** for pressure-sensitive control
