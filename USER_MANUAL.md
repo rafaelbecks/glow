@@ -30,10 +30,12 @@ G.L.O.W. is a real-time visual instrument that transforms your music into geomet
 ### The Track System
 G.L.O.W. works like a digital audio workstation (DAW) with **4 independent tracks**:
 
-- **Each track** can control a different luminodes
+- **Each track** can control a different luminode (visual pattern)
+- **Multiple tracks can use the same luminode type** - (e.g create 4 lissajous curves with different positioning).
 - **Assign any MIDI device** to any track
 - **Mute or solo tracks** for creative control
 - **Mix and match** different visual patterns
+- **Each luminode instance is independent** - different positioning, motion, and configuration
 
 ### Visual Effects (Luminodes)
 Choose from 17 unique visual patterns, each inspired by geometric art:

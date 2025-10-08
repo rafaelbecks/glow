@@ -16,7 +16,7 @@ Play with it: https://glow-visualizer.netlify.app/
 ## Architecture
 
 **Core Modules:**
-- **Main Script**: Application orchestration and animation loop
+- **Main Script**: Application orchestration and animation loop with track-based luminode management
 - **MIDI Manager**: Device connections and note tracking with multi-device support
 - **Track Manager**: MIDI channel routing and track management with trajectory motion
 - **Trajectory System**: Whitney-style motion patterns for spatial animation
@@ -27,8 +27,7 @@ Play with it: https://glow-visualizer.netlify.app/
 - **Project Manager**: Scene saving and state management
 
 **Luminodes (`luminodes/`):**
-Individual drawing modules inspired by geometric art pioneers
-
+Individual drawing modules inspired by geometric art pioneers.
 ### Classic Patterns
 | Luminode | Description |
 |----------|-------------|
@@ -64,6 +63,15 @@ Individual drawing modules inspired by geometric art pioneers
 | Luminode | Description |
 |----------|-------------|
 | **Woven Net** | Interlaced geometric mesh structures |
+
+## Track-Based Luminode System
+
+G.L.O.W. uses a track-based luminode system that creates individual instances for each track:
+
+### Features
+- **Instance-Based**: Each track gets its own luminode instance when assigned
+- **Multiple Instances**: Support for multiple tracks using the same luminode type (e.g., 4 lissajous curves)
+- **Independent Configuration**: Each instance has its own positioning, layout, and trajectory motion
 
 ## Trajectory Motion System
 
@@ -107,17 +115,35 @@ export class MyPatternLuminode {
     this.dimensions = canvasDrawer.getDimensions();
   }
 
-  draw(t, notes) {
+  draw(t, notes, layout = { x: 0, y: 0, rotation: 0 }) {
     // Your drawing logic here
     // t = time in seconds
-    // notes = array of active notes for this channel
+    // notes = array of active notes for this track
+    // layout = track-specific positioning and rotation
+    
+    // Apply layout transform for positioning
+    this.canvasDrawer.applyLayoutTransform(layout);
+    
+    // Your drawing code here
+    
+    // Restore transform
+    this.canvasDrawer.restoreLayoutTransform();
   }
 }
 ```
 
 3. Add the export to `luminodes/index.js`
-4. Import and instantiate in `main.js`
-5. Add the channel mapping in `settings.js`
+4. Add to the luminode factory in `main.js`:
+   ```javascript
+   this.luminodeFactory = {
+     // ... existing luminodes
+     myPattern: MyPatternLuminode
+   }
+   ```
+5. Add to available luminodes in `track-manager.js`
+6. Add configuration settings in `settings.js` if needed
+
+The new luminode will automatically work with the track-based system, supporting multiple instances and efficient rendering.
 
 ## Artistic Inspiration
 
