@@ -18,13 +18,13 @@ Play with it: https://glow-visualizer.netlify.app/
 **Core Modules:**
 - **Main Script**: Application orchestration and animation loop with track-based luminode management
 - **MIDI Manager**: Device connections and note tracking with multi-device support
-- **Track Manager**: MIDI channel routing and track management with trajectory motion
+- **Track Manager**: MIDI channel routing and track management
 - **Trajectory System**: Whitney-style motion patterns for spatial animation
-- **Side Panel**: Unified interface for tracks, tablet, and canvas settings
-- **Tablet Manager**: HID device support with geometric shape detection
+- **Side Panel**: Unified GUI for tracks, tablet, and canvas settings
+- **Tablet Manager**: HID device support for getting events from a drawing tablet.
 - **Canvas Drawer**: Centralized drawing operations
 - **UI Manager**: Interface and event handling
-- **Project Manager**: Scene saving and state management
+- **Project Manager**: Scene saving and state management (In development)
 
 **Luminodes (`luminodes/`):**
 Individual drawing modules inspired by geometric art pioneers.
@@ -81,7 +81,7 @@ G.L.O.W. features a trajectory motion system inspired by John Whitney's non-cent
 | Trajectory | Description | Formula |
 |------------|-------------|---------|
 | **Whitney Oscillations** | Coupled harmonic motion with cos/sin combinations | `x = R1 * cos(a*t + φ1)`, `y = R2 * sin(b*t + φ2)` |
-| **Lissajous Curves** | Balanced harmonic motion perfect for musical coupling | `x = A * sin(a*t + δ1)`, `y = B * sin(b*t + δ2)` |
+| **Lissajous Curves** | Balanced harmonic motion | `x = A * sin(a*t + δ1)`, `y = B * sin(b*t + δ2)` |
 | **Precessing Orbit** | Non-central motion with moving centers (nested circular orbits) | Moving center with orbiting elements |
 | **X-Axis Movement** | Simple horizontal oscillation | `x = A * sin(a*t + φ)` |
 | **Y-Axis Movement** | Simple vertical oscillation | `y = A * sin(a*t + φ)` |
@@ -144,6 +144,13 @@ export class MyPatternLuminode {
 6. Add configuration settings in `settings.js` if needed
 
 The new luminode will automatically work with the track-based system, supporting multiple instances and efficient rendering.
+
+## Design Philosophy
+
+G.L.O.W. follows a set of core principles that guide its development and design decisions. These principles ensure the project remains focused, elegant, and true to its artistic roots.
+
+📖 **[Read the Zen of G.L.O.W. →](ZEN_OF_GLOW.md)**  
+*The guiding principles that shape every aspect of the project*
 
 ## Artistic Inspiration
 
