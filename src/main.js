@@ -47,26 +47,29 @@ export class GLOWVisualizer {
     this.crtModeEnabled = false
     this.crtIntensity = 100
 
-    // Initialize luminodes
-    this.luminodes = {
-      lissajous: new LissajousLuminode(this.canvasDrawer),
-      harmonograph: new HarmonographLuminode(this.canvasDrawer),
-      sphere: new SphereLuminode(this.canvasDrawer),
-      gegoNet: new GegoNetLuminode(this.canvasDrawer),
-      gegoShape: new GegoShapeLuminode(this.canvasDrawer),
-      sotoGrid: new SotoGridLuminode(this.canvasDrawer),
-      sotoGridRotated: new SotoGridLuminode(this.canvasDrawer),
-      whitneyLines: new WhitneyLinesLuminode(this.canvasDrawer),
-      phyllotaxis: new PhyllotaxisLuminode(this.canvasDrawer),
-      moireCircles: new MoireCirclesLuminode(this.canvasDrawer),
-      wovenNet: new WovenNetLuminode(this.canvasDrawer),
-      sinewave: new SinewaveLuminode(this.canvasDrawer),
-      triangle: new TriangleLuminode(this.canvasDrawer),
-      polygons: new PolygonsLuminode(this.canvasDrawer),
-      noiseValley: new NoiseValleyLuminode(this.canvasDrawer),
-      catenoid: new CatenoidLuminode(this.canvasDrawer),
-      lineCylinder: new LineCylinderLuminode(this.canvasDrawer)
+    // Initialize luminode factory
+    this.luminodeFactory = {
+      lissajous: LissajousLuminode,
+      harmonograph: HarmonographLuminode,
+      sphere: SphereLuminode,
+      gegoNet: GegoNetLuminode,
+      gegoShape: GegoShapeLuminode,
+      sotoGrid: SotoGridLuminode,
+      sotoGridRotated: SotoGridLuminode,
+      whitneyLines: WhitneyLinesLuminode,
+      phyllotaxis: PhyllotaxisLuminode,
+      moireCircles: MoireCirclesLuminode,
+      wovenNet: WovenNetLuminode,
+      sinewave: SinewaveLuminode,
+      triangle: TriangleLuminode,
+      polygons: PolygonsLuminode,
+      noiseValley: NoiseValleyLuminode,
+      catenoid: CatenoidLuminode,
+      lineCylinder: LineCylinderLuminode
     }
+
+    // Track-based luminode instances
+    this.trackLuminodes = new Map() // Maps trackId -> luminode instance
 
     this.isRunning = false
     this.animationId = null
@@ -118,6 +121,9 @@ export class GLOWVisualizer {
     this.sidePanel.on('midiOutputChange', (enabled) => this.setMidiOutputEnabled(enabled))
     this.sidePanel.on('midiOutputDeviceChange', (deviceId) => this.setMidiOutputDevice(deviceId))
     this.sidePanel.on('octaveRangeChange', (range) => this.setOctaveRange(range))
+
+    // Track manager events
+    this.trackManager.on('luminodeChanged', (data) => this.handleLuminodeChange(data))
 
     // Canvas and color settings
     this.sidePanel.on('canvasSettingChange', (data) => this.updateCanvasSetting(data))
@@ -276,6 +282,44 @@ export class GLOWVisualizer {
     this.midiManager.setOctaveRange(range)
   }
 
+  // Track-based luminode management
+  createLuminodeForTrack (trackId, luminodeType) {
+    const LuminodeClass = this.luminodeFactory[luminodeType]
+    if (!LuminodeClass) {
+      console.warn(`Unknown luminode type: ${luminodeType}`)
+      return null
+    }
+
+    const luminode = new LuminodeClass(this.canvasDrawer)
+    this.trackLuminodes.set(trackId, luminode)
+    return luminode
+  }
+
+  removeLuminodeFromTrack (trackId) {
+    this.trackLuminodes.delete(trackId)
+  }
+
+  getLuminodeForTrack (trackId) {
+    return this.trackLuminodes.get(trackId)
+  }
+
+  updateTrackLuminode (trackId, luminodeType) {
+    // Remove old luminode if it exists
+    this.removeLuminodeFromTrack(trackId)
+    
+    // Create new luminode if type is specified
+    if (luminodeType) {
+      return this.createLuminodeForTrack(trackId, luminodeType)
+    }
+    
+    return null
+  }
+
+  handleLuminodeChange (data) {
+    const { trackId, luminode } = data
+    this.updateTrackLuminode(trackId, luminode)
+  }
+
   async populateMidiOutputDevices () {
     // Get available MIDI devices from the MIDI manager
     const devices = await this.midiManager.getAvailableOutputDevices()
@@ -403,7 +447,8 @@ export class GLOWVisualizer {
           z: 0
         })
 
-        layouts[track.luminode] = {
+        // Use track ID as key to support multiple instances of same luminode type
+        layouts[track.id] = {
           x: trajectoryPosition.x,
           y: trajectoryPosition.y,
           rotation: baseLayout.rotation
@@ -434,42 +479,70 @@ export class GLOWVisualizer {
       this.uiManager.hideLogoContainer()
     }
 
-    // Get track layouts for positioning
+    // Get active tracks and their layouts
+    const activeTracks = this.trackManager.getActiveTracks()
     const trackLayouts = this.getTrackLayouts()
 
-    // Soto grid animations
-    this.luminodes.sotoGrid.draw(t, activeNotes.sotoGrid || [], false, trackLayouts.sotoGrid)
-    this.luminodes.sotoGridRotated.draw(t, activeNotes.sotoGridRotated || [], true, trackLayouts.sotoGridRotated)
+    // Draw luminodes only for active tracks that have luminodes assigned
+    activeTracks.forEach(track => {
+      if (!track.luminode || !track.midiDevice) return
 
-    // Core visual modules
-    this.luminodes.lissajous.draw(t, activeNotes.lissajous.map(n => n.midi), trackLayouts.lissajous)
-    this.luminodes.harmonograph.draw(t, activeNotes.harmonograph, trackLayouts.harmonograph)
-    this.luminodes.sphere.draw(t, activeNotes.sphere, trackLayouts.sphere)
-    this.luminodes.gegoNet.draw(t, activeNotes.gegoNet, trackLayouts.gegoNet)
-    this.luminodes.gegoShape.draw(t, activeNotes.gegoShape, trackLayouts.gegoShape)
-    this.luminodes.phyllotaxis.draw(t, activeNotes.phyllotaxis, SETTINGS.MODULES.PHYLLOTAXIS.DOTS_PER_NOTE, trackLayouts.phyllotaxis)
-    // Get Whitney Lines color mode from settings
-    const whitneyColorMode = SETTINGS.MODULES.WHITNEY_LINES.USE_COLOR || false
-    this.luminodes.whitneyLines.draw(t, activeNotes.whitneyLines, whitneyColorMode, trackLayouts.whitneyLines)
+      // Get or create luminode instance for this track
+      let luminode = this.getLuminodeForTrack(track.id)
+      if (!luminode) {
+        luminode = this.createLuminodeForTrack(track.id, track.luminode)
+      }
 
-    // Additional visual modules
-    this.luminodes.moireCircles.draw(t, activeNotes.moireCircles, trackLayouts.moireCircles)
-    this.luminodes.wovenNet.draw(t, activeNotes.wovenNet, trackLayouts.wovenNet)
-    this.luminodes.sinewave.draw(t, activeNotes.sinewave, trackLayouts.sinewave)
-    this.luminodes.triangle.draw(t, activeNotes.triangle, 'triangle', 1, 300, trackLayouts.triangle)
-    this.luminodes.polygons.draw(t, activeNotes.polygons, trackLayouts.polygons)
-    
-    // Noise Valley (background layer)
-    const noiseValleyColorMode = SETTINGS.MODULES.NOISE_VALLEY.USE_COLOR || false
-    this.luminodes.noiseValley.draw(t, activeNotes.noiseValley || [], noiseValleyColorMode, trackLayouts.noiseValley)
-    
-    // Catenoid (background layer)
-    const catenoidColorMode = SETTINGS.MODULES.CATENOID.USE_COLOR || false
-    this.luminodes.catenoid.draw(t, activeNotes.catenoid || [], catenoidColorMode, trackLayouts.catenoid)
-    
-    // Line Cylinder (background layer)
-    const lineCylinderColorMode = SETTINGS.MODULES.LINE_CYLINDER.USE_COLOR || false
-    this.luminodes.lineCylinder.draw(t, activeNotes.lineCylinder || [], lineCylinderColorMode, trackLayouts.lineCylinder)
+      if (!luminode) return
+
+      // Get notes for this track's luminode
+      const notes = activeNotes[track.luminode] || []
+      const layout = trackLayouts[track.id] || { x: 0, y: 0, rotation: 0 }
+
+      // Draw the luminode with track-specific parameters
+      this.drawTrackLuminode(luminode, track.luminode, t, notes, layout)
+    })
+  }
+
+  drawTrackLuminode (luminode, luminodeType, t, notes, layout) {
+    // Handle special cases for different luminode types
+    switch (luminodeType) {
+      case 'sotoGrid':
+        luminode.draw(t, notes, false, layout)
+        break
+      case 'sotoGridRotated':
+        luminode.draw(t, notes, true, layout)
+        break
+      case 'lissajous':
+        luminode.draw(t, notes.map(n => n.midi), layout)
+        break
+      case 'phyllotaxis':
+        luminode.draw(t, notes, SETTINGS.MODULES.PHYLLOTAXIS.DOTS_PER_NOTE, layout)
+        break
+      case 'whitneyLines':
+        const whitneyColorMode = SETTINGS.MODULES.WHITNEY_LINES.USE_COLOR || false
+        luminode.draw(t, notes, whitneyColorMode, layout)
+        break
+      case 'triangle':
+        luminode.draw(t, notes, 'triangle', 1, 300, layout)
+        break
+      case 'noiseValley':
+        const noiseValleyColorMode = SETTINGS.MODULES.NOISE_VALLEY.USE_COLOR || false
+        luminode.draw(t, notes, noiseValleyColorMode, layout)
+        break
+      case 'catenoid':
+        const catenoidColorMode = SETTINGS.MODULES.CATENOID.USE_COLOR || false
+        luminode.draw(t, notes, catenoidColorMode, layout)
+        break
+      case 'lineCylinder':
+        const lineCylinderColorMode = SETTINGS.MODULES.LINE_CYLINDER.USE_COLOR || false
+        luminode.draw(t, notes, lineCylinderColorMode, layout)
+        break
+      default:
+        // Standard luminode drawing
+        luminode.draw(t, notes, layout)
+        break
+    }
   }
 
   stop () {

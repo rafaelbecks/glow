@@ -91,6 +91,7 @@ export class TrackManager {
     if (track) {
       track.luminode = luminode
       this.triggerCallback('trackUpdated', { trackId, track })
+      this.triggerCallback('luminodeChanged', { trackId, luminode })
     }
   }
 
