@@ -58,6 +58,7 @@ Choose from 17 unique visual patterns, each inspired by geometric art:
 - **Gego Networks** - Based on Gego's wire sculptures
 - **Gego Shapes** - Geometric constructions with structural connections
 - **Whitney Lines** - Radial patterns from computer animation pioneer John Whitney
+- **Clavilux** - Thomas Wilfred-inspired light compositions with organic shapes
 
 **Natural Patterns:**
 - **Phyllotaxis** - Spiral patterns found in nature
@@ -130,6 +131,9 @@ Access the **🎨 Canvas tab** to customize your visual experience:
 **Canvas Settings:**
 - **Clear Alpha** - Controls the ghostly trail effect (0-1)
 - **Background Color** - Change the canvas background color
+- **Lumia Effect** - Global blur effect for atmospheric light compositions (0-100px)
+
+*Note: The Lumia Effect is a global canvas filter that affects all luminodes, not a separate luminode pattern.*
 
 **Color Palettes:**
 - **Soto Palette** - Main color scheme for geometric luminodes
@@ -176,6 +180,7 @@ G.L.O.W. draws inspiration from the pioneers of geometric and kinetic art:
 - **Jesús Rafael Soto** - Venezuelan kinetic artist known for interactive installations
 - **Gego (Gertrud Goldschmidt)** - German-Venezuelan artist who created intricate wire sculptures
 - **John Whitney** - Father of computer animation and abstract geometric films, whose non-central motion principles inspired the trajectory system
+- **Thomas Wilfred** - Pioneer of light art whose lumia compositions inspired the Clavilux luminode and the global Lumia Effect filter
 - **Early Computer Graphics** - The aesthetic of 1960s-80s computer art
 
 Each visual pattern is designed to honor these artistic traditions while providing modern, real-time control for contemporary musicians and artists. The trajectory motion system specifically implements Whitney's mathematical approach to harmonic motion, allowing luminodes to move through space with the same elegant precision found in his pioneering computer animations.

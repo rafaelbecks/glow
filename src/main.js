@@ -24,7 +24,8 @@ import {
   PolygonsLuminode,
   NoiseValleyLuminode,
   CatenoidLuminode,
-  LineCylinderLuminode
+  LineCylinderLuminode,
+  ClaviluxLuminode
 } from './luminodes/index.js'
 
 export class GLOWVisualizer {
@@ -65,7 +66,8 @@ export class GLOWVisualizer {
       polygons: PolygonsLuminode,
       noiseValley: NoiseValleyLuminode,
       catenoid: CatenoidLuminode,
-      lineCylinder: LineCylinderLuminode
+      lineCylinder: LineCylinderLuminode,
+      clavilux: ClaviluxLuminode
     }
 
     // Track-based luminode instances
@@ -342,6 +344,8 @@ export class GLOWVisualizer {
         this.toggleCRTMode(value)
       } else if (setting === 'CRT_INTENSITY') {
         this.setCRTIntensity(value)
+      } else if (setting === 'LUMIA_EFFECT') {
+        this.updateLumiaEffect(value)
       }
     }
   }
@@ -367,6 +371,17 @@ export class GLOWVisualizer {
     }
   }
 
+  updateLumiaEffect (blurStrength) {
+    if (this.canvas) {
+      if (blurStrength > 0) {
+        this.canvas.style.filter = `blur(${blurStrength}px)`
+      } else {
+        this.canvas.style.filter = 'none'
+      }
+      console.log(`Updated Lumia Effect blur to ${blurStrength}px`)
+    }
+  }
+
   updateLuminodeConfig (data) {
     const { luminode, param, value } = data
 
@@ -388,7 +403,8 @@ export class GLOWVisualizer {
       polygons: 'POLYGONS',
       noiseValley: 'NOISE_VALLEY',
       catenoid: 'CATENOID',
-      lineCylinder: 'LINE_CYLINDER'
+      lineCylinder: 'LINE_CYLINDER',
+      clavilux: 'CLAVILUX'
     }
 
     const settingsKey = luminodeMapping[luminode]

@@ -7,7 +7,7 @@
 
 A generative visual playground for sound-reactive geometry
 
-G.L.O.W. is a lightweight, modular, MIDI and HID reactive visual engine that draws inspiration from early computer graphics, kinetic art, geometric abstraction, and pioneers like Jesús Rafael Soto, Gego and John Whitney. It allows musicians, performers, and artists to visualize sound through structured, evolving geometries in real time.
+G.L.O.W. is a lightweight, modular, MIDI and HID reactive visual engine that draws inspiration from early computer graphics, kinetic art, geometric abstraction, and pioneers like Jesús Rafael Soto, Gego,  John Whitney and Thomas Wilfred. It allows musicians, performers, and artists to visualize sound through structured, evolving geometries in real time.
 
 ## Demo
 
@@ -52,6 +52,7 @@ Individual drawing modules inspired by geometric art pioneers.
 | **Gego Shape** | Geometric constructions with structural connections |
 | **Soto Grid** | Animated striped grids with moire effects |
 | **Whitney Lines** | Radial line patterns with rotational motion |
+| **Clavilux** | Thomas Wilfred-inspired light compositions with organic shapes |
 
 ### Natural Patterns
 | Luminode | Description |
@@ -63,6 +64,8 @@ Individual drawing modules inspired by geometric art pioneers.
 | Luminode | Description |
 |----------|-------------|
 | **Woven Net** | Interlaced geometric mesh structures |
+
+*Note: The Lumia Effect is a global canvas filter, separate from the individual luminode patterns.*
 
 ## Track-Based Luminode System
 

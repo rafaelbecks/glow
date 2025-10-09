@@ -1257,6 +1257,25 @@ export class SidePanel {
               Controls the strength of the CRT effect (80% = subtle, 200% = maximum)
             </div>
           </div>
+          
+          <div class="tablet-config-group">
+            <label>
+              <ion-icon name="blur-outline"></ion-icon>
+              Lumia Effect
+            </label>
+            <div class="range-container">
+              <input type="range" 
+                     id="lumiaEffect" 
+                     min="0" 
+                     max="100" 
+                     step="5" 
+                     value="${canvasSettings.LUMIA_EFFECT || 0}">
+              <span class="range-value">${canvasSettings.LUMIA_EFFECT || 0}px</span>
+            </div>
+            <div class="setting-description">
+              Applies blur effect to all luminodes (0 = no blur, 100px = maximum blur)
+            </div>
+          </div>
         </div>
 
         <!-- Color Palettes -->
@@ -1386,6 +1405,22 @@ export class SidePanel {
         }
         this.triggerCallback('canvasSettingChange', {
           setting: 'CRT_INTENSITY',
+          value
+        })
+      })
+    }
+
+    // Lumia Effect slider
+    const lumiaEffectSlider = container.querySelector('#lumiaEffect')
+    if (lumiaEffectSlider) {
+      lumiaEffectSlider.addEventListener('input', (e) => {
+        const value = parseInt(e.target.value)
+        const valueDisplay = e.target.parentElement.querySelector('.range-value')
+        if (valueDisplay) {
+          valueDisplay.textContent = `${value}px`
+        }
+        this.triggerCallback('canvasSettingChange', {
+          setting: 'LUMIA_EFFECT',
           value
         })
       })

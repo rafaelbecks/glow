@@ -5,7 +5,8 @@ export const SETTINGS = {
     CLEAR_ALPHA: 0.4,
     BACKGROUND_COLOR: '#000',
     CRT_MODE: false,
-    CRT_INTENSITY: 100
+    CRT_INTENSITY: 100,
+    LUMIA_EFFECT: 0
   },
 
   // MIDI settings
@@ -155,6 +156,14 @@ export const SETTINGS = {
       LINE_WIDTH: 0.8,
       BASE_HUE: 0,
       USE_COLOR: false
+    },
+    CLAVILUX: {
+      BASE_SIZE: 120,
+      SIZE_VARIATION: 80,
+      CENTER_AREA: 300,
+      FLOAT_SPEED: 0.1,
+      FADE_DURATION: 5000,
+      MAX_FORMS: 20
     }
   },
 
@@ -202,7 +211,8 @@ export const MIDI_CHANNELS = {
   'bus 15': 'whitneyLines',
   'bus 16': 'noiseValley',
   'bus 17': 'catenoid',
-  'bus 18': 'lineCylinder'
+  'bus 18': 'lineCylinder',
+  'bus 19': 'clavilux'
 }
 
 // Utility functions

@@ -169,6 +169,18 @@ export const LUMINODE_CONFIGS = {
     ]
   },
 
+  clavilux: {
+    group: 'Art-Inspired',
+    config: [
+      { key: 'BASE_SIZE', label: 'Light Size', type: 'slider', min: 60, max: 200, step: 10, default: 120 },
+      { key: 'SIZE_VARIATION', label: 'Size Variation', type: 'slider', min: 20, max: 120, step: 10, default: 80 },
+      { key: 'CENTER_AREA', label: 'Center Area', type: 'slider', min: 150, max: 500, step: 25, default: 300 },
+      { key: 'FLOAT_SPEED', label: 'Float Speed', type: 'slider', min: 0.02, max: 0.3, step: 0.01, default: 0.1 },
+      { key: 'FADE_DURATION', label: 'Fade Duration', type: 'slider', min: 2000, max: 10000, step: 500, default: 5000 },
+      { key: 'MAX_FORMS', label: 'Max Forms', type: 'number', min: 5, max: 40, step: 5, default: 20 }
+    ]
+  },
+
   // Natural Patterns
   phyllotaxis: {
     group: 'Natural Patterns',
