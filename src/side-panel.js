@@ -1018,7 +1018,7 @@ export class SidePanel {
       polygons: 'Polygons',
       noiseValley: 'Noise Valley',
       catenoid: 'Catenoid',
-        lineCylinder: 'Line Cylinder'
+      lineCylinder: 'Line Cylinder'
     }
     return nameMap[name] || name
   }
@@ -1032,7 +1032,7 @@ export class SidePanel {
   createGroupedLuminodeOptions (selectedLuminode) {
     const groupedLuminodes = getLuminodesByGroup()
     let html = ''
-    
+
     Object.entries(groupedLuminodes).forEach(([groupName, luminodes]) => {
       html += `<optgroup label="${groupName}">`
       luminodes.forEach(luminode => {
@@ -1043,7 +1043,7 @@ export class SidePanel {
       })
       html += '</optgroup>'
     })
-    
+
     return html
   }
 
@@ -1078,8 +1078,8 @@ export class SidePanel {
   createTrajectoryTypeOptions (trackId) {
     const currentType = this.getTrajectoryConfig(trackId).trajectoryType
     const typeNames = this.trackManager.getTrajectoryTypeNames()
-    
-    return Object.entries(typeNames).map(([value, label]) => 
+
+    return Object.entries(typeNames).map(([value, label]) =>
       `<option value="${value}" ${currentType === value ? 'selected' : ''}>${label}</option>`
     ).join('')
   }
@@ -1385,7 +1385,7 @@ export class SidePanel {
           setting: 'CRT_MODE',
           value: isEnabled
         })
-        
+
         // Show/hide intensity slider based on CRT mode
         const intensityGroup = container.querySelector('#crtIntensityGroup')
         if (intensityGroup) {

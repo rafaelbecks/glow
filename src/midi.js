@@ -40,7 +40,7 @@ export class MIDIManager {
   noteOn (channel, midi, velocity) {
     const list = this.activeNotes[channel]
     const existingNote = list.find(n => n.midi === midi)
-    
+
     if (existingNote) {
       // Update timestamp and velocity for existing note (key held down)
       existingNote.timestamp = performance.now()

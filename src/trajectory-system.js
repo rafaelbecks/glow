@@ -6,13 +6,13 @@
  */
 
 export class TrajectorySystem {
-  constructor() {
+  constructor () {
     // Global trajectory settings
     this.globalSettings = {
       enabled: true,
-      speed: 0.2,                // overall time scaling
-      amplitude: 0.4,            // base spatial range
-      phaseOffset: 0.0,          // global phase offset
+      speed: 0.2, // overall time scaling
+      amplitude: 0.4, // base spatial range
+      phaseOffset: 0.0 // global phase offset
     }
 
     // Per-track trajectory configurations
@@ -26,7 +26,7 @@ export class TrajectorySystem {
   }
 
   // Initialize default trajectory configurations for tracks
-  initializeDefaultConfigs() {
+  initializeDefaultConfigs () {
     // Default configuration for each track
     const defaultConfig = {
       enabled: false, // Disabled by default
@@ -38,7 +38,7 @@ export class TrajectorySystem {
       offset: [0, 0, 0], // relative to layout base position
       phase: [0, Math.PI / 2, Math.PI / 4],
       amplitude: 100, // Increased amplitude for more visible motion
-      inversion: false, // Invert trajectory (multiply by -1)
+      inversion: false // Invert trajectory (multiply by -1)
     }
 
     // Initialize configs for tracks 1-4
@@ -48,12 +48,12 @@ export class TrajectorySystem {
   }
 
   // Get trajectory configuration for a specific track
-  getTrackConfig(trackId) {
+  getTrackConfig (trackId) {
     return this.trackConfigs.get(trackId) || this.getDefaultConfig()
   }
 
   // Get default configuration
-  getDefaultConfig() {
+  getDefaultConfig () {
     return {
       enabled: false, // Disabled by default
       trajectoryType: 'whitney',
@@ -64,12 +64,12 @@ export class TrajectorySystem {
       offset: [0, 0, 0],
       phase: [0, Math.PI / 2, Math.PI / 4],
       amplitude: 100, // Increased amplitude for more visible motion
-      inversion: false, // Invert trajectory (multiply by -1)
+      inversion: false // Invert trajectory (multiply by -1)
     }
   }
 
   // Update trajectory configuration for a track
-  updateTrackConfig(trackId, updates) {
+  updateTrackConfig (trackId, updates) {
     const currentConfig = this.getTrackConfig(trackId)
     const newConfig = { ...currentConfig, ...updates }
     this.trackConfigs.set(trackId, newConfig)
@@ -77,9 +77,9 @@ export class TrajectorySystem {
   }
 
   // Get trajectory position for a track at a given time
-  getPosition(trackId, time, basePosition = { x: 0, y: 0, z: 0 }) {
+  getPosition (trackId, time, basePosition = { x: 0, y: 0, z: 0 }) {
     const config = this.getTrackConfig(trackId)
-    
+
     if (!config.enabled) {
       return { x: basePosition.x, y: basePosition.y, z: basePosition.z }
     }
@@ -91,10 +91,10 @@ export class TrajectorySystem {
 
     // Calculate trajectory offset
     const trajectoryOffset = trajectoryFn(time * config.motionRate, config)
-    
+
     // Apply inversion if enabled
     const multiplier = config.inversion ? -1 : 1
-    
+
     return {
       x: basePosition.x + (trajectoryOffset[0] * multiplier),
       y: basePosition.y + (trajectoryOffset[1] * multiplier),
@@ -113,7 +113,7 @@ export class TrajectorySystem {
       return [
         offset[0] + amplitude * Math.cos(ratioA * t + phase[0]),
         offset[1] + amplitude * Math.sin(ratioB * t + phase[1]),
-        offset[2] + amplitude * Math.sin(ratioC * t + phase[2]),
+        offset[2] + amplitude * Math.sin(ratioC * t + phase[2])
       ]
     },
 
@@ -126,7 +126,7 @@ export class TrajectorySystem {
       return [
         offset[0] + amplitude * Math.sin(ratioA * t + phase[0]),
         offset[1] + amplitude * Math.sin(ratioB * t + phase[1]),
-        offset[2] + amplitude * Math.sin(ratioC * t + phase[2]),
+        offset[2] + amplitude * Math.sin(ratioC * t + phase[2])
       ]
     },
 
@@ -141,12 +141,12 @@ export class TrajectorySystem {
       const center = [
         offset[0] + R * Math.cos(ratioA * t + phase[0]),
         offset[1] + R * Math.sin(ratioA * t + phase[1]),
-        offset[2],
+        offset[2]
       ]
       return [
         center[0] + r * Math.cos(ratioB * t + phase[2]),
         center[1] + r * Math.sin(ratioB * t + phase[0]),
-        center[2],
+        center[2]
       ]
     },
 
@@ -204,16 +204,16 @@ export class TrajectorySystem {
         offset[1] + amplitude * Math.sin(ratioA * t + phase[0]),
         offset[2]
       ]
-    },
+    }
   }
 
   // Get available trajectory types
-  getTrajectoryTypes() {
+  getTrajectoryTypes () {
     return this.trajectoryTypes
   }
 
   // Get trajectory type display names
-  getTrajectoryTypeNames() {
+  getTrajectoryTypeNames () {
     return {
       whitney: 'Whitney Oscillations',
       lissajous: 'Lissajous Curves',
@@ -226,19 +226,19 @@ export class TrajectorySystem {
   }
 
   // Reset all track configurations to defaults
-  resetAllConfigs() {
+  resetAllConfigs () {
     this.trackConfigs.clear()
     this.initializeDefaultConfigs()
   }
 
   // Reset a specific track configuration
-  resetTrackConfig(trackId) {
+  resetTrackConfig (trackId) {
     const defaultConfig = this.getDefaultConfig()
     this.trackConfigs.set(trackId, { ...defaultConfig })
   }
 
   // Get all track configurations
-  getAllConfigs() {
+  getAllConfigs () {
     const configs = {}
     for (const [trackId, config] of this.trackConfigs) {
       configs[trackId] = config
@@ -247,12 +247,12 @@ export class TrajectorySystem {
   }
 
   // Set global settings
-  setGlobalSettings(settings) {
+  setGlobalSettings (settings) {
     this.globalSettings = { ...this.globalSettings, ...settings }
   }
 
   // Get global settings
-  getGlobalSettings() {
+  getGlobalSettings () {
     return { ...this.globalSettings }
   }
 }

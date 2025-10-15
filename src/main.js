@@ -44,7 +44,7 @@ export class GLOWVisualizer {
     this.saveDialog = new SaveDialog()
     this.filePickerDialog = new FilePickerDialog()
     this.visualizerStarted = false
-    
+
     // CRT overlay element
     this.crtOverlay = null
     this.crtModeEnabled = false
@@ -88,7 +88,7 @@ export class GLOWVisualizer {
     // Initial canvas setup
     this.canvasDrawer.resize()
     this.resizeTabletCanvas()
-    
+
     // Create CRT overlay
     this.createCRTOverlay()
   }
@@ -146,7 +146,6 @@ export class GLOWVisualizer {
     this.filePickerDialog.on('fileSelected', (data) => this.handleProjectLoad(data))
     this.filePickerDialog.setupEventListeners()
   }
-
 
   async start () {
     try {
@@ -227,14 +226,14 @@ export class GLOWVisualizer {
     // Generate default scene name with unix timestamp
     const timestamp = Math.floor(Date.now() / 1000)
     const defaultName = `glow-scene-${timestamp}`
-    
+
     this.saveDialog.setDefaultName(defaultName)
     this.saveDialog.show()
   }
 
   handleProjectSave (data) {
     const { projectName } = data
-    
+
     try {
       this.projectManager.downloadProject(projectName)
       this.uiManager.showStatus(`Scene "${projectName}" saved successfully!`, 'success')
@@ -246,12 +245,12 @@ export class GLOWVisualizer {
 
   async handleProjectLoad (data) {
     const { file, projectData } = data
-    
+
     try {
       this.uiManager.showStatus('Loading project...', 'info')
-      
+
       const success = await this.projectManager.loadProjectState(projectData)
-      
+
       if (success) {
         const projectName = projectData.name || file.name.replace('.glow', '')
         this.uiManager.showStatus(`Project "${projectName}" loaded successfully!`, 'success')
@@ -335,12 +334,12 @@ export class GLOWVisualizer {
   updateTrackLuminode (trackId, luminodeType) {
     // Remove old luminode if it exists
     this.removeLuminodeFromTrack(trackId)
-    
+
     // Create new luminode if type is specified
     if (luminodeType) {
       return this.createLuminodeForTrack(trackId, luminodeType)
     }
-    
+
     return null
   }
 
@@ -482,7 +481,7 @@ export class GLOWVisualizer {
     tracks.forEach(track => {
       if (track.luminode) {
         const baseLayout = track.layout || { x: 0, y: 0, rotation: 0 }
-        
+
         // Apply trajectory motion to the layout
         const trajectoryPosition = this.trackManager.getTrajectoryPosition(track.id, time, {
           x: baseLayout.x,
@@ -606,7 +605,7 @@ export class GLOWVisualizer {
   // Toggle CRT mode
   toggleCRTMode (enabled) {
     this.crtModeEnabled = enabled
-    
+
     if (this.crtOverlay) {
       if (enabled) {
         this.crtOverlay.style.display = 'block'
@@ -617,29 +616,29 @@ export class GLOWVisualizer {
         this.crtOverlay.classList.remove('active')
       }
     }
-    
+
     console.log(`CRT mode ${enabled ? 'enabled' : 'disabled'}`)
   }
 
   // Set CRT intensity
   setCRTIntensity (intensity) {
     this.crtIntensity = intensity
-    
+
     if (this.crtOverlay && this.crtModeEnabled) {
       this.updateCRTIntensity()
     }
-    
+
     console.log(`CRT intensity set to ${intensity}%`)
   }
 
   // Update CRT overlay with current intensity
   updateCRTIntensity () {
     if (!this.crtOverlay) return
-    
+
     // Convert 80-200 range to 0-1 range, with 100 as baseline
     const normalizedIntensity = (this.crtIntensity - 80) / 120 // 0-1 range
     const intensity = Math.max(0.1, normalizedIntensity) // Minimum 0.1 for visibility
-    
+
     // Update CSS custom properties for dynamic intensity
     this.crtOverlay.style.setProperty('--crt-opacity', intensity * 1.2) // Base opacity (increased)
     this.crtOverlay.style.setProperty('--scanline-opacity', intensity * 0.9) // Scanline opacity (increased)

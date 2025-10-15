@@ -113,7 +113,7 @@ export class SaveDialog {
     if (!input) return
 
     const projectName = input.value.trim()
-    
+
     if (!this.validateProjectName(projectName)) {
       return
     }

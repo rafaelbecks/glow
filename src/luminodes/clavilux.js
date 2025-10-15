@@ -34,7 +34,6 @@ export class ClaviluxLuminode {
     this.canvasDrawer.restoreLayoutTransform()
   }
 
-
   handleMIDINotes (t, notes) {
     const config = SETTINGS.MODULES.CLAVILUX
     const currentNoteIds = new Set()
@@ -168,7 +167,7 @@ export class ClaviluxLuminode {
 
     // Draw the shape on the blur canvas
     blurCtx.beginPath()
-    
+
     if (shapePoints && shapePoints.length > 0) {
       const centerX = blurSize / 2
       const centerY = blurSize / 2
@@ -181,7 +180,7 @@ export class ClaviluxLuminode {
       // Fallback to circle if no shape points
       blurCtx.arc(blurSize / 2, blurSize / 2, size, 0, Math.PI * 2)
     }
-    
+
     blurCtx.fill()
 
     // Draw the blurred shape onto the main canvas
@@ -198,20 +197,20 @@ export class ClaviluxLuminode {
     const points = []
     const numPoints = 8 + Math.floor(Math.random() * 6) // 8-13 points
     const irregularity = 0.3 + Math.random() * 0.4 // 0.3-0.7 irregularity
-    
+
     for (let i = 0; i < numPoints; i++) {
       const angle = (i / numPoints) * Math.PI * 2
-      
+
       // Create organic variation
       const baseRadius = size * (0.7 + Math.random() * 0.6) // 0.7-1.3 of size
       const irregularRadius = baseRadius * (1 + (Math.random() - 0.5) * irregularity)
-      
+
       points.push({
         x: Math.cos(angle) * irregularRadius,
         y: Math.sin(angle) * irregularRadius
       })
     }
-    
+
     return points
   }
 }

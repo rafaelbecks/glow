@@ -37,7 +37,7 @@ export class ProjectManager {
   collectModuleSettings () {
     const modules = {}
     const tracks = this.glowVisualizer.trackManager.getTracks()
-    
+
     // Only collect settings for luminodes that are actually assigned to tracks
     tracks.forEach(track => {
       if (track.luminode && SETTINGS.MODULES[track.luminode.toUpperCase()]) {
@@ -53,7 +53,7 @@ export class ProjectManager {
   collectTrackSettings () {
     const tracks = this.glowVisualizer.trackManager.getTracks()
     const availableDevices = this.glowVisualizer.trackManager.getAvailableMidiDevices()
-    
+
     return {
       tracks: tracks.map(track => {
         const trackData = {
@@ -65,7 +65,7 @@ export class ProjectManager {
           luminode: track.luminode,
           layout: { ...track.layout }
         }
-        
+
         // Add MIDI device info if assigned
         if (track.midiDevice) {
           const device = availableDevices.find(d => d.id === track.midiDevice)
@@ -77,7 +77,7 @@ export class ProjectManager {
             }
           }
         }
-        
+
         return trackData
       })
     }
@@ -87,21 +87,21 @@ export class ProjectManager {
   collectTrajectorySettings () {
     const tracks = this.glowVisualizer.trackManager.getTracks()
     const trajectories = {}
-    
+
     tracks.forEach(track => {
       const config = this.glowVisualizer.trackManager.getTrajectoryConfig(track.id)
       if (config) {
         trajectories[track.id] = { ...config }
       }
     })
-    
+
     return trajectories
   }
 
   // Collect tablet settings
   collectTabletSettings () {
     const tabletManager = this.glowVisualizer.tabletManager
-    
+
     return {
       lineWidth: tabletManager.baseLineWidth || 4,
       geometricMode: tabletManager.geometricMode || false,
@@ -119,7 +119,7 @@ export class ProjectManager {
   // Collect MIDI settings
   collectMidiSettings () {
     const midiManager = this.glowVisualizer.midiManager
-    
+
     return {
       outputEnabled: midiManager.outputEnabled || false,
       outputDevice: midiManager.outputDevice || null,
@@ -139,7 +139,7 @@ export class ProjectManager {
     const content = this.generateProjectFile(projectName)
     const blob = new Blob([content], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
-    
+
     const link = document.createElement('a')
     link.href = url
     link.download = `${projectName}.glow`
@@ -152,13 +152,13 @@ export class ProjectManager {
   // Validate project file structure
   validateProjectFile (projectData) {
     const requiredFields = ['version', 'canvas', 'colors', 'modules', 'tracks', 'tablet', 'midi']
-    
+
     for (const field of requiredFields) {
       if (!projectData.hasOwnProperty(field)) {
         throw new Error(`Invalid project file: missing required field '${field}'`)
       }
     }
-    
+
     return true
   }
 
@@ -166,30 +166,30 @@ export class ProjectManager {
   async loadProjectState (projectData) {
     try {
       this.validateProjectFile(projectData)
-      
+
       console.log('Loading project:', projectData.name || 'Unnamed Project')
-      
+
       // Load canvas settings
       this.loadCanvasSettings(projectData.canvas)
-      
+
       // Load color settings
       this.loadColorSettings(projectData.colors)
-      
+
       // Load module settings
       this.loadModuleSettings(projectData.modules)
-      
+
       // Load track settings
       await this.loadTrackSettings(projectData.tracks)
-      
+
       // Load trajectory settings
       this.loadTrajectorySettings(projectData.trajectories || {})
-            
+
       // Load MIDI settings
       await this.loadMidiSettings(projectData.midi)
-      
+
       // Trigger UI updates
       this.glowVisualizer.sidePanel.renderTracks()
-      
+
       console.log('Project loaded successfully')
       return true
     } catch (error) {
@@ -201,28 +201,28 @@ export class ProjectManager {
   // Load canvas settings
   loadCanvasSettings (canvasData) {
     if (!canvasData) return
-    
+
     // Update SETTINGS object
     if (canvasData.clearAlpha !== undefined) {
       SETTINGS.CANVAS.CLEAR_ALPHA = canvasData.clearAlpha
       this.glowVisualizer.canvasDrawer.setClearAlpha(canvasData.clearAlpha)
     }
-    
+
     if (canvasData.backgroundColor !== undefined) {
       SETTINGS.CANVAS.BACKGROUND_COLOR = canvasData.backgroundColor
       this.glowVisualizer.canvasDrawer.setBackgroundColor(canvasData.backgroundColor)
     }
-    
+
     if (canvasData.crtMode !== undefined) {
       SETTINGS.CANVAS.CRT_MODE = canvasData.crtMode
       this.glowVisualizer.toggleCRTMode(canvasData.crtMode)
     }
-    
+
     if (canvasData.crtIntensity !== undefined) {
       SETTINGS.CANVAS.CRT_INTENSITY = canvasData.crtIntensity
       this.glowVisualizer.setCRTIntensity(canvasData.crtIntensity)
     }
-    
+
     if (canvasData.lumiaEffect !== undefined) {
       SETTINGS.CANVAS.LUMIA_EFFECT = canvasData.lumiaEffect
       this.glowVisualizer.updateLumiaEffect(canvasData.lumiaEffect)
@@ -232,15 +232,15 @@ export class ProjectManager {
   // Load color settings
   loadColorSettings (colorData) {
     if (!colorData) return
-    
+
     if (colorData.sotoPalette) {
       SETTINGS.COLORS.SOTO_PALETTE = [...colorData.sotoPalette]
     }
-    
+
     if (colorData.polygonColors) {
       SETTINGS.COLORS.POLYGON_COLORS = [...colorData.polygonColors]
     }
-    
+
     if (colorData.pitchColorFactor !== undefined) {
       UTILS.pitchColorFactor = colorData.pitchColorFactor
     }
@@ -249,7 +249,7 @@ export class ProjectManager {
   // Load module settings
   loadModuleSettings (moduleData) {
     if (!moduleData) return
-    
+
     Object.keys(moduleData).forEach(moduleKey => {
       if (SETTINGS.MODULES[moduleKey]) {
         Object.assign(SETTINGS.MODULES[moduleKey], moduleData[moduleKey])
@@ -260,30 +260,30 @@ export class ProjectManager {
   // Load track settings
   async loadTrackSettings (trackData) {
     if (!trackData || !trackData.tracks) return
-    
+
     const tracks = this.glowVisualizer.trackManager.getTracks()
     const availableDevices = this.glowVisualizer.trackManager.getAvailableMidiDevices()
-    
+
     // Clear existing track luminodes
     this.glowVisualizer.trackLuminodes.clear()
-    
+
     trackData.tracks.forEach((trackConfig, index) => {
       if (index < tracks.length) {
         const track = tracks[index]
-        
+
         // Update track properties
         track.name = trackConfig.name || track.name
         track.muted = trackConfig.muted || false
         track.solo = trackConfig.solo || false
         track.layout = { ...track.layout, ...(trackConfig.layout || {}) }
-        
+
         // Handle luminode assignment
         if (trackConfig.luminode) {
           track.luminode = trackConfig.luminode
           // Create luminode instance for this track
           this.glowVisualizer.createLuminodeForTrack(track.id, trackConfig.luminode)
         }
-        
+
         // Handle MIDI device assignment
         if (trackConfig.midiDevice && trackConfig.midiDeviceInfo) {
           // Check if device is still available
@@ -305,7 +305,7 @@ export class ProjectManager {
   // Load trajectory settings
   loadTrajectorySettings (trajectoryData) {
     if (!trajectoryData) return
-    
+
     Object.keys(trajectoryData).forEach(trackId => {
       const config = trajectoryData[trackId]
       if (config) {
@@ -314,18 +314,17 @@ export class ProjectManager {
     })
   }
 
-
   // Load MIDI settings
   async loadMidiSettings (midiData) {
     if (!midiData) return
-    
+
     const midiManager = this.glowVisualizer.midiManager
-        
+
     // Handle MIDI output device
     if (midiData.outputDevice) {
       const availableDevices = await midiManager.getAvailableOutputDevices()
       const deviceExists = availableDevices.find(d => d.id === midiData.outputDevice)
-      
+
       if (deviceExists) {
         midiManager.setOutputDevice(midiData.outputDevice)
         midiManager.initializeOutput()
