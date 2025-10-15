@@ -90,6 +90,30 @@
         </div>
     </div>
     
+    <!-- File Picker Dialog -->
+    <div id="filePickerDialog" class="file-picker-dialog">
+        <div class="file-picker-dialog-content">
+            <div class="file-picker-dialog-header">
+                <h3>Open Project</h3>
+                <button id="filePickerDialogClose" class="file-picker-dialog-close">
+                    <ion-icon name="close-outline"></ion-icon>
+                </button>
+            </div>
+            <div class="file-picker-dialog-body">
+                <p>Select a .glow project file to load</p>
+                <div class="file-selection-area">
+                    <button id="filePickerDialogBrowse" class="btn-primary">
+                        <ion-icon name="folder-outline"></ion-icon>
+                        Browse Files
+                    </button>
+                </div>
+            </div>
+            <div class="file-picker-dialog-footer">
+                <button id="filePickerDialogCancel" class="btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
     <script type="module" src="src/glow-logo.js"></script>
     <script type="module" src="src/main.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>

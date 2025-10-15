@@ -8,6 +8,7 @@ import { CanvasDrawer } from './canvas-drawer.js'
 import { UIManager } from './ui.js'
 import { ProjectManager } from './project-manager.js'
 import { SaveDialog } from './save-dialog.js'
+import { FilePickerDialog } from './file-picker-dialog.js'
 import {
   LissajousLuminode,
   HarmonographLuminode,
@@ -41,6 +42,7 @@ export class GLOWVisualizer {
     this.sidePanel.setSettings(SETTINGS)
     this.projectManager = new ProjectManager(this)
     this.saveDialog = new SaveDialog()
+    this.filePickerDialog = new FilePickerDialog()
     this.visualizerStarted = false
     
     // CRT overlay element
@@ -78,6 +80,7 @@ export class GLOWVisualizer {
 
     this.setupEventHandlers()
     this.setupSaveDialog()
+    this.setupFilePickerDialog()
     this.initialize()
   }
 
@@ -137,6 +140,11 @@ export class GLOWVisualizer {
     // Save dialog event handlers
     this.saveDialog.on('save', (data) => this.handleProjectSave(data))
     this.saveDialog.setupEventListeners()
+  }
+
+  setupFilePickerDialog () {
+    this.filePickerDialog.on('fileSelected', (data) => this.handleProjectLoad(data))
+    this.filePickerDialog.setupEventListeners()
   }
 
 
@@ -212,8 +220,7 @@ export class GLOWVisualizer {
   }
 
   openFile () {
-    console.log('Open file functionality - to be implemented')
-    this.uiManager.showStatus('Open file functionality - to be implemented', 'info')
+    this.filePickerDialog.show()
   }
 
   saveFile () {
@@ -234,6 +241,26 @@ export class GLOWVisualizer {
     } catch (error) {
       console.error('Error saving scene:', error)
       this.uiManager.showStatus('Error saving scene. Check console for details.', 'error')
+    }
+  }
+
+  async handleProjectLoad (data) {
+    const { file, projectData } = data
+    
+    try {
+      this.uiManager.showStatus('Loading project...', 'info')
+      
+      const success = await this.projectManager.loadProjectState(projectData)
+      
+      if (success) {
+        const projectName = projectData.name || file.name.replace('.glow', '')
+        this.uiManager.showStatus(`Project "${projectName}" loaded successfully!`, 'success')
+      } else {
+        this.uiManager.showStatus('Error loading project. Check console for details.', 'error')
+      }
+    } catch (error) {
+      console.error('Error loading project:', error)
+      this.uiManager.showStatus('Error loading project. Check console for details.', 'error')
     }
   }
 

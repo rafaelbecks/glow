@@ -15,7 +15,8 @@ export class ProjectManager {
         clearAlpha: SETTINGS.CANVAS.CLEAR_ALPHA,
         backgroundColor: SETTINGS.CANVAS.BACKGROUND_COLOR,
         crtMode: SETTINGS.CANVAS.CRT_MODE,
-        crtIntensity: SETTINGS.CANVAS.CRT_INTENSITY
+        crtIntensity: SETTINGS.CANVAS.CRT_INTENSITY,
+        lumiaEffect: SETTINGS.CANVAS.LUMIA_EFFECT
       },
       colors: {
         sotoPalette: [...SETTINGS.COLORS.SOTO_PALETTE],
@@ -24,6 +25,7 @@ export class ProjectManager {
       },
       modules: this.collectModuleSettings(),
       tracks: this.collectTrackSettings(),
+      trajectories: this.collectTrajectorySettings(),
       tablet: this.collectTabletSettings(),
       midi: this.collectMidiSettings()
     }
@@ -79,6 +81,21 @@ export class ProjectManager {
         return trackData
       })
     }
+  }
+
+  // Collect trajectory settings for all tracks
+  collectTrajectorySettings () {
+    const tracks = this.glowVisualizer.trackManager.getTracks()
+    const trajectories = {}
+    
+    tracks.forEach(track => {
+      const config = this.glowVisualizer.trackManager.getTrajectoryConfig(track.id)
+      if (config) {
+        trajectories[track.id] = { ...config }
+      }
+    })
+    
+    return trajectories
   }
 
   // Collect tablet settings
@@ -145,18 +162,177 @@ export class ProjectManager {
     return true
   }
 
-  // Load project state (for future implementation)
-  loadProjectState (projectData) {
+  // Load project state from project data
+  async loadProjectState (projectData) {
     try {
       this.validateProjectFile(projectData)
       
-      // This will be implemented in the next phase
-      console.log('Project loading will be implemented in the next phase')
+      console.log('Loading project:', projectData.name || 'Unnamed Project')
       
+      // Load canvas settings
+      this.loadCanvasSettings(projectData.canvas)
+      
+      // Load color settings
+      this.loadColorSettings(projectData.colors)
+      
+      // Load module settings
+      this.loadModuleSettings(projectData.modules)
+      
+      // Load track settings
+      await this.loadTrackSettings(projectData.tracks)
+      
+      // Load trajectory settings
+      this.loadTrajectorySettings(projectData.trajectories || {})
+            
+      // Load MIDI settings
+      await this.loadMidiSettings(projectData.midi)
+      
+      // Trigger UI updates
+      this.glowVisualizer.sidePanel.renderTracks()
+      
+      console.log('Project loaded successfully')
       return true
     } catch (error) {
       console.error('Error loading project:', error)
       return false
+    }
+  }
+
+  // Load canvas settings
+  loadCanvasSettings (canvasData) {
+    if (!canvasData) return
+    
+    // Update SETTINGS object
+    if (canvasData.clearAlpha !== undefined) {
+      SETTINGS.CANVAS.CLEAR_ALPHA = canvasData.clearAlpha
+      this.glowVisualizer.canvasDrawer.setClearAlpha(canvasData.clearAlpha)
+    }
+    
+    if (canvasData.backgroundColor !== undefined) {
+      SETTINGS.CANVAS.BACKGROUND_COLOR = canvasData.backgroundColor
+      this.glowVisualizer.canvasDrawer.setBackgroundColor(canvasData.backgroundColor)
+    }
+    
+    if (canvasData.crtMode !== undefined) {
+      SETTINGS.CANVAS.CRT_MODE = canvasData.crtMode
+      this.glowVisualizer.toggleCRTMode(canvasData.crtMode)
+    }
+    
+    if (canvasData.crtIntensity !== undefined) {
+      SETTINGS.CANVAS.CRT_INTENSITY = canvasData.crtIntensity
+      this.glowVisualizer.setCRTIntensity(canvasData.crtIntensity)
+    }
+    
+    if (canvasData.lumiaEffect !== undefined) {
+      SETTINGS.CANVAS.LUMIA_EFFECT = canvasData.lumiaEffect
+      this.glowVisualizer.updateLumiaEffect(canvasData.lumiaEffect)
+    }
+  }
+
+  // Load color settings
+  loadColorSettings (colorData) {
+    if (!colorData) return
+    
+    if (colorData.sotoPalette) {
+      SETTINGS.COLORS.SOTO_PALETTE = [...colorData.sotoPalette]
+    }
+    
+    if (colorData.polygonColors) {
+      SETTINGS.COLORS.POLYGON_COLORS = [...colorData.polygonColors]
+    }
+    
+    if (colorData.pitchColorFactor !== undefined) {
+      UTILS.pitchColorFactor = colorData.pitchColorFactor
+    }
+  }
+
+  // Load module settings
+  loadModuleSettings (moduleData) {
+    if (!moduleData) return
+    
+    Object.keys(moduleData).forEach(moduleKey => {
+      if (SETTINGS.MODULES[moduleKey]) {
+        Object.assign(SETTINGS.MODULES[moduleKey], moduleData[moduleKey])
+      }
+    })
+  }
+
+  // Load track settings
+  async loadTrackSettings (trackData) {
+    if (!trackData || !trackData.tracks) return
+    
+    const tracks = this.glowVisualizer.trackManager.getTracks()
+    const availableDevices = this.glowVisualizer.trackManager.getAvailableMidiDevices()
+    
+    // Clear existing track luminodes
+    this.glowVisualizer.trackLuminodes.clear()
+    
+    trackData.tracks.forEach((trackConfig, index) => {
+      if (index < tracks.length) {
+        const track = tracks[index]
+        
+        // Update track properties
+        track.name = trackConfig.name || track.name
+        track.muted = trackConfig.muted || false
+        track.solo = trackConfig.solo || false
+        track.layout = { ...track.layout, ...(trackConfig.layout || {}) }
+        
+        // Handle luminode assignment
+        if (trackConfig.luminode) {
+          track.luminode = trackConfig.luminode
+          // Create luminode instance for this track
+          this.glowVisualizer.createLuminodeForTrack(track.id, trackConfig.luminode)
+        }
+        
+        // Handle MIDI device assignment
+        if (trackConfig.midiDevice && trackConfig.midiDeviceInfo) {
+          // Check if device is still available
+          const deviceExists = availableDevices.find(d => d.id === trackConfig.midiDevice)
+          if (deviceExists) {
+            track.midiDevice = trackConfig.midiDevice
+          } else {
+            // Device not available, set to null and show "Select Device"
+            track.midiDevice = null
+            console.warn(`MIDI device "${trackConfig.midiDeviceInfo.name}" not available`)
+          }
+        } else {
+          track.midiDevice = null
+        }
+      }
+    })
+  }
+
+  // Load trajectory settings
+  loadTrajectorySettings (trajectoryData) {
+    if (!trajectoryData) return
+    
+    Object.keys(trajectoryData).forEach(trackId => {
+      const config = trajectoryData[trackId]
+      if (config) {
+        this.glowVisualizer.trackManager.updateTrajectoryConfig(parseInt(trackId), config)
+      }
+    })
+  }
+
+
+  // Load MIDI settings
+  async loadMidiSettings (midiData) {
+    if (!midiData) return
+    
+    const midiManager = this.glowVisualizer.midiManager
+        
+    // Handle MIDI output device
+    if (midiData.outputDevice) {
+      const availableDevices = await midiManager.getAvailableOutputDevices()
+      const deviceExists = availableDevices.find(d => d.id === midiData.outputDevice)
+      
+      if (deviceExists) {
+        midiManager.setOutputDevice(midiData.outputDevice)
+        midiManager.initializeOutput()
+      } else {
+        console.warn(`MIDI output device not available: ${midiData.outputDevice}`)
+        midiManager.setOutputDevice(null)
+      }
     }
   }
 }

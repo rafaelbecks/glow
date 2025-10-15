@@ -166,6 +166,7 @@ export class UIManager {
 
   // Add status indicator
   showStatus (message, type = 'info') {
+    console.log('[UI DEBUG]:', message, type)
     // Status messages disabled
     return
 
