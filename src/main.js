@@ -82,16 +82,20 @@ export class GLOWVisualizer {
     this.setupSaveDialog()
     this.setupFilePickerDialog()
     this.setupLogoButtons()
-    this.initialize()
+    this.initialize().catch(error => console.error('Failed to initialize:', error))
   }
 
-  initialize () {
+  async initialize () {
     // Initial canvas setup
     this.canvasDrawer.resize()
     this.resizeTabletCanvas()
 
     // Create CRT overlay
     this.createCRTOverlay()
+
+    this.uiManager.showStatus('Connecting to MIDI devices...', 'info')
+
+    await this.midiManager.setupMIDI()
   }
 
   resizeTabletCanvas () {
@@ -188,10 +192,6 @@ export class GLOWVisualizer {
       this.uiManager.showInfoButton()
       this.showProjectNameDisplay()
       this.uiManager.showCanvasMessage()
-
-      this.uiManager.showStatus('Connecting to MIDI devices...', 'info')
-
-      await this.midiManager.setupMIDI()
 
       this.uiManager.showStatus('Starting visualizer...', 'success')
       this.isRunning = true
@@ -296,7 +296,8 @@ export class GLOWVisualizer {
         this.uiManager.showInfoButton()
         this.showProjectNameDisplay()
         this.uiManager.showCanvasMessage()
-
+        this.visualizerStarted = true
+        this.isRunning = true
         this.uiManager.showStatus(`Project "${projectName}" loaded successfully!`, 'success')
       } else {
         this.uiManager.showStatus('Error loading project. Check console for details.', 'error')
