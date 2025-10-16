@@ -22,10 +22,20 @@
     <div id="logoContainer">
         <glow-logo></glow-logo>
         <h3>Geometric Light Oscillation Workstation</h3>
-        <button id="startButton">
-            <ion-icon name="play-outline"></ion-icon>
-            Start
-        </button>
+        <div class="logo-buttons">
+            <button id="startButton">
+                <ion-icon name="play-outline"></ion-icon>
+                Start
+            </button>
+            <button id="openButtonLogo">
+                <ion-icon name="shapes-outline"></ion-icon>
+                Open
+            </button>
+        </div>
+    </div>
+    
+    <div id="projectNameDisplay" class="project-name-display" style="display: none;">
+        <span id="projectNameText">Untitled Project</span>
     </div>
     <button title="Tracks & Tablet" id="panelToggleButton" class="panel-toggle-btn" style="display: none;">
       <ion-icon title="Tracks & Tablet" name="cube-outline"></ion-icon>
@@ -34,7 +44,7 @@
       <ion-icon title="Open Project" name="shapes-outline"></ion-icon>
     </button>
     <button title="Save Scene" id="saveButton" class="save-toggle-btn" style="display: none;">
-      <ion-icon title="Save Scene" name="caret-down-circle-outline"></ion-icon>
+      <ion-icon title="Save Scene" name="save-outline"></ion-icon>
     </button>
     <button title="About" id="infoButton" class="info-toggle-btn" style="display: none;">
       <ion-icon name="triangle-outline"></ion-icon>

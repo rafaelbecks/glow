@@ -81,6 +81,7 @@ export class GLOWVisualizer {
     this.setupEventHandlers()
     this.setupSaveDialog()
     this.setupFilePickerDialog()
+    this.setupLogoButtons()
     this.initialize()
   }
 
@@ -147,6 +148,13 @@ export class GLOWVisualizer {
     this.filePickerDialog.setupEventListeners()
   }
 
+  setupLogoButtons () {
+    const openButtonLogo = document.getElementById('openButtonLogo')
+    if (openButtonLogo) {
+      openButtonLogo.addEventListener('click', () => this.openFile())
+    }
+  }
+
   async start () {
     try {
       this.visualizerStarted = true
@@ -156,6 +164,7 @@ export class GLOWVisualizer {
       this.uiManager.showOpenButton()
       this.uiManager.showSaveButton()
       this.uiManager.showInfoButton()
+      this.showProjectNameDisplay()
       this.uiManager.showCanvasMessage()
 
       this.uiManager.showStatus('Connecting to MIDI devices...', 'info')
@@ -253,6 +262,7 @@ export class GLOWVisualizer {
 
       if (success) {
         const projectName = projectData.name || file.name.replace('.glow', '')
+        this.updateProjectName(projectName)
         this.uiManager.showStatus(`Project "${projectName}" loaded successfully!`, 'success')
       } else {
         this.uiManager.showStatus('Error loading project. Check console for details.', 'error')
@@ -653,6 +663,27 @@ export class GLOWVisualizer {
     console.log('Track system devices:', this.midiManager.getAllMidiDevices())
     console.log('TrackManager devices:', this.trackManager.getAvailableMidiDevices())
     console.log('Current tracks:', this.trackManager.getTracks())
+  }
+
+  showProjectNameDisplay () {
+    const projectNameDisplay = document.getElementById('projectNameDisplay')
+    if (projectNameDisplay) {
+      projectNameDisplay.style.display = 'block'
+    }
+  }
+
+  hideProjectNameDisplay () {
+    const projectNameDisplay = document.getElementById('projectNameDisplay')
+    if (projectNameDisplay) {
+      projectNameDisplay.style.display = 'none'
+    }
+  }
+
+  updateProjectName (name) {
+    const projectNameText = document.getElementById('projectNameText')
+    if (projectNameText) {
+      projectNameText.textContent = name || 'Untitled Project'
+    }
   }
 
   // Cleanup method
