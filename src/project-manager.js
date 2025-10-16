@@ -298,6 +298,9 @@ export class ProjectManager {
         } else {
           track.midiDevice = null
         }
+
+        // Trigger track update callback to notify UI
+        this.glowVisualizer.trackManager.triggerCallback('trackUpdated', { trackId: track.id, track })
       }
     })
   }

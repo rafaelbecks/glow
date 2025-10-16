@@ -135,6 +135,8 @@ export class GLOWVisualizer {
     this.sidePanel.on('canvasSettingChange', (data) => this.updateCanvasSetting(data))
     this.sidePanel.on('colorPaletteChange', (data) => this.updateColorPalette(data))
     this.sidePanel.on('pitchColorFactorChange', (data) => this.updatePitchColorFactor(data))
+
+    this.setupProjectNameEditing()
   }
 
   setupSaveDialog () {
@@ -152,6 +154,26 @@ export class GLOWVisualizer {
     const openButtonLogo = document.getElementById('openButtonLogo')
     if (openButtonLogo) {
       openButtonLogo.addEventListener('click', () => this.openFile())
+    }
+  }
+
+  setupProjectNameEditing () {
+    const projectNameText = document.getElementById('projectNameText')
+    if (projectNameText) {
+      // Handle Enter key press
+      projectNameText.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault()
+          projectNameText.blur()
+        }
+      })
+
+      // Handle blur event (when focus is lost)
+      projectNameText.addEventListener('blur', () => {
+        const newName = projectNameText.value.trim() || 'Untitled Project'
+        projectNameText.value = newName
+        this.handleProjectNameChange(newName)
+      })
     }
   }
 
@@ -258,11 +280,23 @@ export class GLOWVisualizer {
     try {
       this.uiManager.showStatus('Loading project...', 'info')
 
+      this.clearCurrentState()
+
       const success = await this.projectManager.loadProjectState(projectData)
 
       if (success) {
         const projectName = projectData.name || file.name.replace('.glow', '')
         this.updateProjectName(projectName)
+
+        // Hide logo and show renderer screen after successful load
+        this.uiManager.hideLogoContainer()
+        this.uiManager.showPanelToggleButton()
+        this.uiManager.showOpenButton()
+        this.uiManager.showSaveButton()
+        this.uiManager.showInfoButton()
+        this.showProjectNameDisplay()
+        this.uiManager.showCanvasMessage()
+
         this.uiManager.showStatus(`Project "${projectName}" loaded successfully!`, 'success')
       } else {
         this.uiManager.showStatus('Error loading project. Check console for details.', 'error')
@@ -682,8 +716,49 @@ export class GLOWVisualizer {
   updateProjectName (name) {
     const projectNameText = document.getElementById('projectNameText')
     if (projectNameText) {
-      projectNameText.textContent = name || 'Untitled Project'
+      projectNameText.value = name || 'Untitled Project'
     }
+  }
+
+  handleProjectNameChange (newName) {
+    try {
+      this.projectManager.downloadProject(newName)
+      this.uiManager.showStatus(`Project "${newName}" saved automatically!`, 'success')
+    } catch (error) {
+      console.error('Error auto-saving project:', error)
+      this.uiManager.showStatus('Error auto-saving project. Check console for details.', 'error')
+    }
+  }
+
+  clearCurrentState () {
+    // Clear all track luminodes
+    this.trackLuminodes.clear()
+
+    // Clear canvas
+    this.canvasDrawer.clear()
+
+    // Clear tablet strokes
+    this.tabletManager.clear()
+
+    // Reset all tracks to default state
+    const tracks = this.trackManager.getTracks()
+    tracks.forEach(track => {
+      track.midiDevice = null
+      track.luminode = null
+      track.muted = false
+      track.solo = false
+      track.layout = { x: 0, y: 0, rotation: 0 }
+      // Trigger callback to update UI
+      this.trackManager.triggerCallback('trackUpdated', { trackId: track.id, track })
+    })
+
+    // Clear MIDI output device
+    this.midiManager.setOutputDevice(null)
+
+    // Reset project name to default
+    this.updateProjectName('Untitled Project')
+
+    console.log('Current state cleared before loading new project')
   }
 
   // Cleanup method
