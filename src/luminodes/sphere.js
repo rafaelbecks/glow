@@ -10,7 +10,7 @@ export class SphereLuminode {
     this.lastChordSignature = ''
   }
 
-  draw (t, notes, layout = { x: 0, y: 0, rotation: 0 }) {
+  draw (t, notes, useColor = false, layout = { x: 0, y: 0, rotation: 0 }) {
     if (notes.length === 0) return
 
     // Update dimensions in case canvas was resized
@@ -37,12 +37,18 @@ export class SphereLuminode {
       this.currentBaseHue = Math.floor(Math.random() * 360)
     }
 
-    const hue = (this.currentBaseHue + chordSize * 20 + t * 5) % 360
-
-    this.ctx.strokeStyle = `hsla(${hue}, 100%, 65%, 0.15)`
-    this.ctx.shadowColor = `hsla(${hue}, 100%, 70%, 0.4)`
-    this.ctx.shadowBlur = 5
-    this.ctx.lineWidth = 1
+    // Set up drawing context - use pitchToColor when useColor is true
+    if (useColor) {
+      // Use the first note's MIDI value for color, or average if multiple notes
+      const midiValue = notes.length > 0 ? notes[0].midi : 60
+      this.ctx.strokeStyle = UTILS.pitchToColor(midiValue)
+      this.ctx.shadowColor = this.ctx.strokeStyle
+    } else {
+      const baseHue = this.currentBaseHue + t * 2
+      this.ctx.strokeStyle = `hsla(${baseHue}, 0%, 80%, 0.4)`
+      this.ctx.shadowColor = 'rgba(255, 255, 255, 0.5)'
+    }
+    this.ctx.lineWidth = SETTINGS.MODULES.SPHERE.LINE_WIDTH
 
     // Latitudes
     for (let i = 1; i < latLines; i++) {

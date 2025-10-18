@@ -26,7 +26,8 @@ import {
   NoiseValleyLuminode,
   CatenoidLuminode,
   LineCylinderLuminode,
-  ClaviluxLuminode
+  ClaviluxLuminode,
+  DiamondLuminode
 } from './luminodes/index.js'
 
 export class GLOWVisualizer {
@@ -69,7 +70,8 @@ export class GLOWVisualizer {
       noiseValley: NoiseValleyLuminode,
       catenoid: CatenoidLuminode,
       lineCylinder: LineCylinderLuminode,
-      clavilux: ClaviluxLuminode
+      clavilux: ClaviluxLuminode,
+      diamond: DiamondLuminode
     }
 
     // Track-based luminode instances
@@ -475,7 +477,8 @@ export class GLOWVisualizer {
       noiseValley: 'NOISE_VALLEY',
       catenoid: 'CATENOID',
       lineCylinder: 'LINE_CYLINDER',
-      clavilux: 'CLAVILUX'
+      clavilux: 'CLAVILUX',
+      diamond: 'DIAMOND'
     }
 
     const settingsKey = luminodeMapping[luminode]
@@ -624,6 +627,14 @@ export class GLOWVisualizer {
       case 'lineCylinder':
         const lineCylinderColorMode = SETTINGS.MODULES.LINE_CYLINDER.USE_COLOR || false
         luminode.draw(t, notes, lineCylinderColorMode, layout)
+        break
+      case 'diamond':
+        const diamondColorMode = SETTINGS.MODULES.DIAMOND.USE_COLOR || false
+        luminode.draw(t, notes, diamondColorMode, layout)
+        break
+      case 'sphere':
+        const sphereColorMode = SETTINGS.MODULES.SPHERE.USE_COLOR || false
+        luminode.draw(t, notes, sphereColorMode, layout)
         break
       default:
         // Standard luminode drawing

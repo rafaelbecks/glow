@@ -50,7 +50,9 @@ export const SETTINGS = {
       BASE_RADIUS: 160,
       LAT_LINES: 12,
       LON_LINES: 20,
-      DEFORM_FACTOR: 1.2
+      DEFORM_FACTOR: 1.2,
+      LINE_WIDTH: 0.8,
+      USE_COLOR: false
     },
     GEGO_NET: {
       BASE_NODES: 5,
@@ -164,6 +166,21 @@ export const SETTINGS = {
       FLOAT_SPEED: 0.1,
       FADE_DURATION: 5000,
       MAX_FORMS: 20
+    },
+    DIAMOND: {
+      RADIUS: 80,
+      HEIGHT: 200,
+      RINGS: 8,
+      SEGMENTS: 36,
+      INSTANCES: 2,
+      RADIAL_SPACING: 140,
+      INSTANCE_DISTANCE: 1.0, // Distance multiplier between instances
+      SCALE: 1.0,
+      ROTATION_SPEED: 0.3,
+      DEFORMATION_STRENGTH: 0.5,
+      LINE_WIDTH: 0.8,
+      BASE_HUE: 0,
+      USE_COLOR: false
     }
   },
 
@@ -212,7 +229,8 @@ export const MIDI_CHANNELS = {
   'bus 16': 'noiseValley',
   'bus 17': 'catenoid',
   'bus 18': 'lineCylinder',
-  'bus 19': 'clavilux'
+  'bus 19': 'clavilux',
+  'bus 20': 'diamond'
 }
 
 // Utility functions

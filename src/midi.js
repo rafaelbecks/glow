@@ -22,7 +22,8 @@ export class MIDIManager {
       noiseValley: [],
       catenoid: [],
       lineCylinder: [],
-      clavilux: []
+      clavilux: [],
+      diamond: []
     }
 
     this.inputs = new Map() // Maps channel to array of inputs
