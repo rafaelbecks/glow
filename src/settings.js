@@ -6,7 +6,11 @@ export const SETTINGS = {
     BACKGROUND_COLOR: '#000',
     CRT_MODE: false,
     CRT_INTENSITY: 100,
-    LUMIA_EFFECT: 0
+    LUMIA_EFFECT: 0,
+    GRID_ENABLED: false,
+    GRID_X_LINES: 10,
+    GRID_Y_LINES: 10,
+    GRID_COLOR: '#333333'
   },
 
   // MIDI settings
@@ -181,6 +185,15 @@ export const SETTINGS = {
       LINE_WIDTH: 0.8,
       BASE_HUE: 0,
       USE_COLOR: false
+    },
+    CUBE: {
+      SIZE: 150,
+      SEGMENTS: 5,
+      SCALE: 1.0,
+      ROTATION_SPEED: 0.3,
+      LINE_WIDTH: 0.8,
+      BASE_HUE: 0,
+      USE_COLOR: false
     }
   },
 
@@ -230,7 +243,8 @@ export const MIDI_CHANNELS = {
   'bus 17': 'catenoid',
   'bus 18': 'lineCylinder',
   'bus 19': 'clavilux',
-  'bus 20': 'diamond'
+  'bus 20': 'diamond',
+  'bus 21': 'cube'
 }
 
 // Utility functions

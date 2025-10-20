@@ -1276,6 +1276,64 @@ export class SidePanel {
               Applies blur effect to all luminodes (0 = no blur, 100px = maximum blur)
             </div>
           </div>
+          
+          <div class="tablet-config-group">
+            <label>
+              <ion-icon name="grid-outline"></ion-icon>
+              Background Grid
+            </label>
+            <label class="checkbox-container">
+              <input type="checkbox" 
+                     id="gridEnabled" 
+                     ${canvasSettings.GRID_ENABLED ? 'checked' : ''}
+                     class="config-checkbox">
+              <span class="checkmark"></span>
+              Enable Grid
+            </label>
+            <div class="setting-description">
+              Shows a configurable grid overlay on the canvas background
+            </div>
+          </div>
+          
+          <div class="tablet-config-group" id="gridSettingsGroup" style="${canvasSettings.GRID_ENABLED ? 'display: block;' : 'display: none;'}">
+            <div class="grid-controls">
+              <div class="grid-control-row">
+                <div class="grid-control">
+                  <label for="gridXLines">X Lines</label>
+                  <div class="slider-container">
+                    <input type="range" 
+                           id="gridXLines" 
+                           min="2" 
+                           max="50" 
+                           step="1" 
+                           value="${canvasSettings.GRID_X_LINES || 10}">
+                    <span class="slider-value">${canvasSettings.GRID_X_LINES || 10}</span>
+                  </div>
+                </div>
+                <div class="grid-control">
+                  <label for="gridYLines">Y Lines</label>
+                  <div class="slider-container">
+                    <input type="range" 
+                           id="gridYLines" 
+                           min="2" 
+                           max="50" 
+                           step="1" 
+                           value="${canvasSettings.GRID_Y_LINES || 10}">
+                    <span class="slider-value">${canvasSettings.GRID_Y_LINES || 10}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="grid-control-row">
+                <div class="grid-control">
+                  <label for="gridColor">Grid Color</label>
+                  <input type="color" 
+                         id="gridColor" 
+                         value="${canvasSettings.GRID_COLOR || '#333333'}"
+                         class="color-picker">
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Color Palettes -->
@@ -1422,6 +1480,67 @@ export class SidePanel {
         this.triggerCallback('canvasSettingChange', {
           setting: 'LUMIA_EFFECT',
           value
+        })
+      })
+    }
+
+    // Grid enabled checkbox
+    const gridEnabledCheckbox = container.querySelector('#gridEnabled')
+    if (gridEnabledCheckbox) {
+      gridEnabledCheckbox.addEventListener('change', (e) => {
+        const isEnabled = e.target.checked
+        this.triggerCallback('canvasSettingChange', {
+          setting: 'GRID_ENABLED',
+          value: isEnabled
+        })
+
+        // Show/hide grid settings based on enabled state
+        const gridSettingsGroup = container.querySelector('#gridSettingsGroup')
+        if (gridSettingsGroup) {
+          gridSettingsGroup.style.display = isEnabled ? 'block' : 'none'
+        }
+      })
+    }
+
+    // Grid X lines slider
+    const gridXLinesSlider = container.querySelector('#gridXLines')
+    if (gridXLinesSlider) {
+      gridXLinesSlider.addEventListener('input', (e) => {
+        const value = parseInt(e.target.value)
+        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
+        if (valueDisplay) {
+          valueDisplay.textContent = value
+        }
+        this.triggerCallback('canvasSettingChange', {
+          setting: 'GRID_X_LINES',
+          value
+        })
+      })
+    }
+
+    // Grid Y lines slider
+    const gridYLinesSlider = container.querySelector('#gridYLines')
+    if (gridYLinesSlider) {
+      gridYLinesSlider.addEventListener('input', (e) => {
+        const value = parseInt(e.target.value)
+        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
+        if (valueDisplay) {
+          valueDisplay.textContent = value
+        }
+        this.triggerCallback('canvasSettingChange', {
+          setting: 'GRID_Y_LINES',
+          value
+        })
+      })
+    }
+
+    // Grid color picker
+    const gridColorPicker = container.querySelector('#gridColor')
+    if (gridColorPicker) {
+      gridColorPicker.addEventListener('change', (e) => {
+        this.triggerCallback('canvasSettingChange', {
+          setting: 'GRID_COLOR',
+          value: e.target.value
         })
       })
     }

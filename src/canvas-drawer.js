@@ -30,6 +30,39 @@ export class CanvasDrawer {
     this.ctx.fillRect(0, 0, this.width, this.height)
   }
 
+  // Draw grid background
+  drawGrid () {
+    if (!SETTINGS.CANVAS.GRID_ENABLED) return
+
+    this.ctx.save()
+    this.ctx.strokeStyle = SETTINGS.CANVAS.GRID_COLOR
+    this.ctx.lineWidth = 1
+    this.ctx.globalAlpha = 0.3
+
+    const xLines = SETTINGS.CANVAS.GRID_X_LINES
+    const yLines = SETTINGS.CANVAS.GRID_Y_LINES
+
+    // Draw vertical lines
+    for (let i = 0; i <= xLines; i++) {
+      const x = (this.width / xLines) * i
+      this.ctx.beginPath()
+      this.ctx.moveTo(x, 0)
+      this.ctx.lineTo(x, this.height)
+      this.ctx.stroke()
+    }
+
+    // Draw horizontal lines
+    for (let i = 0; i <= yLines; i++) {
+      const y = (this.height / yLines) * i
+      this.ctx.beginPath()
+      this.ctx.moveTo(0, y)
+      this.ctx.lineTo(this.width, y)
+      this.ctx.stroke()
+    }
+
+    this.ctx.restore()
+  }
+
   setClearAlpha (alpha) {
     SETTINGS.CANVAS.CLEAR_ALPHA = alpha
   }

@@ -16,50 +16,54 @@ export class DiamondLuminode {
   // Generate base diamond vertices (two cones tip-to-tip)
   generateDiamondVertices (R, h, rings, segments) {
     const verts = []
-    
+
     // Upper cone (tip at +h/2, base at 0)
     for (let i = 0; i <= rings; i++) {
       const t = i / rings
-      const y = h/2 - t * (h/2)  // tip -> base
-      const radius = R * t       // radius grows linearly from 0 to R
-      
+      const y = h / 2 - t * (h / 2) // tip -> base
+      const radius = R * t // radius grows linearly from 0 to R
+
       for (let j = 0; j < segments; j++) {
         const theta = (j / segments) * Math.PI * 2
         const x = radius * Math.cos(theta)
         const z = radius * Math.sin(theta)
-        
-        verts.push({ 
-          x, y, z, 
-          ring: i, 
-          seg: j, 
+
+        verts.push({
+          x,
+          y,
+          z,
+          ring: i,
+          seg: j,
           theta,
           isUpper: true
         })
       }
     }
-    
+
     // Lower cone (tip at -h/2, base at 0) - mirror of upper
     const lowerStartIndex = verts.length
     for (let i = 0; i <= rings; i++) {
       const t = i / rings
-      const y = -h/2 + t * (h/2)  // tip -> base (mirror)
-      const radius = R * t        // same radius calculation
-      
+      const y = -h / 2 + t * (h / 2) // tip -> base (mirror)
+      const radius = R * t // same radius calculation
+
       for (let j = 0; j < segments; j++) {
         const theta = (j / segments) * Math.PI * 2
         const x = radius * Math.cos(theta)
         const z = radius * Math.sin(theta)
-        
-        verts.push({ 
-          x, y, z, 
-          ring: i, 
-          seg: j, 
+
+        verts.push({
+          x,
+          y,
+          z,
+          ring: i,
+          seg: j,
           theta,
           isUpper: false
         })
       }
     }
-    
+
     return { verts, rings, segments, lowerStartIndex }
   }
 
@@ -67,7 +71,7 @@ export class DiamondLuminode {
   buildDiamondEdges (meta) {
     const { verts, rings, segments, lowerStartIndex } = meta
     const edges = []
-    
+
     // Upper cone rings (horizontal circles)
     for (let i = 0; i <= rings; i++) {
       const ringStart = i * segments
@@ -77,7 +81,7 @@ export class DiamondLuminode {
         edges.push([a, b])
       }
     }
-    
+
     // Upper cone spokes (longitudinal lines from tip to base)
     for (let j = 0; j < segments; j++) {
       for (let i = 0; i < rings; i++) {
@@ -86,7 +90,7 @@ export class DiamondLuminode {
         edges.push([a, b])
       }
     }
-    
+
     // Lower cone rings
     for (let i = 0; i <= rings; i++) {
       const ringStart = lowerStartIndex + i * segments
@@ -96,7 +100,7 @@ export class DiamondLuminode {
         edges.push([a, b])
       }
     }
-    
+
     // Lower cone spokes
     for (let j = 0; j < segments; j++) {
       for (let i = 0; i < rings; i++) {
@@ -105,7 +109,7 @@ export class DiamondLuminode {
         edges.push([a, b])
       }
     }
-    
+
     // Equator ring (connect upper and lower bases at y=0)
     const upperBaseStart = rings * segments
     const lowerBaseStart = lowerStartIndex + rings * segments
@@ -114,27 +118,27 @@ export class DiamondLuminode {
       const b = lowerBaseStart + j
       edges.push([a, b])
     }
-    
+
     return edges
   }
 
   // Transform vertex for radial replication
   transformVertexForInstance (v, instanceIndex, K, D, distanceMultiplier) {
     const angle = (instanceIndex / K) * Math.PI * 2
-    
+
     // Rotate around Y axis (no time-based rotation here)
     const cosA = Math.cos(angle)
     const sinA = Math.sin(angle)
     const xr = v.x * cosA - v.z * sinA
     const zr = v.x * sinA + v.z * cosA
-    
+
     // Translate outward radially with distance multiplier
     const tx = D * distanceMultiplier * Math.cos(angle)
     const tz = D * distanceMultiplier * Math.sin(angle)
-    
-    return { 
-      x: xr + tx, 
-      y: v.y, 
+
+    return {
+      x: xr + tx,
+      y: v.y,
       z: zr + tz,
       ring: v.ring,
       seg: v.seg,
@@ -159,9 +163,9 @@ export class DiamondLuminode {
 
       deformed.forEach(vertex => {
         // Per-vertex radial scale based on theta and ring position
-        const u = vertex.theta  // segment angle
+        const u = vertex.theta // segment angle
         const v = vertex.ring / (deformed.length / (2 * 36)) // approximate ring position
-        
+
         const wave1 = Math.sin(u * waveFreq + t * waveSpeed) * waveStrength
         const wave2 = Math.sin(v * waveFreq * 2 + t * waveSpeed * 1.2) * waveStrength * 0.6
         const wave3 = Math.sin(vertex.x * waveFreq * 0.5 + t * waveSpeed * 0.8) * waveStrength * 0.4
@@ -172,7 +176,7 @@ export class DiamondLuminode {
         // Apply radial deformation
         vertex.x *= scale
         vertex.z *= scale
-        
+
         // Optional tip wobble
         if (vertex.ring === 0) {
           const tipOffset = waveStrength * 0.1 * Math.sin(t * waveSpeed + index)
@@ -188,14 +192,14 @@ export class DiamondLuminode {
   // Generate or get cached base geometry
   getBaseGeometry (R, h, rings, segments) {
     const config = `${R}-${h}-${rings}-${segments}`
-    
+
     if (this.lastConfig !== config || !this.baseVertices || !this.baseEdges) {
       const meta = this.generateDiamondVertices(R, h, rings, segments)
       this.baseVertices = meta.verts
       this.baseEdges = this.buildDiamondEdges(meta)
       this.lastConfig = config
     }
-    
+
     return { vertices: this.baseVertices, edges: this.baseEdges }
   }
 
@@ -245,7 +249,7 @@ export class DiamondLuminode {
     // Draw K instances of the diamond
     for (let k = 0; k < K; k++) {
       // Transform vertices for this instance (positioning only, no time-based rotation)
-      const instanceVertices = baseVertices.map(vertex => 
+      const instanceVertices = baseVertices.map(vertex =>
         this.transformVertexForInstance(vertex, k, K, D, distanceMultiplier)
       )
 

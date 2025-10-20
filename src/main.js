@@ -27,7 +27,8 @@ import {
   CatenoidLuminode,
   LineCylinderLuminode,
   ClaviluxLuminode,
-  DiamondLuminode
+  DiamondLuminode,
+  CubeLuminode
 } from './luminodes/index.js'
 
 export class GLOWVisualizer {
@@ -71,7 +72,8 @@ export class GLOWVisualizer {
       catenoid: CatenoidLuminode,
       lineCylinder: LineCylinderLuminode,
       clavilux: ClaviluxLuminode,
-      diamond: DiamondLuminode
+      diamond: DiamondLuminode,
+      cube: CubeLuminode
     }
 
     // Track-based luminode instances
@@ -478,7 +480,8 @@ export class GLOWVisualizer {
       catenoid: 'CATENOID',
       lineCylinder: 'LINE_CYLINDER',
       clavilux: 'CLAVILUX',
-      diamond: 'DIAMOND'
+      diamond: 'DIAMOND',
+      cube: 'CUBE'
     }
 
     const settingsKey = luminodeMapping[luminode]
@@ -502,6 +505,9 @@ export class GLOWVisualizer {
 
     // Clear canvas with fade effect
     this.canvasDrawer.clear()
+
+    // Draw grid background (if enabled)
+    this.canvasDrawer.drawGrid()
 
     // Get all active notes based on track assignments
     const activeNotes = this.midiManager.getActiveNotesForTracks()
@@ -631,6 +637,10 @@ export class GLOWVisualizer {
       case 'diamond':
         const diamondColorMode = SETTINGS.MODULES.DIAMOND.USE_COLOR || false
         luminode.draw(t, notes, diamondColorMode, layout)
+        break
+      case 'cube':
+        const cubeColorMode = SETTINGS.MODULES.CUBE.USE_COLOR || false
+        luminode.draw(t, notes, cubeColorMode, layout)
         break
       case 'sphere':
         const sphereColorMode = SETTINGS.MODULES.SPHERE.USE_COLOR || false

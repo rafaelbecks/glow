@@ -134,6 +134,18 @@ export const LUMINODE_CONFIGS = {
     ]
   },
 
+  cube: {
+    group: '3D Geometry',
+    config: [
+      { key: 'SIZE', label: 'Size', type: 'slider', min: 50, max: 300, step: 10, default: 150 },
+      { key: 'SEGMENTS', label: 'Segments', type: 'number', min: 2, max: 10, step: 1, default: 5 },
+      { key: 'SCALE', label: 'Scale', type: 'slider', min: 0.5, max: 2, step: 0.1, default: 1.0 },
+      { key: 'ROTATION_SPEED', label: 'Rotation Speed', type: 'slider', min: 0, max: 1, step: 0.05, default: 0.3 },
+      { key: 'LINE_WIDTH', label: 'Line Width', type: 'slider', min: 0.3, max: 2, step: 0.1, default: 0.8 },
+      { key: 'USE_COLOR', label: 'Color Mode', type: 'checkbox', default: false }
+    ]
+  },
+
   // Art-Inspired
   gegoNet: {
     group: 'Art-Inspired',

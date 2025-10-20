@@ -16,7 +16,11 @@ export class ProjectManager {
         backgroundColor: SETTINGS.CANVAS.BACKGROUND_COLOR,
         crtMode: SETTINGS.CANVAS.CRT_MODE,
         crtIntensity: SETTINGS.CANVAS.CRT_INTENSITY,
-        lumiaEffect: SETTINGS.CANVAS.LUMIA_EFFECT
+        lumiaEffect: SETTINGS.CANVAS.LUMIA_EFFECT,
+        gridEnabled: SETTINGS.CANVAS.GRID_ENABLED,
+        gridXLines: SETTINGS.CANVAS.GRID_X_LINES,
+        gridYLines: SETTINGS.CANVAS.GRID_Y_LINES,
+        gridColor: SETTINGS.CANVAS.GRID_COLOR
       },
       colors: {
         sotoPalette: [...SETTINGS.COLORS.SOTO_PALETTE],
@@ -226,6 +230,22 @@ export class ProjectManager {
     if (canvasData.lumiaEffect !== undefined) {
       SETTINGS.CANVAS.LUMIA_EFFECT = canvasData.lumiaEffect
       this.glowVisualizer.updateLumiaEffect(canvasData.lumiaEffect)
+    }
+
+    if (canvasData.gridEnabled !== undefined) {
+      SETTINGS.CANVAS.GRID_ENABLED = canvasData.gridEnabled
+    }
+
+    if (canvasData.gridXLines !== undefined) {
+      SETTINGS.CANVAS.GRID_X_LINES = canvasData.gridXLines
+    }
+
+    if (canvasData.gridYLines !== undefined) {
+      SETTINGS.CANVAS.GRID_Y_LINES = canvasData.gridYLines
+    }
+
+    if (canvasData.gridColor !== undefined) {
+      SETTINGS.CANVAS.GRID_COLOR = canvasData.gridColor
     }
   }
 
