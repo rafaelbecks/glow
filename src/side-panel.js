@@ -1008,7 +1008,7 @@ export class SidePanel {
       gegoNet: 'Gego Net',
       gegoShape: 'Gego Shape',
       sotoGrid: 'Soto Grid',
-      sotoGridRotated: 'Soto Grid Rotated',
+      sotoGridRotated: 'Soto Squares',
       whitneyLines: 'Whitney Lines',
       phyllotaxis: 'Phyllotaxis',
       moireCircles: 'Moire Circles',

@@ -25,22 +25,26 @@ export class SotoGridLuminode {
     const solidHeight = this.dimensions.height * SETTINGS.MODULES.SOTO_GRID.SOLID_HEIGHT_RATIO
     const solidY = this.sotoSolidTop ? 0 : this.dimensions.height - solidHeight
 
-    // Draw vertical stripes
-    for (let i = 0; i < stripeCount; i += 2) {
-      const x = i * stripeWidth
-      const offset = Math.sin(t * 0.5 + i * 0.2) * 3
+    if (!stripedMode) {
+      // Draw vertical stripes
+      for (let i = 0; i < stripeCount; i += 2) {
+        const x = i * stripeWidth
+        const offset = Math.sin(t * 0.5 + i * 0.2) * 3
 
-      this.ctx.beginPath()
-      this.ctx.strokeStyle = 'white'
-      this.ctx.lineWidth = stripeWidth * 0.5
-      this.ctx.moveTo(x + offset, 0)
-      this.ctx.lineTo(x + offset, this.dimensions.height)
-      this.ctx.stroke()
+        this.ctx.beginPath()
+        this.ctx.strokeStyle = 'white'
+        this.ctx.lineWidth = stripeWidth * 0.5
+        this.ctx.moveTo(x + offset, 0)
+        this.ctx.lineTo(x + offset, this.dimensions.height)
+        this.ctx.stroke()
+
+            // Draw solid block
+      this.ctx.fillStyle = '#efe5da'
+      this.ctx.fillRect(0, solidY, this.dimensions.width, solidHeight)
+
+      }
     }
 
-    // Draw solid block
-    this.ctx.fillStyle = '#efe5da'
-    this.ctx.fillRect(0, solidY, this.dimensions.width, solidHeight)
 
     // Draw squares
     const squares = this.generateSotoSquares(notes, stripedMode)
