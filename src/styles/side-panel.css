@@ -725,3 +725,42 @@
     color: #ffffff;
     padding: 6px;
 }
+
+/* Noise Controls */
+.noise-controls {
+    margin-top: 8px;
+}
+
+.noise-controls-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.noise-control-row {
+    display: flex;
+    gap: 8px;
+}
+
+.noise-control {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.noise-control label {
+    font-size: 10px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.slider-value {
+    font-size: 10px;
+    color: #51cf66;
+    font-weight: 500;
+    min-width: 40px;
+    text-align: right;
+}

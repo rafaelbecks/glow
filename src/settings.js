@@ -10,7 +10,15 @@ export const SETTINGS = {
     GRID_ENABLED: false,
     GRID_X_LINES: 10,
     GRID_Y_LINES: 10,
-    GRID_COLOR: '#333333'
+    GRID_COLOR: '#333333',
+    NOISE_OVERLAY: false,
+    NOISE_ANIMATE: true,
+    NOISE_PATTERN_WIDTH: 100,
+    NOISE_PATTERN_HEIGHT: 100,
+    NOISE_OPACITY: 0.05,
+    NOISE_DENSITY: 1,
+    NOISE_WIDTH: 1,
+    NOISE_HEIGHT: 1
   },
 
   // MIDI settings

@@ -52,6 +52,20 @@ export class GLOWVisualizer {
     this.crtModeEnabled = false
     this.crtIntensity = 100
 
+    // Noise overlay element
+    this.noiseOverlay = null
+    this.noiseModeEnabled = false
+    this.grainedInstance = null
+    this.noiseOptions = {
+      animate: true,
+      patternWidth: 100,
+      patternHeight: 100,
+      grainOpacity: 0.05,
+      grainDensity: 1,
+      grainWidth: 1,
+      grainHeight: 1
+    }
+
     // Initialize luminode factory
     this.luminodeFactory = {
       lissajous: LissajousLuminode,
@@ -96,6 +110,9 @@ export class GLOWVisualizer {
 
     // Create CRT overlay
     this.createCRTOverlay()
+
+    // Create noise overlay
+    this.createNoiseOverlay()
 
     this.uiManager.showStatus('Connecting to MIDI devices...', 'info')
 
@@ -421,6 +438,22 @@ export class GLOWVisualizer {
         this.setCRTIntensity(value)
       } else if (setting === 'LUMIA_EFFECT') {
         this.updateLumiaEffect(value)
+      } else if (setting === 'NOISE_OVERLAY') {
+        this.toggleNoiseOverlay(value)
+      } else if (setting === 'NOISE_ANIMATE') {
+        this.updateNoiseOptions({ animate: value })
+      } else if (setting === 'NOISE_PATTERN_WIDTH') {
+        this.updateNoiseOptions({ patternWidth: value })
+      } else if (setting === 'NOISE_PATTERN_HEIGHT') {
+        this.updateNoiseOptions({ patternHeight: value })
+      } else if (setting === 'NOISE_OPACITY') {
+        this.updateNoiseOptions({ grainOpacity: value })
+      } else if (setting === 'NOISE_DENSITY') {
+        this.updateNoiseOptions({ grainDensity: value })
+      } else if (setting === 'NOISE_WIDTH') {
+        this.updateNoiseOptions({ grainWidth: value })
+      } else if (setting === 'NOISE_HEIGHT') {
+        this.updateNoiseOptions({ grainHeight: value })
       }
     }
   }
@@ -710,6 +743,65 @@ export class GLOWVisualizer {
     this.crtOverlay.style.setProperty('--scanline-opacity', intensity * 0.9) // Scanline opacity (increased)
     this.crtOverlay.style.setProperty('--color-separation-opacity', intensity * 0.7) // Color separation opacity (increased)
     this.crtOverlay.style.setProperty('--flicker-intensity', intensity) // Flicker intensity
+  }
+
+  // Create noise overlay element
+  createNoiseOverlay () {
+    this.noiseOverlay = document.getElementById('noiseOverlay')
+    if (!this.noiseOverlay) {
+      console.error('Noise overlay element not found')
+      return
+    }
+    
+    // Initialize grained.js on the noise overlay
+    this.initializeGrained()
+  }
+
+  // Initialize grained.js with current options
+  initializeGrained () {
+    if (!this.noiseOverlay || typeof grained === 'undefined') {
+      console.error('Noise overlay element or grained.js not available')
+      return
+    }
+
+    // Destroy existing grained instance if it exists
+    if (this.grainedInstance) {
+      this.grainedInstance.destroy()
+    }
+
+    this.grainedInstance = grained('#noiseOverlay', this.noiseOptions)
+  }
+
+  // Toggle noise overlay mode
+  toggleNoiseOverlay (enabled) {
+    this.noiseModeEnabled = enabled
+
+    if (this.noiseOverlay) {
+      if (enabled) {
+        this.noiseOverlay.style.display = 'block'
+        this.initializeGrained()
+      } else {
+        this.noiseOverlay.style.display = 'none'
+        if (this.grainedInstance) {
+          this.grainedInstance.destroy()
+          this.grainedInstance = null
+        }
+      }
+    }
+
+    console.log(`Noise overlay ${enabled ? 'enabled' : 'disabled'}`)
+  }
+
+  // Update noise overlay options
+  updateNoiseOptions (options) {
+    this.noiseOptions = { ...this.noiseOptions, ...options }
+
+    if (this.noiseModeEnabled && this.grainedInstance) {
+      // Reinitialize with new options
+      this.initializeGrained()
+    }
+
+    console.log('Noise overlay options updated:', this.noiseOptions)
   }
 
   // Debug method to check MIDI devices

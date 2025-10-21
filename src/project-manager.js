@@ -20,7 +20,15 @@ export class ProjectManager {
         gridEnabled: SETTINGS.CANVAS.GRID_ENABLED,
         gridXLines: SETTINGS.CANVAS.GRID_X_LINES,
         gridYLines: SETTINGS.CANVAS.GRID_Y_LINES,
-        gridColor: SETTINGS.CANVAS.GRID_COLOR
+        gridColor: SETTINGS.CANVAS.GRID_COLOR,
+        noiseOverlay: SETTINGS.CANVAS.NOISE_OVERLAY,
+        noiseAnimate: SETTINGS.CANVAS.NOISE_ANIMATE,
+        noisePatternWidth: SETTINGS.CANVAS.NOISE_PATTERN_WIDTH,
+        noisePatternHeight: SETTINGS.CANVAS.NOISE_PATTERN_HEIGHT,
+        noiseOpacity: SETTINGS.CANVAS.NOISE_OPACITY,
+        noiseDensity: SETTINGS.CANVAS.NOISE_DENSITY,
+        noiseWidth: SETTINGS.CANVAS.NOISE_WIDTH,
+        noiseHeight: SETTINGS.CANVAS.NOISE_HEIGHT
       },
       colors: {
         sotoPalette: [...SETTINGS.COLORS.SOTO_PALETTE],
@@ -246,6 +254,47 @@ export class ProjectManager {
 
     if (canvasData.gridColor !== undefined) {
       SETTINGS.CANVAS.GRID_COLOR = canvasData.gridColor
+    }
+
+    // Noise overlay settings
+    if (canvasData.noiseOverlay !== undefined) {
+      SETTINGS.CANVAS.NOISE_OVERLAY = canvasData.noiseOverlay
+      this.glowVisualizer.toggleNoiseOverlay(canvasData.noiseOverlay)
+    }
+
+    if (canvasData.noiseAnimate !== undefined) {
+      SETTINGS.CANVAS.NOISE_ANIMATE = canvasData.noiseAnimate
+      this.glowVisualizer.updateNoiseOptions({ animate: canvasData.noiseAnimate })
+    }
+
+    if (canvasData.noisePatternWidth !== undefined) {
+      SETTINGS.CANVAS.NOISE_PATTERN_WIDTH = canvasData.noisePatternWidth
+      this.glowVisualizer.updateNoiseOptions({ patternWidth: canvasData.noisePatternWidth })
+    }
+
+    if (canvasData.noisePatternHeight !== undefined) {
+      SETTINGS.CANVAS.NOISE_PATTERN_HEIGHT = canvasData.noisePatternHeight
+      this.glowVisualizer.updateNoiseOptions({ patternHeight: canvasData.noisePatternHeight })
+    }
+
+    if (canvasData.noiseOpacity !== undefined) {
+      SETTINGS.CANVAS.NOISE_OPACITY = canvasData.noiseOpacity
+      this.glowVisualizer.updateNoiseOptions({ grainOpacity: canvasData.noiseOpacity })
+    }
+
+    if (canvasData.noiseDensity !== undefined) {
+      SETTINGS.CANVAS.NOISE_DENSITY = canvasData.noiseDensity
+      this.glowVisualizer.updateNoiseOptions({ grainDensity: canvasData.noiseDensity })
+    }
+
+    if (canvasData.noiseWidth !== undefined) {
+      SETTINGS.CANVAS.NOISE_WIDTH = canvasData.noiseWidth
+      this.glowVisualizer.updateNoiseOptions({ grainWidth: canvasData.noiseWidth })
+    }
+
+    if (canvasData.noiseHeight !== undefined) {
+      SETTINGS.CANVAS.NOISE_HEIGHT = canvasData.noiseHeight
+      this.glowVisualizer.updateNoiseOptions({ grainHeight: canvasData.noiseHeight })
     }
   }
 

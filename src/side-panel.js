@@ -1334,6 +1334,123 @@ export class SidePanel {
               </div>
             </div>
           </div>
+          
+          <div class="tablet-config-group">
+            <label>
+              <ion-icon name="radio-outline"></ion-icon>
+              Noise Overlay
+            </label>
+            <label class="checkbox-container">
+              <input type="checkbox" 
+                     id="noiseOverlay" 
+                     ${canvasSettings.NOISE_OVERLAY ? 'checked' : ''}
+                     class="config-checkbox">
+              <span class="checkmark"></span>
+              Enable Noise Effect
+            </label>
+            <div class="setting-description">
+              Adds animated grain texture overlay on top of the canvas
+            </div>
+          </div>
+          
+          <div class="tablet-config-group" id="noiseSettingsGroup" style="${canvasSettings.NOISE_OVERLAY ? 'display: block;' : 'display: none;'}">
+            <div class="noise-controls">
+              <div class="noise-control-row">
+                <div class="noise-control">
+                  <label for="noiseAnimate">Animate</label>
+                  <label class="checkbox-container">
+                    <input type="checkbox" 
+                           id="noiseAnimate" 
+                           ${canvasSettings.NOISE_ANIMATE ? 'checked' : ''}
+                           class="config-checkbox">
+                    <span class="checkmark"></span>
+                    Animated Noise
+                  </label>
+                </div>
+                <div class="noise-control">
+                  <label for="noiseOpacity">Opacity</label>
+                  <div class="slider-container">
+                    <input type="range" 
+                           id="noiseOpacity" 
+                           min="0.01" 
+                           max="0.2" 
+                           step="0.01" 
+                           value="${canvasSettings.NOISE_OPACITY || 0.05}">
+                    <span class="slider-value">${Math.round((canvasSettings.NOISE_OPACITY || 0.05) * 100)}%</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="noise-control-row">
+                <div class="noise-control">
+                  <label for="noisePatternWidth">Pattern Width</label>
+                  <div class="slider-container">
+                    <input type="range" 
+                           id="noisePatternWidth" 
+                           min="50" 
+                           max="200" 
+                           step="10" 
+                           value="${canvasSettings.NOISE_PATTERN_WIDTH || 100}">
+                    <span class="slider-value">${canvasSettings.NOISE_PATTERN_WIDTH || 100}px</span>
+                  </div>
+                </div>
+                <div class="noise-control">
+                  <label for="noisePatternHeight">Pattern Height</label>
+                  <div class="slider-container">
+                    <input type="range" 
+                           id="noisePatternHeight" 
+                           min="50" 
+                           max="200" 
+                           step="10" 
+                           value="${canvasSettings.NOISE_PATTERN_HEIGHT || 100}">
+                    <span class="slider-value">${canvasSettings.NOISE_PATTERN_HEIGHT || 100}px</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="noise-control-row">
+                <div class="noise-control">
+                  <label for="noiseDensity">Density</label>
+                  <div class="slider-container">
+                    <input type="range" 
+                           id="noiseDensity" 
+                           min="0.5" 
+                           max="2" 
+                           step="0.1" 
+                           value="${canvasSettings.NOISE_DENSITY || 1}">
+                    <span class="slider-value">${canvasSettings.NOISE_DENSITY || 1}</span>
+                  </div>
+                </div>
+                <div class="noise-control">
+                  <label for="noiseWidth">Grain Width</label>
+                  <div class="slider-container">
+                    <input type="range" 
+                           id="noiseWidth" 
+                           min="0.5" 
+                           max="3" 
+                           step="0.1" 
+                           value="${canvasSettings.NOISE_WIDTH || 1}">
+                    <span class="slider-value">${canvasSettings.NOISE_WIDTH || 1}px</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="noise-control-row">
+                <div class="noise-control">
+                  <label for="noiseHeight">Grain Height</label>
+                  <div class="slider-container">
+                    <input type="range" 
+                           id="noiseHeight" 
+                           min="0.5" 
+                           max="3" 
+                           step="0.1" 
+                           value="${canvasSettings.NOISE_HEIGHT || 1}">
+                    <span class="slider-value">${canvasSettings.NOISE_HEIGHT || 1}px</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Color Palettes -->
@@ -1570,6 +1687,131 @@ export class SidePanel {
         }
         this.updatePitchColorExample(value)
         this.triggerCallback('pitchColorFactorChange', { value })
+      })
+    }
+
+    // Noise overlay checkbox
+    const noiseOverlayCheckbox = container.querySelector('#noiseOverlay')
+    if (noiseOverlayCheckbox) {
+      noiseOverlayCheckbox.addEventListener('change', (e) => {
+        const isEnabled = e.target.checked
+        this.triggerCallback('canvasSettingChange', {
+          setting: 'NOISE_OVERLAY',
+          value: isEnabled
+        })
+
+        // Show/hide noise settings based on enabled state
+        const noiseSettingsGroup = container.querySelector('#noiseSettingsGroup')
+        if (noiseSettingsGroup) {
+          noiseSettingsGroup.style.display = isEnabled ? 'block' : 'none'
+        }
+      })
+    }
+
+    // Noise animate checkbox
+    const noiseAnimateCheckbox = container.querySelector('#noiseAnimate')
+    if (noiseAnimateCheckbox) {
+      noiseAnimateCheckbox.addEventListener('change', (e) => {
+        this.triggerCallback('canvasSettingChange', {
+          setting: 'NOISE_ANIMATE',
+          value: e.target.checked
+        })
+      })
+    }
+
+    // Noise opacity slider
+    const noiseOpacitySlider = container.querySelector('#noiseOpacity')
+    if (noiseOpacitySlider) {
+      noiseOpacitySlider.addEventListener('input', (e) => {
+        const value = parseFloat(e.target.value)
+        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
+        if (valueDisplay) {
+          valueDisplay.textContent = `${Math.round(value * 100)}%`
+        }
+        this.triggerCallback('canvasSettingChange', {
+          setting: 'NOISE_OPACITY',
+          value
+        })
+      })
+    }
+
+    // Noise pattern width slider
+    const noisePatternWidthSlider = container.querySelector('#noisePatternWidth')
+    if (noisePatternWidthSlider) {
+      noisePatternWidthSlider.addEventListener('input', (e) => {
+        const value = parseInt(e.target.value)
+        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
+        if (valueDisplay) {
+          valueDisplay.textContent = `${value}px`
+        }
+        this.triggerCallback('canvasSettingChange', {
+          setting: 'NOISE_PATTERN_WIDTH',
+          value
+        })
+      })
+    }
+
+    // Noise pattern height slider
+    const noisePatternHeightSlider = container.querySelector('#noisePatternHeight')
+    if (noisePatternHeightSlider) {
+      noisePatternHeightSlider.addEventListener('input', (e) => {
+        const value = parseInt(e.target.value)
+        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
+        if (valueDisplay) {
+          valueDisplay.textContent = `${value}px`
+        }
+        this.triggerCallback('canvasSettingChange', {
+          setting: 'NOISE_PATTERN_HEIGHT',
+          value
+        })
+      })
+    }
+
+    // Noise density slider
+    const noiseDensitySlider = container.querySelector('#noiseDensity')
+    if (noiseDensitySlider) {
+      noiseDensitySlider.addEventListener('input', (e) => {
+        const value = parseFloat(e.target.value)
+        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
+        if (valueDisplay) {
+          valueDisplay.textContent = value
+        }
+        this.triggerCallback('canvasSettingChange', {
+          setting: 'NOISE_DENSITY',
+          value
+        })
+      })
+    }
+
+    // Noise width slider
+    const noiseWidthSlider = container.querySelector('#noiseWidth')
+    if (noiseWidthSlider) {
+      noiseWidthSlider.addEventListener('input', (e) => {
+        const value = parseFloat(e.target.value)
+        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
+        if (valueDisplay) {
+          valueDisplay.textContent = `${value}px`
+        }
+        this.triggerCallback('canvasSettingChange', {
+          setting: 'NOISE_WIDTH',
+          value
+        })
+      })
+    }
+
+    // Noise height slider
+    const noiseHeightSlider = container.querySelector('#noiseHeight')
+    if (noiseHeightSlider) {
+      noiseHeightSlider.addEventListener('input', (e) => {
+        const value = parseFloat(e.target.value)
+        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
+        if (valueDisplay) {
+          valueDisplay.textContent = `${value}px`
+        }
+        this.triggerCallback('canvasSettingChange', {
+          setting: 'NOISE_HEIGHT',
+          value
+        })
       })
     }
 

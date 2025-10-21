@@ -28,6 +28,17 @@ canvas {
     pointer-events: none; /* Let events pass through to main canvas */
 }
 
+#noiseOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 3; /* Above canvas and tablet canvas */
+    pointer-events: none; /* Let events pass through */
+    display: none; /* Initially hidden */
+}
+
 /* Custom cursor for pointer elements */
 button, 
 .controls button,
