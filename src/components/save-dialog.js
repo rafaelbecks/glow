@@ -1,4 +1,3 @@
-// Save dialog component for project saving
 export class SaveDialog {
   constructor () {
     this.dialog = document.getElementById('saveDialog')

@@ -7,8 +7,8 @@ import { TabletManager } from './tablet-manager.js'
 import { CanvasDrawer } from './canvas-drawer.js'
 import { UIManager } from './ui.js'
 import { ProjectManager } from './project-manager.js'
-import { SaveDialog } from './save-dialog.js'
-import { FilePickerDialog } from './file-picker-dialog.js'
+import { SaveDialog } from './components/save-dialog.js'
+import { FilePickerDialog } from './components/file-picker-dialog.js'
 import {
   LissajousLuminode,
   HarmonographLuminode,
