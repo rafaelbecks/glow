@@ -20,8 +20,12 @@ Play with it: https://glow-visualizer.netlify.app/
 - **MIDI Manager**: Device connections and note tracking with multi-device support
 - **Track Manager**: MIDI channel routing and track management
 - **Trajectory System**: Whitney-style motion patterns for spatial animation
-- **Side Panel**: Unified GUI for tracks, tablet, and canvas settings
-- **Tablet Manager**: HID device support for getting events from a drawing tablet.
+- **Side Panel**: Modular GUI with separated concerns:
+  - `SidePanelBase`: Core panel functionality and coordination
+  - `TrackUIManager`: Track rendering and controls
+  - `LuminodeConfigManager`: Luminode configuration UI
+  - `CanvasUIManager`: Canvas settings and effects
+- **Tablet Manager**: HID device support for getting events from a drawing tablet
 - **Canvas Drawer**: Centralized drawing operations
 - **UI Manager**: Interface and event handling
 - **Project Manager**: Scene saving and state management (In development)
@@ -67,11 +71,13 @@ Individual drawing modules inspired by geometric art pioneers.
 |----------|-------------|
 | **Woven Net** | Interlaced geometric mesh structures |
 
-*Note: The Lumia Effect is a global canvas filter, separate from the individual luminode patterns.*
 
 ## Canvas Effects
 
 G.L.O.W. includes additional canvas-level effects that enhance the visual experience:
+
+### Lumia Effect
+- **Global blur filter** - Applies blur effect to all luminodes (0-100px)
 
 ### Grid Overlay
 - **Configurable grid lines** - Adjust X and Y line counts (2-50)
@@ -89,7 +95,7 @@ G.L.O.W. includes additional canvas-level effects that enhance the visual experi
 - **Grain size** - Adjust individual grain width and height (0.5-3px)
 - **Animation toggle** - Enable/disable animated grain movement
 
-*Thanks to [grained.js](https://github.com/bfred-it/grained) for their elegant noise implementation.*
+*Thanks to [grained.js](https://github.com/sarathsaleem/grained/) for their elegant noise implementation.*
 
 ## Track-Based Luminode System
 

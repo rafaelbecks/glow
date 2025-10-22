@@ -18,7 +18,7 @@ graph LR
     end
     
     subgraph "UI Components"
-        UI[UIManager<br/>SidePanel<br/>Save/Load Dialogs]
+        UI[UIManager<br/>SidePanel (Modular)<br/>Save/Load Dialogs]
     end
     
     subgraph "Rendering Components"
@@ -89,7 +89,7 @@ graph LR
 
 ### UI Layer
 - **UIManager**: Manages UI controls and triggers application events
-- **SidePanel**: Provides settings interface for tracks, tablet, and canvas configuration
+- **SidePanel**: Modular interface with separated concerns (tracks, canvas, tablet controls)
 - **Dialogs**: Handle project save/load operations with user interaction
 
 ### Rendering Layer
