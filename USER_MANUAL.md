@@ -52,6 +52,8 @@ Choose from 17 unique visual patterns, each inspired by geometric art:
 - **Noise Valley** - 3D terrain with noise-based height fields
 - **Catenoid** - 3D minimal surface with parametric deformation
 - **Line Cylinder** - 3D cylinder with vertical lines that opens and closes
+- **Diamond** - 3D diamond shape with geometric facets
+- **Cube** - 3D wireframe cube with rotation and scaling
 
 **Art-Inspired Patterns:**
 - **Soto Grid** - Inspired by kinetic artist Jesús Rafael Soto
@@ -132,6 +134,24 @@ Access the **🎨 Canvas tab** to customize your visual experience:
 - **Clear Alpha** - Controls the ghostly trail effect (0-1)
 - **Background Color** - Change the canvas background color
 - **Lumia Effect** - Global blur effect for atmospheric light compositions (0-100px)
+
+**CRT Effect:**
+- **Enable CRT** - Toggle retro monitor simulation on/off
+- **Intensity** - Adjust CRT effect strength (0-100%)
+
+**Grid Overlay:**
+- **Enable Grid** - Toggle grid overlay on/off
+- **X Lines** - Number of vertical grid lines (2-50)
+- **Y Lines** - Number of horizontal grid lines (2-50)
+- **Grid Color** - Choose any color for the grid lines
+
+**Noise Overlay:**
+- **Enable Noise** - Toggle animated grain texture on/off
+- **Animate** - Enable/disable grain animation
+- **Opacity** - Grain intensity (1-20%)
+- **Pattern Width/Height** - Noise pattern dimensions (50-200px)
+- **Density** - Grain density multiplier (0.5-2x)
+- **Grain Width/Height** - Individual grain size (0.5-3px)
 
 *Note: The Lumia Effect is a global canvas filter that affects all luminodes, not a separate luminode pattern.*
 

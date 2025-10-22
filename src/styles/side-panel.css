@@ -726,6 +726,38 @@
     padding: 6px;
 }
 
+/* Grid Controls */
+.grid-controls {
+    margin-top: 8px;
+}
+
+.grid-controls-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.grid-control-row {
+    display: flex;
+    gap: 8px;
+}
+
+.grid-control {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.grid-control label {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+    font-weight: 500;
+}
+
 /* Noise Controls */
 .noise-controls {
     margin-top: 8px;
@@ -751,16 +783,9 @@
 
 .noise-control label {
     font-size: 10px;
-    color: #888;
+    color: rgba(255, 255, 255, 0.7);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: 2px;
-}
-
-.slider-value {
-    font-size: 10px;
-    color: #51cf66;
     font-weight: 500;
-    min-width: 40px;
-    text-align: right;
 }

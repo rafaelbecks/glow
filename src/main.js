@@ -752,7 +752,7 @@ export class GLOWVisualizer {
       console.error('Noise overlay element not found')
       return
     }
-    
+
     // Initialize grained.js on the noise overlay
     this.initializeGrained()
   }
@@ -766,10 +766,13 @@ export class GLOWVisualizer {
 
     // Destroy existing grained instance if it exists
     if (this.grainedInstance) {
-      this.grainedInstance.destroy()
+      this.grainedInstance = null
     }
 
-    this.grainedInstance = grained('#noiseOverlay', this.noiseOptions)
+    // Only initialize if noise overlay is enabled
+    if (this.noiseModeEnabled) {
+      this.grainedInstance = grained('#noiseOverlay', this.noiseOptions)
+    }
   }
 
   // Toggle noise overlay mode
@@ -783,7 +786,6 @@ export class GLOWVisualizer {
       } else {
         this.noiseOverlay.style.display = 'none'
         if (this.grainedInstance) {
-          this.grainedInstance.destroy()
           this.grainedInstance = null
         }
       }
@@ -796,8 +798,8 @@ export class GLOWVisualizer {
   updateNoiseOptions (options) {
     this.noiseOptions = { ...this.noiseOptions, ...options }
 
-    if (this.noiseModeEnabled && this.grainedInstance) {
-      // Reinitialize with new options
+    // If noise overlay is enabled, always reinitialize to apply changes
+    if (this.noiseModeEnabled) {
       this.initializeGrained()
     }
 

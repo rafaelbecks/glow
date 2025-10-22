@@ -1303,6 +1303,7 @@ export class SidePanel {
                   <div class="slider-container">
                     <input type="range" 
                            id="gridXLines" 
+                           class="config-slider"
                            min="2" 
                            max="50" 
                            step="1" 
@@ -1315,6 +1316,7 @@ export class SidePanel {
                   <div class="slider-container">
                     <input type="range" 
                            id="gridYLines" 
+                           class="config-slider"
                            min="2" 
                            max="50" 
                            step="1" 
@@ -1372,6 +1374,7 @@ export class SidePanel {
                   <div class="slider-container">
                     <input type="range" 
                            id="noiseOpacity" 
+                           class="config-slider"
                            min="0.01" 
                            max="0.2" 
                            step="0.01" 
@@ -1387,6 +1390,7 @@ export class SidePanel {
                   <div class="slider-container">
                     <input type="range" 
                            id="noisePatternWidth" 
+                           class="config-slider"
                            min="50" 
                            max="200" 
                            step="10" 
@@ -1399,6 +1403,7 @@ export class SidePanel {
                   <div class="slider-container">
                     <input type="range" 
                            id="noisePatternHeight" 
+                           class="config-slider"
                            min="50" 
                            max="200" 
                            step="10" 
@@ -1414,6 +1419,7 @@ export class SidePanel {
                   <div class="slider-container">
                     <input type="range" 
                            id="noiseDensity" 
+                           class="config-slider"
                            min="0.5" 
                            max="2" 
                            step="0.1" 
@@ -1426,6 +1432,7 @@ export class SidePanel {
                   <div class="slider-container">
                     <input type="range" 
                            id="noiseWidth" 
+                           class="config-slider"
                            min="0.5" 
                            max="3" 
                            step="0.1" 
@@ -1441,6 +1448,7 @@ export class SidePanel {
                   <div class="slider-container">
                     <input type="range" 
                            id="noiseHeight" 
+                           class="config-slider"
                            min="0.5" 
                            max="3" 
                            step="0.1" 

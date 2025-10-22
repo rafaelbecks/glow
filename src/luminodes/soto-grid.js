@@ -38,13 +38,11 @@ export class SotoGridLuminode {
         this.ctx.lineTo(x + offset, this.dimensions.height)
         this.ctx.stroke()
 
-            // Draw solid block
-      this.ctx.fillStyle = '#efe5da'
-      this.ctx.fillRect(0, solidY, this.dimensions.width, solidHeight)
-
+        // Draw solid block
+        this.ctx.fillStyle = '#efe5da'
+        this.ctx.fillRect(0, solidY, this.dimensions.width, solidHeight)
       }
     }
-
 
     // Draw squares
     const squares = this.generateSotoSquares(notes, stripedMode)

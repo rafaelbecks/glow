@@ -44,6 +44,8 @@ Individual drawing modules inspired by geometric art pioneers.
 | **Noise Valley** | 3D terrain with noise-based height fields |
 | **Catenoid** | 3D minimal surface with parametric deformation |
 | **Line Cylinder** | 3D cylinder with vertical lines that opens and closes |
+| **Diamond** | 3D diamond shape with geometric facets |
+| **Cube** | 3D wireframe cube with rotation and scaling |
 
 ### Art-Inspired
 | Luminode | Description |
@@ -66,6 +68,28 @@ Individual drawing modules inspired by geometric art pioneers.
 | **Woven Net** | Interlaced geometric mesh structures |
 
 *Note: The Lumia Effect is a global canvas filter, separate from the individual luminode patterns.*
+
+## Canvas Effects
+
+G.L.O.W. includes additional canvas-level effects that enhance the visual experience:
+
+### Grid Overlay
+- **Configurable grid lines** - Adjust X and Y line counts (2-50)
+- **Custom grid color** - Choose any color for the grid
+
+### CRT Effect
+- **Retro monitor simulation** - Classic CRT display aesthetics
+- **Intensity control** - Adjust CRT effect strength (0-100%)
+
+### Noise Overlay
+- **Animated grain texture** - Adds film grain aesthetic to the canvas
+- **Pattern controls** - Adjust width and height of noise patterns (50-200px)
+- **Opacity control** - Fine-tune grain intensity (1-20%)
+- **Density settings** - Control grain density (0.5-2x)
+- **Grain size** - Adjust individual grain width and height (0.5-3px)
+- **Animation toggle** - Enable/disable animated grain movement
+
+*Thanks to [grained.js](https://github.com/bfred-it/grained) for their elegant noise implementation.*
 
 ## Track-Based Luminode System
 
