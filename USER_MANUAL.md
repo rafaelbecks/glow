@@ -8,14 +8,16 @@
 
 G.L.O.W. is a real-time visual instrument that transforms your music into geometric light patterns. Inspired by pioneers of kinetic art like Jesús Rafael Soto, Gego, and John Whitney, it creates structured, evolving geometries that renders with your sound (MIDI input) in real time.
 
+**Demos & Luminodes Showcase**: [YouTube Playlist](https://www.youtube.com/playlist?list=PLPLNsAMGizPvOxgBN0TJDBIRIPvcY6njN)
 
 ## Getting Started
 
 ### Quick Setup
-1. **Open the application** in Chrome browser
-2. **Click "Start Visualizer"** to initialize MIDI
-3. **Connect your MIDI device** (keyboard, controller, etc.)
-4. **Map a track with a visual pattern (luminodes)** and watch the geometry unfold!
+1. **Connect your MIDI device** (keyboard, controller, etc.)
+2. **Open the application** in Chrome browser
+3. **Click "Start"** to initialize MIDI
+4. **Click on the cube icon on the top right. Map a track with a visual pattern (luminodes)** and watch the geometry unfold!
+5. **Read this manual on the triangle icon on the top right**
 
 ### System Requirements
 - Modern web browser (Chrome recommended)
@@ -72,6 +74,17 @@ Choose from 17 unique visual patterns, each inspired by geometric art:
 ---
 
 ## Using the Interface
+
+### Toolbar
+
+The toolbar at the top of the screen provides quick access to essential functions:
+
+- **🔷 Shapes Icon (Top Left)** - Open a saved `.glow` scene file
+- **💾 Save Icon** - Save the current scene as a `.glow` file
+- **Project Name (Center)** - Displays the current project name. Click to edit the name
+- **🔷 Cube Icon** - Open the side panel with tracks, canvas settings, and tablet controls
+- **🔺 Triangle Icon** - Open this user manual
+- **Cmd+I / Ctrl+I** - Hide/show the entire toolbar (useful during performances for a clean canvas view)
 
 ### Main Controls
 - **🎛️ Track Panel** - Open the track management interface
@@ -153,8 +166,6 @@ Access the **🎨 Canvas tab** to customize your visual experience:
 - **Pattern Width/Height** - Noise pattern dimensions (50-200px)
 - **Density** - Grain density multiplier (0.5-2x)
 - **Grain Width/Height** - Individual grain size (0.5-3px)
-
-*Note: The Lumia Effect is a global canvas filter that affects all luminodes, not a separate luminode pattern.*
 
 **Color Palettes:**
 - **Soto Palette** - Main color scheme for geometric luminodes

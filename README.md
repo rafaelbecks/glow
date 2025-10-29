@@ -13,6 +13,8 @@ G.L.O.W. is a lightweight, modular, MIDI and HID reactive visual engine that dra
 
 Play with it: https://glow.luminode.studio/
 
+**Demos & Luminodes Showcase**: [YouTube Playlist](https://www.youtube.com/playlist?list=PLPLNsAMGizPvOxgBN0TJDBIRIPvcY6njN)
+
 ## Architecture
 
 **Core Modules:**
