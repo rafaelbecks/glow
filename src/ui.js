@@ -22,7 +22,8 @@ export class UIManager {
       clearTablet: document.getElementById('clearTablet'),
       tabletWidth: document.getElementById('tabletWidth'),
       colorToggle: document.getElementById('colorToggle'),
-      logoContainer: document.getElementById('logoContainer')
+      logoContainer: document.getElementById('logoContainer'),
+      projectNameDisplay: document.getElementById('projectNameDisplay')
     }
 
     this.statusVisible = false
@@ -102,11 +103,10 @@ export class UIManager {
 
     // Keyboard shortcuts
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'c') {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'u') {
+        e.preventDefault()
         this.triggerCallback('clearCanvas')
-      } else if (e.key === 'c' || e.key === 'C') {
-        this.triggerCallback('togglePanel')
-      } else if (e.key === 'i') {
+      } else if ((e.metaKey || e.ctrlKey) && e.key === 'i') {
         e.preventDefault()
         this.toggleIcons()
       } else if ((e.metaKey || e.ctrlKey) && e.key === 's') {
@@ -341,6 +341,7 @@ export class UIManager {
     this.showOpenButton()
     this.showSaveButton()
     this.showInfoButton()
+    this.showProjectNameDisplay()
   }
 
   hideAllIcons () {
@@ -348,5 +349,18 @@ export class UIManager {
     this.hideOpenButton()
     this.hideSaveButton()
     this.hideInfoButton()
+    this.hideProjectNameDisplay()
+  }
+
+  showProjectNameDisplay () {
+    if (this.elements.projectNameDisplay) {
+      this.elements.projectNameDisplay.style.display = 'block'
+    }
+  }
+
+  hideProjectNameDisplay () {
+    if (this.elements.projectNameDisplay) {
+      this.elements.projectNameDisplay.style.display = 'none'
+    }
   }
 }

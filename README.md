@@ -207,5 +207,5 @@ G.L.O.W. draws inspiration from several pioneers of geometric and kinetic art:
 ## Keyboard Shortcuts
 
 - `Cmd+S` / `Ctrl+S`: Save current scene
-- `C`: Clear canvas
-- `I`: Toggle UI icons visibility
+- `Cmd+U` / `Ctrl+U`: Clear canvas
+- `Cmd+I` / `Ctrl+I`: Toggle UI icons and project name visibility

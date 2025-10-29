@@ -78,7 +78,8 @@ Choose from 17 unique visual patterns, each inspired by geometric art:
 - **🎨 Canvas Tab** - Adjust canvas and color settings
 - **⚙️ Tablet Tab** - Configure drawing tablet settings
 - **💾 Save Scene** - Export your current configuration
-- **C** - Clear the canvas
+- **Cmd+U / Ctrl+U** - Clear the canvas
+- **Cmd+I / Ctrl+I** - Toggle UI icons and project name visibility
 - **Cmd+S / Ctrl+S** - Quick save scene
 
 ### Track Management

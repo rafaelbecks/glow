@@ -18,7 +18,7 @@ graph LR
     end
     
     subgraph "UI Components"
-        UI[UIManager<br/>SidePanel (Modular)<br/>Save/Load Dialogs]
+        UI[UIManager<br/>SidePanel<br/>Save/Load Dialogs]
     end
     
     subgraph "Rendering Components"
