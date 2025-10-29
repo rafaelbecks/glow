@@ -11,7 +11,7 @@ G.L.O.W. is a lightweight, modular, MIDI and HID reactive visual engine that dra
 
 ## Demo
 
-Play with it: https://glow-visualizer.netlify.app/
+Play with it: https://glow.luminode.studio/
 
 ## Architecture
 
