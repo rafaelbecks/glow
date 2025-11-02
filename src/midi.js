@@ -24,7 +24,8 @@ export class MIDIManager {
       lineCylinder: [],
       clavilux: [],
       diamond: [],
-      cube: []
+      cube: [],
+      trefoil: []
     }
 
     this.inputs = new Map() // Maps channel to array of inputs

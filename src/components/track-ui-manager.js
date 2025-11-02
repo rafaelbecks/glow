@@ -571,7 +571,10 @@ export class TrackUIManager {
       polygons: 'Polygons',
       noiseValley: 'Noise Valley',
       catenoid: 'Catenoid',
-      lineCylinder: 'Line Cylinder'
+      lineCylinder: 'Line Cylinder',
+      trefoil: 'Trefoil Knot',
+      cube: 'Cube',
+      diamond: 'Diamond'
     }
     return nameMap[name] || name
   }

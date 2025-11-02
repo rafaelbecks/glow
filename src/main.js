@@ -28,7 +28,8 @@ import {
   LineCylinderLuminode,
   ClaviluxLuminode,
   DiamondLuminode,
-  CubeLuminode
+  CubeLuminode,
+  TrefoilKnotLuminode
 } from './luminodes/index.js'
 
 export class GLOWVisualizer {
@@ -87,7 +88,8 @@ export class GLOWVisualizer {
       lineCylinder: LineCylinderLuminode,
       clavilux: ClaviluxLuminode,
       diamond: DiamondLuminode,
-      cube: CubeLuminode
+      cube: CubeLuminode,
+      trefoil: TrefoilKnotLuminode
     }
 
     // Track-based luminode instances
@@ -514,15 +516,21 @@ export class GLOWVisualizer {
       lineCylinder: 'LINE_CYLINDER',
       clavilux: 'CLAVILUX',
       diamond: 'DIAMOND',
-      cube: 'CUBE'
+      cube: 'CUBE',
+      trefoil: 'TREFOIL'
     }
 
     const settingsKey = luminodeMapping[luminode]
     if (settingsKey && SETTINGS.MODULES[settingsKey]) {
       const moduleConfig = SETTINGS.MODULES[settingsKey]
       if (moduleConfig.hasOwnProperty(param)) {
-        moduleConfig[param] = value
-        console.log(`Updated ${luminode} ${param} to ${value}`)
+        // Ensure boolean values are properly converted for checkboxes
+        let convertedValue = value
+        if (typeof moduleConfig[param] === 'boolean') {
+          convertedValue = Boolean(value)
+        }
+        moduleConfig[param] = convertedValue
+        console.log(`Updated ${luminode} ${param} to ${convertedValue} (type: ${typeof convertedValue})`)
       }
     }
   }
@@ -678,6 +686,10 @@ export class GLOWVisualizer {
       case 'sphere':
         const sphereColorMode = SETTINGS.MODULES.SPHERE.USE_COLOR || false
         luminode.draw(t, notes, sphereColorMode, layout)
+        break
+      case 'trefoil':
+        const trefoilColorMode = SETTINGS.MODULES.TREFOIL.USE_COLOR || false
+        luminode.draw(t, notes, trefoilColorMode, layout)
         break
       default:
         // Standard luminode drawing

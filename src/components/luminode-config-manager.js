@@ -270,7 +270,11 @@ export class LuminodeConfigManager {
       triangle: 'TRIANGLE',
       polygons: 'POLYGONS',
       noiseValley: 'NOISE_VALLEY',
-      catenoid: 'CATENOID'
+      catenoid: 'CATENOID',
+      lineCylinder: 'LINE_CYLINDER',
+      diamond: 'DIAMOND',
+      cube: 'CUBE',
+      trefoil: 'TREFOIL'
     }
     return luminodeMapping[luminode] || luminode.toUpperCase()
   }

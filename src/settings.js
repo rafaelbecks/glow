@@ -202,6 +202,18 @@ export const SETTINGS = {
       LINE_WIDTH: 0.8,
       BASE_HUE: 0,
       USE_COLOR: false
+    },
+    TREFOIL: {
+      SCALE: 95,
+      NUM_LACES: 3,
+      NODE_MODE: true,
+      SCALE_VARIATION: 0.5,
+      SEGMENTS: 150,
+      ROTATION_SPEED: 0.3,
+      DEFORMATION_STRENGTH: 0.5,
+      LINE_WIDTH: 1.5,
+      BASE_HUE: 0,
+      USE_COLOR: true
     }
   },
 
@@ -252,7 +264,8 @@ export const MIDI_CHANNELS = {
   'bus 18': 'lineCylinder',
   'bus 19': 'clavilux',
   'bus 20': 'diamond',
-  'bus 21': 'cube'
+  'bus 21': 'cube',
+  'bus 22': 'trefoil'
 }
 
 // Utility functions

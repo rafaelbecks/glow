@@ -146,6 +146,20 @@ export const LUMINODE_CONFIGS = {
     ]
   },
 
+  trefoil: {
+    group: '3D Geometry',
+    config: [
+      { key: 'NODE_MODE', label: 'Node Mode', type: 'checkbox', default: true },
+      { key: 'NUM_LACES', label: 'Number of Laces', type: 'number', min: 1, max: 16, step: 1, default: 3 },
+      { key: 'SCALE', label: 'Scale', type: 'slider', min: 20, max: 120, step: 5, default: 95 },
+      { key: 'SCALE_VARIATION', label: 'Scale Variation', type: 'slider', min: 0, max: 0.5, step: 0.05, default: 0.5 },
+      { key: 'SEGMENTS', label: 'Segments', type: 'number', min: 50, max: 300, step: 10, default: 150 },
+      { key: 'ROTATION_SPEED', label: 'Rotation Speed', type: 'slider', min: 0, max: 1, step: 0.05, default: 0.3 },
+      { key: 'LINE_WIDTH', label: 'Line Width', type: 'slider', min: 0.3, max: 2, step: 0.1, default: 0.8 },
+      { key: 'USE_COLOR', label: 'Color Mode', type: 'checkbox', default: true }
+    ]
+  },
+
   // Art-Inspired
   gegoNet: {
     group: 'Art-Inspired',

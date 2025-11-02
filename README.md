@@ -52,6 +52,7 @@ Individual drawing modules inspired by geometric art pioneers.
 | **Line Cylinder** | 3D cylinder with vertical lines that opens and closes |
 | **Diamond** | 3D diamond shape with geometric facets |
 | **Cube** | 3D wireframe cube with rotation and scaling |
+| **Trefoil Knot** | 3D mathematical knot with multiple laces, node mode for note-responsive lace count |
 
 ### Art-Inspired
 | Luminode | Description |

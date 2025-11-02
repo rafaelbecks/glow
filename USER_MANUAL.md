@@ -40,7 +40,7 @@ G.L.O.W. works like a digital audio workstation (DAW) with **4 independent track
 - **Each luminode instance is independent** - different positioning, motion, and configuration
 
 ### Visual Effects (Luminodes)
-Choose from 17 unique visual patterns, each inspired by geometric art:
+Choose from 18 unique visual patterns, each inspired by geometric art:
 
 **Classic Patterns:**
 - **Lissajous Curves** - Elegant harmonic relationships
@@ -56,6 +56,7 @@ Choose from 17 unique visual patterns, each inspired by geometric art:
 - **Line Cylinder** - 3D cylinder with vertical lines that opens and closes
 - **Diamond** - 3D diamond shape with geometric facets
 - **Cube** - 3D wireframe cube with rotation and scaling
+- **Trefoil Knot** - 3D mathematical knot with multiple laces that respond to MIDI input
 
 **Art-Inspired Patterns:**
 - **Soto Grid** - Inspired by kinetic artist Jesús Rafael Soto
@@ -174,7 +175,13 @@ Access the **🎨 Canvas tab** to customize your visual experience:
 **Pitch to Color Generator:**
 - **Hue Factor** - Adjust how MIDI notes map to colors (1-100)
 - **Real-time preview** - See how different notes will be colored
-- **Affects multiple luminodes** - Harmonograph, Lissajous, Sinewave, Triangle, Woven Net, Whitney Lines, Moire Circles, Phyllotaxis, Noise Valley, Catenoid, Line Cylinder
+- **Affects multiple luminodes** - Harmonograph, Lissajous, Sinewave, Triangle, Woven Net, Whitney Lines, Moire Circles, Phyllotaxis, Noise Valley, Catenoid, Line Cylinder, Trefoil Knot
+
+**Trefoil Knot Special Features:**
+- **Node Mode** (enabled by default) - Number of laces automatically matches the number of active MIDI notes (10 notes = 10 laces). When disabled, uses a fixed number of laces and MIDI only affects color and deformation.
+- Each lace can have different colors when color mode is enabled
+- Deformation strength responds to MIDI velocity
+- Scale variation creates subtle size differences between laces
 
 ### Drawing Tablet Support
 - **Connect a drawing tablet** for pressure-sensitive control
