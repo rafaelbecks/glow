@@ -89,6 +89,7 @@ The toolbar at the top of the screen provides quick access to essential function
 
 ### Main Controls
 - **🎛️ Track Panel** - Open the track management interface
+- **📊 Modulation Tab** - Configure parameter modulation (LFO-style effects)
 - **🎨 Canvas Tab** - Adjust canvas and color settings
 - **⚙️ Tablet Tab** - Configure drawing tablet settings
 - **💾 Save Scene** - Export your current configuration
@@ -103,6 +104,36 @@ The toolbar at the top of the screen provides quick access to essential function
 4. **Use M to mute** or **S to solo** tracks
 5. **Solo overrides mute** - soloed tracks will always play
 6. **Multiple tracks can share the same MIDI device** - perfect for layering different visual effects
+
+### Modulation System
+G.L.O.W. includes a modulation system that works like LFOs (Low-Frequency Oscillators) on synthesizers. It automatically animates luminode parameters over time, creating evolving visual effects.
+
+**Access the Modulation Tab:**
+- Open the side panel (🎛️) and click the **"MODULATION"** tab
+- Create up to 4 modulators per project
+
+**Modulator Controls:**
+- **Waveform** - Choose from sine, square, triangle, or sawtooth shapes (with visual preview)
+- **Track** - Select which track to apply modulation to (automatically uses that track's luminode)
+- **Parameter** - Pick any numeric parameter to modulate (size, rotation, line width, segments, etc.)
+- **Rate** - Oscillation speed (0.001 - 2 Hz)
+- **Depth** - Modulation intensity (0-100%)
+- **Offset** - Base value shift within the parameter range
+- **Enable/Disable** - Toggle modulation on/off without removing it
+
+**How to Use:**
+1. Click **"Add Modulator"** to create a new modulator
+2. Select a **Track** - the luminode will automatically be set from that track
+3. Choose a **Parameter** to modulate (only numeric parameters like sliders/numbers)
+4. Adjust **Rate**, **Depth**, and **Offset** to taste
+5. Toggle **Enable** to activate/deactivate modulation
+
+**Examples:**
+- **Slow Size Modulation** - Rate: 0.1 Hz, Depth: 30%, modulate SIZE for breathing effects
+- **Fast Rotation** - Rate: 1.5 Hz, Depth: 50%, modulate ROTATION_SPEED for rapid spinning
+- **Line Width Pulse** - Rate: 0.5 Hz, Depth: 80%, modulate LINE_WIDTH for rhythmic pulsing
+
+*Note: This is the first version of the modulation system and is under active development. Modulators work best with continuous parameters and automatically handle integer rounding for parameters like segments and rings.*
 
 ### Trajectory Motion System
 Each track features spatial motion controls inspired by John Whitney's non-central motion principles:

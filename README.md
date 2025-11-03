@@ -22,10 +22,12 @@ Play with it: https://glow.luminode.studio/
 - **MIDI Manager**: Device connections and note tracking with multi-device support
 - **Track Manager**: MIDI channel routing and track management
 - **Trajectory System**: Whitney-style motion patterns for spatial animation
+- **Modulation System**: LFO-style parameter modulation for dynamic visual evolution
 - **Side Panel**: Modular GUI with separated concerns:
   - `SidePanelBase`: Core panel functionality and coordination
   - `TrackUIManager`: Track rendering and controls
   - `LuminodeConfigManager`: Luminode configuration UI
+  - `ModulationUIManager`: Modulation system controls and interface
   - `CanvasUIManager`: Canvas settings and effects
 - **Tablet Manager**: HID device support for getting events from a drawing tablet
 - **Canvas Drawer**: Centralized drawing operations
@@ -108,6 +110,22 @@ G.L.O.W. uses a track-based luminode system that creates individual instances fo
 - **Instance-Based**: Each track gets its own luminode instance when assigned
 - **Multiple Instances**: Support for multiple tracks using the same luminode type (e.g., 4 lissajous curves)
 - **Independent Configuration**: Each instance has its own positioning, layout, and trajectory motion
+
+## Modulation System
+
+G.L.O.W. includes a modulation system similar to LFOs (Low-Frequency Oscillators) on synthesizers. Each track can have up to 4 modulators that automatically animate specific luminode parameters over time.
+
+**How It Works:**
+- **Waveform Shapes**: Choose from sine, square, triangle, or sawtooth waveforms
+- **Rate Control**: Adjust oscillation speed (0.001 - 2 Hz) for slow, evolving changes or rapid modulation
+- **Depth Control**: Set modulation intensity (0-100%) to control how much the parameter varies
+- **Offset**: Shift the base value up or down within the parameter's range
+- **Per-Track Targeting**: Modulators automatically apply to the luminode assigned to their track
+- **Parameter Selection**: Choose any numeric parameter (size, rotation speed, line width, etc.) to modulate
+
+Think of it like an LFO modulating a filter cutoff or oscillator pitch - but here it's controlling visual parameters like size, rotation, or line width. Modulators are non-destructive and only affect rendering in real-time, preserving your base configuration values.
+
+*Note: This is the first version of the modulation system and is under active development.*
 
 ## Trajectory Motion System
 
