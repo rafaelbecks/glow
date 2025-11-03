@@ -33,6 +33,10 @@ export class SidePanelBase {
             <ion-icon name="cube-outline"></ion-icon>
             <span>TRACKS</span>
           </button>
+          <button class="tab-btn" data-tab="modulation">
+            <ion-icon name="pulse-outline"></ion-icon>
+            <span>MODULATION</span>
+          </button>
           <button class="tab-btn" data-tab="canvas">
             <ion-icon name="color-palette-outline"></ion-icon>
             <span>CANVAS</span>
@@ -51,6 +55,13 @@ export class SidePanelBase {
         <div id="tracksTab" class="tab-content active">
           <div id="tracksContainer" class="tracks-container">
             <!-- Tracks will be dynamically generated -->
+          </div>
+        </div>
+        
+        <!-- Modulation Tab Content -->
+        <div id="modulationTab" class="tab-content">
+          <div id="modulationControlsContainer">
+            <!-- Modulation controls will be dynamically generated -->
           </div>
         </div>
         

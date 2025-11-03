@@ -1,6 +1,34 @@
 // Luminode configuration UI management
 import { getLuminodeConfig, hasLuminodeConfig } from '../luminode-configs.js'
 
+// Shared mapping function for reuse
+function getLuminodeSettingsKey (luminode) {
+  const luminodeMapping = {
+    lissajous: 'LISSAJOUS',
+    sphere: 'SPHERE',
+    harmonograph: 'HARMONOGRAPH',
+    gegoNet: 'GEGO_NET',
+    gegoShape: 'GEGO_SHAPE',
+    sotoGrid: 'SOTO_GRID',
+    sotoGridRotated: 'SOTO_GRID',
+    whitneyLines: 'WHITNEY_LINES',
+    phyllotaxis: 'PHYLLOTAXIS',
+    moireCircles: 'MOIRE_CIRCLES',
+    wovenNet: 'WOVEN_NET',
+    sinewave: 'SINEWAVE',
+    triangle: 'TRIANGLE',
+    polygons: 'POLYGONS',
+    noiseValley: 'NOISE_VALLEY',
+    catenoid: 'CATENOID',
+    lineCylinder: 'LINE_CYLINDER',
+    clavilux: 'CLAVILUX',
+    diamond: 'DIAMOND',
+    cube: 'CUBE',
+    trefoil: 'TREFOIL'
+  }
+  return luminodeMapping[luminode] || luminode.toUpperCase()
+}
+
 export class LuminodeConfigManager {
   constructor (trackManager, panel) {
     this.trackManager = trackManager
@@ -254,28 +282,9 @@ export class LuminodeConfigManager {
 
   // Map luminode names to settings keys
   getLuminodeSettingsKey (luminode) {
-    const luminodeMapping = {
-      lissajous: 'LISSAJOUS',
-      sphere: 'SPHERE',
-      harmonograph: 'HARMONOGRAPH',
-      gegoNet: 'GEGO_NET',
-      gegoShape: 'GEGO_SHAPE',
-      sotoGrid: 'SOTO_GRID',
-      sotoGridRotated: 'SOTO_GRID',
-      whitneyLines: 'WHITNEY_LINES',
-      phyllotaxis: 'PHYLLOTAXIS',
-      moireCircles: 'MOIRE_CIRCLES',
-      wovenNet: 'WOVEN_NET',
-      sinewave: 'SINEWAVE',
-      triangle: 'TRIANGLE',
-      polygons: 'POLYGONS',
-      noiseValley: 'NOISE_VALLEY',
-      catenoid: 'CATENOID',
-      lineCylinder: 'LINE_CYLINDER',
-      diamond: 'DIAMOND',
-      cube: 'CUBE',
-      trefoil: 'TREFOIL'
-    }
-    return luminodeMapping[luminode] || luminode.toUpperCase()
+    return getLuminodeSettingsKey(luminode)
   }
 }
+
+// Export the shared mapping function for reuse
+export { getLuminodeSettingsKey }

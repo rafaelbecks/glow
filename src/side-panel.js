@@ -3,6 +3,7 @@ import { SidePanelBase } from './components/side-panel-base.js'
 import { TrackUIManager } from './components/track-ui-manager.js'
 import { LuminodeConfigManager } from './components/luminode-config-manager.js'
 import { CanvasUIManager } from './components/canvas-ui-manager.js'
+import { ModulationUIManager } from './components/modulation-ui-manager.js'
 
 export class SidePanel {
   constructor (trackManager, tabletManager, uiManager = null, midiManager = null) {
@@ -13,6 +14,7 @@ export class SidePanel {
     this.luminodeConfigManager = new LuminodeConfigManager(trackManager, this.basePanel.getPanel())
     this.trackUIManager = new TrackUIManager(trackManager, this.basePanel.getPanel(), this.luminodeConfigManager)
     this.canvasUIManager = new CanvasUIManager(this.basePanel.getPanel())
+    this.modulationUIManager = new ModulationUIManager(trackManager, this.basePanel.getPanel())
     
     // Set up event delegation
     this.setupEventDelegation()
@@ -72,6 +74,8 @@ export class SidePanel {
   async handleTabSwitch (tabName) {
     if (tabName === 'tracks') {
       this.trackUIManager.renderTracks()
+    } else if (tabName === 'modulation') {
+      this.modulationUIManager.renderModulationControls()
     } else if (tabName === 'tablet') {
       await this.basePanel.renderTabletControls()
     } else if (tabName === 'canvas') {

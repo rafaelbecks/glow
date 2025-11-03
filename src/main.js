@@ -9,6 +9,8 @@ import { UIManager } from './ui.js'
 import { ProjectManager } from './project-manager.js'
 import { SaveDialog } from './components/save-dialog.js'
 import { FilePickerDialog } from './components/file-picker-dialog.js'
+import { getLuminodeConfig } from './luminode-configs.js'
+import { getLuminodeSettingsKey } from './components/luminode-config-manager.js'
 import {
   LissajousLuminode,
   HarmonographLuminode,
@@ -495,32 +497,7 @@ export class GLOWVisualizer {
   updateLuminodeConfig (data) {
     const { luminode, param, value } = data
 
-    // Map luminode names to settings keys
-    const luminodeMapping = {
-      lissajous: 'LISSAJOUS',
-      sphere: 'SPHERE',
-      harmonograph: 'HARMONOGRAPH',
-      gegoNet: 'GEGO_NET',
-      gegoShape: 'GEGO_SHAPE',
-      sotoGrid: 'SOTO_GRID',
-      sotoGridRotated: 'SOTO_GRID',
-      whitneyLines: 'WHITNEY_LINES',
-      phyllotaxis: 'PHYLLOTAXIS',
-      moireCircles: 'MOIRE_CIRCLES',
-      wovenNet: 'WOVEN_NET',
-      sinewave: 'SINEWAVE',
-      triangle: 'TRIANGLE',
-      polygons: 'POLYGONS',
-      noiseValley: 'NOISE_VALLEY',
-      catenoid: 'CATENOID',
-      lineCylinder: 'LINE_CYLINDER',
-      clavilux: 'CLAVILUX',
-      diamond: 'DIAMOND',
-      cube: 'CUBE',
-      trefoil: 'TREFOIL'
-    }
-
-    const settingsKey = luminodeMapping[luminode]
+    const settingsKey = getLuminodeSettingsKey(luminode)
     if (settingsKey && SETTINGS.MODULES[settingsKey]) {
       const moduleConfig = SETTINGS.MODULES[settingsKey]
       if (moduleConfig.hasOwnProperty(param)) {
@@ -636,9 +613,114 @@ export class GLOWVisualizer {
       const notes = activeNotes[track.luminode] || []
       const layout = trackLayouts[track.id] || { x: 0, y: 0, rotation: 0 }
 
+      // Apply modulation before drawing
+      const restoreValues = this.applyModulationToTrack(track.id, track.luminode)
+      
       // Draw the luminode with track-specific parameters
       this.drawTrackLuminode(luminode, track.luminode, t, notes, layout)
+      
+      // Restore original config values after drawing
+      if (restoreValues) {
+        restoreValues()
+      }
     })
+  }
+
+  /**
+   * Apply modulation to a track's luminode config values
+   * Returns a restore function to call after drawing
+   */
+  applyModulationToTrack (trackId, luminodeType) {
+    const modulationSystem = this.trackManager.getModulationSystem()
+    const modulators = modulationSystem.getModulators().filter(m => 
+      m.enabled && 
+      m.targetTrack === trackId && 
+      m.targetLuminode === luminodeType &&
+      m.targetConfigKey !== null
+    )
+
+    if (modulators.length === 0) {
+      return null
+    }
+
+    // Get luminode config definition for min/max ranges
+    const configParams = getLuminodeConfig(luminodeType)
+    const configParamMap = new Map(configParams.map(p => [p.key, p]))
+
+    const settingsKey = getLuminodeSettingsKey(luminodeType)
+    if (!settingsKey || !SETTINGS.MODULES[settingsKey]) {
+      return null
+    }
+
+    const moduleConfig = SETTINGS.MODULES[settingsKey]
+    const originalValues = new Map()
+    const restoreFunctions = []
+
+    // Group modulators by config key to handle multiple modulators on same param
+    const modulatorsByKey = new Map()
+    modulators.forEach(modulator => {
+      const configKey = modulator.targetConfigKey
+      if (!modulatorsByKey.has(configKey)) {
+        modulatorsByKey.set(configKey, [])
+      }
+      modulatorsByKey.get(configKey).push(modulator)
+    })
+
+    // Apply modulators to each config key
+    modulatorsByKey.forEach((mods, configKey) => {
+      const configParam = configParamMap.get(configKey)
+      
+      if (!configParam || !moduleConfig.hasOwnProperty(configKey)) {
+        return
+      }
+
+      // Store original value
+      if (!originalValues.has(configKey)) {
+        originalValues.set(configKey, moduleConfig[configKey])
+      }
+
+      // Calculate modulation contributions independently and sum them
+      const baseValue = originalValues.get(configKey)
+      let totalModulation = 0
+      let totalOffset = 0
+      
+      const time = modulationSystem.getCurrentTime()
+      
+      mods.forEach(modulator => {
+        if (!modulator.enabled) return
+        
+        const phase = time * modulator.rate * Math.PI * 2
+        const waveform = modulationSystem.generateWaveform(modulator.shape, phase)
+        
+        // Accumulate modulation and offset
+        totalModulation += waveform * modulator.depth
+        totalOffset += modulator.offset
+      })
+
+      // Calculate value range for this parameter
+      const min = configParam.min
+      const max = configParam.max
+      const range = max - min
+
+      // Apply combined modulation
+      let modulatedValue = baseValue + (totalModulation * range) + (totalOffset * range)
+      
+      // Clamp to valid range
+      modulatedValue = Math.max(min, Math.min(max, modulatedValue))
+      
+      // Round to integer if this is a number-type parameter (for parameters like SEGMENTS, RINGS, etc.)
+      const finalValue = configParam.type === 'number' ? Math.round(modulatedValue) : modulatedValue
+
+      // Apply final modulated value
+      moduleConfig[configKey] = finalValue
+    })
+
+    // Return restore function
+    return () => {
+      originalValues.forEach((value, key) => {
+        moduleConfig[key] = value
+      })
+    }
   }
 
   drawTrackLuminode (luminode, luminodeType, t, notes, layout) {

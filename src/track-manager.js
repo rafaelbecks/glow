@@ -1,5 +1,6 @@
 // Track management system for DAW-style interface
 import { TrajectorySystem } from './trajectory-system.js'
+import { ModulationSystem } from './modulation-system.js'
 
 export class TrackManager {
   constructor () {
@@ -12,6 +13,9 @@ export class TrackManager {
 
     // Initialize trajectory system
     this.trajectorySystem = new TrajectorySystem()
+    
+    // Initialize modulation system
+    this.modulationSystem = new ModulationSystem()
 
     this.availableLuminodes = [
       'lissajous', 'harmonograph', 'sphere', 'gegoNet', 'gegoShape',
@@ -129,6 +133,31 @@ export class TrackManager {
   resetTrajectoryConfig (trackId) {
     this.trajectorySystem.resetTrackConfig(trackId)
     this.triggerCallback('trajectoryUpdated', { trackId, config: this.trajectorySystem.getTrackConfig(trackId) })
+  }
+
+  // Modulation management methods
+  getModulationSystem () {
+    return this.modulationSystem
+  }
+
+  addModulator () {
+    return this.modulationSystem.addModulator()
+  }
+
+  removeModulator (modulatorId) {
+    return this.modulationSystem.removeModulator(modulatorId)
+  }
+
+  updateModulator (modulatorId, updates) {
+    return this.modulationSystem.updateModulator(modulatorId, updates)
+  }
+
+  getModulators () {
+    return this.modulationSystem.getModulators()
+  }
+
+  getModulator (modulatorId) {
+    return this.modulationSystem.getModulator(modulatorId)
   }
 
   // MIDI device management

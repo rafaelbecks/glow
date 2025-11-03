@@ -2,8 +2,8 @@
 .side-panel {
     position: fixed;
     top: 0;
-    right: -390px;
-    width: 390px;
+    right: -410px;
+    width: 410px;
     height: 100vh;
     background: #000;
     border-left: 1px solid #333;
@@ -12,7 +12,7 @@
     display: flex;
     flex-direction: column;
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
-    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+    box-shadow: -4px 0 20px rgba(74, 67, 67, 0.3);
 }
 
 .side-panel.visible {
@@ -788,4 +788,231 @@
     letter-spacing: 0.5px;
     margin-bottom: 2px;
     font-weight: 500;
+}
+
+/* Modulation Controls */
+.modulation-controls {
+    padding: 20px;
+}
+
+.modulator-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modulator-header h4 {
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.add-modulator-btn {
+    background: #333;
+    border: 1px solid #555;
+    color: #fff;
+    padding: 6px 12px;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+}
+
+.add-modulator-btn:hover:not(:disabled) {
+    background: #444;
+    border-color: #666;
+}
+
+.add-modulator-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.add-modulator-btn ion-icon {
+    font-size: 12px;
+}
+
+.no-modulators {
+    color: #888;
+    font-size: 12px;
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+}
+
+.modulators-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.modulator-item {
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 12px;
+    transition: border-color 0.15s ease;
+}
+
+.modulator-item:hover {
+    border-color: #444;
+}
+
+.modulator-header-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.modulator-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.modulator-toggle input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: #51cf66;
+}
+
+.toggle-label {
+    color: #ccc;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.remove-modulator-btn {
+    background: transparent;
+    border: 1px solid #444;
+    color: #888;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    border-radius: 2px;
+    padding: 0;
+}
+
+.remove-modulator-btn:hover {
+    background: #ff6b6b;
+    border-color: #ff6b6b;
+    color: #fff;
+}
+
+.remove-modulator-btn ion-icon {
+    font-size: 12px;
+}
+
+.modulator-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.modulator-row {
+    display: flex;
+    gap: 12px;
+}
+
+.modulator-control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}
+
+.modulator-control-group label {
+    color: #ccc;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.modulator-control-group select {
+    background: #222;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 6px 8px;
+    font-size: 11px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border-radius: 3px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+.modulator-control-group select:hover {
+    background: #333;
+    border-color: #555;
+}
+
+.modulator-control-group select:focus {
+    outline: none;
+    border-color: #51cf66;
+    background: #333;
+}
+
+.waveform-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.waveform-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    color: #51cf66;
+}
+
+.waveform-svg {
+    width: 100%;
+    height: 100%;
+}
+
+.modulator-luminode-display {
+    display: flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 6px 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.luminode-name {
+    color: #51cf66;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: 'Inconsolata', monospace;
+    text-transform: lowercase;
 }
