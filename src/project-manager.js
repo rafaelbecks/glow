@@ -38,6 +38,7 @@ export class ProjectManager {
       modules: this.collectModuleSettings(),
       tracks: this.collectTrackSettings(),
       trajectories: this.collectTrajectorySettings(),
+      modulation: this.collectModulationSettings(),
       tablet: this.collectTabletSettings(),
       midi: this.collectMidiSettings()
     }
@@ -108,6 +109,26 @@ export class ProjectManager {
     })
 
     return trajectories
+  }
+
+  // Collect modulation settings
+  collectModulationSettings () {
+    const modulationSystem = this.glowVisualizer.trackManager.getModulationSystem()
+    const modulators = modulationSystem.getModulators()
+
+    return {
+      modulators: modulators.map(modulator => ({
+        id: modulator.id,
+        shape: modulator.shape,
+        rate: modulator.rate,
+        depth: modulator.depth,
+        offset: modulator.offset,
+        enabled: modulator.enabled,
+        targetTrack: modulator.targetTrack,
+        targetConfigKey: modulator.targetConfigKey,
+        targetLuminode: modulator.targetLuminode
+      }))
+    }
   }
 
   // Collect tablet settings
@@ -196,11 +217,15 @@ export class ProjectManager {
       // Load trajectory settings
       this.loadTrajectorySettings(projectData.trajectories || {})
 
+      // Load modulation settings
+      this.loadModulationSettings(projectData.modulation || {})
+
       // Load MIDI settings
       await this.loadMidiSettings(projectData.midi)
 
       // Trigger UI updates
       this.glowVisualizer.sidePanel.renderTracks()
+      this.glowVisualizer.sidePanel.modulationUIManager.renderModulationControls()
 
       console.log('Project loaded successfully')
       return true
@@ -382,6 +407,35 @@ export class ProjectManager {
       const config = trajectoryData[trackId]
       if (config) {
         this.glowVisualizer.trackManager.updateTrajectoryConfig(parseInt(trackId), config)
+      }
+    })
+  }
+
+  // Load modulation settings
+  loadModulationSettings (modulationData) {
+    if (!modulationData || !modulationData.modulators) return
+
+    const modulationSystem = this.glowVisualizer.trackManager.getModulationSystem()
+    
+    // Clear existing modulators
+    modulationSystem.reset()
+
+    // Restore all modulators from saved data
+    modulationData.modulators.forEach(modulatorData => {
+      const modulatorId = modulationSystem.addModulator()
+      if (modulatorId) {
+        // Update with all saved properties, including preserving the original ID
+        modulationSystem.updateModulator(modulatorId, {
+          id: modulatorData.id || modulatorId, // Preserve original ID if available
+          shape: modulatorData.shape || 'sine',
+          rate: modulatorData.rate !== undefined ? modulatorData.rate : 0.5,
+          depth: modulatorData.depth !== undefined ? modulatorData.depth : 0.5,
+          offset: modulatorData.offset !== undefined ? modulatorData.offset : 0,
+          enabled: modulatorData.enabled !== undefined ? modulatorData.enabled : true,
+          targetTrack: modulatorData.targetTrack !== undefined ? modulatorData.targetTrack : 1,
+          targetConfigKey: modulatorData.targetConfigKey || null,
+          targetLuminode: modulatorData.targetLuminode || null
+        })
       }
     })
   }

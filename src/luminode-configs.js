@@ -75,7 +75,7 @@ export const LUMINODE_CONFIGS = {
     config: [
       { key: 'SIZE', label: 'Size', type: 'slider', min: 0.3, max: 1.2, step: 0.05, default: 0.8 },
       { key: 'DENSITY', label: 'Density', type: 'slider', min: 10, max: 60, step: 2, default: 40 },
-      { key: 'ROTATION_SPEED', label: 'Rotation Speed', type: 'slider', min: 0.1, max: 1, step: 0.05, default: 0.3 },
+      { key: 'ROTATION_SPEED', label: 'Rotation Speed', type: 'slider', min: 0.1, max: 3, step: 0.05, default: 0.3 },
       { key: 'DEFORMATION_STRENGTH', label: 'Deformation', type: 'slider', min: 0.1, max: 2, step: 0.1, default: 0.5 },
       { key: 'LINE_WIDTH', label: 'Line Width', type: 'slider', min: 0.3, max: 2, step: 0.1, default: 0.8 },
       { key: 'HEIGHT_SCALE', label: 'Height Scale', type: 'slider', min: 10, max: 100, step: 5, default: 30 },
@@ -93,7 +93,7 @@ export const LUMINODE_CONFIGS = {
       { key: 'RINGS', label: 'Rings', type: 'number', min: 8, max: 32, step: 2, default: 16 },
       { key: 'SEGMENTS', label: 'Segments', type: 'number', min: 12, max: 48, step: 2, default: 24 },
       { key: 'SCALE', label: 'Scale', type: 'slider', min: 0.5, max: 2, step: 0.1, default: 1.0 },
-      { key: 'ROTATION_SPEED', label: 'Rotation Speed', type: 'slider', min: 0, max: 1, step: 0.05, default: 0.3 },
+      { key: 'ROTATION_SPEED', label: 'Rotation Speed', type: 'slider', min: 0, max: 3, step: 0.05, default: 0.3 },
       { key: 'DEFORMATION_STRENGTH', label: 'Deformation', type: 'slider', min: 0, max: 2, step: 0.1, default: 0.5 },
       { key: 'LINE_WIDTH', label: 'Line Width', type: 'slider', min: 0.3, max: 2, step: 0.1, default: 0.8 },
       { key: 'BASE_HUE', label: 'Base Hue', type: 'slider', min: 0, max: 360, step: 10, default: 0 },
@@ -108,7 +108,7 @@ export const LUMINODE_CONFIGS = {
       { key: 'HEIGHT', label: 'Height', type: 'slider', min: 100, max: 400, step: 10, default: 300 },
       { key: 'LINES_PER_NOTE', label: 'Lines Per Note', type: 'number', min: 3, max: 15, step: 1, default: 8 },
       { key: 'SCALE', label: 'Scale', type: 'slider', min: 0.5, max: 2, step: 0.1, default: 1.5 },
-      { key: 'ROTATION_SPEED', label: 'Rotation Speed', type: 'slider', min: 0, max: 1, step: 0.05, default: 0.3 },
+      { key: 'ROTATION_SPEED', label: 'Rotation Speed', type: 'slider', min: 0, max: 3, step: 0.05, default: 0.3 },
       { key: 'ANIMATION_SPEED', label: 'Animation Speed', type: 'slider', min: 0.1, max: 2, step: 0.1, default: 0.5 },
       { key: 'SEPARATION_THRESHOLD', label: 'Separation Threshold', type: 'slider', min: 0, max: 0.5, step: 0.01, default: 0.1 },
       { key: 'DEFORMATION_STRENGTH', label: 'Deformation', type: 'slider', min: 0, max: 2, step: 0.1, default: 0.4 },
@@ -128,7 +128,7 @@ export const LUMINODE_CONFIGS = {
       { key: 'INSTANCES', label: 'Instances', type: 'number', min: 1, max: 16, step: 1, default: 2 },
       { key: 'RADIAL_SPACING', label: 'Radial Spacing', type: 'slider', min: 80, max: 300, step: 10, default: 140 },
       { key: 'SCALE', label: 'Scale', type: 'slider', min: 0.5, max: 2, step: 0.1, default: 1.7 },
-      { key: 'ROTATION_SPEED', label: 'Rotation Speed', type: 'slider', min: 0, max: 1, step: 0.05, default: 0.3 },
+      { key: 'ROTATION_SPEED', label: 'Rotation Speed', type: 'slider', min: 0, max: 3, step: 0.05, default: 0.3 },
       { key: 'LINE_WIDTH', label: 'Line Width', type: 'slider', min: 0.3, max: 2, step: 0.1, default: 0.8 },
       { key: 'USE_COLOR', label: 'Color Mode', type: 'checkbox', default: false }
     ]
@@ -140,7 +140,7 @@ export const LUMINODE_CONFIGS = {
       { key: 'SIZE', label: 'Size', type: 'slider', min: 50, max: 300, step: 10, default: 150 },
       { key: 'SEGMENTS', label: 'Segments', type: 'number', min: 2, max: 10, step: 1, default: 5 },
       { key: 'SCALE', label: 'Scale', type: 'slider', min: 0.5, max: 2, step: 0.1, default: 1.0 },
-      { key: 'ROTATION_SPEED', label: 'Rotation Speed', type: 'slider', min: 0, max: 1, step: 0.05, default: 0.3 },
+      { key: 'ROTATION_SPEED', label: 'Rotation Speed', type: 'slider', min: 0, max: 3, step: 0.05, default: 0.3 },
       { key: 'LINE_WIDTH', label: 'Line Width', type: 'slider', min: 0.3, max: 2, step: 0.1, default: 0.8 },
       { key: 'USE_COLOR', label: 'Color Mode', type: 'checkbox', default: false }
     ]
@@ -154,7 +154,7 @@ export const LUMINODE_CONFIGS = {
       { key: 'SCALE', label: 'Scale', type: 'slider', min: 20, max: 120, step: 5, default: 95 },
       { key: 'SCALE_VARIATION', label: 'Scale Variation', type: 'slider', min: 0, max: 0.5, step: 0.05, default: 0.5 },
       { key: 'SEGMENTS', label: 'Segments', type: 'number', min: 50, max: 300, step: 10, default: 150 },
-      { key: 'ROTATION_SPEED', label: 'Rotation Speed', type: 'slider', min: 0, max: 1, step: 0.05, default: 0.3 },
+      { key: 'ROTATION_SPEED', label: 'Rotation Speed', type: 'slider', min: 0, max: 3, step: 0.05, default: 0.3 },
       { key: 'LINE_WIDTH', label: 'Line Width', type: 'slider', min: 0.3, max: 2, step: 0.1, default: 0.8 },
       { key: 'USE_COLOR', label: 'Color Mode', type: 'checkbox', default: true }
     ]
