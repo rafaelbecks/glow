@@ -28,7 +28,12 @@ export class ProjectManager {
         noiseOpacity: SETTINGS.CANVAS.NOISE_OPACITY,
         noiseDensity: SETTINGS.CANVAS.NOISE_DENSITY,
         noiseWidth: SETTINGS.CANVAS.NOISE_WIDTH,
-        noiseHeight: SETTINGS.CANVAS.NOISE_HEIGHT
+        noiseHeight: SETTINGS.CANVAS.NOISE_HEIGHT,
+        ditherOverlay: SETTINGS.CANVAS.DITHER_OVERLAY,
+        ditherSaturate: SETTINGS.CANVAS.DITHER_SATURATE,
+        ditherTableValuesR: SETTINGS.CANVAS.DITHER_TABLE_VALUES_R,
+        ditherTableValuesG: SETTINGS.CANVAS.DITHER_TABLE_VALUES_G,
+        ditherTableValuesB: SETTINGS.CANVAS.DITHER_TABLE_VALUES_B
       },
       colors: {
         sotoPalette: [...SETTINGS.COLORS.SOTO_PALETTE],
@@ -320,6 +325,32 @@ export class ProjectManager {
     if (canvasData.noiseHeight !== undefined) {
       SETTINGS.CANVAS.NOISE_HEIGHT = canvasData.noiseHeight
       this.glowVisualizer.updateNoiseOptions({ grainHeight: canvasData.noiseHeight })
+    }
+
+    // Dither overlay settings
+    if (canvasData.ditherOverlay !== undefined) {
+      SETTINGS.CANVAS.DITHER_OVERLAY = canvasData.ditherOverlay
+      this.glowVisualizer.toggleDitherOverlay(canvasData.ditherOverlay)
+    }
+
+    if (canvasData.ditherSaturate !== undefined) {
+      SETTINGS.CANVAS.DITHER_SATURATE = canvasData.ditherSaturate
+      this.glowVisualizer.updateDitherSaturate(canvasData.ditherSaturate)
+    }
+
+    if (canvasData.ditherTableValuesR !== undefined) {
+      SETTINGS.CANVAS.DITHER_TABLE_VALUES_R = canvasData.ditherTableValuesR
+      this.glowVisualizer.updateDitherTableValues('R', canvasData.ditherTableValuesR)
+    }
+
+    if (canvasData.ditherTableValuesG !== undefined) {
+      SETTINGS.CANVAS.DITHER_TABLE_VALUES_G = canvasData.ditherTableValuesG
+      this.glowVisualizer.updateDitherTableValues('G', canvasData.ditherTableValuesG)
+    }
+
+    if (canvasData.ditherTableValuesB !== undefined) {
+      SETTINGS.CANVAS.DITHER_TABLE_VALUES_B = canvasData.ditherTableValuesB
+      this.glowVisualizer.updateDitherTableValues('B', canvasData.ditherTableValuesB)
     }
   }
 

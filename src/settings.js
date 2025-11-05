@@ -18,7 +18,12 @@ export const SETTINGS = {
     NOISE_OPACITY: 0.05,
     NOISE_DENSITY: 1,
     NOISE_WIDTH: 1,
-    NOISE_HEIGHT: 1
+    NOISE_HEIGHT: 1,
+    DITHER_OVERLAY: false,
+    DITHER_SATURATE: 1,
+    DITHER_TABLE_VALUES_R: '0 1',
+    DITHER_TABLE_VALUES_G: '0 1',
+    DITHER_TABLE_VALUES_B: '0 1'
   },
 
   // MIDI settings

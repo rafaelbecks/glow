@@ -299,6 +299,85 @@ export class CanvasUIManager {
               </div>
             </div>
           </div>
+          
+          <div class="tablet-config-group">
+            <label>
+              <ion-icon name="grid-outline"></ion-icon>
+              Dither Overlay
+            </label>
+            <label class="checkbox-container">
+              <input type="checkbox" 
+                     id="ditherOverlay" 
+                     ${canvasSettings.DITHER_OVERLAY ? 'checked' : ''}
+                     class="config-checkbox">
+              <span class="checkmark"></span>
+              Enable Dither Effect
+            </label>
+            <div class="setting-description">
+              Adds ordered dithering overlay on top of the canvas for retro aesthetic
+            </div>
+          </div>
+          
+          <div class="tablet-config-group" id="ditherSettingsGroup" style="${canvasSettings.DITHER_OVERLAY ? 'display: block;' : 'display: none;'}">
+            <div class="dither-controls">
+              <div class="dither-control-row">
+                <div class="dither-control">
+                  <label for="ditherSaturate">Saturation</label>
+                  <div class="slider-container">
+                    <input type="range" 
+                           id="ditherSaturate" 
+                           class="config-slider"
+                           min="0" 
+                           max="1" 
+                           step="0.1" 
+                           value="${canvasSettings.DITHER_SATURATE || 1}">
+                    <span class="slider-value">${canvasSettings.DITHER_SATURATE || 1}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="dither-control-row">
+                <div class="dither-control">
+                  <label for="ditherTableValuesR">Red Table Values</label>
+                  <div class="slider-container">
+                    <input type="range" 
+                           id="ditherTableValuesR" 
+                           class="config-slider"
+                           min="0" 
+                           max="1" 
+                           step="0.1" 
+                           value="${this.parseTableValuesToSlider(canvasSettings.DITHER_TABLE_VALUES_R || '0 1')}">
+                    <span class="slider-value">${this.parseTableValuesToSlider(canvasSettings.DITHER_TABLE_VALUES_R || '0 1')}</span>
+                  </div>
+                </div>
+                <div class="dither-control">
+                  <label for="ditherTableValuesG">Green Table Values</label>
+                  <div class="slider-container">
+                    <input type="range" 
+                           id="ditherTableValuesG" 
+                           class="config-slider"
+                           min="0" 
+                           max="1" 
+                           step="0.1" 
+                           value="${this.parseTableValuesToSlider(canvasSettings.DITHER_TABLE_VALUES_G || '0 1')}">
+                    <span class="slider-value">${this.parseTableValuesToSlider(canvasSettings.DITHER_TABLE_VALUES_G || '0 1')}</span>
+                  </div>
+                </div>
+                <div class="dither-control">
+                  <label for="ditherTableValuesB">Blue Table Values</label>
+                  <div class="slider-container">
+                    <input type="range" 
+                           id="ditherTableValuesB" 
+                           class="config-slider"
+                           min="0" 
+                           max="1" 
+                           step="0.1" 
+                           value="${this.parseTableValuesToSlider(canvasSettings.DITHER_TABLE_VALUES_B || '0 1')}">
+                    <span class="slider-value">${this.parseTableValuesToSlider(canvasSettings.DITHER_TABLE_VALUES_B || '0 1')}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Color Palettes -->
@@ -608,8 +687,97 @@ export class CanvasUIManager {
       })
     }
 
+    // Dither overlay checkbox
+    const ditherOverlayCheckbox = container.querySelector('#ditherOverlay')
+    if (ditherOverlayCheckbox) {
+      ditherOverlayCheckbox.addEventListener('change', (e) => {
+        const isEnabled = e.target.checked
+        this.triggerCanvasSettingChange('DITHER_OVERLAY', isEnabled)
+
+        // Show/hide dither settings based on enabled state
+        const ditherSettingsGroup = container.querySelector('#ditherSettingsGroup')
+        if (ditherSettingsGroup) {
+          ditherSettingsGroup.style.display = isEnabled ? 'block' : 'none'
+        }
+      })
+    }
+
+    // Dither saturation slider
+    const ditherSaturateSlider = container.querySelector('#ditherSaturate')
+    if (ditherSaturateSlider) {
+      ditherSaturateSlider.addEventListener('input', (e) => {
+        const value = parseFloat(e.target.value)
+        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
+        if (valueDisplay) {
+          valueDisplay.textContent = value
+        }
+        this.triggerCanvasSettingChange('DITHER_SATURATE', value)
+      })
+    }
+
+    // Dither table values sliders (R, G, B)
+    const ditherTableValuesR = container.querySelector('#ditherTableValuesR')
+    if (ditherTableValuesR) {
+      ditherTableValuesR.addEventListener('input', (e) => {
+        const value = parseFloat(e.target.value)
+        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
+        if (valueDisplay) {
+          valueDisplay.textContent = value
+        }
+        // Convert slider value (0-1) to table values format "0 1" or "1 0"
+        const tableValues = this.sliderToTableValues(value)
+        this.triggerCanvasSettingChange('DITHER_TABLE_VALUES_R', tableValues)
+      })
+    }
+
+    const ditherTableValuesG = container.querySelector('#ditherTableValuesG')
+    if (ditherTableValuesG) {
+      ditherTableValuesG.addEventListener('input', (e) => {
+        const value = parseFloat(e.target.value)
+        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
+        if (valueDisplay) {
+          valueDisplay.textContent = value
+        }
+        const tableValues = this.sliderToTableValues(value)
+        this.triggerCanvasSettingChange('DITHER_TABLE_VALUES_G', tableValues)
+      })
+    }
+
+    const ditherTableValuesB = container.querySelector('#ditherTableValuesB')
+    if (ditherTableValuesB) {
+      ditherTableValuesB.addEventListener('input', (e) => {
+        const value = parseFloat(e.target.value)
+        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
+        if (valueDisplay) {
+          valueDisplay.textContent = value
+        }
+        const tableValues = this.sliderToTableValues(value)
+        this.triggerCanvasSettingChange('DITHER_TABLE_VALUES_B', tableValues)
+      })
+    }
+
     // Initialize pitch color example
     this.updatePitchColorExample(30)
+  }
+
+  // Helper to parse table values string to slider value (0-1)
+  // "0 1" -> 0, "1 0" -> 1, "0.5 0.5" -> 0.5, etc.
+  parseTableValuesToSlider (tableValues) {
+    if (!tableValues) return 0
+    const values = tableValues.split(' ').map(v => parseFloat(v.trim())).filter(v => !isNaN(v))
+    if (values.length === 0) return 0
+    // Return the first value (0 means "0 1", 1 means "1 0", 0.5 means "0.5 0.5", etc.)
+    return values[0]
+  }
+
+  // Helper to convert slider value (0-1) to table values format
+  // 0 -> "0 1", 1 -> "1 0", 0.5 -> "0.5 0.5", etc.
+  sliderToTableValues (sliderValue) {
+    const value = Math.max(0, Math.min(1, sliderValue))
+    // For discrete dithering, we want "0 1" or "1 0" format
+    // But we can also support intermediate values like "0.3 0.7"
+    // For now, let's use the slider value as the first value, and 1-value as the second
+    return `${value} ${1 - value}`
   }
 
   // Update pitch color example display

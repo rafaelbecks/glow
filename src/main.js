@@ -69,6 +69,10 @@ export class GLOWVisualizer {
       grainHeight: 1
     }
 
+    // Dither overlay element
+    this.ditherOverlay = null
+    this.ditherModeEnabled = false
+
     // Initialize luminode factory
     this.luminodeFactory = {
       lissajous: LissajousLuminode,
@@ -117,6 +121,9 @@ export class GLOWVisualizer {
 
     // Create noise overlay
     this.createNoiseOverlay()
+
+    // Create dither overlay
+    this.createDitherOverlay()
 
     this.uiManager.showStatus('Connecting to MIDI devices...', 'info')
 
@@ -458,6 +465,16 @@ export class GLOWVisualizer {
         this.updateNoiseOptions({ grainWidth: value })
       } else if (setting === 'NOISE_HEIGHT') {
         this.updateNoiseOptions({ grainHeight: value })
+      } else if (setting === 'DITHER_OVERLAY') {
+        this.toggleDitherOverlay(value)
+      } else if (setting === 'DITHER_SATURATE') {
+        this.updateDitherSaturate(value)
+      } else if (setting === 'DITHER_TABLE_VALUES_R') {
+        this.updateDitherTableValues('R', value)
+      } else if (setting === 'DITHER_TABLE_VALUES_G') {
+        this.updateDitherTableValues('G', value)
+      } else if (setting === 'DITHER_TABLE_VALUES_B') {
+        this.updateDitherTableValues('B', value)
       }
     }
   }
@@ -532,6 +549,11 @@ export class GLOWVisualizer {
 
     // Draw all luminodes
     this.drawLuminodes(t, activeNotes)
+
+    // Update dither overlay if enabled
+    if (this.ditherModeEnabled && this.ditherCanvas && this.ditherCtx) {
+      this.updateDitherOverlay()
+    }
 
     // Update side panel activity indicators
     this.sidePanel.updateActivityIndicators(activeNotes)
@@ -898,6 +920,129 @@ export class GLOWVisualizer {
     }
 
     console.log('Noise overlay options updated:', this.noiseOptions)
+  }
+
+  // Create dither overlay element
+  createDitherOverlay () {
+    this.ditherOverlay = document.getElementById('ditherOverlay')
+    if (!this.ditherOverlay) {
+      console.error('Dither overlay element not found')
+      return
+    }
+
+    // Create a canvas inside the overlay to copy the main canvas content
+    this.ditherCanvas = document.createElement('canvas')
+    this.ditherCanvas.width = window.innerWidth
+    this.ditherCanvas.height = window.innerHeight
+    this.ditherCanvas.style.width = '100%'
+    this.ditherCanvas.style.height = '100%'
+    this.ditherCanvas.style.display = 'block'
+    this.ditherOverlay.appendChild(this.ditherCanvas)
+    this.ditherCtx = this.ditherCanvas.getContext('2d')
+
+    // Set up dither image size based on device pixel ratio
+    this.updateDitherImageSize()
+    window.addEventListener('resize', () => {
+      this.updateDitherImageSize()
+      if (this.ditherCanvas) {
+        this.ditherCanvas.width = window.innerWidth
+        this.ditherCanvas.height = window.innerHeight
+      }
+    })
+  }
+
+  // Update dither image size based on device pixel ratio
+  updateDitherImageSize () {
+    const ditherImages = document.querySelectorAll('.ditherImage')
+    if (!ditherImages.length) return
+
+    const size = 8 / window.devicePixelRatio
+    Array.from(ditherImages).forEach(img => {
+      img.setAttribute('width', size)
+      img.setAttribute('height', size)
+    })
+  }
+
+  // Toggle dither overlay mode
+  toggleDitherOverlay (enabled) {
+    this.ditherModeEnabled = enabled
+
+    if (this.ditherOverlay) {
+      if (enabled) {
+        this.ditherOverlay.style.display = 'block'
+      } else {
+        this.ditherOverlay.style.display = 'none'
+      }
+    }
+
+    console.log(`Dither overlay ${enabled ? 'enabled' : 'disabled'}`)
+  }
+
+  // Update dither overlay by copying canvas content
+  updateDitherOverlay () {
+    if (!this.ditherCanvas || !this.ditherCtx || !this.canvas) return
+
+    // Clear the dither canvas
+    this.ditherCtx.clearRect(0, 0, this.ditherCanvas.width, this.ditherCanvas.height)
+
+    // Check if lumia effect (blur) is enabled
+    const lumiaBlur = SETTINGS.CANVAS.LUMIA_EFFECT || 0
+
+    if (lumiaBlur > 0) {
+      // Apply blur to the dither canvas context before drawing
+      // This will blur the content, then the SVG dither filter will be applied on top
+      this.ditherCtx.filter = `blur(${lumiaBlur}px)`
+    } else {
+      this.ditherCtx.filter = 'none'
+    }
+
+    // Copy the main canvas to the dither canvas
+    // If blur is enabled, the content will be blurred before dithering
+    this.ditherCtx.drawImage(this.canvas, 0, 0, this.ditherCanvas.width, this.ditherCanvas.height)
+
+    // Reset filter for next frame
+    this.ditherCtx.filter = 'none'
+  }
+
+  // Update dither saturation value
+  updateDitherSaturate (value) {
+    const filter = document.getElementById('ditherFilter')
+    if (!filter) return
+
+    const colorMatrix = filter.querySelector('feColorMatrix[type="saturate"]')
+    if (colorMatrix) {
+      colorMatrix.setAttribute('values', value)
+      console.log(`Dither saturation updated to ${value}`)
+    }
+  }
+
+  // Update dither table values for a specific RGB channel
+  updateDitherTableValues (channel, tableValues) {
+    const filter = document.getElementById('ditherFilter')
+    if (!filter) return
+
+    // Parse table values (e.g., "0 1" or "1 0")
+    const values = tableValues.split(' ').map(v => v.trim()).filter(v => v)
+    if (values.length === 0) return
+
+    const tableValueString = values.join(' ')
+    const componentTransfer = filter.querySelector('feComponentTransfer')
+    if (!componentTransfer) return
+
+    // Update the specific channel
+    let funcElement = null
+    if (channel === 'R') {
+      funcElement = componentTransfer.querySelector('feFuncR')
+    } else if (channel === 'G') {
+      funcElement = componentTransfer.querySelector('feFuncG')
+    } else if (channel === 'B') {
+      funcElement = componentTransfer.querySelector('feFuncB')
+    }
+
+    if (funcElement) {
+      funcElement.setAttribute('tableValues', tableValueString)
+      console.log(`Dither ${channel} channel table values updated to ${tableValueString}`)
+    }
   }
 
   // Debug method to check MIDI devices

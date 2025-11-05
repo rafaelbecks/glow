@@ -39,6 +39,27 @@ canvas {
     display: none; /* Initially hidden */
 }
 
+#ditherOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 4; /* Above noise overlay */
+    pointer-events: none; /* Let events pass through */
+    display: none; /* Initially hidden */
+    background: transparent;
+}
+
+#ditherOverlay canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    filter: url(#ditherFilter);
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+}
+
 /* Custom cursor for pointer elements */
 button, 
 .controls button,
