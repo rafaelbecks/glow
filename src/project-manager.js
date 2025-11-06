@@ -201,15 +201,21 @@ export class ProjectManager {
     const content = this.generateProjectFile(projectName)
     const blob = new Blob([content], { type: 'application/json' })
 
-      const fileHandle = await window.showSaveFilePicker({
-        suggestedName: `${projectName}.glow`,
-        types: [{
-          description: 'Glow Project Files',
-          accept: {
-            'application/json': ['.glow']
-          }
-        }]
-      })
+      document.body.classList.add('loading')
+      let fileHandle
+      try {
+        fileHandle = await window.showSaveFilePicker({
+          suggestedName: `${projectName}.glow`,
+          types: [{
+            description: 'Glow Project Files',
+            accept: {
+              'application/json': ['.glow']
+            }
+          }]
+        })
+      } finally {
+        document.body.classList.remove('loading')
+      }
 
       const writable = await fileHandle.createWritable()
       await writable.write(blob)
@@ -224,6 +230,7 @@ export class ProjectManager {
 
       return { success: true, fileHandle, projectName }
     } catch (error) {
+      document.body.classList.remove('loading')
       if (error.name === 'AbortError') {
         return { success: false, cancelled: true }
       }
@@ -277,16 +284,21 @@ export class ProjectManager {
       let handle = fileHandle
 
       if (!handle) {
-        const [selectedHandle] = await window.showOpenFilePicker({
-          types: [{
-            description: 'Glow Project Files',
-            accept: {
-              'application/json': ['.glow']
-            }
-          }],
-          multiple: false
-        })
-        handle = selectedHandle
+        document.body.classList.add('loading')
+        try {
+          const [selectedHandle] = await window.showOpenFilePicker({
+            types: [{
+              description: 'Glow Project Files',
+              accept: {
+                'application/json': ['.glow']
+              }
+            }],
+            multiple: false
+          })
+          handle = selectedHandle
+        } finally {
+          document.body.classList.remove('loading')
+        }
       }
 
       const file = await handle.getFile()
@@ -295,6 +307,7 @@ export class ProjectManager {
 
       return await this.openProjectWithData(handle, projectData, file)
     } catch (error) {
+      document.body.classList.remove('loading')
       if (error.name === 'AbortError') {
         return { cancelled: true }
       }

@@ -82,6 +82,14 @@ select,
     cursor: url('../../assets/cursor.svg') 4 4, auto !important;
 }
 
+body.loading {
+    cursor: wait !important;
+}
+
+body.loading * {
+    cursor: wait !important;
+}
+
 /* Icon styles */
 ion-icon {
     font-size: 20px;

@@ -82,15 +82,22 @@ export class FilePickerDialog {
         return
       }
 
-      const [fileHandle] = await window.showOpenFilePicker({
-        types: [{
-          description: 'Glow Project Files',
-          accept: {
-            'application/json': ['.glow']
-          }
-        }],
-        multiple: false
-      })
+      document.body.classList.add('loading')
+      let fileHandle
+      try {
+        const [selectedHandle] = await window.showOpenFilePicker({
+          types: [{
+            description: 'Glow Project Files',
+            accept: {
+              'application/json': ['.glow']
+            }
+          }],
+          multiple: false
+        })
+        fileHandle = selectedHandle
+      } finally {
+        document.body.classList.remove('loading')
+      }
 
       const file = await fileHandle.getFile()
       const content = await file.text()
@@ -103,6 +110,7 @@ export class FilePickerDialog {
       })
       this.hide()
     } catch (error) {
+      document.body.classList.remove('loading')
       if (error.name === 'AbortError') {
         return
       }

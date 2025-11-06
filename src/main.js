@@ -173,7 +173,6 @@ export class GLOWVisualizer {
     this.sidePanel.on('colorPaletteChange', (data) => this.updateColorPalette(data))
     this.sidePanel.on('pitchColorFactorChange', (data) => this.updatePitchColorFactor(data))
 
-    this.setupProjectNameEditing()
   }
 
   setupSaveDialog () {
@@ -194,25 +193,6 @@ export class GLOWVisualizer {
     }
   }
 
-  setupProjectNameEditing () {
-    const projectNameText = document.getElementById('projectNameText')
-    if (projectNameText) {
-      // Handle Enter key press
-      projectNameText.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault()
-          projectNameText.blur()
-        }
-      })
-
-      // Handle blur event (when focus is lost)
-      projectNameText.addEventListener('blur', () => {
-        const newName = projectNameText.value.trim() || 'Untitled Project'
-        projectNameText.value = newName
-        this.handleProjectNameChange(newName)
-      })
-    }
-  }
 
   async start () {
     try {
@@ -298,6 +278,8 @@ export class GLOWVisualizer {
       if (this.projectManager.hasOpenFile()) {
         const result = await this.projectManager.saveExistingProject()
         if (result.success) {
+          this.projectManager.savedState = this.projectManager.getCurrentState()
+          this.projectManager.hasUnsavedChanges = false
           this.updateProjectName(this.projectManager.getCurrentProjectName())
           this.updateUnsavedChangesIndicator()
           this.uiManager.showStatus('Project saved successfully!', 'success')
@@ -321,11 +303,12 @@ export class GLOWVisualizer {
     try {
       const result = await this.projectManager.saveNewProject(projectName)
       if (result.success) {
+        this.projectManager.savedState = this.projectManager.getCurrentState()
+        this.projectManager.hasUnsavedChanges = false
         this.updateProjectName(result.projectName)
         this.updateUnsavedChangesIndicator()
         this.uiManager.showStatus(`Project "${result.projectName}" saved successfully!`, 'success')
       } else if (result.cancelled) {
-        // User cancelled, do nothing
       }
     } catch (error) {
       console.error('Error saving project:', error)
@@ -413,12 +396,12 @@ export class GLOWVisualizer {
     const currentName = this.projectManager.getCurrentProjectName()
     
     if (hasUnsaved) {
-      if (!projectNameText.value.endsWith(' *')) {
-        projectNameText.value = currentName + ' *'
+      if (!projectNameText.textContent.endsWith(' *')) {
+        projectNameText.textContent = currentName + ' *'
       }
     } else {
-      if (projectNameText.value.endsWith(' *')) {
-        projectNameText.value = currentName
+      if (projectNameText.textContent.endsWith(' *')) {
+        projectNameText.textContent = currentName
       }
     }
   }
@@ -1156,26 +1139,10 @@ export class GLOWVisualizer {
   updateProjectName (name) {
     const projectNameText = document.getElementById('projectNameText')
     if (projectNameText) {
-      projectNameText.value = name || 'Untitled Project'
+      projectNameText.textContent = name || 'Untitled Project'
     }
   }
 
-  async handleProjectNameChange (newName) {
-    this.projectManager.setCurrentProjectName(newName)
-    this.updateUnsavedChangesIndicator()
-    
-    if (this.projectManager.hasOpenFile()) {
-      try {
-        const result = await this.projectManager.saveExistingProject()
-        if (result.success) {
-          this.updateUnsavedChangesIndicator()
-          this.uiManager.showStatus(`Project "${newName}" saved automatically!`, 'success')
-        }
-      } catch (error) {
-        console.error('Error auto-saving project:', error)
-      }
-    }
-  }
 
   clearCurrentState () {
     this.trackLuminodes.clear()
