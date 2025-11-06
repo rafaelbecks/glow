@@ -401,3 +401,47 @@
     padding: 20px;
     border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
+
+.recent-projects-list {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.recent-projects-empty {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 12px;
+    margin: 10px 0;
+    text-align: center;
+}
+
+.recent-projects-items {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+}
+
+.recent-project-item {
+    padding: 8px 12px;
+    margin: 4px 0;
+    cursor: pointer;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.05);
+    transition: background-color 0.2s;
+}
+
+.recent-project-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.recent-project-item-name {
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.recent-project-item-path {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.6);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

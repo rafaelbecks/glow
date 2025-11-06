@@ -1,12 +1,14 @@
-// Project management system for saving and loading Glow projects
 import { SETTINGS, UTILS } from './settings.js'
 
 export class ProjectManager {
   constructor (glowVisualizer) {
     this.glowVisualizer = glowVisualizer
+    this.currentFileHandle = null
+    this.currentProjectName = 'Untitled Project'
+    this.savedState = null
+    this.hasUnsavedChanges = false
   }
 
-  // Collect all current application state into a project object
   collectProjectState () {
     const state = {
       version: '1.0.0',
@@ -51,12 +53,10 @@ export class ProjectManager {
     return state
   }
 
-  // Collect only luminode module settings for active tracks
   collectModuleSettings () {
     const modules = {}
     const tracks = this.glowVisualizer.trackManager.getTracks()
 
-    // Only collect settings for luminodes that are actually assigned to tracks
     tracks.forEach(track => {
       if (track.luminode && SETTINGS.MODULES[track.luminode.toUpperCase()]) {
         const moduleKey = track.luminode.toUpperCase()
@@ -67,7 +67,6 @@ export class ProjectManager {
     return modules
   }
 
-  // Collect track configuration
   collectTrackSettings () {
     const tracks = this.glowVisualizer.trackManager.getTracks()
     const availableDevices = this.glowVisualizer.trackManager.getAvailableMidiDevices()
@@ -84,7 +83,6 @@ export class ProjectManager {
           layout: { ...track.layout }
         }
 
-        // Add MIDI device info if assigned
         if (track.midiDevice) {
           const device = availableDevices.find(d => d.id === track.midiDevice)
           if (device) {
@@ -101,7 +99,6 @@ export class ProjectManager {
     }
   }
 
-  // Collect trajectory settings for all tracks
   collectTrajectorySettings () {
     const tracks = this.glowVisualizer.trackManager.getTracks()
     const trajectories = {}
@@ -116,7 +113,6 @@ export class ProjectManager {
     return trajectories
   }
 
-  // Collect modulation settings
   collectModulationSettings () {
     const modulationSystem = this.glowVisualizer.trackManager.getModulationSystem()
     const modulators = modulationSystem.getModulators()
@@ -136,7 +132,6 @@ export class ProjectManager {
     }
   }
 
-  // Collect tablet settings
   collectTabletSettings () {
     const tabletManager = this.glowVisualizer.tabletManager
 
@@ -154,7 +149,6 @@ export class ProjectManager {
     }
   }
 
-  // Collect MIDI settings
   collectMidiSettings () {
     const midiManager = this.glowVisualizer.midiManager
 
@@ -165,29 +159,241 @@ export class ProjectManager {
     }
   }
 
-  // Generate project file content as JSON string
   generateProjectFile (projectName) {
     const state = this.collectProjectState()
     state.name = projectName
     return JSON.stringify(state, null, 2)
   }
 
-  // Download project file
-  downloadProject (projectName) {
-    const content = this.generateProjectFile(projectName)
-    const blob = new Blob([content], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `${projectName}.glow`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
+  getCurrentState () {
+    return this.collectProjectState()
   }
 
-  // Validate project file structure
+  checkForUnsavedChanges () {
+    if (!this.savedState) {
+      return this.currentFileHandle !== null
+    }
+
+    const currentState = this.getCurrentState()
+    const savedStateCopy = { ...this.savedState }
+    const currentStateCopy = { ...currentState }
+    
+    delete savedStateCopy.timestamp
+    delete currentStateCopy.timestamp
+    
+    const currentStateStr = JSON.stringify(currentStateCopy)
+    const savedStateStr = JSON.stringify(savedStateCopy)
+    
+    return currentStateStr !== savedStateStr
+  }
+
+  updateUnsavedChangesFlag () {
+    this.hasUnsavedChanges = this.checkForUnsavedChanges()
+    return this.hasUnsavedChanges
+  }
+
+  async saveNewProject (projectName) {
+    try {
+      if (!('showSaveFilePicker' in window)) {
+        throw new Error('File System Access API is not supported in this browser')
+      }
+
+    const content = this.generateProjectFile(projectName)
+    const blob = new Blob([content], { type: 'application/json' })
+
+      const fileHandle = await window.showSaveFilePicker({
+        suggestedName: `${projectName}.glow`,
+        types: [{
+          description: 'Glow Project Files',
+          accept: {
+            'application/json': ['.glow']
+          }
+        }]
+      })
+
+      const writable = await fileHandle.createWritable()
+      await writable.write(blob)
+      await writable.close()
+
+      this.currentFileHandle = fileHandle
+      this.currentProjectName = projectName
+      this.savedState = this.getCurrentState()
+      this.hasUnsavedChanges = false
+
+      this.addToRecentProjects(fileHandle, projectName)
+
+      return { success: true, fileHandle, projectName }
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        return { success: false, cancelled: true }
+      }
+      throw error
+    }
+  }
+
+  async saveExistingProject () {
+    if (!this.currentFileHandle) {
+      return this.saveNewProject(this.currentProjectName)
+    }
+
+    try {
+      const content = this.generateProjectFile(this.currentProjectName)
+      const blob = new Blob([content], { type: 'application/json' })
+
+      const writable = await this.currentFileHandle.createWritable()
+      await writable.write(blob)
+      await writable.close()
+
+      this.savedState = this.getCurrentState()
+      this.hasUnsavedChanges = false
+
+      this.addToRecentProjects(this.currentFileHandle, this.currentProjectName)
+
+      return { success: true }
+    } catch (error) {
+      if (error.name === 'PermissionDeniedError') {
+        return this.saveNewProject(this.currentProjectName)
+      }
+      throw error
+    }
+  }
+
+  async saveProject (projectName = null) {
+    if (projectName && !this.currentFileHandle) {
+      return this.saveNewProject(projectName)
+    } else if (this.currentFileHandle) {
+      return this.saveExistingProject()
+    } else {
+      throw new Error('No file handle and no project name provided')
+    }
+  }
+
+  async openProject (fileHandle = null) {
+    try {
+      if (!('showOpenFilePicker' in window)) {
+        throw new Error('File System Access API is not supported in this browser')
+      }
+
+      let handle = fileHandle
+
+      if (!handle) {
+        const [selectedHandle] = await window.showOpenFilePicker({
+          types: [{
+            description: 'Glow Project Files',
+            accept: {
+              'application/json': ['.glow']
+            }
+          }],
+          multiple: false
+        })
+        handle = selectedHandle
+      }
+
+      const file = await handle.getFile()
+      const content = await file.text()
+      const projectData = JSON.parse(content)
+
+      return await this.openProjectWithData(handle, projectData, file)
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        return { cancelled: true }
+      }
+      throw error
+    }
+  }
+
+  async openProjectWithData (fileHandle, projectData, file) {
+    try {
+      this.validateProjectFile(projectData)
+      
+      this.currentFileHandle = fileHandle
+      this.currentProjectName = projectData.name || file.name.replace('.glow', '')
+
+      const loadSuccess = await this.loadProjectState(projectData)
+      
+      if (!loadSuccess) {
+        this.currentFileHandle = null
+        this.currentProjectName = 'Untitled Project'
+        throw new Error('Failed to load project state')
+      }
+
+      this.savedState = this.getCurrentState()
+      this.hasUnsavedChanges = false
+
+      this.addToRecentProjects(fileHandle, this.currentProjectName)
+
+      return { success: true, file, projectData, fileHandle }
+    } catch (error) {
+      this.currentFileHandle = null
+      this.currentProjectName = 'Untitled Project'
+      throw error
+    }
+  }
+
+  getRecentProjects () {
+    try {
+      const recent = localStorage.getItem('glow_recent_projects')
+      if (!recent) return []
+      return JSON.parse(recent)
+    } catch (error) {
+      console.error('Error reading recent projects:', error)
+      return []
+    }
+  }
+
+  async addToRecentProjects (fileHandle, projectName) {
+    try {
+      const file = await fileHandle.getFile()
+      const fileName = file.name
+      
+      const recentProjects = this.getRecentProjects()
+      
+      const existingIndex = recentProjects.findIndex(p => p.fileName === fileName)
+      if (existingIndex !== -1) {
+        recentProjects.splice(existingIndex, 1)
+      }
+
+      const projectInfo = {
+        fileName,
+        projectName,
+        lastOpened: Date.now()
+      }
+
+      recentProjects.unshift(projectInfo)
+
+      const maxRecent = 5
+      if (recentProjects.length > maxRecent) {
+        recentProjects.splice(maxRecent)
+      }
+
+      localStorage.setItem('glow_recent_projects', JSON.stringify(recentProjects))
+    } catch (error) {
+      console.error('Error saving recent projects:', error)
+    }
+  }
+
+  clearProject () {
+    this.currentFileHandle = null
+    this.currentProjectName = 'Untitled Project'
+    this.savedState = null
+    this.hasUnsavedChanges = false
+  }
+
+  getCurrentProjectName () {
+    return this.currentProjectName
+  }
+
+  setCurrentProjectName (name) {
+    this.currentProjectName = name
+    if (this.currentFileHandle) {
+      this.updateUnsavedChangesFlag()
+    }
+  }
+
+  hasOpenFile () {
+    return this.currentFileHandle !== null
+  }
+
   validateProjectFile (projectData) {
     const requiredFields = ['version', 'canvas', 'colors', 'modules', 'tracks', 'tablet', 'midi']
 
@@ -228,7 +434,6 @@ export class ProjectManager {
       // Load MIDI settings
       await this.loadMidiSettings(projectData.midi)
 
-      // Trigger UI updates
       this.glowVisualizer.sidePanel.renderTracks()
       this.glowVisualizer.sidePanel.modulationUIManager.renderModulationControls()
 
@@ -240,11 +445,9 @@ export class ProjectManager {
     }
   }
 
-  // Load canvas settings
   loadCanvasSettings (canvasData) {
     if (!canvasData) return
 
-    // Update SETTINGS object
     if (canvasData.clearAlpha !== undefined) {
       SETTINGS.CANVAS.CLEAR_ALPHA = canvasData.clearAlpha
       this.glowVisualizer.canvasDrawer.setClearAlpha(canvasData.clearAlpha)
@@ -286,7 +489,6 @@ export class ProjectManager {
       SETTINGS.CANVAS.GRID_COLOR = canvasData.gridColor
     }
 
-    // Noise overlay settings
     if (canvasData.noiseOverlay !== undefined) {
       SETTINGS.CANVAS.NOISE_OVERLAY = canvasData.noiseOverlay
       this.glowVisualizer.toggleNoiseOverlay(canvasData.noiseOverlay)
@@ -327,7 +529,6 @@ export class ProjectManager {
       this.glowVisualizer.updateNoiseOptions({ grainHeight: canvasData.noiseHeight })
     }
 
-    // Dither overlay settings
     if (canvasData.ditherOverlay !== undefined) {
       SETTINGS.CANVAS.DITHER_OVERLAY = canvasData.ditherOverlay
       this.glowVisualizer.toggleDitherOverlay(canvasData.ditherOverlay)
@@ -354,7 +555,6 @@ export class ProjectManager {
     }
   }
 
-  // Load color settings
   loadColorSettings (colorData) {
     if (!colorData) return
 
@@ -371,7 +571,6 @@ export class ProjectManager {
     }
   }
 
-  // Load module settings
   loadModuleSettings (moduleData) {
     if (!moduleData) return
 
@@ -382,41 +581,33 @@ export class ProjectManager {
     })
   }
 
-  // Load track settings
   async loadTrackSettings (trackData) {
     if (!trackData || !trackData.tracks) return
 
     const tracks = this.glowVisualizer.trackManager.getTracks()
     const availableDevices = this.glowVisualizer.trackManager.getAvailableMidiDevices()
 
-    // Clear existing track luminodes
     this.glowVisualizer.trackLuminodes.clear()
 
     trackData.tracks.forEach((trackConfig, index) => {
       if (index < tracks.length) {
         const track = tracks[index]
 
-        // Update track properties
         track.name = trackConfig.name || track.name
         track.muted = trackConfig.muted || false
         track.solo = trackConfig.solo || false
         track.layout = { ...track.layout, ...(trackConfig.layout || {}) }
 
-        // Handle luminode assignment
         if (trackConfig.luminode) {
           track.luminode = trackConfig.luminode
-          // Create luminode instance for this track
           this.glowVisualizer.createLuminodeForTrack(track.id, trackConfig.luminode)
         }
 
-        // Handle MIDI device assignment
         if (trackConfig.midiDevice && trackConfig.midiDeviceInfo) {
-          // Check if device is still available
           const deviceExists = availableDevices.find(d => d.id === trackConfig.midiDevice)
           if (deviceExists) {
             track.midiDevice = trackConfig.midiDevice
           } else {
-            // Device not available, set to null and show "Select Device"
             track.midiDevice = null
             console.warn(`MIDI device "${trackConfig.midiDeviceInfo.name}" not available`)
           }
@@ -424,13 +615,11 @@ export class ProjectManager {
           track.midiDevice = null
         }
 
-        // Trigger track update callback to notify UI
         this.glowVisualizer.trackManager.triggerCallback('trackUpdated', { trackId: track.id, track })
       }
     })
   }
 
-  // Load trajectory settings
   loadTrajectorySettings (trajectoryData) {
     if (!trajectoryData) return
 
@@ -442,22 +631,18 @@ export class ProjectManager {
     })
   }
 
-  // Load modulation settings
   loadModulationSettings (modulationData) {
     if (!modulationData || !modulationData.modulators) return
 
     const modulationSystem = this.glowVisualizer.trackManager.getModulationSystem()
     
-    // Clear existing modulators
     modulationSystem.reset()
 
-    // Restore all modulators from saved data
     modulationData.modulators.forEach(modulatorData => {
       const modulatorId = modulationSystem.addModulator()
       if (modulatorId) {
-        // Update with all saved properties, including preserving the original ID
         modulationSystem.updateModulator(modulatorId, {
-          id: modulatorData.id || modulatorId, // Preserve original ID if available
+          id: modulatorData.id || modulatorId,
           shape: modulatorData.shape || 'sine',
           rate: modulatorData.rate !== undefined ? modulatorData.rate : 0.5,
           depth: modulatorData.depth !== undefined ? modulatorData.depth : 0.5,
@@ -471,13 +656,11 @@ export class ProjectManager {
     })
   }
 
-  // Load MIDI settings
   async loadMidiSettings (midiData) {
     if (!midiData) return
 
     const midiManager = this.glowVisualizer.midiManager
 
-    // Handle MIDI output device
     if (midiData.outputDevice) {
       const availableDevices = await midiManager.getAvailableOutputDevices()
       const deviceExists = availableDevices.find(d => d.id === midiData.outputDevice)

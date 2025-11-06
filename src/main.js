@@ -47,7 +47,7 @@ export class GLOWVisualizer {
     this.sidePanel.setSettings(SETTINGS)
     this.projectManager = new ProjectManager(this)
     this.saveDialog = new SaveDialog()
-    this.filePickerDialog = new FilePickerDialog()
+    this.filePickerDialog = new FilePickerDialog(this.projectManager)
     this.visualizerStarted = false
 
     // CRT overlay element
@@ -166,6 +166,7 @@ export class GLOWVisualizer {
 
     // Track manager events
     this.trackManager.on('luminodeChanged', (data) => this.handleLuminodeChange(data))
+    this.trackManager.on('trackUpdated', () => this.markProjectChanged())
 
     // Canvas and color settings
     this.sidePanel.on('canvasSettingChange', (data) => this.updateCanvasSetting(data))
@@ -281,46 +282,82 @@ export class GLOWVisualizer {
     this.uiManager.setPanelToggleActive(this.sidePanel.isPanelVisible())
   }
 
-  openFile () {
+  async openFile () {
+    if (this.projectManager.updateUnsavedChangesFlag()) {
+      const shouldProceed = await this.promptUnsavedChanges()
+      if (!shouldProceed) {
+        return
+      }
+    }
+
     this.filePickerDialog.show()
   }
 
-  saveFile () {
-    // Generate default scene name with unix timestamp
-    const timestamp = Math.floor(Date.now() / 1000)
-    const defaultName = `glow-scene-${timestamp}`
-
-    this.saveDialog.setDefaultName(defaultName)
-    this.saveDialog.show()
+  async saveFile () {
+    try {
+      if (this.projectManager.hasOpenFile()) {
+        const result = await this.projectManager.saveExistingProject()
+        if (result.success) {
+          this.updateProjectName(this.projectManager.getCurrentProjectName())
+          this.updateUnsavedChangesIndicator()
+          this.uiManager.showStatus('Project saved successfully!', 'success')
+        } else if (result.cancelled) {
+        }
+      } else {
+        const timestamp = Math.floor(Date.now() / 1000)
+        const defaultName = `glow-scene-${timestamp}`
+        this.saveDialog.setDefaultName(defaultName)
+        this.saveDialog.show()
+      }
+    } catch (error) {
+      console.error('Error saving project:', error)
+      this.uiManager.showStatus('Error saving project. Check console for details.', 'error')
+    }
   }
 
-  handleProjectSave (data) {
+  async handleProjectSave (data) {
     const { projectName } = data
 
     try {
-      this.projectManager.downloadProject(projectName)
-      this.uiManager.showStatus(`Scene "${projectName}" saved successfully!`, 'success')
+      const result = await this.projectManager.saveNewProject(projectName)
+      if (result.success) {
+        this.updateProjectName(result.projectName)
+        this.updateUnsavedChangesIndicator()
+        this.uiManager.showStatus(`Project "${result.projectName}" saved successfully!`, 'success')
+      } else if (result.cancelled) {
+        // User cancelled, do nothing
+      }
     } catch (error) {
-      console.error('Error saving scene:', error)
-      this.uiManager.showStatus('Error saving scene. Check console for details.', 'error')
+      console.error('Error saving project:', error)
+      this.uiManager.showStatus('Error saving project. Check console for details.', 'error')
     }
   }
 
   async handleProjectLoad (data) {
-    const { file, projectData } = data
+    if (this.projectManager.updateUnsavedChangesFlag()) {
+      const shouldProceed = await this.promptUnsavedChanges()
+      if (!shouldProceed) {
+        return
+      }
+    }
 
     try {
       this.uiManager.showStatus('Loading project...', 'info')
 
       this.clearCurrentState()
 
-      const success = await this.projectManager.loadProjectState(projectData)
+      if (!data.fileHandle || !data.projectData) {
+        this.uiManager.showStatus('Error loading project: missing file data.', 'error')
+        return
+      }
 
-      if (success) {
-        const projectName = projectData.name || file.name.replace('.glow', '')
+      const result = await this.projectManager.openProjectWithData(data.fileHandle, data.projectData, data.file)
+
+      if (result.success) {
+        const projectName = this.projectManager.getCurrentProjectName()
         this.updateProjectName(projectName)
+        this.updateUnsavedChangesIndicator()
 
-        // Hide logo and show renderer screen after successful load
         this.uiManager.hideLogoContainer()
         this.uiManager.showPanelToggleButton()
         this.uiManager.showOpenButton()
@@ -340,50 +377,86 @@ export class GLOWVisualizer {
     }
   }
 
+  async promptUnsavedChanges () {
+    return new Promise((resolve) => {
+      const message = 'You have unsaved changes. Do you want to save them before continuing?'
+      const shouldSave = confirm(message + '\n\nClick OK to save, Cancel to discard changes.')
+      
+      if (shouldSave) {
+        this.saveFile().then(() => {
+          resolve(true)
+        }).catch(() => {
+          const proceed = confirm('Save was cancelled. Do you want to discard changes and continue?')
+          resolve(proceed)
+        })
+      } else {
+        resolve(true)
+      }
+    })
+  }
+
+  markProjectChanged () {
+    if (this._changeCheckTimeout) {
+      clearTimeout(this._changeCheckTimeout)
+    }
+    
+    this._changeCheckTimeout = setTimeout(() => {
+      this.updateUnsavedChangesIndicator()
+    }, 300)
+  }
+
+  updateUnsavedChangesIndicator () {
+    const projectNameText = document.getElementById('projectNameText')
+    if (!projectNameText) return
+
+    const hasUnsaved = this.projectManager.updateUnsavedChangesFlag()
+    const currentName = this.projectManager.getCurrentProjectName()
+    
+    if (hasUnsaved) {
+      if (!projectNameText.value.endsWith(' *')) {
+        projectNameText.value = currentName + ' *'
+      }
+    } else {
+      if (projectNameText.value.endsWith(' *')) {
+        projectNameText.value = currentName
+      }
+    }
+  }
+
   setGeometricMode (enabled) {
-    // Update the geometric mode in the tablet manager
     this.tabletManager.setGeometricMode(enabled)
   }
 
   setShapeDetectionThreshold (threshold) {
-    // Update the shape detection threshold in the tablet manager
     this.tabletManager.setShapeDetectionThreshold(threshold)
   }
 
   setGeometricPencilMode (enabled) {
-    // Update the geometric pencil mode in the tablet manager
     this.tabletManager.setGeometricPencilMode(enabled)
   }
 
   setPolygonSides (sides) {
-    // Update the polygon sides in the tablet manager
     this.tabletManager.setPolygonSides(sides)
   }
 
   setPolygonSize (size) {
-    // Update the polygon size in the tablet manager
     this.tabletManager.setPolygonSize(size)
   }
 
   setFadeDuration (duration) {
-    // Update the fade duration in the tablet manager (convert seconds to milliseconds)
     this.tabletManager.setFadeDuration(duration * 1000)
   }
 
   setMidiOutputEnabled (enabled) {
-    // Update the MIDI output enabled state in the MIDI manager
     this.midiManager.setOutputEnabled(enabled)
   }
 
   setMidiOutputDevice (deviceId) {
-    // Update the MIDI output device in the MIDI manager
     this.midiManager.setOutputDevice(deviceId)
-    // Reinitialize MIDI output with the new device
     this.midiManager.initializeOutput()
   }
 
   setOctaveRange (range) {
-    // Update the octave range in the MIDI manager
     this.midiManager.setOctaveRange(range)
   }
 
@@ -438,6 +511,9 @@ export class GLOWVisualizer {
       SETTINGS.CANVAS[setting] = value
       console.log(`Updated canvas setting ${setting} to ${value}`)
 
+      // Mark as changed
+      this.markProjectChanged()
+
       // Apply the setting immediately
       if (setting === 'CLEAR_ALPHA') {
         this.canvasDrawer.setClearAlpha(value)
@@ -486,6 +562,9 @@ export class GLOWVisualizer {
       const paletteKey = palette.toUpperCase() + '_PALETTE'
       SETTINGS.COLORS[paletteKey][index] = color
       console.log(`Updated ${palette} palette color at index ${index} to ${color}`)
+      
+      // Mark as changed
+      this.markProjectChanged()
     }
   }
 
@@ -497,6 +576,9 @@ export class GLOWVisualizer {
       // Store the factor for the pitchToColor function
       UTILS.pitchColorFactor = value
       console.log(`Updated pitch color factor to ${value}`)
+      
+      // Mark as changed
+      this.markProjectChanged()
     }
   }
 
@@ -525,6 +607,9 @@ export class GLOWVisualizer {
         }
         moduleConfig[param] = convertedValue
         console.log(`Updated ${luminode} ${param} to ${convertedValue} (type: ${typeof convertedValue})`)
+        
+        // Mark as changed
+        this.markProjectChanged()
       }
     }
   }
@@ -1075,27 +1160,28 @@ export class GLOWVisualizer {
     }
   }
 
-  handleProjectNameChange (newName) {
-    try {
-      this.projectManager.downloadProject(newName)
-      this.uiManager.showStatus(`Project "${newName}" saved automatically!`, 'success')
-    } catch (error) {
-      console.error('Error auto-saving project:', error)
-      this.uiManager.showStatus('Error auto-saving project. Check console for details.', 'error')
+  async handleProjectNameChange (newName) {
+    this.projectManager.setCurrentProjectName(newName)
+    this.updateUnsavedChangesIndicator()
+    
+    if (this.projectManager.hasOpenFile()) {
+      try {
+        const result = await this.projectManager.saveExistingProject()
+        if (result.success) {
+          this.updateUnsavedChangesIndicator()
+          this.uiManager.showStatus(`Project "${newName}" saved automatically!`, 'success')
+        }
+      } catch (error) {
+        console.error('Error auto-saving project:', error)
+      }
     }
   }
 
   clearCurrentState () {
-    // Clear all track luminodes
     this.trackLuminodes.clear()
-
-    // Clear canvas
     this.canvasDrawer.clear()
-
-    // Clear tablet strokes
     this.tabletManager.clear()
 
-    // Reset all tracks to default state
     const tracks = this.trackManager.getTracks()
     tracks.forEach(track => {
       track.midiDevice = null
@@ -1103,23 +1189,17 @@ export class GLOWVisualizer {
       track.muted = false
       track.solo = false
       track.layout = { x: 0, y: 0, rotation: 0 }
-      // Trigger callback to update UI
       this.trackManager.triggerCallback('trackUpdated', { trackId: track.id, track })
     })
 
-    // Clear MIDI output device
     this.midiManager.setOutputDevice(null)
-
-    // Reset project name to default
-    this.updateProjectName('Untitled Project')
+    this.projectManager.clearProject()
 
     console.log('Current state cleared before loading new project')
   }
 
-  // Cleanup method
   destroy () {
     this.stop()
-    // Add any other cleanup needed
   }
 }
 

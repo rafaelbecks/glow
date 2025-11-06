@@ -1,13 +1,12 @@
-// File picker dialog component for project loading
 export class FilePickerDialog {
-  constructor () {
+  constructor (projectManager) {
     this.dialog = document.getElementById('filePickerDialog')
     this.callbacks = {}
     this.isVisible = false
     this.fileInput = null
+    this.projectManager = projectManager
   }
 
-  // Callback system
   on (event, callback) {
     if (!this.callbacks[event]) {
       this.callbacks[event] = []
@@ -21,20 +20,14 @@ export class FilePickerDialog {
     }
   }
 
-  // Show the file picker dialog
   show () {
     if (this.isVisible) return
 
     this.dialog.classList.add('show')
     this.isVisible = true
-
-    // Focus the file input
-    if (this.fileInput) {
-      this.fileInput.focus()
-    }
+    // this.renderRecentProjects()
   }
 
-  // Hide the file picker dialog
   hide () {
     if (!this.isVisible) return
 
@@ -42,7 +35,6 @@ export class FilePickerDialog {
     this.isVisible = false
   }
 
-  // Setup event listeners
   setupEventListeners () {
     if (!this.dialog) return
 
@@ -51,28 +43,24 @@ export class FilePickerDialog {
     const browseBtn = this.dialog.querySelector('#filePickerDialogBrowse')
     const dialog = this.dialog
 
-    // Close button
     if (closeBtn) {
       closeBtn.addEventListener('click', () => {
         this.hide()
       })
     }
 
-    // Cancel button
     if (cancelBtn) {
       cancelBtn.addEventListener('click', () => {
         this.hide()
       })
     }
 
-    // Browse button
     if (browseBtn) {
       browseBtn.addEventListener('click', () => {
         this.triggerFileSelection()
       })
     }
 
-    // Click outside to close
     if (dialog) {
       dialog.addEventListener('click', (e) => {
         if (e.target === dialog) {
@@ -81,79 +69,117 @@ export class FilePickerDialog {
       })
     }
 
-    // Setup file input
     this.setupFileInput()
   }
 
-  // Setup hidden file input
   setupFileInput () {
-    this.fileInput = document.createElement('input')
-    this.fileInput.type = 'file'
-    this.fileInput.accept = '.glow,application/json'
-    this.fileInput.style.display = 'none'
-    document.body.appendChild(this.fileInput)
-
-    this.fileInput.addEventListener('change', (e) => {
-      this.handleFileSelection(e)
-    })
   }
 
-  // Trigger file selection
-  triggerFileSelection () {
-    if (this.fileInput) {
-      this.fileInput.click()
+  async triggerFileSelection () {
+    try {
+      if (!('showOpenFilePicker' in window)) {
+        this.showError('File System Access API is not supported in this browser')
+        return
+      }
+
+      const [fileHandle] = await window.showOpenFilePicker({
+        types: [{
+          description: 'Glow Project Files',
+          accept: {
+            'application/json': ['.glow']
+          }
+        }],
+        multiple: false
+      })
+
+      const file = await fileHandle.getFile()
+      const content = await file.text()
+      const projectData = JSON.parse(content)
+
+      this.triggerCallback('fileSelected', { 
+        file, 
+        projectData,
+        fileHandle
+      })
+      this.hide()
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        return
+      }
+      console.error('Error opening file:', error)
+      this.showError('Error opening file. Check console for details.')
     }
   }
 
-  // Handle file selection
-  handleFileSelection (event) {
-    const file = event.target.files[0]
-    if (!file) return
+  renderRecentProjects () {
+    if (!this.projectManager) return
 
-    // Validate file extension
-    if (!file.name.toLowerCase().endsWith('.glow')) {
-      this.showError('Please select a valid .glow project file')
+    const recentProjects = this.projectManager.getRecentProjects()
+    const recentProjectsContainer = this.dialog.querySelector('.recent-projects-list')
+    
+    if (!recentProjectsContainer) {
+      const dialogBody = this.dialog.querySelector('.file-picker-dialog-body')
+      if (dialogBody) {
+        const container = document.createElement('div')
+        container.className = 'recent-projects-list'
+        dialogBody.insertBefore(container, dialogBody.firstChild)
+      }
       return
     }
 
-    // Read file content
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      try {
-        const projectData = JSON.parse(e.target.result)
-        this.triggerCallback('fileSelected', { file, projectData })
-        this.hide()
-      } catch (error) {
-        console.error('Error parsing project file:', error)
-        this.showError('Invalid project file format')
-      }
+    recentProjectsContainer.innerHTML = ''
+
+    if (recentProjects.length === 0) {
+      const emptyMsg = document.createElement('p')
+      emptyMsg.className = 'recent-projects-empty'
+      emptyMsg.textContent = 'No recent projects'
+      recentProjectsContainer.appendChild(emptyMsg)
+      return
     }
-    reader.onerror = () => {
-      this.showError('Error reading file')
-    }
-    reader.readAsText(file)
+
+    const list = document.createElement('ul')
+    list.className = 'recent-projects-items'
+
+    recentProjects.forEach((project) => {
+      const item = document.createElement('li')
+      item.className = 'recent-project-item'
+
+      const name = document.createElement('div')
+      name.className = 'recent-project-item-name'
+      name.textContent = project.projectName || project.fileName
+
+      const path = document.createElement('div')
+      path.className = 'recent-project-item-path'
+      path.textContent = project.fileName
+
+      item.appendChild(name)
+      item.appendChild(path)
+
+      item.addEventListener('click', () => {
+        this.triggerFileSelection()
+      })
+
+      list.appendChild(item)
+    })
+
+    recentProjectsContainer.appendChild(list)
   }
 
-  // Show error message
   showError (message) {
-    // Remove existing error
     const existingError = this.dialog.querySelector('.error-message')
     if (existingError) {
       existingError.remove()
     }
 
-    // Create error element
     const errorEl = document.createElement('div')
     errorEl.className = 'error-message'
     errorEl.textContent = message
 
-    // Insert after the dialog body
     const dialogBody = this.dialog.querySelector('.file-picker-dialog-body')
     if (dialogBody) {
       dialogBody.insertAdjacentElement('afterend', errorEl)
     }
 
-    // Auto-remove after 3 seconds
     setTimeout(() => {
       if (errorEl.parentNode) {
         errorEl.remove()
@@ -161,7 +187,6 @@ export class FilePickerDialog {
     }, 3000)
   }
 
-  // Cleanup
   destroy () {
     if (this.fileInput && this.fileInput.parentNode) {
       this.fileInput.parentNode.removeChild(this.fileInput)
