@@ -103,8 +103,8 @@ export class FilePickerDialog {
       const content = await file.text()
       const projectData = JSON.parse(content)
 
-      this.triggerCallback('fileSelected', { 
-        file, 
+      this.triggerCallback('fileSelected', {
+        file,
         projectData,
         fileHandle
       })
@@ -124,7 +124,7 @@ export class FilePickerDialog {
 
     const recentProjects = this.projectManager.getRecentProjects()
     const recentProjectsContainer = this.dialog.querySelector('.recent-projects-list')
-    
+
     if (!recentProjectsContainer) {
       const dialogBody = this.dialog.querySelector('.file-picker-dialog-body')
       if (dialogBody) {

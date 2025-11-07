@@ -177,13 +177,13 @@ export class ProjectManager {
     const currentState = this.getCurrentState()
     const savedStateCopy = { ...this.savedState }
     const currentStateCopy = { ...currentState }
-    
+
     delete savedStateCopy.timestamp
     delete currentStateCopy.timestamp
-    
+
     const currentStateStr = JSON.stringify(currentStateCopy)
     const savedStateStr = JSON.stringify(savedStateCopy)
-    
+
     return currentStateStr !== savedStateStr
   }
 
@@ -198,8 +198,8 @@ export class ProjectManager {
         throw new Error('File System Access API is not supported in this browser')
       }
 
-    const content = this.generateProjectFile(projectName)
-    const blob = new Blob([content], { type: 'application/json' })
+      const content = this.generateProjectFile(projectName)
+      const blob = new Blob([content], { type: 'application/json' })
 
       document.body.classList.add('loading')
       let fileHandle
@@ -318,12 +318,12 @@ export class ProjectManager {
   async openProjectWithData (fileHandle, projectData, file) {
     try {
       this.validateProjectFile(projectData)
-      
+
       this.currentFileHandle = fileHandle
       this.currentProjectName = projectData.name || file.name.replace('.glow', '')
 
       const loadSuccess = await this.loadProjectState(projectData)
-      
+
       if (!loadSuccess) {
         this.currentFileHandle = null
         this.currentProjectName = 'Untitled Project'
@@ -358,9 +358,9 @@ export class ProjectManager {
     try {
       const file = await fileHandle.getFile()
       const fileName = file.name
-      
+
       const recentProjects = this.getRecentProjects()
-      
+
       const existingIndex = recentProjects.findIndex(p => p.fileName === fileName)
       if (existingIndex !== -1) {
         recentProjects.splice(existingIndex, 1)
@@ -648,7 +648,7 @@ export class ProjectManager {
     if (!modulationData || !modulationData.modulators) return
 
     const modulationSystem = this.glowVisualizer.trackManager.getModulationSystem()
-    
+
     modulationSystem.reset()
 
     modulationData.modulators.forEach(modulatorData => {

@@ -13,7 +13,7 @@ export class TrackManager {
 
     // Initialize trajectory system
     this.trajectorySystem = new TrajectorySystem()
-    
+
     // Initialize modulation system
     this.modulationSystem = new ModulationSystem()
 
@@ -22,7 +22,7 @@ export class TrackManager {
       'sotoGrid', 'sotoGridRotated', 'whitneyLines', 'phyllotaxis',
       'moireCircles', 'wovenNet', 'sinewave', 'triangle', 'polygons',
       'noiseValley', 'catenoid', 'lineCylinder', 'clavilux', 'diamond',
-      'cube', 'trefoil', 'luneburgLens'
+      'cube', 'trefoil', 'sphericalLens'
     ]
 
     this.availableMidiDevices = new Map()

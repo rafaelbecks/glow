@@ -32,7 +32,7 @@ import {
   DiamondLuminode,
   CubeLuminode,
   TrefoilKnotLuminode,
-  LuneburgLensLuminode
+  SphericalLensLuminode
 } from './luminodes/index.js'
 
 export class GLOWVisualizer {
@@ -97,7 +97,7 @@ export class GLOWVisualizer {
       diamond: DiamondLuminode,
       cube: CubeLuminode,
       trefoil: TrefoilKnotLuminode,
-      luneburgLens: LuneburgLensLuminode
+      sphericalLens: SphericalLensLuminode
     }
 
     // Track-based luminode instances
@@ -174,7 +174,6 @@ export class GLOWVisualizer {
     this.sidePanel.on('canvasSettingChange', (data) => this.updateCanvasSetting(data))
     this.sidePanel.on('colorPaletteChange', (data) => this.updateColorPalette(data))
     this.sidePanel.on('pitchColorFactorChange', (data) => this.updatePitchColorFactor(data))
-
   }
 
   setupSaveDialog () {
@@ -194,7 +193,6 @@ export class GLOWVisualizer {
       openButtonLogo.addEventListener('click', () => this.openFile())
     }
   }
-
 
   async start () {
     try {
@@ -366,7 +364,7 @@ export class GLOWVisualizer {
     return new Promise((resolve) => {
       const message = 'You have unsaved changes. Do you want to save them before continuing?'
       const shouldSave = confirm(message + '\n\nClick OK to save, Cancel to discard changes.')
-      
+
       if (shouldSave) {
         this.saveFile().then(() => {
           resolve(true)
@@ -384,7 +382,7 @@ export class GLOWVisualizer {
     if (this._changeCheckTimeout) {
       clearTimeout(this._changeCheckTimeout)
     }
-    
+
     this._changeCheckTimeout = setTimeout(() => {
       this.updateUnsavedChangesIndicator()
     }, 300)
@@ -396,7 +394,7 @@ export class GLOWVisualizer {
 
     const hasUnsaved = this.projectManager.updateUnsavedChangesFlag()
     const currentName = this.projectManager.getCurrentProjectName()
-    
+
     if (hasUnsaved) {
       if (!projectNameText.textContent.endsWith(' *')) {
         projectNameText.textContent = currentName + ' *'
@@ -547,7 +545,7 @@ export class GLOWVisualizer {
       const paletteKey = palette.toUpperCase() + '_PALETTE'
       SETTINGS.COLORS[paletteKey][index] = color
       console.log(`Updated ${palette} palette color at index ${index} to ${color}`)
-      
+
       // Mark as changed
       this.markProjectChanged()
     }
@@ -561,7 +559,7 @@ export class GLOWVisualizer {
       // Store the factor for the pitchToColor function
       UTILS.pitchColorFactor = value
       console.log(`Updated pitch color factor to ${value}`)
-      
+
       // Mark as changed
       this.markProjectChanged()
     }
@@ -592,7 +590,7 @@ export class GLOWVisualizer {
         }
         moduleConfig[param] = convertedValue
         console.log(`Updated ${luminode} ${param} to ${convertedValue} (type: ${typeof convertedValue})`)
-        
+
         // Mark as changed
         this.markProjectChanged()
       }
@@ -707,10 +705,10 @@ export class GLOWVisualizer {
 
       // Apply modulation before drawing
       const restoreValues = this.applyModulationToTrack(track.id, track.luminode)
-      
+
       // Draw the luminode with track-specific parameters
       this.drawTrackLuminode(luminode, track.luminode, t, notes, layout)
-      
+
       // Restore original config values after drawing
       if (restoreValues) {
         restoreValues()
@@ -724,9 +722,9 @@ export class GLOWVisualizer {
    */
   applyModulationToTrack (trackId, luminodeType) {
     const modulationSystem = this.trackManager.getModulationSystem()
-    const modulators = modulationSystem.getModulators().filter(m => 
-      m.enabled && 
-      m.targetTrack === trackId && 
+    const modulators = modulationSystem.getModulators().filter(m =>
+      m.enabled &&
+      m.targetTrack === trackId &&
       m.targetLuminode === luminodeType &&
       m.targetConfigKey !== null
     )
@@ -761,7 +759,7 @@ export class GLOWVisualizer {
     // Apply modulators to each config key
     modulatorsByKey.forEach((mods, configKey) => {
       const configParam = configParamMap.get(configKey)
-      
+
       if (!configParam || !moduleConfig.hasOwnProperty(configKey)) {
         return
       }
@@ -775,15 +773,15 @@ export class GLOWVisualizer {
       const baseValue = originalValues.get(configKey)
       let totalModulation = 0
       let totalOffset = 0
-      
+
       const time = modulationSystem.getCurrentTime()
-      
+
       mods.forEach(modulator => {
         if (!modulator.enabled) return
-        
+
         const phase = time * modulator.rate * Math.PI * 2
         const waveform = modulationSystem.generateWaveform(modulator.shape, phase)
-        
+
         // Accumulate modulation and offset
         totalModulation += waveform * modulator.depth
         totalOffset += modulator.offset
@@ -796,10 +794,10 @@ export class GLOWVisualizer {
 
       // Apply combined modulation
       let modulatedValue = baseValue + (totalModulation * range) + (totalOffset * range)
-      
+
       // Clamp to valid range
       modulatedValue = Math.max(min, Math.min(max, modulatedValue))
-      
+
       // Round to integer if this is a number-type parameter (for parameters like SEGMENTS, RINGS, etc.)
       const finalValue = configParam.type === 'number' ? Math.round(modulatedValue) : modulatedValue
 
@@ -864,6 +862,10 @@ export class GLOWVisualizer {
       case 'trefoil':
         const trefoilColorMode = SETTINGS.MODULES.TREFOIL.USE_COLOR || false
         luminode.draw(t, notes, trefoilColorMode, layout)
+        break
+      case 'sphericalLens':
+        const sphericalLensColorMode = SETTINGS.MODULES.SPHERICAL_LENS.USE_COLOR || false
+        luminode.draw(t, notes, sphericalLensColorMode, layout)
         break
       default:
         // Standard luminode drawing
@@ -1144,7 +1146,6 @@ export class GLOWVisualizer {
       projectNameText.textContent = name || 'Untitled Project'
     }
   }
-
 
   clearCurrentState () {
     this.trackLuminodes.clear()

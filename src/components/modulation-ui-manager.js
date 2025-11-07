@@ -23,7 +23,7 @@ export class ModulationUIManager {
     const modulationSystem = this.trackManager.getModulationSystem()
     const waveformShapes = modulationSystem.getWaveformShapes()
     const waveformNames = modulationSystem.getWaveformShapeNames()
-    
+
     // Sync modulators with track luminodes (auto-populate if missing)
     modulators.forEach(modulator => {
       const track = tracks.find(t => t.id === modulator.targetTrack)
@@ -46,7 +46,7 @@ export class ModulationUIManager {
             </button>
           </div>
           
-          ${modulators.length === 0 
+          ${modulators.length === 0
             ? '<div class="no-modulators">No modulators. Click "Add Modulator" to create one.</div>'
             : ''
           }
@@ -62,11 +62,11 @@ export class ModulationUIManager {
   // Create HTML for a single modulator
   createModulatorHTML (modulator, tracks, waveformShapes, waveformNames) {
     const waveformPreview = this.createWaveformPreview(modulator.shape, 40, 20)
-    
+
     // Get the track's assigned luminode
     const track = tracks.find(t => t.id === modulator.targetTrack)
     const trackLuminode = track ? track.luminode : null
-    
+
     // Get available config params for the track's luminode
     let configOptions = ''
     if (trackLuminode) {
@@ -124,7 +124,8 @@ export class ModulationUIManager {
             </div>
           </div>
 
-          ${trackLuminode ? `
+          ${trackLuminode
+? `
             <div class="modulator-row">
               <div class="modulator-control-group">
                 <label>Parameter</label>
@@ -134,7 +135,8 @@ export class ModulationUIManager {
                 </select>
               </div>
             </div>
-          ` : ''}
+          `
+: ''}
 
           <div class="modulator-row">
             <div class="modulator-control-group">
@@ -269,14 +271,14 @@ export class ModulationUIManager {
         const targetTrack = parseInt(e.target.value)
         const track = this.trackManager.getTrack(targetTrack)
         const targetLuminode = track && track.luminode ? track.luminode : null
-        
+
         // Update modulator with track and auto-assigned luminode
-        this.trackManager.updateModulator(modulatorId, { 
-          targetTrack, 
+        this.trackManager.updateModulator(modulatorId, {
+          targetTrack,
           targetLuminode,
           targetConfigKey: null // Reset config key when track changes
         })
-        
+
         // Re-render to show updated luminode and config params
         this.renderModulationControls()
       })

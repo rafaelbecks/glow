@@ -220,21 +220,25 @@ export const SETTINGS = {
       BASE_HUE: 0,
       USE_COLOR: true
     },
-    LUNEBURG_LENS: {
+    SPHERICAL_LENS: {
       RADIUS: 200,
       LINES_PER_NOTE: 8,
       LINE_WIDTH: 1.0,
       LINE_COLOR: 'rgba(255, 255, 255, 0.6)',
-      LENS_COLOR: 'rgba(255, 255, 255, 0.8)',
       LENS_WIDTH: 1.5,
       SHADOW_BLUR: 10,
-      ANIMATION_SPEED: 0.2,
       ROTATION_SPEED: 0.1,
-      SHOW_POINT_SOURCE: true,
+      SHOW_POINT_SOURCE: false,
       USE_COLOR: false,
-      DISTORTION_STRENGTH: 1.5,
-      MODE: 'parallel', // 'parallel' or 'circles'
-      LINE_LENGTH: 0 // 0 = full canvas width, or specify pixel length
+      ABERRATION_STRENGTH: 1.0,
+      CHROMATIC_ABERRATION: false,
+      ORIENTATION: 'horizontal',
+      LINE_LENGTH: 0,
+      CENTER_X: 0,
+      CENTER_Y: 0,
+      WAVE_SPEED: 0.3,
+      WAVE_AMPLITUDE: 5,
+      LENS_DEPTH: 0.3
     }
   },
 
@@ -287,7 +291,7 @@ export const MIDI_CHANNELS = {
   'bus 20': 'diamond',
   'bus 21': 'cube',
   'bus 22': 'trefoil',
-  'bus 23': 'luneburgLens'
+  'bus 23': 'sphericalLens'
 }
 
 // Utility functions

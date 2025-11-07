@@ -26,7 +26,7 @@ export class MIDIManager {
       diamond: [],
       cube: [],
       trefoil: [],
-      luneburgLens: []
+      sphericalLens: []
     }
 
     this.inputs = new Map() // Maps channel to array of inputs

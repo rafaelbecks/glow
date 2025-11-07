@@ -23,7 +23,7 @@ function normalizeLuminodeNameUtil (name) {
     trefoil: 'Trefoil Knot',
     cube: 'Cube',
     diamond: 'Diamond',
-    luneburgLens: 'Luneburg Lens'
+    sphericalLens: 'Spherical Lens'
   }
   return nameMap[name] || name
 }

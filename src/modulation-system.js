@@ -10,10 +10,10 @@ export class ModulationSystem {
     // Maximum of 4 modulators
     this.maxModulators = 4
     this.modulators = []
-    
+
     // Store original config values for restoration
     this.originalConfigValues = new Map()
-    
+
     // Global time reference (shared with animation loop)
     this.startTime = performance.now() / 1000
   }
@@ -87,7 +87,7 @@ export class ModulationSystem {
   generateWaveform (shape, phase) {
     // Normalize phase to 0-2π
     const normalizedPhase = ((phase % (Math.PI * 2)) + (Math.PI * 2)) % (Math.PI * 2)
-    
+
     switch (shape) {
       case 'sine':
         return Math.sin(normalizedPhase)
@@ -124,18 +124,18 @@ export class ModulationSystem {
     const time = (performance.now() / 1000) - this.startTime
     const phase = time * modulator.rate * Math.PI * 2
     const waveform = this.generateWaveform(modulator.shape, phase)
-    
+
     // Map waveform (-1 to 1) to modulation range
     const modulationAmount = waveform * modulator.depth
-    
+
     // Calculate value range for this parameter
     const min = configParam.min
     const max = configParam.max
     const range = max - min
-    
+
     // Apply modulation
     const modulatedValue = baseValue + (modulationAmount * range) + (modulator.offset * range)
-    
+
     // Clamp to valid range
     return Math.max(min, Math.min(max, modulatedValue))
   }
@@ -146,9 +146,9 @@ export class ModulationSystem {
    */
   applyModulation (trackId, luminodeType, luminodeConfigKey, baseConfigValue, configParam) {
     // Find modulators targeting this track and config key
-    const relevantModulators = this.modulators.filter(m => 
-      m.enabled && 
-      m.targetTrack === trackId && 
+    const relevantModulators = this.modulators.filter(m =>
+      m.enabled &&
+      m.targetTrack === trackId &&
       m.targetConfigKey === luminodeConfigKey &&
       m.targetLuminode === luminodeType
     )
@@ -159,7 +159,7 @@ export class ModulationSystem {
 
     // Combine multiple modulators (simple addition for now)
     let modulatedValue = baseConfigValue
-    
+
     for (const modulator of relevantModulators) {
       modulatedValue = this.getModulatedValue(modulatedValue, modulator, configParam)
     }
@@ -173,11 +173,11 @@ export class ModulationSystem {
    */
   getModulatedConfig (trackId, luminodeType, baseConfig) {
     const modulatedConfig = { ...baseConfig }
-    
+
     // Find all modulators for this track and luminode
-    const relevantModulators = this.modulators.filter(m => 
-      m.enabled && 
-      m.targetTrack === trackId && 
+    const relevantModulators = this.modulators.filter(m =>
+      m.enabled &&
+      m.targetTrack === trackId &&
       m.targetLuminode === luminodeType &&
       m.targetConfigKey !== null
     )

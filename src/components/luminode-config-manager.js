@@ -25,7 +25,7 @@ function getLuminodeSettingsKey (luminode) {
     diamond: 'DIAMOND',
     cube: 'CUBE',
     trefoil: 'TREFOIL',
-    luneburgLens: 'LUNEBURG_LENS'
+    sphericalLens: 'SPHERICAL_LENS'
   }
   return luminodeMapping[luminode] || luminode.toUpperCase()
 }

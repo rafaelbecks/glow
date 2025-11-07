@@ -19,7 +19,7 @@ export class TrefoilKnotLuminode {
 
     for (let i = 0; i <= segments; i++) {
       const t = (i / segments) * Math.PI * 2
-      
+
       const x = (Math.sin(t) + 2 * Math.sin(2 * t)) * scale
       const y = (Math.cos(t) - 2 * Math.cos(2 * t)) * scale
       const z = -Math.sin(3 * t) * scale
@@ -93,7 +93,7 @@ export class TrefoilKnotLuminode {
     for (let lace = 0; lace < numLaces; lace++) {
       // Calculate scale for this lace (each lace can have a slightly different size)
       const laceScale = baseScale * (1 + (lace / numLaces) * scaleVariation)
-      
+
       // Generate trefoil points for this lace
       const basePoints = this.generateTrefoilPoints(segments, laceScale)
 
@@ -114,7 +114,7 @@ export class TrefoilKnotLuminode {
         this.ctx.strokeStyle = `hsla(${laceHue}, 0%, 80%, 0.4)`
         this.ctx.shadowColor = 'rgba(255, 255, 255, 0.5)'
       }
-      
+
       this.ctx.lineWidth = SETTINGS.MODULES.TREFOIL.LINE_WIDTH
 
       // Draw the trefoil knot curve
@@ -153,11 +153,10 @@ export class TrefoilKnotLuminode {
       const perspectiveFirstX = rotatedFirstX + (rotatedFirstX / width) * rotatedFirstZ * 0.001
       const perspectiveFirstY = rotatedFirstY + (rotatedFirstY / height) * rotatedFirstZ * 0.001 - rotatedFirstZ * 0.3
       this.ctx.lineTo(perspectiveFirstX, perspectiveFirstY)
-      
+
       this.ctx.stroke()
     }
 
     this.canvasDrawer.restoreLayoutTransform()
   }
 }
-
