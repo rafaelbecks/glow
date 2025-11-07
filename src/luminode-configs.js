@@ -257,6 +257,25 @@ export const LUMINODE_CONFIGS = {
       { key: 'BASE_SIZE', label: 'Base Size', type: 'slider', min: 10, max: 40, step: 2, default: 20 },
       { key: 'SIZE_VARIATION', label: 'Size Variation', type: 'slider', min: 5, max: 25, step: 1, default: 15 }
     ]
+  },
+
+  // Optical Patterns
+  luneburgLens: {
+    group: 'Optical Patterns',
+    config: [
+      { key: 'MODE', label: 'Mode', type: 'select', options: [{ value: 'parallel', label: 'Parallel Lines' }, { value: 'circles', label: 'Concentric Circles' }], default: 'parallel' },
+      { key: 'RADIUS', label: 'Lens Radius', type: 'slider', min: 100, max: 400, step: 10, default: 200 },
+      { key: 'LINES_PER_NOTE', label: 'Lines Per Note', type: 'number', min: 3, max: 20, step: 1, default: 8 },
+      { key: 'DISTORTION_STRENGTH', label: 'Distortion Strength', type: 'slider', min: 0.5, max: 6, step: 0.1, default: 1.5 },
+      { key: 'LINE_LENGTH', label: 'Line Length', type: 'slider', min: 0, max: 2000, step: 50, default: 0, note: '0 = full canvas width' },
+      { key: 'LINE_WIDTH', label: 'Line Width', type: 'slider', min: 0.5, max: 3, step: 0.1, default: 1.0 },
+      { key: 'LENS_WIDTH', label: 'Lens Width', type: 'slider', min: 0.5, max: 3, step: 0.1, default: 1.5 },
+      { key: 'SHADOW_BLUR', label: 'Shadow Blur', type: 'slider', min: 0, max: 30, step: 1, default: 10 },
+      { key: 'ANIMATION_SPEED', label: 'Animation Speed', type: 'slider', min: 0.05, max: 1, step: 0.05, default: 0.2 },
+      { key: 'ROTATION_SPEED', label: 'Rotation Speed', type: 'slider', min: 0, max: 0.5, step: 0.05, default: 0.1 },
+      { key: 'SHOW_POINT_SOURCE', label: 'Show Point Source', type: 'checkbox', default: true },
+      { key: 'USE_COLOR', label: 'Color Mode', type: 'checkbox', default: false }
+    ]
   }
 }
 

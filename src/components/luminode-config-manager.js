@@ -1,7 +1,7 @@
 // Luminode configuration UI management
 import { getLuminodeConfig, hasLuminodeConfig } from '../luminode-configs.js'
+import { normalizeLuminodeName as normalizeLuminodeNameUtil } from './track-ui-manager.js'
 
-// Shared mapping function for reuse
 function getLuminodeSettingsKey (luminode) {
   const luminodeMapping = {
     lissajous: 'LISSAJOUS',
@@ -24,7 +24,8 @@ function getLuminodeSettingsKey (luminode) {
     clavilux: 'CLAVILUX',
     diamond: 'DIAMOND',
     cube: 'CUBE',
-    trefoil: 'TREFOIL'
+    trefoil: 'TREFOIL',
+    luneburgLens: 'LUNEBURG_LENS'
   }
   return luminodeMapping[luminode] || luminode.toUpperCase()
 }
@@ -121,6 +122,7 @@ export class LuminodeConfigManager {
     const controlId = `config-${trackId}-${param.key.toLowerCase()}`
 
     if (param.type === 'slider') {
+      const displayValue = param.value === 0 && param.key === 'LINE_LENGTH' ? 'Full Width' : param.value
       return `
         <div class="config-control">
           <label for="${controlId}">${param.label}</label>
@@ -130,11 +132,11 @@ export class LuminodeConfigManager {
                    min="${param.min}" 
                    max="${param.max}" 
                    step="${param.step}" 
-                   value="${param.value}"
+                   value="${param.value || 0}"
                    data-track-id="${trackId}"
                    data-param="${param.key}"
                    class="config-slider">
-            <span class="slider-value">${param.value}</span>
+            <span class="slider-value">${displayValue}</span>
           </div>
         </div>
       `
@@ -168,6 +170,23 @@ export class LuminodeConfigManager {
           </label>
         </div>
       `
+    } else if (param.type === 'select') {
+      const options = param.options || []
+      return `
+        <div class="config-control">
+          <label for="${controlId}">${param.label}</label>
+          <select id="${controlId}"
+                  data-track-id="${trackId}"
+                  data-param="${param.key}"
+                  class="config-select luminode-select">
+            ${options.map(opt => `
+              <option value="${opt.value}" ${param.value === opt.value ? 'selected' : ''}>
+                ${opt.label}
+              </option>
+            `).join('')}
+          </select>
+        </div>
+      `
     }
 
     return ''
@@ -187,7 +206,12 @@ export class LuminodeConfigManager {
         const valueDisplay = e.target.parentElement.querySelector('.slider-value')
 
         if (valueDisplay) {
-          valueDisplay.textContent = value
+          // Special display for LINE_LENGTH when 0
+          if (param === 'LINE_LENGTH' && value === 0) {
+            valueDisplay.textContent = 'Full Width'
+          } else {
+            valueDisplay.textContent = value
+          }
         }
 
         this.triggerConfigChange(trackId, param, value)
@@ -210,6 +234,17 @@ export class LuminodeConfigManager {
     checkboxInputs.forEach(input => {
       input.addEventListener('change', (e) => {
         const value = e.target.checked
+        const param = e.target.dataset.param
+
+        this.triggerConfigChange(trackId, param, value)
+      })
+    })
+
+    // Select controls
+    const selectInputs = configElement.querySelectorAll('.config-select')
+    selectInputs.forEach(select => {
+      select.addEventListener('change', (e) => {
+        const value = e.target.value
         const param = e.target.dataset.param
 
         this.triggerConfigChange(trackId, param, value)
@@ -256,31 +291,10 @@ export class LuminodeConfigManager {
     this.panel.dispatchEvent(event)
   }
 
-  // Normalize luminode names for display
   normalizeLuminodeName (name) {
-    const nameMap = {
-      lissajous: 'Lissajous',
-      harmonograph: 'Harmonograph',
-      sphere: 'Sphere',
-      gegoNet: 'Gego Net',
-      gegoShape: 'Gego Shape',
-      sotoGrid: 'Soto Grid',
-      sotoGridRotated: 'Soto Squares',
-      whitneyLines: 'Whitney Lines',
-      phyllotaxis: 'Phyllotaxis',
-      moireCircles: 'Moire Circles',
-      wovenNet: 'Woven Net',
-      sinewave: 'Sine Wave',
-      triangle: 'Triangle',
-      polygons: 'Polygons',
-      noiseValley: 'Noise Valley',
-      catenoid: 'Catenoid',
-      lineCylinder: 'Line Cylinder'
-    }
-    return nameMap[name] || name
+    return normalizeLuminodeNameUtil(name)
   }
 
-  // Map luminode names to settings keys
   getLuminodeSettingsKey (luminode) {
     return getLuminodeSettingsKey(luminode)
   }

@@ -1,6 +1,36 @@
 // Track UI management - handles track rendering, event listeners, and updates
 import { hasLuminodeConfig, getLuminodesByGroup } from '../luminode-configs.js'
 
+function normalizeLuminodeNameUtil (name) {
+  const nameMap = {
+    lissajous: 'Lissajous',
+    harmonograph: 'Harmonograph',
+    sphere: 'Sphere',
+    gegoNet: 'Gego Net',
+    gegoShape: 'Gego Shape',
+    sotoGrid: 'Soto Grid',
+    sotoGridRotated: 'Soto Squares',
+    whitneyLines: 'Whitney Lines',
+    phyllotaxis: 'Phyllotaxis',
+    moireCircles: 'Moire Circles',
+    wovenNet: 'Woven Net',
+    sinewave: 'Sine Wave',
+    triangle: 'Triangle',
+    polygons: 'Polygons',
+    noiseValley: 'Noise Valley',
+    catenoid: 'Catenoid',
+    lineCylinder: 'Line Cylinder',
+    trefoil: 'Trefoil Knot',
+    cube: 'Cube',
+    diamond: 'Diamond',
+    luneburgLens: 'Luneburg Lens'
+  }
+  return nameMap[name] || name
+}
+
+// Export for reuse in other modules
+export { normalizeLuminodeNameUtil as normalizeLuminodeName }
+
 export class TrackUIManager {
   constructor (trackManager, panel, luminodeConfigManager = null) {
     this.trackManager = trackManager
@@ -552,34 +582,10 @@ export class TrackUIManager {
     return html
   }
 
-  // Normalize luminode names for display
   normalizeLuminodeName (name) {
-    const nameMap = {
-      lissajous: 'Lissajous',
-      harmonograph: 'Harmonograph',
-      sphere: 'Sphere',
-      gegoNet: 'Gego Net',
-      gegoShape: 'Gego Shape',
-      sotoGrid: 'Soto Grid',
-      sotoGridRotated: 'Soto Squares',
-      whitneyLines: 'Whitney Lines',
-      phyllotaxis: 'Phyllotaxis',
-      moireCircles: 'Moire Circles',
-      wovenNet: 'Woven Net',
-      sinewave: 'Sine Wave',
-      triangle: 'Triangle',
-      polygons: 'Polygons',
-      noiseValley: 'Noise Valley',
-      catenoid: 'Catenoid',
-      lineCylinder: 'Line Cylinder',
-      trefoil: 'Trefoil Knot',
-      cube: 'Cube',
-      diamond: 'Diamond'
-    }
-    return nameMap[name] || name
+    return normalizeLuminodeNameUtil(name)
   }
 
-  // Trajectory control helper methods
   getTrajectoryConfig (trackId) {
     return this.trackManager.getTrajectoryConfig(trackId)
   }

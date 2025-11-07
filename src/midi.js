@@ -25,7 +25,8 @@ export class MIDIManager {
       clavilux: [],
       diamond: [],
       cube: [],
-      trefoil: []
+      trefoil: [],
+      luneburgLens: []
     }
 
     this.inputs = new Map() // Maps channel to array of inputs
@@ -42,6 +43,10 @@ export class MIDIManager {
 
   noteOn (channel, midi, velocity) {
     const list = this.activeNotes[channel]
+    if (!list) {
+      console.warn(`Unknown MIDI channel: ${channel}`)
+      return
+    }
     const existingNote = list.find(n => n.midi === midi)
 
     if (existingNote) {
@@ -60,6 +65,10 @@ export class MIDIManager {
 
   noteOff (channel, midi) {
     const list = this.activeNotes[channel]
+    if (!list) {
+      console.warn(`Unknown MIDI channel: ${channel}`)
+      return
+    }
     const index = list.findIndex(n => n.midi === midi)
     if (index !== -1) {
       list.splice(index, 1)

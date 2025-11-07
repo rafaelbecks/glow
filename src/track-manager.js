@@ -21,7 +21,8 @@ export class TrackManager {
       'lissajous', 'harmonograph', 'sphere', 'gegoNet', 'gegoShape',
       'sotoGrid', 'sotoGridRotated', 'whitneyLines', 'phyllotaxis',
       'moireCircles', 'wovenNet', 'sinewave', 'triangle', 'polygons',
-      'noiseValley', 'catenoid', 'lineCylinder', 'clavilux', 'diamond'
+      'noiseValley', 'catenoid', 'lineCylinder', 'clavilux', 'diamond',
+      'cube', 'trefoil', 'luneburgLens'
     ]
 
     this.availableMidiDevices = new Map()

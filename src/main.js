@@ -31,7 +31,8 @@ import {
   ClaviluxLuminode,
   DiamondLuminode,
   CubeLuminode,
-  TrefoilKnotLuminode
+  TrefoilKnotLuminode,
+  LuneburgLensLuminode
 } from './luminodes/index.js'
 
 export class GLOWVisualizer {
@@ -95,7 +96,8 @@ export class GLOWVisualizer {
       clavilux: ClaviluxLuminode,
       diamond: DiamondLuminode,
       cube: CubeLuminode,
-      trefoil: TrefoilKnotLuminode
+      trefoil: TrefoilKnotLuminode,
+      luneburgLens: LuneburgLensLuminode
     }
 
     // Track-based luminode instances
