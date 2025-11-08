@@ -40,7 +40,7 @@ G.L.O.W. works like a digital audio workstation (DAW) with **4 independent track
 - **Each luminode instance is independent** - different positioning, motion, and configuration
 
 ### Visual Effects (Luminodes)
-Choose from 18 unique visual patterns, each inspired by geometric art:
+Choose from 19 unique visual patterns, each inspired by geometric art:
 
 **Classic Patterns:**
 - **Lissajous Curves** - Elegant harmonic relationships
@@ -68,6 +68,9 @@ Choose from 18 unique visual patterns, each inspired by geometric art:
 **Natural Patterns:**
 - **Phyllotaxis** - Spiral patterns found in nature
 - **Moire Circles** - Concentric circles with optical effects
+
+**Optical Patterns:**
+- **Spherical Lens** - Lens distortion with spherical aberration, creating caustic patterns and chromatic effects
 
 **Abstract Structures:**
 - **Woven Net** - Interlaced geometric structures
@@ -206,7 +209,15 @@ Access the **🎨 Canvas tab** to customize your visual experience:
 **Pitch to Color Generator:**
 - **Hue Factor** - Adjust how MIDI notes map to colors (1-100)
 - **Real-time preview** - See how different notes will be colored
-- **Affects multiple luminodes** - Harmonograph, Lissajous, Sinewave, Triangle, Woven Net, Whitney Lines, Moire Circles, Phyllotaxis, Noise Valley, Catenoid, Line Cylinder, Trefoil Knot
+- **Affects multiple luminodes** - Harmonograph, Lissajous, Sinewave, Triangle, Woven Net, Whitney Lines, Moire Circles, Phyllotaxis, Noise Valley, Catenoid, Line Cylinder, Trefoil Knot, Spherical Lens
+
+**Spherical Lens Special Features:**
+- **Spherical Aberration** - Simulates optical lens distortion where outer rays bend more than inner rays, creating caustic patterns
+- **Chromatic Aberration** - Optional RGB separation effect that creates dramatic color shifts simulating optical light dispersion
+- **3D Lens Projection** - Rotating light source creates a 3D spherical appearance with depth
+- **Animated Lines** - Lines wave and move organically, creating dynamic distortion effects
+- **Orientation Control** - Switch between horizontal and vertical line patterns
+- **Movable Lens** - Lens position can be adjusted across the canvas
 
 **Trefoil Knot Special Features:**
 - **Node Mode** (enabled by default) - Number of laces automatically matches the number of active MIDI notes (10 notes = 10 laces). When disabled, uses a fixed number of laces and MIDI only affects color and deformation.

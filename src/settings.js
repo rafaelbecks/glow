@@ -231,7 +231,7 @@ export const SETTINGS = {
       SHOW_POINT_SOURCE: false,
       USE_COLOR: false,
       ABERRATION_STRENGTH: 1.0,
-      CHROMATIC_ABERRATION: false,
+      CHROMATIC_ABERRATION: 0,
       ORIENTATION: 'horizontal',
       LINE_LENGTH: 0,
       CENTER_X: 0,

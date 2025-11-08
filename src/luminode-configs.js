@@ -253,8 +253,8 @@ export const LUMINODE_CONFIGS = {
       { key: 'WAVE_AMPLITUDE', label: 'Wave Amplitude', type: 'slider', min: 0, max: 20, step: 1, default: 5 },
       { key: 'ROTATION_SPEED', label: 'Rotation Speed', type: 'slider', min: 0, max: 0.5, step: 0.05, default: 0.1 },
       { key: 'SHOW_POINT_SOURCE', label: 'Show Point Source', type: 'checkbox', default: false },
-      { key: 'USE_COLOR', label: 'Color Mode', type: 'checkbox', default: false }
-      // { key: 'CHROMATIC_ABERRATION', label: 'Chromatic Aberration', type: 'checkbox', default: false }
+      { key: 'USE_COLOR', label: 'Color Mode', type: 'checkbox', default: false },
+      { key: 'CHROMATIC_ABERRATION', label: 'Chromatic Aberration', type: 'slider', min: 0, max: 30, step: 1, default: 0 }
     ]
   },
 

@@ -100,11 +100,14 @@ export class SphericalLensLuminode {
         endY = halfLength
       }
 
-      const useChromaticAberration = SETTINGS.MODULES.SPHERICAL_LENS.CHROMATIC_ABERRATION && !useColor
-      const chromaticOffset = useChromaticAberration ? lensRadius * 0.08 : 0
+      const chromaticAmount = SETTINGS.MODULES.SPHERICAL_LENS.CHROMATIC_ABERRATION || 0
+      const useChromaticAberration = chromaticAmount > 0 && !useColor
 
       if (useChromaticAberration) {
-        // Calculate perpendicular direction for RGB separation
+        const chromaticIntensity = chromaticAmount / 100
+        const chromaticOffset = lensRadius * 0.12 * chromaticIntensity
+        const chromaticBlur = chromaticIntensity * 8
+
         const lineDirX = endX - startX
         const lineDirY = endY - startY
         const lineLen = Math.sqrt(lineDirX * lineDirX + lineDirY * lineDirY)
@@ -112,9 +115,9 @@ export class SphericalLensLuminode {
         const perpY = lineLen > 0 ? lineDirX / lineLen : 1
 
         const channels = [
-          { offsetX: perpX * -chromaticOffset, offsetY: perpY * -chromaticOffset, color: 'rgba(255, 0, 0, 0.7)' },
-          { offsetX: 0, offsetY: 0, color: 'rgba(0, 255, 0, 0.7)' },
-          { offsetX: perpX * chromaticOffset, offsetY: perpY * chromaticOffset, color: 'rgba(0, 0, 255, 0.7)' }
+          { offsetX: perpX * -chromaticOffset, offsetY: perpY * -chromaticOffset, color: 'rgba(255, 50, 50, 0.9)' },
+          { offsetX: 0, offsetY: 0, color: 'rgba(50, 255, 50, 0.9)' },
+          { offsetX: perpX * chromaticOffset, offsetY: perpY * chromaticOffset, color: 'rgba(50, 50, 255, 0.9)' }
         ]
 
         channels.forEach(channel => {
@@ -127,6 +130,7 @@ export class SphericalLensLuminode {
 
           this.ctx.strokeStyle = channel.color
           this.ctx.shadowColor = channel.color
+          this.ctx.shadowBlur = chromaticBlur
 
           this.ctx.beginPath()
           if (points.length > 0) {
@@ -137,6 +141,8 @@ export class SphericalLensLuminode {
           }
           this.ctx.stroke()
         })
+
+        this.ctx.shadowBlur = SETTINGS.MODULES.SPHERICAL_LENS.SHADOW_BLUR
       } else {
         const points = this.generateDistortedLine(
           startX, startY, endX, endY,

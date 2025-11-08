@@ -71,6 +71,11 @@ Individual drawing modules inspired by geometric art pioneers.
 | **Phyllotaxis** | Spiral dot patterns based on golden angle |
 | **Moire Circles** | Concentric circles with interference patterns |
 
+### Optical Patterns
+| Luminode | Description |
+|----------|-------------|
+| **Spherical Lens** | Lens distortion with spherical aberration, creating caustic patterns and chromatic effects |
+
 ### Abstract Structures
 | Luminode | Description |
 |----------|-------------|
