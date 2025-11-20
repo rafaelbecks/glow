@@ -8,15 +8,15 @@ This document describes the goals, architecture, and development plan for creati
 
 ## 1. Goal
 
-Build a **self-contained visual instrument**—similar in spirit to the Organelle, OXI One, or Squarp devices—running GLOW on embedded hardware (e.g., Raspberry Pi) with:
+Build a **self-contained visual instrument**, similar in spirit to the Organelle, OXI One, or Squarp devices, running GLOW on embedded hardware (e.g., Raspberry Pi) with:
 
 * A **physical control surface** with fixed mappings.
 * **MIDI → GLOW** mapping layer (GLOW acts as a MIDI-controlled engine).
 * **Kiosk-mode boot** into GLOW (Electron or Chromium).
-* **HDMI/VGA/RCA video output** for screens and projectors.
-* **Project storage** (Save/Load).
-* **LGO, Motion/Layout and FX slots**: The device should be a hands-on hardware synthesizer 
-* **[Optional] OLED Screen on the device**: A version could be an standalone composition tool with a screen.
+* **HDMI video output** for screens and projectors.
+* **Project storage (SD Card)** (Save/Load).
+* **LFO, Motion/Layout and FX slots**: The device should be a hands-on hardware synthesizer 
+* **LCD Screen on the device**: Preview 5inch screen to use the device as standalone compositional tool
 
 The hardware behaves essentially as a **MIDI controller + embedded visual engine**.
 
@@ -27,7 +27,8 @@ The hardware behaves essentially as a **MIDI controller + embedded visual engine
 ### Hardware
 
 * Raspberry Pi 4 or later.
-* Custom controller (eventually): buttons, encoders, LEDs.
+* 5 inch LCD Screen
+* Custom controller with Arduino Leonardo / Teensy: buttons, encoders, LEDs.
 * Prototype: *any* MIDI controller mapped to GLOW.
 
 ### Software Stack
@@ -58,6 +59,84 @@ The hardware behaves essentially as a **MIDI controller + embedded visual engine
      ```json
      { "cc": 21, "param": "track[1].layout.xPos" }
      ```
+
+### Architecture Diagram
+
+```mermaid
+graph LR
+
+    subgraph "Hardware Interface"
+
+        ENC[Rotary Encoders<br/>knobs]
+
+        BTN[Buttons & Switches<br/>track select, invert]
+
+    end
+
+    
+
+    subgraph "Arduino Controller"
+
+        LEONARDO[Arduino Leonardo<br/>MIDI/Serial Controller]
+
+    end
+
+    
+
+    subgraph "Raspberry Pi System"
+
+        USBLINK[USB Connection<br/>MIDI or Serial]
+
+        MIDIIN[MIDI/Serial Handler<br/>mapping layer]
+
+        GLOW[GLOW Software<br/>WebGL/Electron/Chromium]
+
+    end
+
+    
+
+    subgraph "Display Output"
+
+        LCD[5' LCD Display<br/>HDMI Input]
+
+    end
+
+    
+
+    %% Main flow
+
+    ENC --> LEONARDO
+
+    BTN --> LEONARDO
+
+    LEONARDO -->|USB MIDI/Serial| USBLINK
+
+    USBLINK --> MIDIIN
+
+    MIDIIN --> GLOW
+
+    GLOW -->|HDMI| LCD
+
+    
+
+    classDef hardware fill:#2c3e50,stroke:#ffffff,stroke-width:2px,color:#ffffff
+
+    classDef controller fill:#16a085,stroke:#ffffff,stroke-width:2px,color:#ffffff
+
+    classDef raspi fill:#8e44ad,stroke:#ffffff,stroke-width:2px,color:#ffffff
+
+    classDef display fill:#c0392b,stroke:#ffffff,stroke-width:2px,color:#ffffff
+
+    
+
+    class ENC,BTN hardware
+
+    class LEONARDO controller
+
+    class USBLINK,MIDIIN,GLOW raspi
+
+    class LCD display
+```
 
 ---
 
@@ -93,28 +172,8 @@ The hardware behaves essentially as a **MIDI controller + embedded visual engine
 
 ---
 
-## 4. Development Plan (Step-By-Step)
 
-### Phase 1 — Foundations (Software)
-
-1. Add **hardware mode** to GLOW.
-2. Define **public parameter API** for all controllable parameters.
-3. Implement **MIDI → GLOW mapping layer** (JSON).
-4. Create **default mapping** for prototyping with any controller.
-5. Implement Save/Load Hardware API (trigger existing save/load .glow projects).
-
-### Phase 2 — Prototype (No hardware yet)
-
-1. Install Raspberry Pi OS Lite.
-2. Configure boot into kiosk (Chromium/Electron → GLOW).
-3. Connect any MIDI controller.
-4. Use mapping file to drive GLOW parameters.
-5. Verify low-latency controls and stable rendering.
-
-### Phase 3 — Hardware Control Surface (v0)
-
-1. Choose enclosure + layout reference (horizontal, MS-20 style).
-2. Select components:
+## 4. Possible list of components
 
    * 4 track buttons
    * 1 Luminode Type encoder
@@ -125,25 +184,10 @@ The hardware behaves essentially as a **MIDI controller + embedded visual engine
    * 2×FX encoders + ON/OFF buttons
    * Save/Load/Settings buttons
 3. Build a **custom USB-MIDI firmware** using:
-   * RP2040
-   * Arduino/PlatformIO
+   * Arduino Leonardo
    * Teensy (optional)
 
-### Phase 4 — Hardware Integration
-
-1. Wire encoders & buttons → microcontroller → USB MIDI out.
-2. Define fixed CC numbers based on the schema.
-3. Connect to Raspberry Pi running GLOW in kiosk mode.
-4. Validate full parameter control.
-
-### Phase 5 — UX + Finishing
-
-1. Add LED feedback per track (color-coded).
-2. Add minimal silk-screen (labels + lines like MS2000/MS20).
-3. Add preset storage buttons and long-press settings menu.
-4. Test video output (HDMI, VGA adapters, RCA if needed).
-
-## 6. Notes
+## 5. Notes
 
 * All hardware mappings must remain **deterministic and fixed** to avoid complexity.
 * The engine should behave identically whether controlled via hardware or standard MIDI.
