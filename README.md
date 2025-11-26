@@ -107,6 +107,11 @@ G.L.O.W. includes additional canvas-level effects that enhance the visual experi
 
 *Thanks to [grained.js](https://github.com/sarathsaleem/grained/) for their elegant noise implementation.*
 
+### Dither Effect
+- **Retro display simulation** - Applies ordered dithering for classic computer graphics aesthetic
+- **Saturation control** - Adjust color saturation (0-1)
+- **RGB table values** - Fine-tune dithering patterns for each color channel
+
 ## Track-Based Luminode System
 
 G.L.O.W. uses a track-based luminode system that creates individual instances for each track:
@@ -229,6 +234,31 @@ G.L.O.W. draws inspiration from several pioneers of geometric and kinetic art:
 - Web HID API support (for tablet functionality on macOS/Linux)
 - Canvas 2D context support
 - File API support (for scene saving/loading)
+
+## MIDI Mappings
+
+G.L.O.W. supports custom MIDI CC mappings for hardware controllers. MIDI mappings allow you to control tracks, luminodes, layout, and motion parameters via MIDI Control Change messages.
+
+**How It Works:**
+- **Mapping files** - JSON configuration files in `midi-mappings/` directory
+- **Track selection** - Map CC numbers to select active tracks
+- **Luminode selection** - Control which luminode type is active
+- **Layout control** - Map X/Y position and rotation
+- **Motion control** - Control trajectory motion parameters
+- **Luminode parameters** - Map CC ranges to luminode-specific controls
+
+**Available Mappings:**
+- `example-mapping.json` - Reference mapping configuration
+- `arturia-keylab-essential-49-mk3.json` - Arturia KeyLab Essential 49 mk3 preset
+
+*Note: MIDI mapping system is a work in progress and subject to changes.*
+
+## Hardware Controller
+
+As part of the G.L.O.W. project, a dedicated hardware controller is in development. The hardware controller will run G.L.O.W. as a standalone visual instrument with physical controls, embedded display, and MIDI integration.
+
+📖 **[Hardware Documentation →](hardware/README.md)**  
+*Goals, architecture, and development plan for the hardware controller*
 
 ## Keyboard Shortcuts
 

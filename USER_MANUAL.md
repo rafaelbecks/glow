@@ -202,6 +202,11 @@ Access the **🎨 Canvas tab** to customize your visual experience:
 - **Density** - Grain density multiplier (0.5-2x)
 - **Grain Width/Height** - Individual grain size (0.5-3px)
 
+**Dither Effect:**
+- **Enable Dither** - Toggle ordered dithering effect on/off
+- **Saturation** - Adjust color saturation (0-1)
+- **RGB Table Values** - Fine-tune dithering patterns for red, green, and blue channels
+
 **Color Palettes:**
 - **Soto Palette** - Main color scheme for geometric luminodes
 - **Polygon Colors** - Specific colors for polygon shapes
@@ -224,6 +229,22 @@ Access the **🎨 Canvas tab** to customize your visual experience:
 - Each lace can have different colors when color mode is enabled
 - Deformation strength responds to MIDI velocity
 - Scale variation creates subtle size differences between laces
+
+### MIDI Mappings
+
+G.L.O.W. supports custom MIDI CC mappings for hardware controllers. This allows you to control tracks, luminodes, layout, and motion parameters directly from your MIDI controller.
+
+**How It Works:**
+- Mapping files are JSON configurations stored in the `midi-mappings/` directory
+- Map CC numbers to track selection, luminode selection, layout (X/Y/rotation), and motion parameters
+- Each mapping file can target a specific MIDI device
+- Luminode parameters can be mapped to CC ranges for hands-on control
+
+**Available Mappings:**
+- `example-mapping.json` - Reference configuration showing all available mappings
+- `arturia-keylab-essential-49-mk3.json` - Preset for Arturia KeyLab Essential 49 mk3
+
+*Note: MIDI mapping system is a work in progress and subject to changes.*
 
 ### Drawing Tablet Support
 - **Connect a drawing tablet** for pressure-sensitive control
@@ -265,6 +286,13 @@ G.L.O.W. draws inspiration from the pioneers of geometric and kinetic art:
 - **Early Computer Graphics** - The aesthetic of 1960s-80s computer art
 
 Each visual pattern is designed to honor these artistic traditions while providing modern, real-time control for contemporary musicians and artists. The trajectory motion system specifically implements Whitney's mathematical approach to harmonic motion, allowing luminodes to move through space with the same elegant precision found in his pioneering computer animations.
+
+## Hardware Controller
+
+As part of the G.L.O.W. project, a dedicated hardware controller is in development. The hardware controller will run G.L.O.W. as a standalone visual instrument with physical controls, embedded display, and MIDI integration.
+
+📖 **[Hardware Documentation →](hardware/README.md)**  
+*Goals, architecture, and development plan for the hardware controller*
 
 ## Repository
 
