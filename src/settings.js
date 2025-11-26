@@ -30,7 +30,12 @@ export const SETTINGS = {
   MIDI: {
     NOTE_ON: 0x90,
     NOTE_OFF: 0x80,
+    CONTROL_CHANGE: 0xB0,
     VELOCITY_MAX: 127
+  },
+
+  HARDWARE_MODE: {
+    ENABLED: false 
   },
 
   // Color settings

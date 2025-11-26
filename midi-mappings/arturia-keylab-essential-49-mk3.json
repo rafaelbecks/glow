@@ -1,0 +1,26 @@
+{
+  "enabled": true,
+  "device": {
+    "name": "KL Essential 49 mk3 MIDI",
+    "id": null
+  },
+  "trackSelection": {
+    "1": 40,
+    "2": 41,
+    "3": 42,
+    "4": 43
+  },
+  "luminodeSelection": {
+    "cc": 96
+  },
+  "luminodeParameters": {
+    "start": 97,
+    "max": 110
+  },
+  "layout": {
+    "111": "x",
+    "112": "y",
+    "113": "rotation"
+  }
+}
+

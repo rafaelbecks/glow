@@ -2,8 +2,9 @@
 import { SETTINGS, MIDI_CHANNELS } from './settings.js'
 
 export class MIDIManager {
-  constructor (trackManager = null) {
+  constructor (trackManager = null, ccMapper = null) {
     this.trackManager = trackManager
+    this.ccMapper = ccMapper
     this.activeNotes = {
       lissajous: [],
       harmonograph: [],
@@ -155,6 +156,14 @@ export class MIDIManager {
     const [status, data1, data2] = msg.data
     const cmd = status & 0xf0
 
+    // Handle Control Change messages for hardware mode
+    if (SETTINGS.HARDWARE_MODE.ENABLED && cmd === SETTINGS.MIDI.CONTROL_CHANGE && this.ccMapper) {
+      const input = this.trackInputs.get(deviceId)
+      if (input) {
+        this.ccMapper.handleCC(data1, data2, deviceId, input.name)
+      }
+    }
+
     // Find which tracks this device is assigned to
     if (!this.trackManager) return
 
@@ -173,6 +182,10 @@ export class MIDIManager {
         this.noteOff(track.luminode, data1)
       }
     })
+  }
+
+  setCCMapper (ccMapper) {
+    this.ccMapper = ccMapper
   }
 
   // Clean up old notes based on timestamp

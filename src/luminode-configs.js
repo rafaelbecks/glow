@@ -90,8 +90,8 @@ export const LUMINODE_CONFIGS = {
     config: [
       { key: 'RADIUS', label: 'Radius', type: 'slider', min: 30, max: 150, step: 5, default: 80 },
       { key: 'HEIGHT', label: 'Height', type: 'slider', min: 100, max: 400, step: 10, default: 300 },
-      { key: 'RINGS', label: 'Rings', type: 'number', min: 8, max: 32, step: 2, default: 16 },
-      { key: 'SEGMENTS', label: 'Segments', type: 'number', min: 12, max: 48, step: 2, default: 24 },
+      { key: 'RINGS', label: 'Rings', type: 'number', min: 1, max: 50, step: 2, default: 16 },
+      { key: 'SEGMENTS', label: 'Segments', type: 'number', min: 1, max: 48, step: 2, default: 24 },
       { key: 'SCALE', label: 'Scale', type: 'slider', min: 0.5, max: 2, step: 0.1, default: 1.0 },
       { key: 'ROTATION_SPEED', label: 'Rotation Speed', type: 'slider', min: 0, max: 3, step: 0.05, default: 0.3 },
       { key: 'DEFORMATION_STRENGTH', label: 'Deformation', type: 'slider', min: 0, max: 2, step: 0.1, default: 0.5 },
@@ -123,10 +123,10 @@ export const LUMINODE_CONFIGS = {
     config: [
       { key: 'RADIUS', label: 'Radius', type: 'slider', min: 30, max: 150, step: 5, default: 80 },
       { key: 'HEIGHT', label: 'Height', type: 'slider', min: 100, max: 300, step: 10, default: 200 },
-      { key: 'RINGS', label: 'Rings', type: 'number', min: 4, max: 16, step: 1, default: 8 },
-      { key: 'SEGMENTS', label: 'Segments', type: 'number', min: 12, max: 48, step: 2, default: 36 },
+      { key: 'RINGS', label: 'Rings', type: 'number', min: 1, max: 30, step: 1, default: 8 },
+      { key: 'SEGMENTS', label: 'Segments', type: 'number', min: 1, max: 48, step: 2, default: 36 },
       { key: 'INSTANCES', label: 'Instances', type: 'number', min: 1, max: 16, step: 1, default: 2 },
-      { key: 'RADIAL_SPACING', label: 'Radial Spacing', type: 'slider', min: 80, max: 300, step: 10, default: 140 },
+      { key: 'RADIAL_SPACING', label: 'Radial Spacing', type: 'slider', min: 40, max: 300, step: 10, default: 140 },
       { key: 'SCALE', label: 'Scale', type: 'slider', min: 0.5, max: 2, step: 0.1, default: 1.7 },
       { key: 'ROTATION_SPEED', label: 'Rotation Speed', type: 'slider', min: 0, max: 3, step: 0.05, default: 0.3 },
       { key: 'LINE_WIDTH', label: 'Line Width', type: 'slider', min: 0.3, max: 2, step: 0.1, default: 0.8 },
@@ -138,7 +138,7 @@ export const LUMINODE_CONFIGS = {
     group: '3D Geometry',
     config: [
       { key: 'SIZE', label: 'Size', type: 'slider', min: 50, max: 300, step: 10, default: 150 },
-      { key: 'SEGMENTS', label: 'Segments', type: 'number', min: 2, max: 10, step: 1, default: 5 },
+      { key: 'SEGMENTS', label: 'Segments', type: 'number', min: 1, max: 40, step: 1, default: 5 },
       { key: 'SCALE', label: 'Scale', type: 'slider', min: 0.5, max: 2, step: 0.1, default: 1.0 },
       { key: 'ROTATION_SPEED', label: 'Rotation Speed', type: 'slider', min: 0, max: 3, step: 0.05, default: 0.3 },
       { key: 'LINE_WIDTH', label: 'Line Width', type: 'slider', min: 0.3, max: 2, step: 0.1, default: 0.8 },

@@ -11,6 +11,7 @@ import { SaveDialog } from './components/save-dialog.js'
 import { FilePickerDialog } from './components/file-picker-dialog.js'
 import { getLuminodeConfig } from './luminode-configs.js'
 import { getLuminodeSettingsKey } from './components/luminode-config-manager.js'
+import { MIDICCMapper } from './midi-cc-mapper.js'
 import {
   LissajousLuminode,
   HarmonographLuminode,
@@ -41,7 +42,16 @@ export class GLOWVisualizer {
     this.tabletCanvas = document.getElementById('tabletCanvas')
     this.canvasDrawer = new CanvasDrawer(this.canvas)
     this.trackManager = new TrackManager()
-    this.midiManager = new MIDIManager(this.trackManager)
+    
+    this.ccMapper = null
+    if (SETTINGS.HARDWARE_MODE.ENABLED) {
+      this.ccMapper = new MIDICCMapper(this.trackManager, this)
+    }
+    
+    this.midiManager = new MIDIManager(this.trackManager, this.ccMapper)
+    if (this.ccMapper) {
+      this.midiManager.setCCMapper(this.ccMapper)
+    }
     this.tabletManager = new TabletManager(this.tabletCanvas, { midiManager: this.midiManager })
     this.uiManager = new UIManager()
     this.sidePanel = new SidePanel(this.trackManager, this.tabletManager, this.uiManager, this.midiManager)
@@ -106,6 +116,10 @@ export class GLOWVisualizer {
     this.isRunning = false
     this.animationId = null
 
+    this.debugOverlay = document.getElementById('midiDebugOverlay')
+    this.debugVisible = false
+    this.debugTimeout = null
+
     this.setupEventHandlers()
     this.setupSaveDialog()
     this.setupFilePickerDialog()
@@ -150,6 +164,8 @@ export class GLOWVisualizer {
     this.uiManager.on('saveFile', () => this.saveFile())
     this.uiManager.on('toggleMute', (trackId) => this.trackManager.toggleMute(trackId))
     this.uiManager.on('toggleSolo', (trackId) => this.trackManager.toggleSolo(trackId))
+    this.uiManager.on('enableHardwareMode', () => this.enableHardwareMode())
+    this.uiManager.on('toggleDebugOverlay', () => this.toggleDebugOverlay())
 
     // Side panel events (now includes both tracks and tablet functionality)
     this.sidePanel.on('luminodeConfigChange', (data) => this.updateLuminodeConfig(data))
@@ -594,6 +610,76 @@ export class GLOWVisualizer {
         // Mark as changed
         this.markProjectChanged()
       }
+    }
+  }
+
+
+  loadCCMapping (mappingConfig) {
+    if (this.ccMapper) {
+      this.ccMapper.loadMapping(mappingConfig)
+    } else {
+      console.warn('Hardware mode is not enabled. Set SETTINGS.HARDWARE_MODE.ENABLED = true')
+    }
+  }
+
+  showDebugMessage (message) {
+    if (!this.debugOverlay || !this.debugVisible) return
+
+    if (this.debugTimeout) {
+      clearTimeout(this.debugTimeout)
+    }
+
+    this.debugOverlay.textContent = message
+    this.debugOverlay.style.display = 'block'
+
+    this.debugTimeout = setTimeout(() => {
+      if (this.debugOverlay) {
+        this.debugOverlay.style.display = 'none'
+      }
+    }, 3000)
+  }
+
+  toggleDebugOverlay () {
+    this.debugVisible = !this.debugVisible
+    if (this.debugOverlay) {
+      if (this.debugVisible) {
+        this.debugOverlay.style.display = 'block'
+      } else {
+        this.debugOverlay.style.display = 'none'
+        if (this.debugTimeout) {
+          clearTimeout(this.debugTimeout)
+          this.debugTimeout = null
+        }
+      }
+    }
+  }
+
+  /**
+   * Enable hardware mode and load Arturia KeyLab mapping (for testing)
+   */
+  async enableHardwareMode () {
+    // Enable hardware mode in settings
+    SETTINGS.HARDWARE_MODE.ENABLED = true
+
+    // Create CC mapper if it doesn't exist
+    if (!this.ccMapper) {
+      this.ccMapper = new MIDICCMapper(this.trackManager, this)
+      this.midiManager.setCCMapper(this.ccMapper)
+    }
+
+    // Load Arturia KeyLab Essential 49 mk3 mapping
+    try {
+      const response = await fetch('midi-mappings/arturia-keylab-essential-49-mk3.json')
+      if (!response.ok) {
+        throw new Error(`Failed to load mapping: ${response.statusText}`)
+      }
+      const mapping = await response.json()
+      this.loadCCMapping(mapping)
+      console.log('Hardware mode enabled with Arturia KeyLab Essential 49 mk3 mapping')
+      this.uiManager.showStatus('Hardware mode enabled (Arturia KeyLab)', 'success')
+    } catch (error) {
+      console.error('Failed to load Arturia mapping:', error)
+      this.uiManager.showStatus('Failed to load hardware mapping', 'error')
     }
   }
 

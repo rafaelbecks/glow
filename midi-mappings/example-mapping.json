@@ -1,0 +1,32 @@
+{
+  "enabled": true,
+  "device": {
+    "name": "MIDI Controller",
+    "id": null
+  },
+  "trackSelection": {
+    "1": 20,
+    "2": 21,
+    "3": 22,
+    "4": 23
+  },
+  "luminodeSelection": {
+    "cc": 24
+  },
+  "luminodeParameters": {
+    "start": 0,
+    "max": 12
+  },
+  "layout": {
+    "30": "x",
+    "31": "y",
+    "32": "rotation"
+  },
+  "motion": {
+    "40": "enabled",
+    "41": "motionRate",
+    "42": "amplitude",
+    "43": "trajectoryType"
+  }
+}
+

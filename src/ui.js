@@ -112,6 +112,9 @@ export class UIManager {
       } else if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault()
         this.triggerCallback('saveFile')
+      } else if ((e.metaKey || e.ctrlKey) && e.key === 'm') {
+        e.preventDefault()
+        this.triggerCallback('enableHardwareMode')
       }
     })
 
@@ -334,6 +337,7 @@ export class UIManager {
     } else {
       this.hideAllIcons()
     }
+    this.triggerCallback('toggleDebugOverlay')
   }
 
   showAllIcons () {
