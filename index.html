@@ -53,6 +53,7 @@
     <canvas id="tabletCanvas"></canvas>
     <div id="noiseOverlay" class="noise-overlay"></div>
     <div id="ditherOverlay" class="dither-overlay"></div>
+    <div id="chromaticAberrationOverlay" class="chromatic-aberration-overlay"></div>
     <div id="midiDebugOverlay" class="midi-debug-overlay" style="display: none;"></div>
     <svg style="position: absolute; width: 0; height: 0;">
       <defs>
@@ -68,6 +69,24 @@
             <feFuncG type="discrete" tableValues="0 1"/>
             <feFuncB type="discrete" tableValues="0 1"/>
           </feComponentTransfer>
+        </filter>
+        <filter id="chromaticAberrationFilter">
+          <feColorMatrix type="matrix" 
+            result="red_"             
+            values="4 0 0 0 0
+                    0 0 0 0 0 
+                    0 0 0 0 0 
+                    0 0 0 1 0"/>
+          <feOffset in="red_" dx="2" dy="0" result="red"/>
+          <feColorMatrix type="matrix" 
+            in="SourceGraphic"             
+            result="blue_"             
+            values="0 0 0 0 0
+                    0 3 0 0 0 
+                    0 0 10 0 0 
+                    0 0 0 1 0"/>
+          <feOffset in="blue_" dx="-3" dy="0" result="blue"/>    
+          <feBlend mode="screen" in="red" in2="blue"/>
         </filter>
       </defs>
     </svg>

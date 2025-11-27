@@ -84,6 +84,12 @@ export class GLOWVisualizer {
     this.ditherOverlay = null
     this.ditherModeEnabled = false
 
+    // Chromatic aberration overlay element
+    this.chromaticAberrationOverlay = null
+    this.chromaticAberrationModeEnabled = false
+    this.chromaticAberrationCanvas = null
+    this.chromaticAberrationCtx = null
+
     // Initialize luminode factory
     this.luminodeFactory = {
       lissajous: LissajousLuminode,
@@ -140,6 +146,9 @@ export class GLOWVisualizer {
 
     // Create dither overlay
     this.createDitherOverlay()
+
+    // Create chromatic aberration overlay
+    this.createChromaticAberrationOverlay()
 
     this.uiManager.showStatus('Connecting to MIDI devices...', 'info')
 
@@ -550,6 +559,12 @@ export class GLOWVisualizer {
         this.updateDitherTableValues('G', value)
       } else if (setting === 'DITHER_TABLE_VALUES_B') {
         this.updateDitherTableValues('B', value)
+      } else if (setting === 'CHROMATIC_ABERRATION_ENABLED') {
+        this.toggleChromaticAberrationOverlay(value)
+      } else if (setting === 'CHROMATIC_ABERRATION_CONTRAST') {
+        this.updateChromaticAberrationContrast(value)
+      } else if (setting === 'INVERT_FILTER') {
+        this.updateInvertFilter(value)
       }
     }
   }
@@ -583,12 +598,31 @@ export class GLOWVisualizer {
 
   updateLumiaEffect (blurStrength) {
     if (this.canvas) {
-      if (blurStrength > 0) {
-        this.canvas.style.filter = `blur(${blurStrength}px)`
-      } else {
-        this.canvas.style.filter = 'none'
-      }
+      this.applyCanvasFilters()
       console.log(`Updated Lumia Effect blur to ${blurStrength}px`)
+    }
+  }
+
+  // Apply all canvas filters (blur and invert) together
+  applyCanvasFilters () {
+    if (!this.canvas) return
+
+    const filters = []
+    const lumiaBlur = SETTINGS.CANVAS.LUMIA_EFFECT || 0
+    const invertValue = SETTINGS.CANVAS.INVERT_FILTER || 0
+
+    if (lumiaBlur > 0) {
+      filters.push(`blur(${lumiaBlur}px)`)
+    }
+
+    if (invertValue > 0) {
+      filters.push(`invert(${invertValue / 100})`)
+    }
+
+    if (filters.length > 0) {
+      this.canvas.style.filter = filters.join(' ')
+    } else {
+      this.canvas.style.filter = 'none'
     }
   }
 
@@ -707,6 +741,11 @@ export class GLOWVisualizer {
     // Update dither overlay if enabled
     if (this.ditherModeEnabled && this.ditherCanvas && this.ditherCtx) {
       this.updateDitherOverlay()
+    }
+
+    // Update chromatic aberration overlay if enabled
+    if (this.chromaticAberrationModeEnabled && this.chromaticAberrationCanvas && this.chromaticAberrationCtx) {
+      this.updateChromaticAberrationOverlay()
     }
 
     // Update side panel activity indicators
@@ -1201,6 +1240,80 @@ export class GLOWVisualizer {
       funcElement.setAttribute('tableValues', tableValueString)
       console.log(`Dither ${channel} channel table values updated to ${tableValueString}`)
     }
+  }
+
+  // Create chromatic aberration overlay element
+  createChromaticAberrationOverlay () {
+    this.chromaticAberrationOverlay = document.getElementById('chromaticAberrationOverlay')
+    if (!this.chromaticAberrationOverlay) {
+      console.error('Chromatic aberration overlay element not found')
+      return
+    }
+
+    // Create a canvas inside the overlay to copy the main canvas content
+    this.chromaticAberrationCanvas = document.createElement('canvas')
+    this.chromaticAberrationCanvas.width = window.innerWidth
+    this.chromaticAberrationCanvas.height = window.innerHeight
+    this.chromaticAberrationCanvas.style.width = '100%'
+    this.chromaticAberrationCanvas.style.height = '100%'
+    this.chromaticAberrationCanvas.style.display = 'block'
+    this.chromaticAberrationOverlay.appendChild(this.chromaticAberrationCanvas)
+    this.chromaticAberrationCtx = this.chromaticAberrationCanvas.getContext('2d')
+
+    // Set initial contrast value
+    const initialContrast = SETTINGS.CANVAS.CHROMATIC_ABERRATION_CONTRAST || 1
+    this.updateChromaticAberrationContrast(initialContrast)
+
+    window.addEventListener('resize', () => {
+      if (this.chromaticAberrationCanvas) {
+        this.chromaticAberrationCanvas.width = window.innerWidth
+        this.chromaticAberrationCanvas.height = window.innerHeight
+      }
+    })
+  }
+
+  // Toggle chromatic aberration overlay mode
+  toggleChromaticAberrationOverlay (enabled) {
+    this.chromaticAberrationModeEnabled = enabled
+
+    if (this.chromaticAberrationOverlay) {
+      if (enabled) {
+        this.chromaticAberrationOverlay.style.display = 'block'
+      } else {
+        this.chromaticAberrationOverlay.style.display = 'none'
+      }
+    }
+
+    console.log(`Chromatic aberration overlay ${enabled ? 'enabled' : 'disabled'}`)
+  }
+
+  // Update chromatic aberration overlay by copying canvas content
+  updateChromaticAberrationOverlay () {
+    if (!this.chromaticAberrationCanvas || !this.chromaticAberrationCtx || !this.canvas) return
+
+    // Clear the chromatic aberration canvas
+    this.chromaticAberrationCtx.clearRect(0, 0, this.chromaticAberrationCanvas.width, this.chromaticAberrationCanvas.height)
+
+    // Copy the main canvas to the chromatic aberration canvas
+    this.chromaticAberrationCtx.drawImage(this.canvas, 0, 0, this.chromaticAberrationCanvas.width, this.chromaticAberrationCanvas.height)
+  }
+
+  // Update chromatic aberration contrast value
+  updateChromaticAberrationContrast (value) {
+    const contrast = Math.max(1, Math.min(10, value))
+    SETTINGS.CANVAS.CHROMATIC_ABERRATION_CONTRAST = contrast
+    if (this.chromaticAberrationOverlay) {
+      this.chromaticAberrationOverlay.style.filter = `url(#chromaticAberrationFilter) contrast(${contrast})`
+      console.log(`Chromatic aberration contrast updated to ${contrast}`)
+    }
+  }
+
+  // Update invert filter value
+  updateInvertFilter (value) {
+    const invertPercent = Math.max(0, Math.min(100, value))
+    SETTINGS.CANVAS.INVERT_FILTER = invertPercent
+    this.applyCanvasFilters()
+    console.log(`Invert filter updated to ${invertPercent}%`)
   }
 
   // Debug method to check MIDI devices

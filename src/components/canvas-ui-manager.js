@@ -378,6 +378,63 @@ export class CanvasUIManager {
               </div>
             </div>
           </div>
+          
+          <div class="tablet-config-group">
+            <label>
+              <ion-icon name="color-filter-outline"></ion-icon>
+              Chromatic Aberration
+            </label>
+            <label class="checkbox-container">
+              <input type="checkbox" 
+                     id="chromaticAberrationOverlay" 
+                     ${canvasSettings.CHROMATIC_ABERRATION_ENABLED ? 'checked' : ''}
+                     class="config-checkbox">
+              <span class="checkmark"></span>
+              Enable Chromatic Aberration
+            </label>
+            <div class="setting-description">
+              Adds chromatic aberration effect with RGB color separation
+            </div>
+          </div>
+          
+          <div class="tablet-config-group" id="chromaticAberrationSettingsGroup" style="${canvasSettings.CHROMATIC_ABERRATION_ENABLED ? 'display: block;' : 'display: none;'}">
+            <div class="chromatic-aberration-controls">
+              <div class="chromatic-aberration-control-row">
+                <div class="chromatic-aberration-control">
+                  <label for="chromaticAberrationContrast">Contrast</label>
+                  <div class="slider-container">
+                    <input type="range" 
+                           id="chromaticAberrationContrast" 
+                           class="config-slider"
+                           min="1" 
+                           max="10" 
+                           step="0.1" 
+                           value="${canvasSettings.CHROMATIC_ABERRATION_CONTRAST || 1}">
+                    <span class="slider-value">${canvasSettings.CHROMATIC_ABERRATION_CONTRAST || 1}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tablet-config-group">
+            <label>
+              <ion-icon name="contrast-outline"></ion-icon>
+              Invert Filter
+            </label>
+            <div class="range-container">
+              <input type="range" 
+                     id="invertFilter" 
+                     min="0" 
+                     max="100" 
+                     step="1" 
+                     value="${canvasSettings.INVERT_FILTER || 0}">
+              <span class="range-value">${canvasSettings.INVERT_FILTER || 0}%</span>
+            </div>
+            <div class="setting-description">
+              Inverts the canvas colors (0% = normal, 100% = fully inverted)
+            </div>
+          </div>
         </div>
 
         <!-- Color Palettes -->
@@ -753,6 +810,47 @@ export class CanvasUIManager {
         }
         const tableValues = this.sliderToTableValues(value)
         this.triggerCanvasSettingChange('DITHER_TABLE_VALUES_B', tableValues)
+      })
+    }
+
+    // Chromatic aberration overlay checkbox
+    const chromaticAberrationOverlayCheckbox = container.querySelector('#chromaticAberrationOverlay')
+    if (chromaticAberrationOverlayCheckbox) {
+      chromaticAberrationOverlayCheckbox.addEventListener('change', (e) => {
+        const isEnabled = e.target.checked
+        this.triggerCanvasSettingChange('CHROMATIC_ABERRATION_ENABLED', isEnabled)
+
+        // Show/hide chromatic aberration settings based on enabled state
+        const chromaticAberrationSettingsGroup = container.querySelector('#chromaticAberrationSettingsGroup')
+        if (chromaticAberrationSettingsGroup) {
+          chromaticAberrationSettingsGroup.style.display = isEnabled ? 'block' : 'none'
+        }
+      })
+    }
+
+    // Chromatic aberration contrast slider
+    const chromaticAberrationContrastSlider = container.querySelector('#chromaticAberrationContrast')
+    if (chromaticAberrationContrastSlider) {
+      chromaticAberrationContrastSlider.addEventListener('input', (e) => {
+        const value = parseFloat(e.target.value)
+        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
+        if (valueDisplay) {
+          valueDisplay.textContent = value
+        }
+        this.triggerCanvasSettingChange('CHROMATIC_ABERRATION_CONTRAST', value)
+      })
+    }
+
+    // Invert filter slider
+    const invertFilterSlider = container.querySelector('#invertFilter')
+    if (invertFilterSlider) {
+      invertFilterSlider.addEventListener('input', (e) => {
+        const value = parseInt(e.target.value)
+        const valueDisplay = e.target.parentElement.querySelector('.range-value')
+        if (valueDisplay) {
+          valueDisplay.textContent = `${value}%`
+        }
+        this.triggerCanvasSettingChange('INVERT_FILTER', value)
       })
     }
 

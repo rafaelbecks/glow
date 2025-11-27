@@ -35,7 +35,10 @@ export class ProjectManager {
         ditherSaturate: SETTINGS.CANVAS.DITHER_SATURATE,
         ditherTableValuesR: SETTINGS.CANVAS.DITHER_TABLE_VALUES_R,
         ditherTableValuesG: SETTINGS.CANVAS.DITHER_TABLE_VALUES_G,
-        ditherTableValuesB: SETTINGS.CANVAS.DITHER_TABLE_VALUES_B
+        ditherTableValuesB: SETTINGS.CANVAS.DITHER_TABLE_VALUES_B,
+        chromaticAberrationEnabled: SETTINGS.CANVAS.CHROMATIC_ABERRATION_ENABLED,
+        chromaticAberrationContrast: SETTINGS.CANVAS.CHROMATIC_ABERRATION_CONTRAST,
+        invertFilter: SETTINGS.CANVAS.INVERT_FILTER
       },
       colors: {
         sotoPalette: [...SETTINGS.COLORS.SOTO_PALETTE],
@@ -565,6 +568,21 @@ export class ProjectManager {
     if (canvasData.ditherTableValuesB !== undefined) {
       SETTINGS.CANVAS.DITHER_TABLE_VALUES_B = canvasData.ditherTableValuesB
       this.glowVisualizer.updateDitherTableValues('B', canvasData.ditherTableValuesB)
+    }
+
+    if (canvasData.chromaticAberrationEnabled !== undefined) {
+      SETTINGS.CANVAS.CHROMATIC_ABERRATION_ENABLED = canvasData.chromaticAberrationEnabled
+      this.glowVisualizer.toggleChromaticAberrationOverlay(canvasData.chromaticAberrationEnabled)
+    }
+
+    if (canvasData.chromaticAberrationContrast !== undefined) {
+      SETTINGS.CANVAS.CHROMATIC_ABERRATION_CONTRAST = canvasData.chromaticAberrationContrast
+      this.glowVisualizer.updateChromaticAberrationContrast(canvasData.chromaticAberrationContrast)
+    }
+
+    if (canvasData.invertFilter !== undefined) {
+      SETTINGS.CANVAS.INVERT_FILTER = canvasData.invertFilter
+      this.glowVisualizer.updateInvertFilter(canvasData.invertFilter)
     }
   }
 
