@@ -70,6 +70,7 @@ Individual drawing modules inspired by geometric art pioneers.
 |----------|-------------|
 | **Phyllotaxis** | Spiral dot patterns based on golden angle |
 | **Moire Circles** | Concentric circles with interference patterns |
+| **Epitrochoid** | Closed rosette patterns created by rotating circles, forming interlacing loops that grow and transform |
 
 ### Optical Patterns
 | Luminode | Description |

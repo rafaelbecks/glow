@@ -247,6 +247,18 @@ export const SETTINGS = {
       WAVE_SPEED: 0.3,
       WAVE_AMPLITUDE: 5,
       LENS_DEPTH: 0.3
+    },
+    EPITROCHOID: {
+      BASE_SIZE: 250,
+      GROWTH_RATE: 0.2,
+      ROTATION_SPEED: 0.3,
+      SEGMENTS: 200,
+      LINES_PER_NOTE: 1,
+      DEPTH_PROJECTION: 0.2,
+      LINE_WIDTH: 1,
+      SHADOW_BLUR: 15,
+      USE_3D_ROTATION: true,
+      USE_COLOR: false
     }
   },
 

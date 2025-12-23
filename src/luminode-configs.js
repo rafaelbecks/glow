@@ -276,6 +276,21 @@ export const LUMINODE_CONFIGS = {
       { key: 'BASE_SIZE', label: 'Base Size', type: 'slider', min: 10, max: 40, step: 2, default: 20 },
       { key: 'SIZE_VARIATION', label: 'Size Variation', type: 'slider', min: 5, max: 25, step: 1, default: 15 }
     ]
+  },
+
+  epitrochoid: {
+    group: 'Natural Patterns',
+    config: [
+      { key: 'BASE_SIZE', label: 'Base Size', type: 'slider', min: 150, max: 1200, step: 5, default: 350 },
+      { key: 'GROWTH_RATE', label: 'Growth Rate', type: 'slider', min: 0, max: 0.5, step: 0.05, default: 0.2 },
+      { key: 'ROTATION_SPEED', label: 'Rotation Speed', type: 'slider', min: 0, max: 1, step: 0.05, default: 0.3 },
+      { key: 'SEGMENTS', label: 'Segments', type: 'number', min: 50, max: 400, step: 10, default: 200 },
+      { key: 'LINES_PER_NOTE', label: 'Lines Per Note', type: 'number', min: 1, max: 5, step: 1, default: 1 },
+      { key: 'DEPTH_PROJECTION', label: 'Depth Projection', type: 'slider', min: 0, max: 0.5, step: 0.05, default: 0.2 },
+      { key: 'LINE_WIDTH', label: 'Line Width', type: 'slider', min: 0.5, max: 2, step: 0.1, default: 1 },
+      { key: 'USE_3D_ROTATION', label: '3D Rotation', type: 'checkbox', default: true },
+      { key: 'USE_COLOR', label: 'Color Mode', type: 'checkbox', default: false }
+    ]
   }
 }
 

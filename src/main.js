@@ -33,7 +33,8 @@ import {
   DiamondLuminode,
   CubeLuminode,
   TrefoilKnotLuminode,
-  SphericalLensLuminode
+  SphericalLensLuminode,
+  EpitrochoidLuminode
 } from './luminodes/index.js'
 
 export class GLOWVisualizer {
@@ -113,7 +114,8 @@ export class GLOWVisualizer {
       diamond: DiamondLuminode,
       cube: CubeLuminode,
       trefoil: TrefoilKnotLuminode,
-      sphericalLens: SphericalLensLuminode
+      sphericalLens: SphericalLensLuminode,
+      epitrochoid: EpitrochoidLuminode
     }
 
     // Track-based luminode instances

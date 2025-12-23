@@ -40,7 +40,7 @@ G.L.O.W. works like a digital audio workstation (DAW) with **4 independent track
 - **Each luminode instance is independent** - different positioning, motion, and configuration
 
 ### Visual Effects (Luminodes)
-Choose from 19 unique visual patterns, each inspired by geometric art:
+Choose from 20 unique visual patterns, each inspired by geometric art:
 
 **Classic Patterns:**
 - **Lissajous Curves** - Elegant harmonic relationships
@@ -68,6 +68,7 @@ Choose from 19 unique visual patterns, each inspired by geometric art:
 **Natural Patterns:**
 - **Phyllotaxis** - Spiral patterns found in nature
 - **Moire Circles** - Concentric circles with optical effects
+- **Epitrochoid** - Closed rosette patterns created by rotating circles, forming interlacing loops that grow and transform with MIDI input
 
 **Optical Patterns:**
 - **Spherical Lens** - Lens distortion with spherical aberration, creating caustic patterns and chromatic effects
