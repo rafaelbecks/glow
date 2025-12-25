@@ -25,7 +25,8 @@ function getLuminodeSettingsKey (luminode) {
     diamond: 'DIAMOND',
     cube: 'CUBE',
     trefoil: 'TREFOIL',
-    sphericalLens: 'SPHERICAL_LENS'
+    sphericalLens: 'SPHERICAL_LENS',
+    epitrochoid: 'EPITROCHOID'
   }
   return luminodeMapping[luminode] || luminode.toUpperCase()
 }

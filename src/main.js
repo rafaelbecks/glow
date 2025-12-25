@@ -12,6 +12,7 @@ import { FilePickerDialog } from './components/file-picker-dialog.js'
 import { getLuminodeConfig } from './luminode-configs.js'
 import { getLuminodeSettingsKey } from './components/luminode-config-manager.js'
 import { MIDICCMapper } from './midi-cc-mapper.js'
+import { SynthManager } from './synth-manager.js'
 import {
   LissajousLuminode,
   HarmonographLuminode,
@@ -54,8 +55,9 @@ export class GLOWVisualizer {
       this.midiManager.setCCMapper(this.ccMapper)
     }
     this.tabletManager = new TabletManager(this.tabletCanvas, { midiManager: this.midiManager })
+    this.synthManager = new SynthManager()
     this.uiManager = new UIManager()
-    this.sidePanel = new SidePanel(this.trackManager, this.tabletManager, this.uiManager, this.midiManager)
+    this.sidePanel = new SidePanel(this.trackManager, this.tabletManager, this.uiManager, this.midiManager, this.synthManager)
     this.sidePanel.setSettings(SETTINGS)
     this.projectManager = new ProjectManager(this)
     this.saveDialog = new SaveDialog()
@@ -192,6 +194,33 @@ export class GLOWVisualizer {
     this.sidePanel.on('midiOutputChange', (enabled) => this.setMidiOutputEnabled(enabled))
     this.sidePanel.on('midiOutputDeviceChange', (deviceId) => this.setMidiOutputDevice(deviceId))
     this.sidePanel.on('octaveRangeChange', (range) => this.setOctaveRange(range))
+    
+    // Synth events
+    if (this.sidePanel.synthUIManager) {
+      this.sidePanel.synthUIManager.on('synthEnabledChange', (enabled) => {
+        this.synthManager.setEnabled(enabled)
+      })
+      this.sidePanel.synthUIManager.on('xRangeMinChange', (value) => {
+        const currentConfig = this.synthManager.getConfig()
+        this.synthManager.updateConfig({ xRange: { ...currentConfig.xRange, min: value } })
+      })
+      this.sidePanel.synthUIManager.on('xRangeMaxChange', (value) => {
+        const currentConfig = this.synthManager.getConfig()
+        this.synthManager.updateConfig({ xRange: { ...currentConfig.xRange, max: value } })
+      })
+      this.sidePanel.synthUIManager.on('frequencyMinChange', (value) => {
+        this.synthManager.updateConfig({ frequencyMin: value })
+      })
+      this.sidePanel.synthUIManager.on('frequencyMaxChange', (value) => {
+        this.synthManager.updateConfig({ frequencyMax: value })
+      })
+      this.sidePanel.synthUIManager.on('attackChange', (value) => {
+        this.synthManager.updateConfig({ attack: value })
+      })
+      this.sidePanel.synthUIManager.on('releaseChange', (value) => {
+        this.synthManager.updateConfig({ release: value })
+      })
+    }
 
     // Track manager events
     this.trackManager.on('luminodeChanged', (data) => this.handleLuminodeChange(data))
@@ -737,8 +766,72 @@ export class GLOWVisualizer {
     // Get all active notes based on track assignments
     const activeNotes = this.midiManager.getActiveNotesForTracks()
 
-    // Draw all luminodes
+    // Process synth drawing data and generate audio
+    // Convert captured points to waveforms and synthesize
+    if (this.synthManager && this.synthManager.isEnabled) {
+      // Get active tracks (tracks with MIDI notes or drawing) BEFORE drawing
+      const activeTracks = this.trackManager.getActiveTracks()
+      const activeTrackIds = activeTracks
+        .filter(track => {
+          // Only include tracks that have a luminode, MIDI device, and active notes
+          const hasLuminode = track.luminode !== null
+          const hasMidiDevice = track.midiDevice !== null
+          const hasNotes = activeNotes[track.luminode] && activeNotes[track.luminode].length > 0
+          return hasLuminode && hasMidiDevice && hasNotes
+        })
+        .map(track => track.id)
+      
+      // Clear drawing points for tracks that are no longer active
+      this.synthManager.drawingPoints.forEach((points, trackId) => {
+        const trackIdStr = String(trackId)
+        const trackIdNum = parseInt(trackIdStr)
+        if (!activeTrackIds.includes(trackIdNum) && !activeTrackIds.includes(trackIdStr)) {
+          this.synthManager.drawingPoints.delete(trackIdStr)
+          this.synthManager.waveforms.delete(trackIdStr)
+          this.synthManager.stopAudioNode(trackIdStr)
+        }
+      })
+    }
+
+    // Draw all luminodes (this will capture new points)
     this.drawLuminodes(t, activeNotes)
+
+    // Process synth drawing data and generate audio
+    if (this.synthManager && this.synthManager.isEnabled) {
+      const { width, height } = this.canvasDrawer.getDimensions()
+      const trackLayouts = this.getTrackLayouts()
+      
+      // Get active tracks again (after drawing)
+      const activeTracks = this.trackManager.getActiveTracks()
+      const activeTrackIds = activeTracks
+        .filter(track => {
+          const hasLuminode = track.luminode !== null
+          const hasMidiDevice = track.midiDevice !== null
+          const hasNotes = activeNotes[track.luminode] && activeNotes[track.luminode].length > 0
+          return hasLuminode && hasMidiDevice && hasNotes
+        })
+        .map(track => track.id)
+      
+      // Convert points to waveforms with canvas height context (only for active tracks)
+      this.synthManager.drawingPoints.forEach((points, trackId) => {
+        if (points && points.length > 0) {
+          const trackIdStr = String(trackId)
+          const trackIdNum = parseInt(trackIdStr)
+          // Only convert if this track is active
+          if (activeTrackIds.includes(trackIdNum) || activeTrackIds.includes(trackIdStr)) {
+            this.synthManager.convertPointsToWaveformWithContext(trackIdStr, height)
+          }
+        }
+      })
+      
+      // Process and synthesize (only for active tracks)
+      this.synthManager.processDrawingData(width, height, trackLayouts, activeTrackIds)
+    } else {
+      // If synth is disabled, stop all audio
+      if (this.synthManager) {
+        this.synthManager.stopAllAudioNodes()
+      }
+    }
 
     // Update dither overlay if enabled
     if (this.ditherModeEnabled && this.ditherCanvas && this.ditherCtx) {
@@ -779,7 +872,8 @@ export class GLOWVisualizer {
         })
 
         // Use track ID as key to support multiple instances of same luminode type
-        layouts[track.id] = {
+        // Convert to string for consistency with synth manager
+        layouts[String(track.id)] = {
           x: trajectoryPosition.x,
           y: trajectoryPosition.y,
           rotation: baseLayout.rotation
@@ -833,8 +927,38 @@ export class GLOWVisualizer {
       // Apply modulation before drawing
       const restoreValues = this.applyModulationToTrack(track.id, track.luminode)
 
+      // Set up point capture for synth (if enabled)
+      if (this.synthManager && this.synthManager.isEnabled) {
+        // Use string trackId for consistency
+        const trackIdStr = String(track.id)
+        this.canvasDrawer.setCurrentTrackId(trackIdStr)
+        this.canvasDrawer.setPointCaptureCallback((trackId, x, y) => {
+          // Points are already in local coordinates (after layout transform)
+          // Store them as-is, we'll convert when processing
+          this.synthManager.captureDrawingPoints(trackId, [{ x, y }])
+        })
+      }
+
       // Draw the luminode with track-specific parameters
       this.drawTrackLuminode(luminode, track.luminode, t, notes, layout)
+
+      // Clear point capture after drawing
+      if (this.synthManager && this.synthManager.isEnabled) {
+        this.canvasDrawer.setPointCaptureCallback(null)
+        this.canvasDrawer.setCurrentTrackId(null)
+      }
+      
+      // Clear captured points for this track if there are no active notes
+      if (this.synthManager && this.synthManager.isEnabled) {
+        const trackNotes = notes || []
+        if (trackNotes.length === 0) {
+          // No notes, clear points for this track
+          const trackIdStr = String(track.id)
+          this.synthManager.drawingPoints.delete(trackIdStr)
+          this.synthManager.waveforms.delete(trackIdStr)
+          this.synthManager.stopAudioNode(trackIdStr)
+        }
+      }
 
       // Restore original config values after drawing
       if (restoreValues) {

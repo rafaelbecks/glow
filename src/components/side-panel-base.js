@@ -41,9 +41,9 @@ export class SidePanelBase {
             <ion-icon name="color-palette-outline"></ion-icon>
             <span>CANVAS</span>
           </button>
-          <button class="tab-btn" data-tab="tablet">
-            <ion-icon name="color-filter-outline"></ion-icon>
-            <span>TABLET</span>
+          <button class="tab-btn" data-tab="synth">
+            <ion-icon name="musical-notes-outline"></ion-icon>
+            <span>SYNTH</span>
           </button>
         </div>
         <button id="togglePanel" class="toggle-panel-btn">
@@ -65,10 +65,10 @@ export class SidePanelBase {
           </div>
         </div>
         
-        <!-- Tablet Tab Content -->
-        <div id="tabletTab" class="tab-content">
-          <div id="tabletControlsContainer">
-            <!-- Tablet controls will be dynamically generated -->
+        <!-- Synth Tab Content -->
+        <div id="synthTab" class="tab-content">
+          <div id="synthControlsContainer">
+            <!-- Synth controls will be dynamically generated -->
           </div>
         </div>
         

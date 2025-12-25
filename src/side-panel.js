@@ -4,9 +4,10 @@ import { TrackUIManager } from './components/track-ui-manager.js'
 import { LuminodeConfigManager } from './components/luminode-config-manager.js'
 import { CanvasUIManager } from './components/canvas-ui-manager.js'
 import { ModulationUIManager } from './components/modulation-ui-manager.js'
+import { SynthUIManager } from './components/synth-ui-manager.js'
 
 export class SidePanel {
-  constructor (trackManager, tabletManager, uiManager = null, midiManager = null) {
+  constructor (trackManager, tabletManager, uiManager = null, midiManager = null, synthManager = null) {
     // Initialize base panel
     this.basePanel = new SidePanelBase(trackManager, tabletManager, uiManager, midiManager)
 
@@ -15,6 +16,11 @@ export class SidePanel {
     this.trackUIManager = new TrackUIManager(trackManager, this.basePanel.getPanel(), this.luminodeConfigManager)
     this.canvasUIManager = new CanvasUIManager(this.basePanel.getPanel())
     this.modulationUIManager = new ModulationUIManager(trackManager, this.basePanel.getPanel())
+    
+    // Initialize synth UI manager if synth manager is provided
+    if (synthManager) {
+      this.synthUIManager = new SynthUIManager(this.basePanel.getPanel(), synthManager, trackManager)
+    }
 
     // Set up event delegation
     this.setupEventDelegation()
@@ -76,8 +82,10 @@ export class SidePanel {
       this.trackUIManager.renderTracks()
     } else if (tabName === 'modulation') {
       this.modulationUIManager.renderModulationControls()
-    } else if (tabName === 'tablet') {
-      await this.basePanel.renderTabletControls()
+    } else if (tabName === 'synth') {
+      if (this.synthUIManager) {
+        this.synthUIManager.renderSynthControls()
+      }
     } else if (tabName === 'canvas') {
       this.canvasUIManager.renderCanvasControls()
     }

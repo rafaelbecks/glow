@@ -4,9 +4,81 @@ import { SETTINGS } from './settings.js'
 export class CanvasDrawer {
   constructor (canvas) {
     this.canvas = canvas
-    this.ctx = canvas.getContext('2d')
+    this.rawCtx = canvas.getContext('2d')
+    // Create a proxy context that always checks for point capture
+    this.ctx = this.createProxiedContext()
     this.width = canvas.width
     this.height = canvas.height
+    this.pointCaptureCallback = null // Callback to capture drawing points for synth
+    this.currentTrackId = null // Current track ID for point capture
+  }
+
+  // Create a proxied context that always checks for point capture
+  createProxiedContext () {
+    const self = this
+    return new Proxy(this.rawCtx, {
+      get (target, prop) {
+        // Intercept drawing methods to capture points
+        if (prop === 'lineTo') {
+          return function (x, y) {
+            self.capturePoint(x, y)
+            return target.lineTo.call(target, x, y)
+          }
+        } else if (prop === 'moveTo') {
+          return function (x, y) {
+            self.capturePoint(x, y)
+            return target.moveTo.call(target, x, y)
+          }
+        } else if (prop === 'arc') {
+          return function (x, y, radius, startAngle, endAngle, anticlockwise) {
+            // Sample points along the arc
+            if (self.pointCaptureCallback && self.currentTrackId) {
+              const steps = Math.ceil(Math.abs(endAngle - startAngle) * radius / 2)
+              for (let i = 0; i <= steps; i++) {
+                const angle = startAngle + (endAngle - startAngle) * (i / steps)
+                const px = x + Math.cos(angle) * radius
+                const py = y + Math.sin(angle) * radius
+                self.capturePoint(px, py)
+              }
+            }
+            return target.arc.call(target, x, y, radius, startAngle, endAngle, anticlockwise)
+          }
+        }
+        
+        // For all other properties/methods
+        const value = target[prop]
+        
+        // If it's a function, bind it to the target to preserve 'this' context
+        if (typeof value === 'function') {
+          return value.bind(target)
+        }
+        
+        // For properties, return as-is (this preserves getters/setters)
+        return value
+      },
+      set (target, prop, value) {
+        // Allow setting properties normally
+        target[prop] = value
+        return true
+      }
+    })
+  }
+
+  // Set callback for capturing drawing points (for synth)
+  setPointCaptureCallback (callback) {
+    this.pointCaptureCallback = callback
+  }
+
+  // Set current track ID for point capture
+  setCurrentTrackId (trackId) {
+    this.currentTrackId = trackId
+  }
+
+  // Capture a drawing point
+  capturePoint (x, y) {
+    if (this.pointCaptureCallback && this.currentTrackId) {
+      this.pointCaptureCallback(this.currentTrackId, x, y)
+    }
   }
 
   resize () {
@@ -224,6 +296,7 @@ export class CanvasDrawer {
   }
 
   // Get canvas context for direct drawing operations
+  // Returns the proxied context that always captures points when enabled
   getContext () {
     return this.ctx
   }

@@ -1,4 +1,6 @@
 // Tablet controls component for the side panel
+// NOTE: This is experimental/deprecated functionality for tablet device drawing support.
+// Currently not supported in the UI, but code is kept for potential future use.
 export class TabletControls {
   constructor (tabletManager) {
     this.tabletManager = tabletManager
