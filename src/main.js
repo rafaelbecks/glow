@@ -776,7 +776,7 @@ export class GLOWVisualizer {
         if (!activeTrackIds.includes(trackIdNum) && !activeTrackIds.includes(trackIdStr)) {
           this.synthManager.drawingPoints.delete(trackIdStr)
           this.synthManager.waveforms.delete(trackIdStr)
-          this.synthManager.stopAudioNode(trackIdStr)
+          this.synthManager.stopAllSynthsForTrack(trackIdStr)
         }
       })
     }
@@ -809,7 +809,7 @@ export class GLOWVisualizer {
     } else {
       // If synth is disabled, stop all audio
       if (this.synthManager) {
-        this.synthManager.stopAllAudioNodes()
+        this.synthManager.stopAllSynths()
       }
     }
 
