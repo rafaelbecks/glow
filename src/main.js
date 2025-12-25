@@ -56,6 +56,8 @@ export class GLOWVisualizer {
     }
     this.tabletManager = new TabletManager(this.tabletCanvas, { midiManager: this.midiManager })
     this.synthManager = new SynthManager()
+    // Set track manager reference so synth can access track info
+    this.synthManager.setTrackManager(this.trackManager)
     this.uiManager = new UIManager()
     this.sidePanel = new SidePanel(this.trackManager, this.tabletManager, this.uiManager, this.midiManager, this.synthManager)
     this.sidePanel.setSettings(SETTINGS)
@@ -199,20 +201,6 @@ export class GLOWVisualizer {
     if (this.sidePanel.synthUIManager) {
       this.sidePanel.synthUIManager.on('synthEnabledChange', (enabled) => {
         this.synthManager.setEnabled(enabled)
-      })
-      this.sidePanel.synthUIManager.on('xRangeMinChange', (value) => {
-        const currentConfig = this.synthManager.getConfig()
-        this.synthManager.updateConfig({ xRange: { ...currentConfig.xRange, min: value } })
-      })
-      this.sidePanel.synthUIManager.on('xRangeMaxChange', (value) => {
-        const currentConfig = this.synthManager.getConfig()
-        this.synthManager.updateConfig({ xRange: { ...currentConfig.xRange, max: value } })
-      })
-      this.sidePanel.synthUIManager.on('frequencyMinChange', (value) => {
-        this.synthManager.updateConfig({ frequencyMin: value })
-      })
-      this.sidePanel.synthUIManager.on('frequencyMaxChange', (value) => {
-        this.synthManager.updateConfig({ frequencyMax: value })
       })
       this.sidePanel.synthUIManager.on('attackChange', (value) => {
         this.synthManager.updateConfig({ attack: value })
@@ -813,19 +801,11 @@ export class GLOWVisualizer {
         .map(track => track.id)
       
       // Convert points to waveforms with canvas height context (only for active tracks)
-      this.synthManager.drawingPoints.forEach((points, trackId) => {
-        if (points && points.length > 0) {
-          const trackIdStr = String(trackId)
-          const trackIdNum = parseInt(trackIdStr)
-          // Only convert if this track is active
-          if (activeTrackIds.includes(trackIdNum) || activeTrackIds.includes(trackIdStr)) {
-            this.synthManager.convertPointsToWaveformWithContext(trackIdStr, height)
-          }
-        }
-      })
+      // This happens in processDrawingData now, so we don't need to do it here
       
       // Process and synthesize (only for active tracks)
-      this.synthManager.processDrawingData(width, height, trackLayouts, activeTrackIds)
+      // Pass activeNotes so synth can use MIDI note frequencies
+      this.synthManager.processDrawingData(width, height, trackLayouts, activeTrackIds, activeNotes)
     } else {
       // If synth is disabled, stop all audio
       if (this.synthManager) {
@@ -948,17 +928,8 @@ export class GLOWVisualizer {
         this.canvasDrawer.setCurrentTrackId(null)
       }
       
-      // Clear captured points for this track if there are no active notes
-      if (this.synthManager && this.synthManager.isEnabled) {
-        const trackNotes = notes || []
-        if (trackNotes.length === 0) {
-          // No notes, clear points for this track
-          const trackIdStr = String(track.id)
-          this.synthManager.drawingPoints.delete(trackIdStr)
-          this.synthManager.waveforms.delete(trackIdStr)
-          this.synthManager.stopAudioNode(trackIdStr)
-        }
-      }
+      // Don't clear points when notes stop - keep them for waveform generation
+      // Points will be cleared when track becomes inactive in processDrawingData
 
       // Restore original config values after drawing
       if (restoreValues) {

@@ -57,16 +57,6 @@ export class SynthUIManager {
             <span class="range-value">50%</span>
           </div>
           
-          <div class="assignment-group" style="margin-top: 12px;">
-            <label>
-              <ion-icon name="headset-outline"></ion-icon>
-              Audio Device
-            </label>
-            <select id="audioOutputDevice" class="synth-select">
-              <option value="">Default Output</option>
-            </select>
-          </div>
-          
           <button id="testAudio" class="synth-action-btn" style="margin-top: 8px;">
             <ion-icon name="musical-note-outline"></ion-icon>
             Test Audio
@@ -80,41 +70,38 @@ export class SynthUIManager {
         
         <div class="synth-config-group">
           <label>
-            <ion-icon name="resize-outline"></ion-icon>
-            X-Axis Range (Frequency Mapping)
+            <ion-icon name="information-circle-outline"></ion-icon>
+            Wavetable Synthesis
           </label>
-          <div class="range-container">
-            <span style="font-size: 8px; color: #888; min-width: 30px;">Min:</span>
-            <input id="xRangeMin" type="range" min="0" max="1" step="0.01" value="${config.xRange.min}"/>
-            <span class="range-value">${config.xRange.min.toFixed(2)}</span>
-          </div>
-          <div class="range-container">
-            <span style="font-size: 8px; color: #888; min-width: 30px;">Max:</span>
-            <input id="xRangeMax" type="range" min="0" max="1" step="0.01" value="${config.xRange.max}"/>
-            <span class="range-value">${config.xRange.max.toFixed(2)}</span>
-          </div>
-          <div class="setting-description">
-            Canvas X position range mapped to audio frequency spectrum
+          <div class="setting-description" style="margin-top: 8px;">
+            Drawing data points create the waveform shape (wavetable).<br/>
+            MIDI notes determine the playback pitch/frequency.<br/>
+            Each luminode type has its characteristic waveform.
           </div>
         </div>
         
         <div class="synth-config-group">
           <label>
-            <ion-icon name="musical-notes-outline"></ion-icon>
-            Frequency Range (Hz)
+            <ion-icon name="filter-outline"></ion-icon>
+            MS20 Filter
+          </label>
+          <label class="checkbox-container">
+            <input id="filterEnabled" type="checkbox" ${config.filterEnabled ? 'checked' : ''}/>
+            <span class="checkmark"></span>
+            Enable Filter
           </label>
           <div class="range-container">
-            <span style="font-size: 8px; color: #888; min-width: 30px;">Min:</span>
-            <input id="frequencyMin" type="range" min="20" max="500" step="10" value="${config.frequencyMin}"/>
-            <span class="range-value">${config.frequencyMin} Hz</span>
+            <span style="font-size: 8px; color: #888; min-width: 60px;">Cutoff:</span>
+            <input id="filterCutoff" type="range" min="20" max="20000" step="10" value="${config.filterCutoff}"/>
+            <span class="range-value">${config.filterCutoff} Hz</span>
           </div>
           <div class="range-container">
-            <span style="font-size: 8px; color: #888; min-width: 30px;">Max:</span>
-            <input id="frequencyMax" type="range" min="500" max="5000" step="50" value="${config.frequencyMax}"/>
-            <span class="range-value">${config.frequencyMax} Hz</span>
+            <span style="font-size: 8px; color: #888; min-width: 60px;">Resonance:</span>
+            <input id="filterResonance" type="range" min="0" max="10" step="0.1" value="${config.filterResonance}"/>
+            <span class="range-value">${config.filterResonance.toFixed(1)}</span>
           </div>
           <div class="setting-description">
-            Audio frequency range for X-axis mapping
+            MS20-style low pass filter with resonance (max ${config.maxPolyphony} voices per track)
           </div>
         </div>
         
@@ -192,22 +179,20 @@ export class SynthUIManager {
 
     let html = ''
     tracksWithLuminodes.forEach(track => {
-      const volume = this.synthManager.getTrackVolume(track.id) || 0.5
+      const trackIdStr = String(track.id)
+      const volume = this.synthManager.getTrackVolume(trackIdStr) || this.synthManager.getTrackVolume(track.id) || 0.5
       html += `
-        <div class="track-volume-item" data-track-id="${track.id}">
-          <div class="track-volume-label">
-            <span>${track.name}</span>
-            <span class="track-volume-value">${(volume * 100).toFixed(0)}%</span>
-          </div>
-          <div class="range-container">
-            <input type="range" 
-                   class="track-volume-slider" 
-                   data-track-id="${track.id}"
-                   min="0" 
-                   max="1" 
-                   step="0.01" 
-                   value="${volume}"/>
-          </div>
+        <div class="range-container">
+          <span style="font-size: 8px; color: #888; min-width: 60px;">${track.name}:</span>
+          <input type="range" 
+                 id="trackVolume-${track.id}"
+                 class="track-volume-slider" 
+                 data-track-id="${track.id}"
+                 min="0" 
+                 max="1" 
+                 step="0.01" 
+                 value="${volume}"/>
+          <span class="range-value" id="trackVolumeValue-${track.id}">${Math.round(volume * 100)}%</span>
         </div>
       `
     })
@@ -218,13 +203,16 @@ export class SynthUIManager {
     container.querySelectorAll('.track-volume-slider').forEach(slider => {
       slider.addEventListener('input', (e) => {
         const trackId = parseInt(e.target.dataset.trackId)
+        const trackIdStr = String(trackId)
         const volume = parseFloat(e.target.value)
-        this.synthManager.setTrackVolume(trackId, volume)
+        
+        // Set volume using string trackId for consistency
+        this.synthManager.setTrackVolume(trackIdStr, volume)
         
         // Update display
-        const volumeValue = e.target.closest('.track-volume-item').querySelector('.track-volume-value')
+        const volumeValue = document.getElementById(`trackVolumeValue-${trackId}`)
         if (volumeValue) {
-          volumeValue.textContent = `${(volume * 100).toFixed(0)}%`
+          volumeValue.textContent = `${Math.round(volume * 100)}%`
         }
         
         this.triggerCallback('trackVolumeChange', { trackId, volume })
@@ -235,15 +223,10 @@ export class SynthUIManager {
   // Setup event listeners for synth controls
   setupEventListeners (container) {
     const synthEnabled = container.querySelector('#synthEnabled')
-    const xRangeMin = container.querySelector('#xRangeMin')
-    const xRangeMax = container.querySelector('#xRangeMax')
-    const frequencyMin = container.querySelector('#frequencyMin')
-    const frequencyMax = container.querySelector('#frequencyMax')
     const attack = container.querySelector('#attack')
     const release = container.querySelector('#release')
     const clearSynthData = container.querySelector('#clearSynthData')
     const masterVolume = container.querySelector('#masterVolume')
-    const audioOutputDevice = container.querySelector('#audioOutputDevice')
     const testAudio = container.querySelector('#testAudio')
     const showDebugInfo = container.querySelector('#showDebugInfo')
 
@@ -252,38 +235,6 @@ export class SynthUIManager {
         const enabled = e.target.checked
         await this.synthManager.setEnabled(enabled)
         this.triggerCallback('synthEnabledChange', enabled)
-      })
-    }
-
-    if (xRangeMin) {
-      xRangeMin.addEventListener('input', (e) => {
-        const value = parseFloat(e.target.value)
-        this.updateRangeValue(value, container, 'xRangeMin')
-        this.triggerCallback('xRangeMinChange', value)
-      })
-    }
-
-    if (xRangeMax) {
-      xRangeMax.addEventListener('input', (e) => {
-        const value = parseFloat(e.target.value)
-        this.updateRangeValue(value, container, 'xRangeMax')
-        this.triggerCallback('xRangeMaxChange', value)
-      })
-    }
-
-    if (frequencyMin) {
-      frequencyMin.addEventListener('input', (e) => {
-        const value = parseInt(e.target.value)
-        this.updateRangeValue(value, container, 'frequencyMin', ' Hz')
-        this.triggerCallback('frequencyMinChange', value)
-      })
-    }
-
-    if (frequencyMax) {
-      frequencyMax.addEventListener('input', (e) => {
-        const value = parseInt(e.target.value)
-        this.updateRangeValue(value, container, 'frequencyMax', ' Hz')
-        this.triggerCallback('frequencyMaxChange', value)
       })
     }
 
@@ -300,6 +251,35 @@ export class SynthUIManager {
         const value = parseFloat(e.target.value)
         this.updateRangeValue(value, container, 'release', 's')
         this.triggerCallback('releaseChange', value)
+      })
+    }
+
+    if (filterEnabled) {
+      filterEnabled.addEventListener('change', (e) => {
+        const enabled = e.target.checked
+        this.synthManager.updateConfig({ filterEnabled: enabled })
+        this.synthManager.setFilterEnabled(enabled)
+        this.triggerCallback('filterEnabledChange', enabled)
+      })
+    }
+
+    if (filterCutoff) {
+      filterCutoff.addEventListener('input', (e) => {
+        const value = parseInt(e.target.value)
+        this.updateRangeValue(value, container, 'filterCutoff', ' Hz')
+        this.synthManager.updateConfig({ filterCutoff: value })
+        this.synthManager.setFilterCutoff(value)
+        this.triggerCallback('filterCutoffChange', value)
+      })
+    }
+
+    if (filterResonance) {
+      filterResonance.addEventListener('input', (e) => {
+        const value = parseFloat(e.target.value)
+        this.updateRangeValue(value, container, 'filterResonance', '')
+        this.synthManager.updateConfig({ filterResonance: value })
+        this.synthManager.setFilterResonance(value)
+        this.triggerCallback('filterResonanceChange', value)
       })
     }
 
@@ -322,17 +302,6 @@ export class SynthUIManager {
       })
     }
 
-    if (audioOutputDevice) {
-      // Populate audio output devices
-      this.populateAudioOutputDevices()
-      
-      audioOutputDevice.addEventListener('change', async (e) => {
-        const sinkId = e.target.value
-        await this.synthManager.setSinkId(sinkId || '')
-        this.triggerCallback('audioOutputDeviceChange', sinkId)
-      })
-    }
-
     if (testAudio) {
       testAudio.addEventListener('click', () => {
         this.synthManager.playTestTone()
@@ -349,35 +318,6 @@ export class SynthUIManager {
     }
   }
 
-  // Populate audio output device dropdown
-  async populateAudioOutputDevices () {
-    const select = this.panel.querySelector('#audioOutputDevice')
-    if (!select) return
-
-    try {
-      const devices = await this.synthManager.getAvailableSinks()
-      
-      // Clear existing options except default
-      select.innerHTML = '<option value="">Default Output</option>'
-      
-      devices.forEach(device => {
-        const option = document.createElement('option')
-        option.value = device.id
-        option.textContent = device.name
-        select.appendChild(option)
-      })
-      
-      if (devices.length === 0) {
-        const option = document.createElement('option')
-        option.value = ''
-        option.textContent = 'No audio outputs available'
-        option.disabled = true
-        select.appendChild(option)
-      }
-    } catch (error) {
-      console.error('Failed to populate audio output devices:', error)
-    }
-  }
 
   // Update range value display
   updateRangeValue (value, container, selector, suffix = '') {

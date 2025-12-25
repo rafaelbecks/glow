@@ -8,31 +8,45 @@ export class SynthManager {
     this.isEnabled = false
     this.masterGain = null
     this.scriptProcessor = null
-    this.audioNodes = new Map() // Track ID -> audio node
+    this.audioNodes = new Map() // Track ID -> Map of note -> audio node (for polyphony)
     this.trackVolumes = new Map() // Track ID -> volume (0-1)
+    this.trackMidiNotes = new Map() // Track ID -> array of active MIDI notes (for polyphony)
+    this.trackManager = null // Reference to track manager (set externally)
     this.testOscillator = null // For testing audio output
     this.debugMode = true // Enable detailed logging
     
     // Configuration parameters
     this.config = {
-      // Range mapping: canvas coordinates to audio spectrum
-      xRange: { min: 0, max: 1 }, // Normalized X position (0-1) maps to frequency range
-      
-      // Frequency mapping (Hz) - playback speed of the waveform
-      frequencyMin: 80, // Low frequency bound
-      frequencyMax: 2000, // High frequency bound
-      
       // Audio parameters
       attack: 0.01, // Attack time in seconds
       release: 0.1, // Release time in seconds
+      
+      // Filter parameters (MS20 style)
+      filterCutoff: 20000, // Cutoff frequency in Hz (0-20000)
+      filterResonance: 1.0, // Resonance/Q factor (0-10, MS20 style)
+      filterEnabled: false, // Enable/disable filter
+      
+      // Polyphony settings
+      maxPolyphony: 8, // Maximum simultaneous voices per track
       
       // Sample rate and buffer settings
       sampleRate: 44100,
       bufferSize: 4096, // Audio buffer size
       
       // Waveform settings
-      waveformLength: 512, // Target length for waveform (will be resampled to this)
-      maxPoints: 10000 // Maximum points to store per track
+      waveformLength: 1024, // Target length for waveform (will be resampled to this)
+      maxPoints: 44000 // Maximum points to store per track
+    }
+    
+    // Filter state (MS20-style state variable filter)
+    this.filterState = {
+      cutoff: 20000,
+      resonance: 1.0,
+      enabled: false,
+      // State variables for filter
+      lp: 0, // Low pass output
+      bp: 0, // Band pass output
+      hp: 0  // High pass output
     }
     
     // Waveform cache - stores drawing points and converted waveforms per track
@@ -276,67 +290,137 @@ export class SynthManager {
       return
     }
     
-    // Mix all active track waveforms
+    // Mix all active track waveforms (with polyphony)
     let activeCount = 0
     let totalOutput = 0
     
     this.waveforms.forEach((waveform, trackId) => {
       if (!waveform || waveform.length === 0) return
       
-      const audioNode = this.audioNodes.get(trackId)
-      if (!audioNode || !audioNode.active || audioNode.gain < 0.001) return
+      // Get all audio nodes for this track (polyphony - one per note)
+      const trackAudioNodes = this.audioNodes.get(trackId)
+      if (!trackAudioNodes || trackAudioNodes.size === 0) return
       
-      activeCount++
-      
-      // Generate audio from waveform
-      for (let i = 0; i < bufferLength; i++) {
-        // Get sample from waveform using phase (with interpolation for smoother sound)
-        const phaseFloor = Math.floor(audioNode.phase)
-        const phaseFrac = audioNode.phase - phaseFloor
-        const index1 = phaseFloor % waveform.length
-        const index2 = (index1 + 1) % waveform.length
+      // Process each voice (note) for this track
+      trackAudioNodes.forEach((audioNode, noteId) => {
+        if (!audioNode || !audioNode.active || audioNode.gain < 0.001) return
         
-        // Linear interpolation between samples
-        const sample1 = waveform[index1]
-        const sample2 = waveform[index2]
-        const sample = sample1 + (sample2 - sample1) * phaseFrac
+        activeCount++
         
-        // Add to output with gain
-        const outputSample = sample * audioNode.gain
-        output[i] += outputSample
-        totalOutput += Math.abs(outputSample)
+        // Apply envelope and generate audio from waveform
+        const attack = this.config.attack
+        const release = this.config.release
+        const sampleRate = this.audioContext.sampleRate
         
-        // Advance phase
-        audioNode.phase += audioNode.phaseIncrement
-        
-        // Wrap phase if it exceeds waveform length
-        while (audioNode.phase >= waveform.length) {
-          audioNode.phase -= waveform.length
+        for (let i = 0; i < bufferLength; i++) {
+          // Apply envelope
+          if (audioNode.gain < audioNode.targetGain && attack > 0) {
+            // Attack phase
+            audioNode.attackTime += 1 / sampleRate
+            if (audioNode.attackTime < attack) {
+              const attackProgress = audioNode.attackTime / attack
+              audioNode.gain = audioNode.targetGain * attackProgress
+            } else {
+              audioNode.gain = audioNode.targetGain
+              audioNode.attackTime = attack
+            }
+            audioNode.releaseTime = 0
+          } else if (audioNode.gain > audioNode.targetGain && release > 0) {
+            // Release phase
+            audioNode.releaseTime += 1 / sampleRate
+            if (audioNode.releaseTime < release) {
+              const releaseProgress = 1 - (audioNode.releaseTime / release)
+              const startGain = audioNode.targetGain + (audioNode.gain - audioNode.targetGain) * releaseProgress
+              audioNode.gain = Math.max(audioNode.targetGain, startGain)
+            } else {
+              audioNode.gain = audioNode.targetGain
+            }
+          } else {
+            audioNode.gain = audioNode.targetGain
+          }
+          
+          // Get sample from waveform using phase (with interpolation for smoother sound)
+          const phaseFloor = Math.floor(audioNode.phase)
+          const phaseFrac = audioNode.phase - phaseFloor
+          const index1 = phaseFloor % waveform.length
+          const index2 = (index1 + 1) % waveform.length
+          
+          // Linear interpolation between samples
+          const sample1 = waveform[index1]
+          const sample2 = waveform[index2]
+          let sample = sample1 + (sample2 - sample1) * phaseFrac
+          
+          // Apply gain
+          sample *= audioNode.gain
+          
+          // Apply MS20-style low pass filter if enabled
+          if (this.filterState.enabled) {
+            sample = this.applyMS20Filter(sample, i)
+          }
+          
+          // Add to output
+          output[i] += sample
+          totalOutput += Math.abs(sample)
+          
+          // Advance phase
+          audioNode.phase += audioNode.phaseIncrement
+          
+          // Wrap phase if it exceeds waveform length
+          while (audioNode.phase >= waveform.length) {
+            audioNode.phase -= waveform.length
+          }
+          while (audioNode.phase < 0) {
+            audioNode.phase += waveform.length
+          }
         }
-        while (audioNode.phase < 0) {
-          audioNode.phase += waveform.length
-        }
-      }
+      })
     })
     
     // Debug: log audio processing stats occasionally
     if (this.debugMode && Math.random() < 0.01) {
       const avgOutput = totalOutput / bufferLength
       if (activeCount > 0 || this.waveforms.size > 0) {
+        let totalVoices = 0
+        const activeNodesInfo = []
+        this.audioNodes.forEach((trackNodes, trackId) => {
+          trackNodes.forEach((node, noteId) => {
+            if (node.active) {
+              totalVoices++
+              activeNodesInfo.push({
+                trackId,
+                noteId,
+                gain: node.gain.toFixed(3),
+                targetGain: node.targetGain.toFixed(3),
+                phaseInc: node.phaseIncrement.toFixed(4)
+              })
+            }
+          })
+        })
+        
         console.log('Audio processing:', {
-          activeNodes: activeCount,
+          activeVoices: activeCount,
+          totalVoices,
           waveforms: this.waveforms.size,
-          audioNodes: this.audioNodes.size,
+          tracks: this.audioNodes.size,
           avgOutput: avgOutput.toFixed(4),
-          masterGain: this.masterGain?.gain.value
+          masterGain: this.masterGain?.gain.value.toFixed(3),
+          filterEnabled: this.filterState.enabled,
+          activeNodesInfo: activeNodesInfo.slice(0, 5) // Limit to first 5 for readability
         })
       }
     }
   }
 
+  // Convert MIDI note to frequency (Hz)
+  midiToFrequency (midiNote) {
+    // Standard MIDI note to frequency conversion: A4 (69) = 440 Hz
+    return 440 * Math.pow(2, (midiNote - 69) / 12)
+  }
+
   // Process drawing data and synthesize audio
   // This is called from the animation loop after drawing
-  processDrawingData (canvasWidth, canvasHeight, trackLayouts = {}, activeTrackIds = []) {
+  // activeNotes: Map of luminode type -> array of {midi, velocity, timestamp}
+  processDrawingData (canvasWidth, canvasHeight, trackLayouts = {}, activeTrackIds = [], activeNotes = {}) {
     if (!this.isEnabled || !this.audioContext) {
       // Stop all audio if disabled
       this.stopAllAudioNodes()
@@ -359,10 +443,10 @@ export class SynthManager {
     const activeTrackIdsStr = activeTrackIds.map(id => String(id))
     
     // First, stop all audio nodes for tracks that are not active
-    this.audioNodes.forEach((node, trackId) => {
+    this.audioNodes.forEach((trackNodes, trackId) => {
       const trackIdStr = String(trackId)
       if (!activeTrackIdsStr.includes(trackIdStr)) {
-        this.stopAudioNode(trackIdStr)
+        this.stopAllAudioNodesForTrack(trackIdStr)
       }
     })
     
@@ -378,35 +462,87 @@ export class SynthManager {
     activeTrackIdsStr.forEach(trackIdStr => {
       const layout = trackLayouts[trackIdStr] || trackLayouts[parseInt(trackIdStr)]
       if (!layout) {
-        this.stopAudioNode(trackIdStr)
+        this.stopAllAudioNodesForTrack(trackIdStr)
         return
       }
       
-      const waveform = this.waveforms.get(trackIdStr)
-      const drawingPoints = this.drawingPoints.get(trackIdStr)
+      // Get the track to find its luminode type
+      const trackIdNum = parseInt(trackIdStr)
+      const track = this.trackManager?.getTrack(trackIdNum)
+      if (!track || !track.luminode) {
+        this.stopAllAudioNodesForTrack(trackIdStr)
+        return
+      }
       
-      // Only process if we have recent drawing points (within last frame)
-      if (drawingPoints && drawingPoints.length > 0 && waveform && waveform.length > 0) {
-        // Check if waveform has any non-zero samples (actual drawing)
-        const hasDrawing = waveform.some(sample => Math.abs(sample) > 0.01)
+      // Get MIDI notes for this track's luminode
+      const notes = activeNotes[track.luminode] || []
+      if (notes.length === 0) {
+        // No active notes, stop all voices for this track
+        this.stopAllAudioNodesForTrack(trackIdStr)
+        this.trackMidiNotes.delete(trackIdStr)
+        this.waveforms.delete(trackIdStr)
+        return
+      }
+      
+      // Get waveform from captured points
+      const drawingPoints = this.drawingPoints.get(trackIdStr)
+      let trackWaveform = this.waveforms.get(trackIdStr)
+      
+      // Always convert points to waveform if we have points (update continuously)
+      // This ensures the waveform reflects the current drawing state
+      if (drawingPoints && drawingPoints.length > 0) {
+        // Need at least a few points to form a waveform
+        if (drawingPoints.length >= 2) {
+          // Convert points to waveform (this will update the waveform)
+          this.convertPointsToWaveformWithContext(trackIdStr, canvasHeight)
+          trackWaveform = this.waveforms.get(trackIdStr)
+        }
+      }
+      
+      // Process if we have a valid waveform
+      if (trackWaveform && trackWaveform.length > 0) {
+        // Check if waveform has any non-zero samples
+        const hasDrawing = trackWaveform.some(sample => Math.abs(sample) > 0.01)
         
         if (hasDrawing) {
-          // Calculate frequency based on layout X position
-          const normalizedX = Math.max(0, Math.min(1, (layout.x + canvasWidth / 2) / canvasWidth))
-          const frequency = this.mapToFrequency(normalizedX)
-          
           // Get track volume (default to 0.5 if not set)
           const volume = this.trackVolumes.get(trackIdStr) || 0.5
           
-          // Update or create audio node for this track
-          this.updateAudioNode(trackIdStr, frequency, volume)
+          // POLYPHONY: Create/update audio node for each active MIDI note
+          const activeNoteIds = new Set()
+          
+          // Limit polyphony to maxPolyphony
+          const limitedNotes = notes.slice(0, this.config.maxPolyphony)
+          
+          limitedNotes.forEach((note) => {
+            const noteId = `${trackIdStr}-${note.midi}`
+            activeNoteIds.add(noteId)
+            
+            const frequency = this.midiToFrequency(note.midi)
+            
+            // Update or create audio node for this note
+            this.updateAudioNode(trackIdStr, noteId, frequency, volume)
+          })
+          
+          // Stop audio nodes for notes that are no longer active
+          const trackNodes = this.audioNodes.get(trackIdStr)
+          if (trackNodes) {
+            trackNodes.forEach((node, noteId) => {
+              if (!activeNoteIds.has(noteId)) {
+                this.stopAudioNode(trackIdStr, noteId)
+              }
+            })
+          }
+          
+          // Store active notes for this track
+          this.trackMidiNotes.set(trackIdStr, limitedNotes.map(n => n.midi))
         } else {
-          // No drawing, stop this track
-          this.stopAudioNode(trackIdStr)
+          // No drawing, stop all voices for this track
+          this.stopAllAudioNodesForTrack(trackIdStr)
         }
       } else {
-        // No waveform or points, stop this track
-        this.stopAudioNode(trackIdStr)
+        // No waveform, stop all voices for this track
+        this.stopAllAudioNodesForTrack(trackIdStr)
       }
     })
   }
@@ -434,21 +570,19 @@ export class SynthManager {
 
   // Get volume for a specific track
   getTrackVolume (trackId) {
-    return this.trackVolumes.get(trackId) || 0.5
+    // Try both string and number versions
+    const trackIdStr = String(trackId)
+    return this.trackVolumes.get(trackIdStr) || this.trackVolumes.get(parseInt(trackIdStr)) || 0.5
   }
 
-  // Map normalized X position (0-1) to frequency (Hz)
-  mapToFrequency (normalizedX) {
-    const { frequencyMin, frequencyMax, xRange } = this.config
-    
-    // Map from xRange to frequency range
-    const rangeX = (normalizedX - xRange.min) / (xRange.max - xRange.min)
-    const clampedX = Math.max(0, Math.min(1, rangeX))
-    
-    return frequencyMin + (frequencyMax - frequencyMin) * clampedX
+  // Set track manager reference (needed to get track info)
+  setTrackManager (trackManager) {
+    this.trackManager = trackManager
   }
+
 
   // Convert points to waveform with canvas height context
+  // This is like a reverse Fourier transform - we're summing the drawing points into a waveform
   convertPointsToWaveformWithContext (trackId, canvasHeight) {
     const points = this.drawingPoints.get(trackId)
     if (!points || points.length === 0) {
@@ -456,68 +590,128 @@ export class SynthManager {
       return
     }
     
+    // Sort points by X coordinate to ensure proper waveform order
+    // This is critical - the waveform must be ordered by X (left to right)
+    const sortedPoints = [...points].sort((a, b) => a.x - b.x)
+    
     const targetLength = this.config.waveformLength
     const waveform = new Float32Array(targetLength)
     
-    if (points.length === 1) {
-      const normalizedY = this.normalizeY(points[0].y, canvasHeight)
-      waveform.fill(normalizedY)
+    // Find the actual Y range for proper normalization
+    const yValues = sortedPoints.map(p => p.y)
+    const minY = Math.min(...yValues)
+    const maxY = Math.max(...yValues)
+    const rangeY = maxY - minY
+    
+    if (sortedPoints.length === 1) {
+      // Single point - use as constant value
+      waveform.fill(rangeY > 0 ? ((sortedPoints[0].y - minY) / rangeY) * 2 - 1 : 0)
     } else {
+      // Create waveform by sampling Y values based on X position
+      // This preserves the shape of what was drawn
+      const xValues = sortedPoints.map(p => p.x)
+      const minX = Math.min(...xValues)
+      const maxX = Math.max(...xValues)
+      const xRange = maxX - minX
+      
       for (let i = 0; i < targetLength; i++) {
-        const t = i / (targetLength - 1)
-        const pointIndex = t * (points.length - 1)
-        const index1 = Math.floor(pointIndex)
-        const index2 = Math.min(index1 + 1, points.length - 1)
-        const frac = pointIndex - index1
+        // Map waveform index to X position
+        const normalizedX = i / (targetLength - 1) // 0 to 1
+        const targetX = minX + normalizedX * xRange
         
-        const y1 = points[index1].y
-        const y2 = points[index2].y
-        const y = y1 + (y2 - y1) * frac
+        // Find the two points that bracket this X position
+        let index1 = 0
+        let index2 = sortedPoints.length - 1
         
-        waveform[i] = this.normalizeY(y, canvasHeight)
+        // Binary search for efficiency (or linear for small arrays)
+        for (let j = 0; j < sortedPoints.length - 1; j++) {
+          if (sortedPoints[j].x <= targetX && sortedPoints[j + 1].x >= targetX) {
+            index1 = j
+            index2 = j + 1
+            break
+          }
+        }
+        
+        // Interpolate Y value between the two points
+        const p1 = sortedPoints[index1]
+        const p2 = sortedPoints[index2]
+        const xDiff = p2.x - p1.x
+        const frac = xDiff > 0 ? (targetX - p1.x) / xDiff : 0
+        const y = p1.y + (p2.y - p1.y) * frac
+        
+        // Normalize Y to -1 to 1 range
+        waveform[i] = rangeY > 0 ? ((y - minY) / rangeY) * 2 - 1 : 0
       }
+      
+      // Make waveform periodic - ensure last sample connects smoothly to first
+      // This is important for wavetable synthesis
+      const firstSample = waveform[0]
+      const lastSample = waveform[targetLength - 1]
+      const avg = (firstSample + lastSample) / 2
+      waveform[0] = avg
+      waveform[targetLength - 1] = avg
     }
     
+    // Normalize waveform to prevent clipping (but preserve shape)
     this.normalizeWaveform(waveform)
     this.waveforms.set(trackId, waveform)
     
-    // Debug: log when waveform is created
-    if (waveform.length > 0) {
+    // Debug
+    if (this.debugMode && sortedPoints.length > 10) {
       const hasNonZero = waveform.some(s => Math.abs(s) > 0.01)
       if (hasNonZero) {
-        const min = Math.min(...waveform)
-        const max = Math.max(...waveform)
-        const avg = waveform.reduce((a, b) => a + Math.abs(b), 0) / waveform.length
-        console.log(`✓ Waveform created for track ${trackId}:`, {
-          length: waveform.length,
-          min: min.toFixed(3),
-          max: max.toFixed(3),
-          avg: avg.toFixed(3),
-          points: points.length,
-          hasData: hasNonZero
-        })
-      } else {
-        console.warn(`⚠ Waveform created but all zeros for track ${trackId} (${points.length} points)`)
+        console.log(`Waveform created: track=${trackId}, points=${sortedPoints.length}, samples=${targetLength}, minY=${minY.toFixed(2)}, maxY=${maxY.toFixed(2)}`)
       }
     }
   }
 
-  // Update or create audio node for a track
-  updateAudioNode (trackId, frequency, volume) {
-    let audioNode = this.audioNodes.get(trackId)
+  // MS20-style state variable filter
+  applyMS20Filter (sample, sampleIndex) {
+    const cutoff = this.filterState.cutoff
+    const resonance = this.filterState.resonance
+    const sampleRate = this.audioContext.sampleRate
+    
+    // Calculate filter coefficients
+    const f = cutoff / sampleRate
+    const k = 3.6 * f - 1.6 * f * f - 1 // MS20-style coefficient
+    const p = (k + 1) * 0.5
+    const scale = Math.exp((1 - p) * 1.386249)
+    const r = resonance * scale
+    
+    // State variable filter (MS20 style)
+    const input = sample
+    this.filterState.bp = p * (this.filterState.lp + input) - this.filterState.lp
+    this.filterState.lp = this.filterState.lp + p * this.filterState.bp
+    this.filterState.hp = input - this.filterState.lp - r * this.filterState.bp
+    
+    // Return low pass output (MS20 style)
+    return this.filterState.lp
+  }
+
+  // Update or create audio node for a track and note (polyphony)
+  updateAudioNode (trackId, noteId, frequency, volume) {
+    // Get or create track's audio nodes map
+    if (!this.audioNodes.has(trackId)) {
+      this.audioNodes.set(trackId, new Map())
+    }
+    const trackNodes = this.audioNodes.get(trackId)
+    
+    let audioNode = trackNodes.get(noteId)
     
     if (!audioNode) {
-      // Create new audio node
+      // Create new audio node for this note
       audioNode = {
         active: true,
         phase: 0,
         phaseIncrement: 0,
         gain: 0,
-        targetGain: 0
+        targetGain: 0,
+        attackTime: 0, // Time since note on
+        releaseTime: 0 // Time since note off
       }
-      this.audioNodes.set(trackId, audioNode)
+      trackNodes.set(noteId, audioNode)
       if (this.debugMode) {
-        console.log(`✓ Audio node created for track ${trackId}`)
+        console.log(`✓ Audio node created for track ${trackId}, note ${noteId}`)
       }
     }
     
@@ -539,34 +733,75 @@ export class SynthManager {
       return
     }
     
-    // Update target gain
+    // Update target gain (envelope is applied in processAudio)
     audioNode.targetGain = volume
     audioNode.active = true
     
-    // Smooth gain transition (faster for more responsive audio)
-    const currentGain = audioNode.gain
-    const gainDiff = audioNode.targetGain - currentGain
-    const gainStep = gainDiff * 0.5 // Faster interpolation for more responsive audio
-    
-    audioNode.gain = Math.max(0, Math.min(1, currentGain + gainStep))
+    // If starting from silence and volume > 0, start attack immediately
+    if (audioNode.gain === 0 && volume > 0) {
+      audioNode.attackTime = 0
+      audioNode.releaseTime = 0
+      // Start with a small gain to avoid silence
+      if (this.config.attack > 0) {
+        audioNode.gain = 0.01 // Small initial gain
+      } else {
+        audioNode.gain = volume // No attack, set directly
+      }
+    } else if (volume > audioNode.gain) {
+      // Starting attack - reset attack time
+      audioNode.attackTime = 0
+      audioNode.releaseTime = 0
+    } else if (volume < audioNode.gain) {
+      // Starting release - reset release time
+      audioNode.releaseTime = 0
+    }
   }
 
-  // Stop audio node for a track
-  stopAudioNode (trackId) {
-    const audioNode = this.audioNodes.get(trackId)
-    if (audioNode) {
-      // Immediately stop (no fade for now to avoid lingering sounds)
-      audioNode.targetGain = 0
-      audioNode.gain = 0
-      audioNode.active = false
-      audioNode.phase = 0
+  // Stop audio node for a specific track and note
+  stopAudioNode (trackId, noteId = null) {
+    const trackNodes = this.audioNodes.get(trackId)
+    if (!trackNodes) return
+    
+    if (noteId) {
+      // Stop specific note
+      const audioNode = trackNodes.get(noteId)
+      if (audioNode) {
+        audioNode.targetGain = 0
+        audioNode.releaseTime = 0
+        if (audioNode.gain < 0.001) {
+          audioNode.active = false
+          trackNodes.delete(noteId)
+        }
+      }
+    } else {
+      // Stop all notes for this track (legacy support)
+      this.stopAllAudioNodesForTrack(trackId)
+    }
+  }
+
+  // Stop all audio nodes for a track
+  stopAllAudioNodesForTrack (trackId) {
+    const trackNodes = this.audioNodes.get(trackId)
+    if (trackNodes) {
+      trackNodes.forEach((node, noteId) => {
+        node.targetGain = 0
+        node.releaseTime = 0
+        if (node.gain < 0.001) {
+          node.active = false
+        }
+      })
+      // Clean up if all nodes are inactive
+      const hasActive = Array.from(trackNodes.values()).some(n => n.active)
+      if (!hasActive) {
+        this.audioNodes.delete(trackId)
+      }
     }
   }
 
   // Stop all audio nodes
   stopAllAudioNodes () {
-    this.audioNodes.forEach((node, trackId) => {
-      this.stopAudioNode(trackId)
+    this.audioNodes.forEach((trackNodes, trackId) => {
+      this.stopAllAudioNodesForTrack(trackId)
     })
   }
 
@@ -594,6 +829,22 @@ export class SynthManager {
   // Get current configuration
   getConfig () {
     return { ...this.config }
+  }
+
+  // Filter control methods
+  setFilterEnabled (enabled) {
+    this.filterState.enabled = enabled
+    this.config.filterEnabled = enabled
+  }
+
+  setFilterCutoff (cutoff) {
+    this.filterState.cutoff = Math.max(20, Math.min(20000, cutoff))
+    this.config.filterCutoff = this.filterState.cutoff
+  }
+
+  setFilterResonance (resonance) {
+    this.filterState.resonance = Math.max(0, Math.min(10, resonance))
+    this.config.filterResonance = this.filterState.resonance
   }
 
   // Play a test tone to verify audio output works
@@ -626,48 +877,6 @@ export class SynthManager {
     }
   }
 
-  // Set audio sink (output device) - if supported by browser
-  async setSinkId (sinkId) {
-    if (!this.audioContext) return false
-    
-    // Check if setSinkId is available (Chrome/Edge)
-    if (this.audioContext.setSinkId) {
-      try {
-        await this.audioContext.setSinkId(sinkId || '')
-        console.log('Audio sink set to:', sinkId || 'default')
-        return true
-      } catch (error) {
-        console.error('Failed to set audio sink:', error)
-        return false
-      }
-    } else {
-      console.warn('setSinkId not supported in this browser')
-      return false
-    }
-  }
-
-  // Get available audio sinks (output devices) - if supported
-  async getAvailableSinks () {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
-      return []
-    }
-    
-    try {
-      const devices = await navigator.mediaDevices.enumerateDevices()
-      const audioOutputs = devices
-        .filter(device => device.kind === 'audiooutput')
-        .map(device => ({
-          id: device.deviceId,
-          name: device.label || `Audio Output ${device.deviceId.substring(0, 8)}`,
-          groupId: device.groupId
-        }))
-      
-      return audioOutputs
-    } catch (error) {
-      console.error('Failed to enumerate audio devices:', error)
-      return []
-    }
-  }
 
   // Get debug info
   getDebugInfo () {
