@@ -49,11 +49,21 @@ export class SynthManager {
     this.waveforms = new Map() // Track ID -> Float32Array of waveform data
   }
 
-  // Initialize Tone.js
+  // Initialize Tone.js and AudioWorklet
   async initialize () {
     try {
       // Start Tone.js context (requires user interaction)
       await Tone.start()
+      
+      // Load AudioWorklet processor
+      try {
+        await Tone.context.audioWorklet.addModule('src/wavetable-worklet.js')
+        this.workletLoaded = true
+        console.log('AudioWorklet loaded successfully')
+      } catch (error) {
+        console.warn('Failed to load AudioWorklet, falling back to Tone.js oscillators:', error)
+        this.workletLoaded = false
+      }
       
       // Create master volume
       this.masterVolume = new Tone.Volume(0).toDestination()
@@ -70,7 +80,8 @@ export class SynthManager {
       
       console.log('Synth Manager initialized with Tone.js', {
         sampleRate: Tone.context.sampleRate,
-        state: Tone.context.state
+        state: Tone.context.state,
+        workletLoaded: this.workletLoaded
       })
       
       // Test audio output
@@ -408,15 +419,41 @@ export class SynthManager {
       }
     } else {
       // Update existing voice
-      if (voice.synth.oscillator.frequency.value !== frequency) {
-        voice.synth.oscillator.frequency.value = frequency
-        voice.frequency = frequency
+      if (voice.workletNode) {
+        // Update AudioWorklet voice
+        if (voice.frequency !== frequency) {
+          voice.workletNode.port.postMessage({
+            type: 'setFrequency',
+            data: frequency
+          })
+          voice.frequency = frequency
+        }
+        const trackVolume = this.trackVolumes.get(trackId) || 0.5
+        voice.workletNode.port.postMessage({
+          type: 'setGain',
+          data: trackVolume * volume
+        })
+      } else if (voice.synth && voice.synth.oscillator) {
+        // Update Tone.js oscillator voice
+        if (voice.synth.oscillator.frequency.value !== frequency) {
+          voice.synth.oscillator.frequency.value = frequency
+          voice.frequency = frequency
+        }
+        const trackVolume = this.trackVolumes.get(trackId) || 0.5
+        voice.volume.volume.value = Tone.gainToDb(trackVolume * volume)
       }
     }
     
-    // Update volume
-    const trackVolume = this.trackVolumes.get(trackId) || 0.5
-    voice.volume.volume.value = Tone.gainToDb(trackVolume * volume)
+    // Update volume for new voices
+    if (!voice.volume) {
+      const trackVolume = this.trackVolumes.get(trackId) || 0.5
+      if (voice.workletNode) {
+        voice.workletNode.port.postMessage({
+          type: 'setGain',
+          data: trackVolume * volume
+        })
+      }
+    }
     
     return voice
   }
@@ -429,26 +466,84 @@ export class SynthManager {
     const voice = trackSynths.get(noteId)
     if (!voice) return
     
-    // Trigger release
-    voice.envelope.triggerRelease()
-    
-    // Clean up after release
-    const releaseTime = this.config.release
-    setTimeout(() => {
-      if (voice.synth.oscillator) {
-        voice.synth.oscillator.stop()
-        voice.synth.oscillator.dispose()
-      }
-      voice.envelope.dispose()
-      voice.filter.dispose()
-      voice.volume.dispose()
-      trackSynths.delete(noteId)
+    if (voice.workletNode) {
+      // Stop AudioWorklet voice
+      voice.workletNode.port.postMessage({ type: 'stop' })
       
-      // Clean up track if empty
-      if (trackSynths.size === 0) {
-        this.trackSynths.delete(trackId)
+      // Clean up after release time
+      const releaseTime = this.config.release
+      const cleanupDelay = Math.max(releaseTime * 1000, 50) + 50
+      
+      setTimeout(() => {
+        try {
+          if (voice.workletNode) {
+            voice.workletNode.disconnect()
+            voice.workletNode = null
+          }
+          if (voice.filter) {
+            voice.filter.dispose()
+          }
+          if (voice.volume) {
+            voice.volume.dispose()
+          }
+        } catch (e) {
+          // Already disposed, ignore
+        }
+        
+        trackSynths.delete(noteId)
+        
+        if (trackSynths.size === 0) {
+          this.trackSynths.delete(trackId)
+        }
+      }, cleanupDelay)
+    } else {
+      // Stop Tone.js oscillator voice
+      if (voice.synth && voice.synth.oscillator) {
+        try {
+          voice.synth.oscillator.stop()
+        } catch (e) {
+          // Already stopped, ignore
+        }
       }
-    }, releaseTime * 1000 + 100) // Add small buffer
+      
+      // Trigger release on envelope
+      if (voice.envelope) {
+        try {
+          voice.envelope.triggerRelease()
+        } catch (e) {
+          // Already released, ignore
+        }
+      }
+      
+      // Clean up after release time
+      const releaseTime = this.config.release
+      const cleanupDelay = Math.max(releaseTime * 1000, 50) + 50
+      
+      setTimeout(() => {
+        try {
+          if (voice.synth && voice.synth.oscillator) {
+            voice.synth.oscillator.dispose()
+          }
+          if (voice.envelope) {
+            voice.envelope.dispose()
+          }
+          if (voice.filter) {
+            voice.filter.dispose()
+          }
+          if (voice.volume) {
+            voice.volume.dispose()
+          }
+        } catch (e) {
+          // Already disposed, ignore
+        }
+        
+        trackSynths.delete(noteId)
+        
+        if (trackSynths.size === 0) {
+          this.trackSynths.delete(trackId)
+        }
+      }, cleanupDelay)
+    }
   }
 
   // Stop all synths for a track
@@ -461,11 +556,36 @@ export class SynthManager {
     })
   }
 
-  // Stop all synths
+  // Stop all synths immediately
   stopAllSynths () {
     this.trackSynths.forEach((trackSynths, trackId) => {
-      this.stopAllSynthsForTrack(trackId)
+      trackSynths.forEach((voice, noteId) => {
+        // Immediately stop and dispose
+        try {
+          if (voice.workletNode) {
+            voice.workletNode.port.postMessage({ type: 'stop' })
+            voice.workletNode.disconnect()
+            voice.workletNode = null
+          }
+          if (voice.synth && voice.synth.oscillator) {
+            voice.synth.oscillator.stop()
+            voice.synth.oscillator.dispose()
+          }
+          if (voice.envelope) {
+            voice.envelope.dispose()
+          }
+          if (voice.filter) {
+            voice.filter.dispose()
+          }
+          if (voice.volume) {
+            voice.volume.dispose()
+          }
+        } catch (e) {
+          // Already disposed, ignore
+        }
+      })
     })
+    this.trackSynths.clear()
   }
 
   // Process drawing data and synthesize audio
