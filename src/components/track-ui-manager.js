@@ -20,10 +20,13 @@ function normalizeLuminodeNameUtil (name) {
     noiseValley: 'Noise Valley',
     catenoid: 'Catenoid',
     lineCylinder: 'Line Cylinder',
+    clavilux: 'Clavilux',
     trefoil: 'Trefoil Knot',
     cube: 'Cube',
     diamond: 'Diamond',
-    sphericalLens: 'Spherical Lens'
+    sphericalLens: 'Spherical Lens',
+    epitrochoid: 'Epitrochoid',
+    syncHelix2D: 'Sync Helix'
   }
   return nameMap[name] || name
 }

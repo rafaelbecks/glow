@@ -291,6 +291,24 @@ export const LUMINODE_CONFIGS = {
       { key: 'USE_3D_ROTATION', label: '3D Rotation', type: 'checkbox', default: true },
       { key: 'USE_COLOR', label: 'Color Mode', type: 'checkbox', default: false }
     ]
+  },
+
+  syncHelix2D: {
+    group: '3D Geometry',
+    config: [
+      { key: 'SEGMENTS', label: 'Segments', type: 'number', min: 20, max: 300, step: 10, default: 40 },
+      { key: 'AMPLITUDE', label: 'Amplitude', type: 'slider', min: 0, max: 300, step: 5, default: 200, note: '0 = auto (15% of canvas height)' },
+      { key: 'FREQUENCY', label: 'Frequency', type: 'slider', min: 0.5, max: 5, step: 0.1, default: 2.2 },
+      { key: 'RADIUS', label: 'Cross-Section Radius', type: 'slider', min: 50, max: 100, step: 1, default: 81 },
+      { key: 'CROSS_SECTION_POINTS', label: 'Cross-Section Points', type: 'number', min: 4, max: 16, step: 1, default: 10 },
+      { key: 'SCALE', label: 'Scale', type: 'slider', min: 0.5, max: 2, step: 0.1, default: 1.0 },
+      { key: 'LINE_WIDTH', label: 'Line Width', type: 'slider', min: 0.3, max: 2, step: 0.1, default: 1.2 },
+      { key: 'ANIMATION_SPEED', label: 'Animation Speed', type: 'slider', min: 0.1, max: 2, step: 0.1, default: 0.5 },
+      { key: 'SYNC_RATE', label: 'Sync Rate', type: 'slider', min: 0.1, max: 2, step: 0.1, default: 0.7 },
+      { key: 'PERSPECTIVE', label: 'Rotation Angle', type: 'slider', min: 0, max: Math.PI * 2, step: 0.1, default: 0.2 },
+      { key: 'ENABLE_PROJECTION', label: 'Enable Projection', type: 'checkbox', default: true },
+      { key: 'USE_COLOR', label: 'Color Mode', type: 'checkbox', default: false }
+    ]
   }
 }
 

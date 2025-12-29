@@ -259,6 +259,20 @@ export const SETTINGS = {
       SHADOW_BLUR: 15,
       USE_3D_ROTATION: true,
       USE_COLOR: false
+    },
+    SYNC_HELIX_2D: {
+      SEGMENTS: 40,
+      AMPLITUDE: 200,
+      FREQUENCY: 2.2,
+      RADIUS: 81,
+      CROSS_SECTION_POINTS: 10,
+      SCALE: 1.0,
+      LINE_WIDTH: 1.2,
+      ANIMATION_SPEED: 0.5,
+      SYNC_RATE: 0.7,
+      PERSPECTIVE: 0.2,
+      ENABLE_PROJECTION: true,
+      USE_COLOR: false
     }
   },
 

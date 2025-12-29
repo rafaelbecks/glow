@@ -34,7 +34,8 @@ import {
   CubeLuminode,
   TrefoilKnotLuminode,
   SphericalLensLuminode,
-  EpitrochoidLuminode
+  EpitrochoidLuminode,
+  SyncHelix2DLuminode
 } from './luminodes/index.js'
 
 export class GLOWVisualizer {
@@ -115,7 +116,8 @@ export class GLOWVisualizer {
       cube: CubeLuminode,
       trefoil: TrefoilKnotLuminode,
       sphericalLens: SphericalLensLuminode,
-      epitrochoid: EpitrochoidLuminode
+      epitrochoid: EpitrochoidLuminode,
+      syncHelix2D: SyncHelix2DLuminode
     }
 
     // Track-based luminode instances
@@ -993,6 +995,10 @@ export class GLOWVisualizer {
       case 'sphericalLens':
         const sphericalLensColorMode = SETTINGS.MODULES.SPHERICAL_LENS.USE_COLOR || false
         luminode.draw(t, notes, sphericalLensColorMode, layout)
+        break
+      case 'syncHelix2D':
+        const syncHelix2DColorMode = SETTINGS.MODULES.SYNC_HELIX_2D.USE_COLOR || false
+        luminode.draw(t, notes, syncHelix2DColorMode, layout)
         break
       default:
         // Standard luminode drawing

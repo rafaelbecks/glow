@@ -22,7 +22,7 @@ export class TrackManager {
       'sotoGrid', 'sotoGridRotated', 'whitneyLines', 'phyllotaxis',
       'moireCircles', 'wovenNet', 'sinewave', 'triangle', 'polygons',
       'noiseValley', 'catenoid', 'lineCylinder', 'clavilux', 'diamond',
-      'cube', 'trefoil', 'sphericalLens', 'epitrochoid'
+      'cube', 'trefoil', 'sphericalLens', 'epitrochoid', 'syncHelix2D'
     ]
 
     this.availableMidiDevices = new Map()
