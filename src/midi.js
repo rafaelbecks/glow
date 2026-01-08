@@ -29,7 +29,8 @@ export class MIDIManager {
       trefoil: [],
       sphericalLens: [],
       epitrochoid: [],
-      syncHelix2D: []
+      syncHelix2D: [],
+      ramiel: []
     }
 
     this.inputs = new Map() // Maps channel to array of inputs
