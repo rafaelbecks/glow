@@ -41,14 +41,13 @@ export class SidePanelBase {
             <ion-icon name="color-palette-outline"></ion-icon>
             <span>CANVAS</span>
           </button>
+          <!-- DEPRECATED: Canvas tab - commented out
           <button class="tab-btn" data-tab="tablet">
             <ion-icon name="color-filter-outline"></ion-icon>
             <span>TABLET</span>
           </button>
-        </div>
-        <button id="togglePanel" class="toggle-panel-btn">
-          <ion-icon name="close-outline"></ion-icon>
-        </button>
+          -->
+          </div>
       </div>
       <div class="side-panel-content">
         <!-- Tracks Tab Content -->
@@ -65,14 +64,16 @@ export class SidePanelBase {
           </div>
         </div>
         
+        <!-- DEPRECATED: Canvas Tab Content - commented out
+
         <!-- Tablet Tab Content -->
         <div id="tabletTab" class="tab-content">
           <div id="tabletControlsContainer">
             <!-- Tablet controls will be dynamically generated -->
           </div>
         </div>
+        -->
         
-        <!-- Canvas Tab Content -->
         <div id="canvasTab" class="tab-content">
           <div id="canvasControlsContainer">
             <!-- Canvas and color controls will be dynamically generated -->
@@ -89,12 +90,6 @@ export class SidePanelBase {
   }
 
   setupEventListeners () {
-    // Toggle panel visibility
-    const toggleBtn = this.panel.querySelector('#togglePanel')
-    toggleBtn.addEventListener('click', () => {
-      this.toggle()
-    })
-
     // Click outside to close panel
     document.addEventListener('click', (e) => {
       if (this.isVisible && !this.panel.contains(e.target) && !e.target.closest('.panel-toggle-btn')) {

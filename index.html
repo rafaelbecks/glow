@@ -17,6 +17,32 @@
     <link rel="stylesheet" href="src/styles/tablet-controls.css">
     <link rel="stylesheet" href="src/styles/crt-effects.css">
     <link rel="stylesheet" href="src/styles/modals.css">
+    <!-- Tweakpane Theme -->
+    <style>
+    :root {
+      --tp-base-background-color: hsla(0, 0%, 0%, 1.00);
+      --tp-base-shadow-color: hsla(0, 0%, 0%, 0.2);
+      --tp-button-background-color: hsla(0, 0%, 70%, 1.00);
+      --tp-button-background-color-active: hsla(0, 0%, 85%, 1.00);
+      --tp-button-background-color-focus: hsla(0, 0%, 80%, 1.00);
+      --tp-button-background-color-hover: hsla(0, 0%, 75%, 1.00);
+      --tp-button-foreground-color: hsla(0, 0%, 0%, 1.00);
+      --tp-container-background-color: hsla(0, 0%, 10%, 1.00);
+      --tp-container-background-color-active: hsla(0, 0%, 25%, 1.00);
+      --tp-container-background-color-focus: hsla(0, 0%, 20%, 1.00);
+      --tp-container-background-color-hover: hsla(0, 0%, 15%, 1.00);
+      --tp-container-foreground-color: hsla(0, 0%, 50%, 1.00);
+      --tp-groove-foreground-color: hsla(0, 0%, 10%, 1.00);
+      --tp-input-background-color: hsla(0, 0%, 10%, 1.00);
+      --tp-input-background-color-active: hsla(0, 0%, 25%, 1.00);
+      --tp-input-background-color-focus: hsla(0, 0%, 20%, 1.00);
+      --tp-input-background-color-hover: hsla(0, 0%, 15%, 1.00);
+      --tp-input-foreground-color: hsla(131, 59%, 59%, 1.00);
+      --tp-label-foreground-color: hsla(0, 0%, 50%, 1.00);
+      --tp-monitor-background-color: hsla(0, 0%, 8%, 1.00);
+      --tp-monitor-foreground-color: hsla(0, 0%, 48%, 1.00);
+    }
+    </style>
 </head>
 <body>
     <div id="logoContainer">
@@ -164,6 +190,7 @@
         </div>
     </div>
     
+    <script type="module" src="src/lib/tweakpane.min.js"></script>
     <script type="module" src="src/components/glow-logo.js"></script>
     <script type="module" src="src/main.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>

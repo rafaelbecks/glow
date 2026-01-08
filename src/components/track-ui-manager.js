@@ -1,5 +1,5 @@
-// Track UI management - handles track rendering, event listeners, and updates
-import { hasLuminodeConfig, getLuminodesByGroup } from '../luminode-configs.js'
+import { Pane } from '../lib/tweakpane.min.js'
+import { hasLuminodeConfig, getLuminodesByGroup, getLuminodeConfig } from '../luminode-configs.js'
 
 function normalizeLuminodeNameUtil (name) {
   const nameMap = {
@@ -31,7 +31,6 @@ function normalizeLuminodeNameUtil (name) {
   return nameMap[name] || name
 }
 
-// Export for reuse in other modules
 export { normalizeLuminodeNameUtil as normalizeLuminodeName }
 
 export class TrackUIManager {
@@ -40,549 +39,527 @@ export class TrackUIManager {
     this.panel = panel
     this.luminodeConfigManager = luminodeConfigManager
     this.settings = null
+    this.trackPanes = new Map()
+    this.mainPane = null
   }
 
-  // Set settings reference
   setSettings (settings) {
     this.settings = settings
   }
 
-  // Render all tracks
   renderTracks () {
     const tracksContainer = this.panel.querySelector('#tracksContainer')
     const tracks = this.trackManager.getTracks()
 
-    tracksContainer.innerHTML = tracks.map(track => this.createTrackHTML(track)).join('')
+    if (this.mainPane) {
+      this.mainPane.dispose()
+      this.mainPane = null
+    }
+    this.trackPanes.clear()
 
-    // Add event listeners to track elements
-    this.attachTrackEventListeners()
+    tracksContainer.innerHTML = `<div id="track-pane-container"></div>`
 
-    // Initialize configuration sections for existing tracks
-    tracks.forEach(track => {
-      if (track.luminode && hasLuminodeConfig(track.luminode)) {
-        this.updateLuminodeConfig(track.id, track.luminode)
+    const paneContainer = tracksContainer.querySelector('#track-pane-container')
+    if (!paneContainer) return
+
+    this.mainPane = new Pane({ container: paneContainer })
+    
+    const stylePane = () => {
+      const paneElement = paneContainer.querySelector('.tp-rotv')
+      if (paneElement) {
+        paneElement.style.width = '100%'
+        paneElement.style.margin = '0'
+        paneElement.style.padding = '0'
+        paneElement.style.background = 'transparent'
+        paneElement.style.border = 'none'
+      } else {
+        requestAnimationFrame(stylePane)
+      }
+    }
+    requestAnimationFrame(stylePane)
+
+    const tabs = this.mainPane.addTab({
+      pages: tracks.map(track => ({ title: `Track ${track.id}` }))
+    })
+
+    tracks.forEach((track, index) => {
+      this.createTrackPane(tabs.pages[index], track)
+    })
+  }
+
+  createTrackPane (tabPage, track) {
+    try {
+      const pane = tabPage
+      
+      const trackControls = {
+        muted: track.muted,
+        solo: track.solo
+      }
+
+      const trackHeaderContainer = document.createElement('div')
+      trackHeaderContainer.className = 'track-tab-header'
+      trackHeaderContainer.innerHTML = `
+        <div class="track-info">
+          <div class="track-number" style="background-color: ${this.getTrackColor(track.id)}">${track.id}</div>
+          <div class="track-activity-indicator" id="activity-${track.id}"></div>
+        </div>
+        <div class="track-controls">
+          <button class="mute-btn ${track.muted ? 'active' : ''}" data-action="mute" title="Mute">M</button>
+          <button class="solo-btn ${track.solo ? 'active' : ''}" data-action="solo" title="Solo">S</button>
+        </div>
+      `
+      
+      const muteBtn = trackHeaderContainer.querySelector('.mute-btn')
+      const soloBtn = trackHeaderContainer.querySelector('.solo-btn')
+      
+      if (muteBtn) {
+        muteBtn.addEventListener('click', () => {
+          this.trackManager.toggleMute(track.id)
+        })
+      }
+      
+      if (soloBtn) {
+        soloBtn.addEventListener('click', () => {
+          this.trackManager.toggleSolo(track.id)
+        })
+      }
+
+      const insertHeader = () => {
+        const paneElement = pane.element || pane.element_ || (pane.controller && pane.controller.view && pane.controller.view.element)
+        if (paneElement) {
+          const tabContent = paneElement.querySelector('.tp-tabv_c') || paneElement.querySelector('.tp-rotv') || paneElement
+          if (tabContent && tabContent.firstChild) {
+            tabContent.insertBefore(trackHeaderContainer, tabContent.firstChild)
+            return true
+          }
+        }
+        return false
+      }
+      
+      if (!insertHeader()) {
+        requestAnimationFrame(() => {
+          if (!insertHeader()) {
+            setTimeout(insertHeader, 100)
+          }
+        })
+      }
+
+      const midiDevices = this.trackManager.getAvailableMidiDevices()
+      const midiDeviceOptions = { 'Select Device': '' }
+      midiDevices.forEach(device => {
+        midiDeviceOptions[device.name] = device.id
+      })
+
+      const groupedLuminodes = this.getGroupedLuminodeOptions()
+
+      const trackData = {
+        midiDevice: track.midiDevice || '',
+        luminode: track.luminode || ''
+      }
+
+      const midiBinding = pane.addBinding(trackData, 'midiDevice', {
+        options: midiDeviceOptions,
+        label: 'MIDI Device'
+      }).on('change', (ev) => {
+        this.trackManager.setMidiDevice(track.id, ev.value || null)
+      })
+
+      const luminodeBinding = pane.addBinding(trackData, 'luminode', {
+        options: groupedLuminodes,
+        label: 'Luminode'
+      }).on('change', (ev) => {
+        const newLuminode = ev.value || null
+        this.trackManager.setLuminode(track.id, newLuminode)
+        trackData.luminode = newLuminode || ''
+        this.updateLuminodeConfigPane(track.id, newLuminode)
+      })
+
+    let layoutData = null
+    let trajectoryData = null
+
+    if (track.luminode !== 'triangle') {
+      layoutData = {
+        position: { x: track.layout.x, y: track.layout.y },
+        rotation: track.layout.rotation
+      }
+
+      const layoutFolder = pane.addFolder({ title: 'Layout', expanded: true })
+      const positionBinding = layoutFolder.addBinding(layoutData, 'position', {
+        label: 'Position',
+        picker: 'inline',
+        expanded: true,
+        x: { min: -500, max: 500, step: 10 },
+        y: { min: -500, max: 500, step: 10 }
+      }).on('change', (ev) => {
+        this.trackManager.setLayout(track.id, { x: ev.value.x, y: ev.value.y })
+      })
+
+      setTimeout(() => {
+        const positionElement = positionBinding.element
+        if (positionElement) {
+          const textContainer = positionElement.querySelector('.tp-pndtxtv')
+          if (textContainer) {
+            const inputs = textContainer.querySelectorAll('.tp-pndtxtv_a input')
+            if (inputs.length >= 2) {
+              const xInput = inputs[0]
+              const yInput = inputs[1]
+              if (xInput && !xInput.parentElement.querySelector('.axis-label-x')) {
+                const xLabel = document.createElement('span')
+                xLabel.className = 'axis-label axis-label-x'
+                xLabel.textContent = 'X:'
+                xInput.parentElement.insertBefore(xLabel, xInput)
+              }
+              if (yInput && !yInput.parentElement.querySelector('.axis-label-y')) {
+                const yLabel = document.createElement('span')
+                yLabel.className = 'axis-label axis-label-y'
+                yLabel.textContent = 'Y:'
+                yInput.parentElement.insertBefore(yLabel, yInput)
+              }
+            }
+          }
+        }
+      }, 150)
+
+      layoutFolder.addBinding(layoutData, 'rotation', {
+        label: 'R',
+        min: -180,
+        max: 180,
+        step: 5
+      }).on('change', (ev) => {
+        this.trackManager.setLayout(track.id, { rotation: ev.value })
+      })
+
+      const trajectoryConfig = this.getTrajectoryConfig(track.id)
+      trajectoryData = {
+        enabled: trajectoryConfig.enabled,
+        trajectoryType: trajectoryConfig.trajectoryType,
+        motionRate: trajectoryConfig.motionRate,
+        amplitude: trajectoryConfig.amplitude,
+        ratioA: trajectoryConfig.ratioA,
+        ratioB: trajectoryConfig.ratioB,
+        ratioC: trajectoryConfig.ratioC,
+        inversion: trajectoryConfig.inversion
+      }
+
+      const typeNames = this.trackManager.getTrajectoryTypeNames()
+      const typeOptions = Object.fromEntries(
+        Object.entries(typeNames).map(([value, label]) => [label, value])
+      )
+
+      const trajectoryFolder = pane.addFolder({ title: 'Trajectory Motion', expanded: true })
+      trajectoryFolder.addBinding(trajectoryData, 'enabled', {
+        label: 'Enable Motion'
+      }).on('change', (ev) => {
+        this.trackManager.updateTrajectoryConfig(track.id, { enabled: ev.value })
+      })
+
+      trajectoryFolder.addBinding(trajectoryData, 'trajectoryType', {
+        options: typeOptions,
+        label: 'Type'
+      }).on('change', (ev) => {
+        this.trackManager.updateTrajectoryConfig(track.id, { trajectoryType: ev.value })
+      })
+
+      trajectoryFolder.addBinding(trajectoryData, 'motionRate', {
+        label: 'Rate',
+        min: 0.01,
+        max: 2.0,
+        step: 0.01
+      }).on('change', (ev) => {
+        this.trackManager.updateTrajectoryConfig(track.id, { motionRate: ev.value })
+      })
+
+      trajectoryFolder.addBinding(trajectoryData, 'amplitude', {
+        label: 'Amplitude',
+        min: 0,
+        max: 200,
+        step: 1
+      }).on('change', (ev) => {
+        this.trackManager.updateTrajectoryConfig(track.id, { amplitude: ev.value })
+      })
+
+      trajectoryFolder.addBinding(trajectoryData, 'ratioA', {
+        label: 'Ratio A',
+        min: 0.1,
+        max: 5.0,
+        step: 0.1
+      }).on('change', (ev) => {
+        this.trackManager.updateTrajectoryConfig(track.id, { ratioA: ev.value })
+      })
+
+      trajectoryFolder.addBinding(trajectoryData, 'ratioB', {
+        label: 'Ratio B',
+        min: 0.1,
+        max: 5.0,
+        step: 0.1
+      }).on('change', (ev) => {
+        this.trackManager.updateTrajectoryConfig(track.id, { ratioB: ev.value })
+      })
+
+      trajectoryFolder.addBinding(trajectoryData, 'ratioC', {
+        label: 'Ratio C',
+        min: 0.1,
+        max: 5.0,
+        step: 0.1
+      }).on('change', (ev) => {
+        this.trackManager.updateTrajectoryConfig(track.id, { ratioC: ev.value })
+      })
+
+      trajectoryFolder.addBinding(trajectoryData, 'inversion', {
+        label: 'Invert Motion'
+      }).on('change', (ev) => {
+        this.trackManager.updateTrajectoryConfig(track.id, { inversion: ev.value })
+      })
+    }
+
+    let luminodeFolder = null
+    if (track.luminode && hasLuminodeConfig(track.luminode)) {
+      luminodeFolder = this.createLuminodeConfigFolder(pane, track)
+    }
+
+    this.trackPanes.set(track.id, {
+      pane,
+      trackData,
+      layoutData,
+      trajectoryData,
+      luminodeFolder,
+      midiBinding,
+      luminodeBinding,
+      trackHeaderContainer
+    })
+    } catch (error) {
+      console.error(`Failed to create track pane for track ${track.id}:`, error)
+    }
+  }
+
+  getGroupedLuminodeOptions () {
+    const groupedLuminodes = getLuminodesByGroup()
+    const options = { 'Select Luminode': '' }
+
+    Object.entries(groupedLuminodes).forEach(([groupName, luminodes]) => {
+      luminodes.forEach(luminode => {
+        const displayName = `${this.normalizeLuminodeName(luminode)} (${groupName})`
+        options[displayName] = luminode
+      })
+    })
+
+    return options
+  }
+
+  createLuminodeConfigFolder (pane, track) {
+    const configParams = getLuminodeConfig(track.luminode)
+    if (!configParams || configParams.length === 0) return null
+
+    let currentValues = {}
+    if (this.settings) {
+      const settingsModule = this.settings.MODULES || this.settings
+      const luminodeKey = this.getLuminodeSettingsKey(track.luminode)
+      if (settingsModule[luminodeKey]) {
+        currentValues = settingsModule[luminodeKey]
+      }
+    }
+
+    const luminodeData = {}
+    configParams.forEach(param => {
+      luminodeData[param.key] = currentValues[param.key] !== undefined 
+        ? currentValues[param.key] 
+        : param.default
+    })
+
+    const luminodeFolder = pane.addFolder({ title: 'Luminode Parameters', expanded: true })
+
+    configParams.forEach(param => {
+      const bindingOptions = {
+        label: param.label
+      }
+
+      if (param.type === 'slider' || param.type === 'number') {
+        bindingOptions.min = param.min
+        bindingOptions.max = param.max
+        bindingOptions.step = param.step
+      } else if (param.type === 'select') {
+        const options = param.options || []
+        bindingOptions.options = Object.fromEntries(
+          options.map(opt => [opt.label, opt.value])
+        )
+      }
+
+      luminodeFolder.addBinding(luminodeData, param.key, bindingOptions)
+        .on('change', (ev) => {
+          this.triggerLuminodeConfigChange(track.id, track.luminode, param.key, ev.value)
+        })
+    })
+
+    return luminodeFolder
+  }
+
+  triggerLuminodeConfigChange (trackId, luminode, param, value) {
+    const event = new CustomEvent('luminodeConfigChange', {
+      detail: {
+        trackId,
+        luminode,
+        param,
+        value
       }
     })
+    this.panel.dispatchEvent(event)
   }
 
-  createTrackHTML (track) {
-    const midiDevices = this.trackManager.getAvailableMidiDevices()
-    const luminodes = this.trackManager.getAvailableLuminodes()
-
-    return `
-      <div class="track-tile" data-track-id="${track.id}">
-        <div class="track-header">
-          <div class="track-info">
-            <div class="track-number" style="background-color: ${this.getTrackColor(track.id)}">${track.id}</div>
-            <div class="track-activity-indicator" id="activity-${track.id}"></div>
-          </div>
-          <div class="track-controls">
-            <button class="mute-btn ${track.muted ? 'active' : ''}" data-action="mute" title="Mute">
-              M
-            </button>
-            <button class="solo-btn ${track.solo ? 'active' : ''}" data-action="solo" title="Solo">
-              S
-            </button>
-          </div>
-        </div>
-        
-        <div class="track-assignments">
-          <div class="assignment-row">
-            <div class="assignment-group">
-              <label>
-                <ion-icon name="grid-outline"></ion-icon>
-                MIDI Device
-              </label>
-              <select class="midi-device-select" data-track-id="${track.id}">
-                <option value="">Select Device</option>
-                ${midiDevices.map(device =>
-                  `<option value="${device.id}" ${track.midiDevice === device.id ? 'selected' : ''}>
-                    ${device.name}
-                  </option>`
-                ).join('')}
-              </select>
-            </div>
-            
-            <div class="assignment-group">
-              <label>
-                <svg class="luminode-icon" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <style>.cls-1{fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:20px;}</style>
-                  </defs>
-                  <g data-name="Layer 2" id="Layer_2">
-                    <g data-name="E449, Sine, sound, wave" id="E449_Sine_sound_wave">
-                      <circle class="cls-1" cx="256" cy="256" r="246"></circle>
-                      <line class="cls-1" x1="70.24" x2="441.76" y1="235.92" y2="235.92"></line>
-                      <path class="cls-1" d="M100.37,150.57c77.81,0,77.81,210.86,155.63,210.86s77.82-210.86,155.63-210.86"></path>
-                    </g>
-                  </g>
-                </svg>
-                Luminode
-              </label>
-              <select class="luminode-select" data-track-id="${track.id}">
-                <option value="">Select Luminode</option>
-                ${this.createGroupedLuminodeOptions(track.luminode)}
-              </select>
-            </div>
-          </div>
-          
-          ${track.luminode !== 'triangle'
-? `
-          <div class="assignment-row">
-            <div class="assignment-group layout-controls">
-              <label>
-                <svg class="layout-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <style>.cls-1{fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:2px;}</style>
-                  </defs>
-                  <g data-name="Layer 2" id="Layer_2">
-                    <g data-name="E449, Sine, sound, wave" id="E449_Sine_sound_wave">
-                      <rect class="cls-1" x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                      <circle class="cls-1" cx="9" cy="9" r="2"></circle>
-                      <circle class="cls-1" cx="15" cy="15" r="2"></circle>
-                      <line class="cls-1" x1="9" y1="9" x2="15" y2="15"></line>
-                    </g>
-                  </g>
-                </svg>
-                Layout
-              </label>
-              <div class="layout-controls-grid">
-                <div class="layout-control-row">
-                  <div class="layout-control">
-                    <span class="layout-label">X</span>
-                    <div class="slider-container">
-                      <input type="range" 
-                             class="layout-slider" 
-                             data-track-id="${track.id}" 
-                             data-axis="x"
-                             min="-500" 
-                             max="500" 
-                             step="10" 
-                             value="${track.layout.x}">
-                      <span class="slider-value">${track.layout.x}</span>
-                    </div>
-                  </div>
-                  <div class="layout-control">
-                    <span class="layout-label">Y</span>
-                    <div class="slider-container">
-                      <input type="range" 
-                             class="layout-slider" 
-                             data-track-id="${track.id}" 
-                             data-axis="y"
-                             min="-500" 
-                             max="500" 
-                             step="10" 
-                             value="${track.layout.y}">
-                      <span class="slider-value">${track.layout.y}</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="layout-control-row">
-                  <div class="layout-control">
-                    <span class="layout-label">R</span>
-                    <div class="slider-container">
-                      <input type="range" 
-                             class="layout-slider" 
-                             data-track-id="${track.id}" 
-                             data-axis="rotation"
-                             min="-180" 
-                             max="180" 
-                             step="5" 
-                             value="${track.layout.rotation}">
-                      <span class="slider-value">${track.layout.rotation}°</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Trajectory Motion Controls -->
-          <div class="assignment-row">
-            <div class="assignment-group trajectory-controls">
-              <label>
-                <svg class="trajectory-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <style>.cls-1{fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:2px;}</style>
-                  </defs>
-                  <g data-name="Layer 2" id="Layer_2">
-                    <g data-name="E449, Sine, sound, wave" id="E449_Sine_sound_wave">
-                      <path class="cls-1" d="M3 12c0-1.657 1.343-3 3-3s3 1.343 3 3-1.343 3-3 3-3-1.343-3-3z"></path>
-                      <path class="cls-1" d="M21 12c0-1.657 1.343-3 3-3s3 1.343 3 3-1.343 3-3 3-3-1.343-3-3z"></path>
-                      <path class="cls-1" d="M12 3c0-1.657 1.343-3 3-3s3 1.343 3 3-1.343 3-3 3-3-1.343-3-3z"></path>
-                      <path class="cls-1" d="M12 21c0-1.657 1.343-3 3-3s3 1.343 3 3-1.343 3-3 3-3-1.343-3-3z"></path>
-                      <path class="cls-1" d="M6 6l12 12M18 6L6 18"></path>
-                    </g>
-                  </g>
-                </svg>
-                Trajectory Motion
-              </label>
-              <div class="trajectory-controls-grid">
-                <div class="trajectory-control-row">
-                  <div class="trajectory-control">
-                    <label class="checkbox-container">
-                      <input type="checkbox" 
-                             class="trajectory-enable" 
-                             data-track-id="${track.id}"
-                             ${this.getTrajectoryConfig(track.id).enabled ? 'checked' : ''}>
-                      <span class="checkmark"></span>
-                      Enable Motion
-                    </label>
-                  </div>
-                  <div class="trajectory-control">
-                    <span class="trajectory-label">Type</span>
-                    <select class="trajectory-type-select" data-track-id="${track.id}">
-                      ${this.createTrajectoryTypeOptions(track.id)}
-                    </select>
-                  </div>
-                </div>
-                <div class="trajectory-control-row">
-                  <div class="trajectory-control">
-                    <span class="trajectory-label">Rate</span>
-                    <div class="slider-container">
-                      <input type="range" 
-                             class="trajectory-slider" 
-                             data-track-id="${track.id}" 
-                             data-param="motionRate"
-                             min="0.01" 
-                             max="2.0" 
-                             step="0.01" 
-                             value="${this.getTrajectoryConfig(track.id).motionRate}">
-                      <span class="slider-value">${this.getTrajectoryConfig(track.id).motionRate}</span>
-                    </div>
-                  </div>
-                  <div class="trajectory-control">
-                    <span class="trajectory-label">Amplitude</span>
-                    <div class="slider-container">
-                      <input type="range" 
-                             class="trajectory-slider" 
-                             data-track-id="${track.id}" 
-                             data-param="amplitude"
-                             min="0" 
-                             max="200" 
-                             step="1" 
-                             value="${this.getTrajectoryConfig(track.id).amplitude}">
-                      <span class="slider-value">${this.getTrajectoryConfig(track.id).amplitude}</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="trajectory-control-row">
-                  <div class="trajectory-control">
-                    <span class="trajectory-label">Ratio A</span>
-                    <div class="slider-container">
-                      <input type="range" 
-                             class="trajectory-slider" 
-                             data-track-id="${track.id}" 
-                             data-param="ratioA"
-                             min="0.1" 
-                             max="5.0" 
-                             step="0.1" 
-                             value="${this.getTrajectoryConfig(track.id).ratioA}">
-                      <span class="slider-value">${this.getTrajectoryConfig(track.id).ratioA}</span>
-                    </div>
-                  </div>
-                  <div class="trajectory-control">
-                    <span class="trajectory-label">Ratio B</span>
-                    <div class="slider-container">
-                      <input type="range" 
-                             class="trajectory-slider" 
-                             data-track-id="${track.id}" 
-                             data-param="ratioB"
-                             min="0.1" 
-                             max="5.0" 
-                             step="0.1" 
-                             value="${this.getTrajectoryConfig(track.id).ratioB}">
-                      <span class="slider-value">${this.getTrajectoryConfig(track.id).ratioB}</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="trajectory-control-row">
-                  <div class="trajectory-control">
-                    <span class="trajectory-label">Ratio C</span>
-                    <div class="slider-container">
-                      <input type="range" 
-                             class="trajectory-slider" 
-                             data-track-id="${track.id}" 
-                             data-param="ratioC"
-                             min="0.1" 
-                             max="5.0" 
-                             step="0.1" 
-                             value="${this.getTrajectoryConfig(track.id).ratioC}">
-                      <span class="slider-value">${this.getTrajectoryConfig(track.id).ratioC}</span>
-                    </div>
-                  </div>
-                </div>
-                <div class="trajectory-control-row">
-                  <div class="trajectory-control">
-                    <label class="checkbox-container">
-                      <input type="checkbox" 
-                             class="trajectory-inversion" 
-                             data-track-id="${track.id}"
-                             ${this.getTrajectoryConfig(track.id).inversion ? 'checked' : ''}>
-                      <span class="checkmark"></span>
-                      Invert Motion
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          `
-: ''}
-        </div>
-        
-        <!-- Luminode Configuration Section -->
-        <div class="luminode-config" id="config-${track.id}" style="${track.luminode && hasLuminodeConfig(track.luminode) ? 'display: block;' : 'display: none;'}">
-          ${this.luminodeConfigManager ? this.luminodeConfigManager.createLuminodeConfigHTML(track.luminode, track.id, this.settings || null) : ''}
-        </div>
-      </div>
-    `
-  }
-
-  attachTrackEventListeners () {
-    const trackTiles = this.panel.querySelectorAll('.track-tile')
-
-    trackTiles.forEach(tile => {
-      const trackId = parseInt(tile.dataset.trackId)
-
-      // Mute/Solo buttons
-      const muteBtn = tile.querySelector('.mute-btn')
-      const soloBtn = tile.querySelector('.solo-btn')
-
-      muteBtn.addEventListener('click', () => {
-        this.trackManager.toggleMute(trackId)
-      })
-
-      soloBtn.addEventListener('click', () => {
-        this.trackManager.toggleSolo(trackId)
-      })
-
-      // MIDI device selection
-      const midiSelect = tile.querySelector('.midi-device-select')
-      midiSelect.addEventListener('change', (e) => {
-        this.trackManager.setMidiDevice(trackId, e.target.value || null)
-      })
-
-      // Luminode selection
-      const luminodeSelect = tile.querySelector('.luminode-select')
-      luminodeSelect.addEventListener('change', (e) => {
-        this.trackManager.setLuminode(trackId, e.target.value || null)
-        this.updateLuminodeConfig(trackId, e.target.value)
-        // Re-render the track to show/hide layout controls based on luminode
-        this.renderTracks()
-      })
-
-      // Layout controls
-      const layoutSliders = tile.querySelectorAll('.layout-slider')
-      layoutSliders.forEach(slider => {
-        slider.addEventListener('input', (e) => {
-          const axis = e.target.dataset.axis
-          const value = parseFloat(e.target.value)
-          const valueDisplay = e.target.parentElement.querySelector('.slider-value')
-
-          if (valueDisplay) {
-            valueDisplay.textContent = axis === 'rotation' ? `${value}°` : value
-          }
-
-          this.trackManager.setLayout(trackId, { [axis]: value })
-        })
-      })
-
-      // Trajectory controls
-      this.attachTrajectoryEventListeners(trackId)
-    })
+  getLuminodeSettingsKey (luminode) {
+    const luminodeMapping = {
+      lissajous: 'LISSAJOUS',
+      sphere: 'SPHERE',
+      harmonograph: 'HARMONOGRAPH',
+      gegoNet: 'GEGO_NET',
+      gegoShape: 'GEGO_SHAPE',
+      sotoGrid: 'SOTO_GRID',
+      sotoGridRotated: 'SOTO_GRID',
+      whitneyLines: 'WHITNEY_LINES',
+      phyllotaxis: 'PHYLLOTAXIS',
+      moireCircles: 'MOIRE_CIRCLES',
+      wovenNet: 'WOVEN_NET',
+      sinewave: 'SINEWAVE',
+      triangle: 'TRIANGLE',
+      polygons: 'POLYGONS',
+      noiseValley: 'NOISE_VALLEY',
+      catenoid: 'CATENOID',
+      lineCylinder: 'LINE_CYLINDER',
+      clavilux: 'CLAVILUX',
+      diamond: 'DIAMOND',
+      cube: 'CUBE',
+      trefoil: 'TREFOIL',
+      sphericalLens: 'SPHERICAL_LENS',
+      epitrochoid: 'EPITROCHOID',
+      syncHelix2D: 'SYNC_HELIX_2D'
+    }
+    return luminodeMapping[luminode] || luminode.toUpperCase()
   }
 
   updateTrackUI (trackId, track) {
-    const trackTile = this.panel.querySelector(`[data-track-id="${trackId}"]`)
-    if (!trackTile) return
+    const paneData = this.trackPanes.get(trackId)
+    if (!paneData || !paneData.trackHeaderContainer) return
 
-    // Update mute/solo button states
-    const muteBtn = trackTile.querySelector('.mute-btn')
-    const soloBtn = trackTile.querySelector('.solo-btn')
+    const muteBtn = paneData.trackHeaderContainer.querySelector('.mute-btn')
+    const soloBtn = paneData.trackHeaderContainer.querySelector('.solo-btn')
 
-    muteBtn.classList.toggle('active', track.muted)
-    soloBtn.classList.toggle('active', track.solo)
+    if (muteBtn) muteBtn.classList.toggle('active', track.muted)
+    if (soloBtn) soloBtn.classList.toggle('active', track.solo)
 
-    // Update dropdown selections
-    const midiSelect = trackTile.querySelector('.midi-device-select')
-    const luminodeSelect = trackTile.querySelector('.luminode-select')
+    paneData.trackData.midiDevice = track.midiDevice || ''
+    paneData.trackData.luminode = track.luminode || ''
+    
+    if (track.luminode !== 'triangle' && paneData.layoutData) {
+      paneData.layoutData.position = { x: track.layout.x, y: track.layout.y }
+      paneData.layoutData.rotation = track.layout.rotation
+    }
 
-    midiSelect.value = track.midiDevice || ''
-    luminodeSelect.value = track.luminode || ''
-
-    // Update layout controls (only if they exist - not for triangle luminode)
-    const layoutSliders = trackTile.querySelectorAll('.layout-slider')
-    layoutSliders.forEach(slider => {
-      const axis = slider.dataset.axis
-      const value = track.layout[axis] || 0
-      slider.value = value
-      const valueDisplay = slider.parentElement.querySelector('.slider-value')
-      if (valueDisplay) {
-        valueDisplay.textContent = axis === 'rotation' ? `${value}°` : value
-      }
-    })
-
-    // Update luminode configuration
-    this.updateLuminodeConfig(trackId, track.luminode)
+    this.updateLuminodeConfigPane(trackId, track.luminode)
   }
 
-  // Update luminode configuration section
-  updateLuminodeConfig (trackId, luminode) {
-    if (this.luminodeConfigManager) {
-      this.luminodeConfigManager.updateLuminodeConfig(trackId, luminode)
+  updateLuminodeConfigPane (trackId, luminode) {
+    const paneData = this.trackPanes.get(trackId)
+    if (!paneData || !paneData.pane) {
+      console.warn(`Pane data not found for track ${trackId}`)
+      return
+    }
+
+    if (paneData.luminodeFolder) {
+      try {
+        paneData.luminodeFolder.dispose()
+      } catch (e) {
+        console.warn('Error disposing luminode folder:', e)
+      }
+      paneData.luminodeFolder = null
+    }
+
+    if (luminode && hasLuminodeConfig(luminode)) {
+      const track = this.trackManager.getTrack(trackId)
+      if (track) {
+        const updatedTrack = { ...track, luminode }
+        try {
+          paneData.luminodeFolder = this.createLuminodeConfigFolder(paneData.pane, updatedTrack)
+          if (paneData.luminodeFolder) {
+            paneData.pane.refresh()
+          }
+        } catch (e) {
+          console.error('Error creating luminode config folder:', e)
+        }
+      } else {
+        console.warn(`Track ${trackId} not found when updating luminode config`)
+      }
     }
   }
 
-  // Update trajectory UI controls
   updateTrajectoryUI (trackId, config) {
-    const trackTile = this.panel.querySelector(`[data-track-id="${trackId}"]`)
-    if (!trackTile) return
+    const paneData = this.trackPanes.get(trackId)
+    if (!paneData || !paneData.trajectoryData) return
 
-    // Update enable checkbox
-    const enableCheckbox = trackTile.querySelector('.trajectory-enable')
-    if (enableCheckbox) {
-      enableCheckbox.checked = config.enabled
-    }
-
-    // Update type selection
-    const typeSelect = trackTile.querySelector('.trajectory-type-select')
-    if (typeSelect) {
-      typeSelect.value = config.trajectoryType
-    }
-
-    // Update sliders
-    const trajectorySliders = trackTile.querySelectorAll('.trajectory-slider')
-    trajectorySliders.forEach(slider => {
-      const param = slider.dataset.param
-      if (config.hasOwnProperty(param)) {
-        slider.value = config[param]
-        const valueDisplay = slider.parentElement.querySelector('.slider-value')
-        if (valueDisplay) {
-          valueDisplay.textContent = config[param]
-        }
-      }
+    Object.assign(paneData.trajectoryData, {
+      enabled: config.enabled,
+      trajectoryType: config.trajectoryType,
+      motionRate: config.motionRate,
+      amplitude: config.amplitude,
+      ratioA: config.ratioA,
+      ratioB: config.ratioB,
+      ratioC: config.ratioC,
+      inversion: config.inversion
     })
-  }
-
-  // Attach trajectory control event listeners
-  attachTrajectoryEventListeners (trackId) {
-    const trackTile = this.panel.querySelector(`[data-track-id="${trackId}"]`)
-    if (!trackTile) return
-
-    // Trajectory enable checkbox
-    const enableCheckbox = trackTile.querySelector('.trajectory-enable')
-    if (enableCheckbox) {
-      enableCheckbox.addEventListener('change', (e) => {
-        this.trackManager.updateTrajectoryConfig(trackId, { enabled: e.target.checked })
-      })
-    }
-
-    // Trajectory type selection
-    const typeSelect = trackTile.querySelector('.trajectory-type-select')
-    if (typeSelect) {
-      typeSelect.addEventListener('change', (e) => {
-        this.trackManager.updateTrajectoryConfig(trackId, { trajectoryType: e.target.value })
-      })
-    }
-
-    // Trajectory sliders
-    const trajectorySliders = trackTile.querySelectorAll('.trajectory-slider')
-    trajectorySliders.forEach(slider => {
-      slider.addEventListener('input', (e) => {
-        const param = e.target.dataset.param
-        const value = parseFloat(e.target.value)
-        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
-
-        if (valueDisplay) {
-          valueDisplay.textContent = value
-        }
-
-        this.trackManager.updateTrajectoryConfig(trackId, { [param]: value })
-      })
-    })
-
-    // Trajectory inversion checkbox
-    const inversionCheckbox = trackTile.querySelector('.trajectory-inversion')
-    if (inversionCheckbox) {
-      inversionCheckbox.addEventListener('change', (e) => {
-        this.trackManager.updateTrajectoryConfig(trackId, { inversion: e.target.checked })
-      })
-    }
   }
 
   updateMidiDeviceDropdowns () {
-    const tracks = this.trackManager.getTracks()
-    const midiDevices = this.trackManager.getAvailableMidiDevices()
+    this.trackPanes.forEach((paneData, trackId) => {
+      if (!paneData || !paneData.midiBinding) return
 
-    console.log(`SidePanel: Updating dropdowns with ${midiDevices.length} devices:`, midiDevices.map(d => d.name))
+      const midiDevices = this.trackManager.getAvailableMidiDevices()
+      const midiDeviceOptions = { 'Select Device': '' }
+      midiDevices.forEach(device => {
+        midiDeviceOptions[device.name] = device.id
+      })
 
-    tracks.forEach(track => {
-      const trackTile = this.panel.querySelector(`[data-track-id="${track.id}"]`)
-      if (!trackTile) return
-
-      const midiSelect = trackTile.querySelector('.midi-device-select')
-      const currentValue = midiSelect.value
-
-      // Update options
-      midiSelect.innerHTML = `
-        <option value="">Select Device</option>
-        ${midiDevices.map(device =>
-          `<option value="${device.id}">${device.name}</option>`
-        ).join('')}
-      `
-
-      // Restore selection if still valid
-      if (currentValue && midiDevices.find(d => d.id === currentValue)) {
-        midiSelect.value = currentValue
-      } else {
-        midiSelect.value = ''
-        this.trackManager.setMidiDevice(track.id, null)
+      try {
+        const binding = paneData.midiBinding
+        if (binding.controller && binding.controller.valueController) {
+          const valueController = binding.controller.valueController
+          if (valueController.props) {
+            valueController.props.set('options', midiDeviceOptions)
+            const currentDeviceId = paneData.trackData.midiDevice
+            const deviceName = Object.keys(midiDeviceOptions).find(k => midiDeviceOptions[k] === currentDeviceId)
+            if (currentDeviceId && !deviceName) {
+              paneData.trackData.midiDevice = ''
+              this.trackManager.setMidiDevice(trackId, null)
+            }
+          }
+        }
+      } catch (error) {
+        console.warn(`Failed to update MIDI device dropdown for track ${trackId}:`, error)
+        this.renderTracks()
       }
     })
   }
 
-  // Update activity indicators
   updateActivityIndicators (activeNotes) {
     const tracks = this.trackManager.getTracks()
 
     tracks.forEach(track => {
-      const indicator = this.panel.querySelector(`#activity-${track.id}`)
-      if (indicator) {
-        const hasActivity = track.luminode && activeNotes[track.luminode] && activeNotes[track.luminode].length > 0
-        indicator.classList.toggle('active', hasActivity)
+      const paneData = this.trackPanes.get(track.id)
+      if (paneData && paneData.trackHeaderContainer) {
+        const indicator = paneData.trackHeaderContainer.querySelector(`#activity-${track.id}`)
+        if (indicator) {
+          const hasActivity = track.luminode && activeNotes[track.luminode] && activeNotes[track.luminode].length > 0
+          indicator.classList.toggle('active', hasActivity)
+        }
       }
     })
   }
 
-  // Get track color from Soto palette
   getTrackColor (trackId) {
     const colors = [
-      '#EF4136', // Red-orange
-      '#005BBB', // Blue
-      '#fca309', // Orange
-      '#2E7D32' // Green
+      '#EF4136',
+      '#005BBB',
+      '#fca309',
+      '#2E7D32'
     ]
     return colors[(trackId - 1) % colors.length]
-  }
-
-  // Create grouped luminode options for dropdown
-  createGroupedLuminodeOptions (selectedLuminode) {
-    const groupedLuminodes = getLuminodesByGroup()
-    let html = ''
-
-    Object.entries(groupedLuminodes).forEach(([groupName, luminodes]) => {
-      html += `<optgroup label="${groupName}">`
-      luminodes.forEach(luminode => {
-        const isSelected = selectedLuminode === luminode ? 'selected' : ''
-        html += `<option value="${luminode}" ${isSelected}>
-          ${this.normalizeLuminodeName(luminode)}
-        </option>`
-      })
-      html += '</optgroup>'
-    })
-
-    return html
   }
 
   normalizeLuminodeName (name) {
@@ -591,14 +568,5 @@ export class TrackUIManager {
 
   getTrajectoryConfig (trackId) {
     return this.trackManager.getTrajectoryConfig(trackId)
-  }
-
-  createTrajectoryTypeOptions (trackId) {
-    const currentType = this.getTrajectoryConfig(trackId).trajectoryType
-    const typeNames = this.trackManager.getTrajectoryTypeNames()
-
-    return Object.entries(typeNames).map(([value, label]) =>
-      `<option value="${value}" ${currentType === value ? 'selected' : ''}>${label}</option>`
-    ).join('')
   }
 }
