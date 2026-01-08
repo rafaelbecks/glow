@@ -1,41 +1,30 @@
 // Modulation controls UI management
+import { Pane } from '../lib/tweakpane.min.js'
+import * as EssentialsPlugin from '../lib/tweakpane-plugin-essentials.min.js'
 import { getLuminodeConfig } from '../luminode-configs.js'
 
 export class ModulationUIManager {
   constructor (trackManager, panel) {
     this.trackManager = trackManager
     this.panel = panel
+    this.modulatorPanes = new Map()
+    this.mainPane = null
   }
 
-  // Render modulation controls
   renderModulationControls () {
     const modulationContainer = this.panel.querySelector('#modulationControlsContainer')
-    if (modulationContainer) {
-      modulationContainer.innerHTML = this.createModulationControlsHTML()
-      this.setupModulationControlsEventListeners(modulationContainer)
-    }
-  }
+    if (!modulationContainer) return
 
-  // Create modulation controls HTML
-  createModulationControlsHTML () {
+    if (this.mainPane) {
+      this.mainPane.dispose()
+      this.mainPane = null
+    }
+    this.modulatorPanes.clear()
+
     const modulators = this.trackManager.getModulators()
     const tracks = this.trackManager.getTracks()
-    const modulationSystem = this.trackManager.getModulationSystem()
-    const waveformShapes = modulationSystem.getWaveformShapes()
-    const waveformNames = modulationSystem.getWaveformShapeNames()
 
-    // Sync modulators with track luminodes (auto-populate if missing)
-    modulators.forEach(modulator => {
-      const track = tracks.find(t => t.id === modulator.targetTrack)
-      if (track && track.luminode && !modulator.targetLuminode) {
-        this.trackManager.updateModulator(modulator.id, { targetLuminode: track.luminode })
-      } else if (track && !track.luminode && modulator.targetLuminode) {
-        // Clear luminode if track doesn't have one
-        this.trackManager.updateModulator(modulator.id, { targetLuminode: null, targetConfigKey: null })
-      }
-    })
-
-    return `
+    modulationContainer.innerHTML = `
       <div class="modulation-controls">
         <div class="control-section">
           <div class="modulator-header">
@@ -51,144 +40,281 @@ export class ModulationUIManager {
             : ''
           }
           
-          <div class="modulators-list" id="modulatorsList">
-            ${modulators.map(modulator => this.createModulatorHTML(modulator, tracks, waveformShapes, waveformNames)).join('')}
-          </div>
+          <div id="modulator-pane-container"></div>
         </div>
       </div>
     `
-  }
 
-  // Create HTML for a single modulator
-  createModulatorHTML (modulator, tracks, waveformShapes, waveformNames) {
-    const waveformPreview = this.createWaveformPreview(modulator.shape, 40, 20)
+    this.setupAddModulatorListener()
 
-    // Get the track's assigned luminode
-    const track = tracks.find(t => t.id === modulator.targetTrack)
-    const trackLuminode = track ? track.luminode : null
+    if (modulators.length > 0) {
+      const paneContainer = modulationContainer.querySelector('#modulator-pane-container')
+      if (paneContainer) {
+        this.mainPane = new Pane({ container: paneContainer })
+        this.mainPane.registerPlugin(EssentialsPlugin)
 
-    // Get available config params for the track's luminode
-    let configOptions = ''
-    if (trackLuminode) {
-      const configParams = getLuminodeConfig(trackLuminode)
-      configOptions = configParams
-        .filter(p => p.type === 'slider' || p.type === 'number')
-        .map(p => `<option value="${p.key}" ${modulator.targetConfigKey === p.key ? 'selected' : ''}>${p.label}</option>`)
-        .join('')
+        const stylePane = () => {
+          const paneElement = paneContainer.querySelector('.tp-rotv')
+          if (paneElement) {
+            paneElement.style.width = '100%'
+            paneElement.style.margin = '0'
+            paneElement.style.padding = '0'
+            paneElement.style.background = 'transparent'
+            paneElement.style.border = 'none'
+          } else {
+            requestAnimationFrame(stylePane)
+          }
+        }
+        requestAnimationFrame(stylePane)
+
+        modulators.forEach(modulator => {
+          this.createModulatorPane(modulator, tracks)
+        })
+      }
     }
-
-    return `
-      <div class="modulator-item" data-modulator-id="${modulator.id}">
-        <div class="modulator-header-controls">
-          <label class="modulator-toggle">
-            <input type="checkbox" 
-                   class="modulator-enabled" 
-                   ${modulator.enabled ? 'checked' : ''}
-                   data-modulator-id="${modulator.id}">
-            <span class="toggle-label">${modulator.enabled ? 'Enabled' : 'Disabled'}</span>
-          </label>
-          <button class="remove-modulator-btn" data-modulator-id="${modulator.id}" title="Remove Modulator">
-            <ion-icon name="close-outline"></ion-icon>
-          </button>
-        </div>
-
-        <div class="modulator-controls">
-          <div class="modulator-row">
-            <div class="modulator-control-group">
-              <label>Waveform</label>
-              <div class="waveform-selector">
-                <select class="modulator-shape" data-modulator-id="${modulator.id}">
-                  ${waveformShapes.map(shape => `
-                    <option value="${shape}" ${modulator.shape === shape ? 'selected' : ''}>
-                      ${waveformNames[shape]}
-                    </option>
-                  `).join('')}
-                </select>
-                <div class="waveform-preview" data-shape="${modulator.shape}">
-                  ${waveformPreview}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="modulator-row">
-            <div class="modulator-control-group" style="flex: 1;">
-              <label>Track</label>
-              <select class="modulator-track" data-modulator-id="${modulator.id}">
-                ${tracks.map(t => `
-                  <option value="${t.id}" ${modulator.targetTrack === t.id ? 'selected' : ''}>
-                    Track ${t.id}${t.luminode ? ` (${t.luminode})` : ''}
-                  </option>
-                `).join('')}
-              </select>
-            </div>
-          </div>
-
-          ${trackLuminode
-? `
-            <div class="modulator-row">
-              <div class="modulator-control-group">
-                <label>Parameter</label>
-                <select class="modulator-config-key" data-modulator-id="${modulator.id}">
-                  <option value="">Select Parameter</option>
-                  ${configOptions}
-                </select>
-              </div>
-            </div>
-          `
-: ''}
-
-          <div class="modulator-row">
-            <div class="modulator-control-group">
-              <label>Rate</label>
-              <div class="slider-container">
-                <input type="range" 
-                       class="modulator-rate" 
-                       data-modulator-id="${modulator.id}"
-                       min="0.001" 
-                       max="2" 
-                       step="0.001" 
-                       value="${modulator.rate}">
-                <span class="slider-value">${modulator.rate.toFixed(3)} Hz</span>
-              </div>
-            </div>
-
-            <div class="modulator-control-group">
-              <label>Depth</label>
-              <div class="slider-container">
-                <input type="range" 
-                       class="modulator-depth" 
-                       data-modulator-id="${modulator.id}"
-                       min="0" 
-                       max="1" 
-                       step="0.01" 
-                       value="${modulator.depth}">
-                <span class="slider-value">${(modulator.depth * 100).toFixed(0)}%</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="modulator-row">
-            <div class="modulator-control-group">
-              <label>Offset</label>
-              <div class="slider-container">
-                <input type="range" 
-                       class="modulator-offset" 
-                       data-modulator-id="${modulator.id}"
-                       min="-1" 
-                       max="1" 
-                       step="0.01" 
-                       value="${modulator.offset}">
-                <span class="slider-value">${(modulator.offset * 100).toFixed(0)}%</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `
   }
 
-  // Create SVG waveform preview
+  createModulatorPane (modulator, tracks) {
+    try {
+      const modulationSystem = this.trackManager.getModulationSystem()
+      const waveformShapes = modulationSystem.getWaveformShapes()
+      const waveformNames = modulationSystem.getWaveformShapeNames()
+
+      const track = tracks.find(t => t.id === modulator.targetTrack)
+      const trackLuminode = track ? track.luminode : null
+
+      const modulatorData = {
+        enabled: modulator.enabled,
+        shape: modulator.shape,
+        targetTrack: modulator.targetTrack,
+        targetConfigKey: modulator.targetConfigKey || '',
+        rate: modulator.rate,
+        depth: modulator.depth,
+        offset: modulator.offset,
+        cubicBezier: modulator.cubicBezier || [0.5, 0, 0.5, 1]
+      }
+
+      const modulatorFolder = this.mainPane.addFolder({ 
+        title: `Modulator ${this.modulatorPanes.size + 1}`, 
+        expanded: true 
+      })
+
+      modulatorFolder.addBinding(modulatorData, 'enabled', {
+        label: 'Enabled'
+      }).on('change', (ev) => {
+        modulatorData.enabled = ev.value
+        this.trackManager.updateModulator(modulator.id, { enabled: ev.value })
+      })
+
+      const waveformOptions = {}
+      waveformShapes.forEach(shape => {
+        waveformOptions[waveformNames[shape]] = shape
+      })
+      waveformOptions['Cubic Bezier'] = 'cubicBezier'
+
+      const shapeBinding = modulatorFolder.addBinding(modulatorData, 'shape', {
+        options: waveformOptions,
+        label: 'Waveform'
+      }).on('change', (ev) => {
+        modulatorData.shape = ev.value
+        this.trackManager.updateModulator(modulator.id, { shape: ev.value })
+        this.updateWaveformPreview(modulatorFolder, ev.value)
+        this.updateCubicBezierVisibility(modulatorFolder, ev.value === 'cubicBezier')
+      })
+
+      const waveformPreviewContainer = document.createElement('div')
+      waveformPreviewContainer.className = 'waveform-preview-container'
+      if (modulator.shape === 'cubicBezier') {
+        const bezier = modulator.cubicBezier && Array.isArray(modulator.cubicBezier) && modulator.cubicBezier.length === 4
+          ? modulator.cubicBezier
+          : [0.5, 0, 0.5, 1]
+        waveformPreviewContainer.innerHTML = this.createCubicBezierPreview(bezier, 40, 20)
+      } else {
+        waveformPreviewContainer.innerHTML = this.createWaveformPreview(modulator.shape, 40, 20)
+      }
+      
+      setTimeout(() => {
+        const shapeBindingElement = shapeBinding.controller?.view?.element || shapeBinding.element
+        if (shapeBindingElement) {
+          const labelRow = shapeBindingElement.closest('.tp-lblv') || shapeBindingElement.parentElement
+          if (labelRow) {
+            const previewRow = document.createElement('div')
+            previewRow.className = 'waveform-preview-row'
+            previewRow.appendChild(waveformPreviewContainer)
+            labelRow.parentElement.insertBefore(previewRow, labelRow.nextSibling)
+          }
+        }
+      }, 100)
+
+      const trackOptions = {}
+      tracks.forEach(t => {
+        const label = t.luminode ? `Track ${t.id} (${t.luminode})` : `Track ${t.id}`
+        trackOptions[label] = t.id
+      })
+
+      modulatorFolder.addBinding(modulatorData, 'targetTrack', {
+        options: trackOptions,
+        label: 'Track'
+      }).on('change', (ev) => {
+        const targetTrack = ev.value
+        modulatorData.targetTrack = targetTrack
+        const newTrack = tracks.find(t => t.id === targetTrack)
+        const targetLuminode = newTrack && newTrack.luminode ? newTrack.luminode : null
+
+        this.trackManager.updateModulator(modulator.id, {
+          targetTrack,
+          targetLuminode,
+          targetConfigKey: null
+        })
+        this.renderModulationControls()
+      })
+
+      if (trackLuminode) {
+        const configParams = getLuminodeConfig(trackLuminode)
+        const configOptions = { 'Select Parameter': '' }
+        configParams
+          .filter(p => p.type === 'slider' || p.type === 'number')
+          .forEach(p => {
+            configOptions[p.label] = p.key
+          })
+
+        modulatorFolder.addBinding(modulatorData, 'targetConfigKey', {
+          options: configOptions,
+          label: 'Parameter'
+        }).on('change', (ev) => {
+          modulatorData.targetConfigKey = ev.value || ''
+          this.trackManager.updateModulator(modulator.id, { 
+            targetConfigKey: ev.value || null,
+            targetLuminode: trackLuminode
+          })
+        })
+      }
+
+      modulatorFolder.addBinding(modulatorData, 'rate', {
+        label: 'Rate',
+        min: 0.001,
+        max: 2,
+        step: 0.001
+      }).on('change', (ev) => {
+        modulatorData.rate = ev.value
+        this.trackManager.updateModulator(modulator.id, { rate: ev.value })
+      })
+
+      modulatorFolder.addBinding(modulatorData, 'depth', {
+        label: 'Depth',
+        min: 0,
+        max: 1,
+        step: 0.01
+      }).on('change', (ev) => {
+        modulatorData.depth = ev.value
+        this.trackManager.updateModulator(modulator.id, { depth: ev.value })
+      })
+
+      modulatorFolder.addBinding(modulatorData, 'offset', {
+        label: 'Offset',
+        min: -1,
+        max: 1,
+        step: 0.01
+      }).on('change', (ev) => {
+        modulatorData.offset = ev.value
+        this.trackManager.updateModulator(modulator.id, { offset: ev.value })
+      })
+
+      let cubicBezierBinding = null
+      if (modulator.shape === 'cubicBezier') {
+        const bezierValue = modulator.cubicBezier && Array.isArray(modulator.cubicBezier) && modulator.cubicBezier.length === 4
+          ? modulator.cubicBezier
+          : [0.5, 0, 0.5, 1]
+        modulatorData.cubicBezier = bezierValue
+        cubicBezierBinding = modulatorFolder.addBlade({
+          view: 'cubicbezier',
+          value: bezierValue,
+          expanded: true,
+          label: 'Cubic Bezier',
+          picker: 'inline'
+        }).on('change', (ev) => {
+          const bezierValue = Array.isArray(ev.value) && ev.value.length === 4 ? ev.value : [0.5, 0, 0.5, 1]
+          modulatorData.cubicBezier = bezierValue
+          this.trackManager.updateModulator(modulator.id, { cubicBezier: bezierValue })
+          const paneData = this.modulatorPanes.get(modulator.id)
+          if (paneData && paneData.waveformPreviewContainer) {
+            paneData.waveformPreviewContainer.innerHTML = this.createCubicBezierPreview(bezierValue, 40, 20)
+          }
+        })
+      }
+
+      modulatorFolder.addBlade({
+        view: 'button',
+        label: 'Delete',
+        title: 'Remove Modulator'
+      }).on('click', () => {
+        this.trackManager.removeModulator(modulator.id)
+        this.renderModulationControls()
+      })
+
+      this.modulatorPanes.set(modulator.id, {
+        folder: modulatorFolder,
+        modulatorData,
+        waveformPreviewContainer,
+        cubicBezierBinding
+      })
+    } catch (error) {
+      console.error(`Failed to create modulator pane for ${modulator.id}:`, error)
+    }
+  }
+
+  updateWaveformPreview (folder, shape) {
+    const paneData = Array.from(this.modulatorPanes.values()).find(p => p.folder === folder)
+    if (paneData && paneData.waveformPreviewContainer) {
+      if (shape === 'cubicBezier') {
+        const bezier = paneData.modulatorData.cubicBezier && Array.isArray(paneData.modulatorData.cubicBezier) && paneData.modulatorData.cubicBezier.length === 4
+          ? paneData.modulatorData.cubicBezier
+          : [0.5, 0, 0.5, 1]
+        paneData.waveformPreviewContainer.innerHTML = this.createCubicBezierPreview(bezier, 40, 20)
+      } else {
+        paneData.waveformPreviewContainer.innerHTML = this.createWaveformPreview(shape, 40, 20)
+      }
+    }
+  }
+
+  updateCubicBezierVisibility (folder, show) {
+    const paneData = Array.from(this.modulatorPanes.values()).find(p => p.folder === folder)
+    if (!paneData) return
+
+    const modulatorId = Array.from(this.modulatorPanes.entries()).find(([id, data]) => data.folder === folder)?.[0]
+    if (!modulatorId) return
+
+    const modulator = this.trackManager.getModulators().find(m => m.id === modulatorId)
+    if (!modulator) return
+
+    if (show && !paneData.cubicBezierBinding) {
+      const bezierValue = modulator.cubicBezier && Array.isArray(modulator.cubicBezier) && modulator.cubicBezier.length === 4
+        ? modulator.cubicBezier
+        : [0.5, 0, 0.5, 1]
+      paneData.cubicBezierBinding = folder.addBlade({
+        view: 'cubicbezier',
+        value: bezierValue,
+        expanded: true,
+        label: 'Cubic Bezier',
+        picker: 'inline'
+      }).on('change', (ev) => {
+        const bezierValue = Array.isArray(ev.value) && ev.value.length === 4 ? ev.value : [0.5, 0, 0.5, 1]
+        paneData.modulatorData.cubicBezier = bezierValue
+        this.trackManager.updateModulator(modulatorId, { cubicBezier: bezierValue })
+        if (paneData.waveformPreviewContainer) {
+          paneData.waveformPreviewContainer.innerHTML = this.createCubicBezierPreview(bezierValue, 40, 20)
+        }
+      })
+    } else if (!show && paneData.cubicBezierBinding) {
+      try {
+        paneData.cubicBezierBinding.dispose()
+      } catch (e) {
+        console.warn('Error disposing cubic bezier binding:', e)
+      }
+      paneData.cubicBezierBinding = null
+    }
+  }
+
   createWaveformPreview (shape, width, height) {
     const viewBox = `0 0 ${width} ${height}`
     const centerY = height / 2
@@ -222,10 +348,45 @@ export class ModulationUIManager {
     `
   }
 
-  // Setup event listeners
-  setupModulationControlsEventListeners (container) {
-    // Add modulator button
-    const addBtn = container.querySelector('#addModulatorBtn')
+  createCubicBezierPreview (bezierPoints, width, height) {
+    if (!bezierPoints || !Array.isArray(bezierPoints) || bezierPoints.length !== 4) {
+      bezierPoints = [0.5, 0, 0.5, 1]
+    }
+    const [x1, y1, x2, y2] = bezierPoints
+    const viewBox = `0 0 ${width} ${height}`
+    const centerY = height / 2
+    const scaleX = width
+    const scaleY = height / 2
+
+    const points = []
+    for (let i = 0; i <= width; i++) {
+      const t = i / width
+      const y = this.cubicBezierEval(t, y1, y2)
+      const x = i
+      const mappedY = centerY - (y * scaleY)
+      points.push(`${x},${mappedY}`)
+    }
+
+    const pathData = `M ${points[0]} L ${points.slice(1).map(p => p).join(' L ')}`
+
+    return `
+      <svg width="${width}" height="${height}" viewBox="${viewBox}" class="waveform-svg">
+        <path d="${pathData}" stroke="currentColor" stroke-width="1.5" fill="none"/>
+      </svg>
+    `
+  }
+
+  cubicBezierEval (t, y1, y2) {
+    const t2 = t * t
+    const t3 = t2 * t
+    const mt = 1 - t
+    const mt2 = mt * mt
+    const mt3 = mt2 * mt
+    return mt3 * 0 + 3 * mt2 * t * y1 + 3 * mt * t2 * y2 + t3 * 1
+  }
+
+  setupAddModulatorListener () {
+    const addBtn = this.panel.querySelector('#addModulatorBtn')
     if (addBtn) {
       addBtn.addEventListener('click', () => {
         const modulatorId = this.trackManager.addModulator()
@@ -235,119 +396,13 @@ export class ModulationUIManager {
       })
     }
 
-    // Remove modulator buttons
-    container.querySelectorAll('.remove-modulator-btn').forEach(btn => {
+    const removeBtns = this.panel.querySelectorAll('.remove-modulator-btn')
+    removeBtns.forEach(btn => {
       btn.addEventListener('click', (e) => {
         const modulatorId = e.currentTarget.dataset.modulatorId
         this.trackManager.removeModulator(modulatorId)
         this.renderModulationControls()
       })
     })
-
-    // Enable/disable toggles
-    container.querySelectorAll('.modulator-enabled').forEach(checkbox => {
-      checkbox.addEventListener('change', (e) => {
-        const modulatorId = e.currentTarget.dataset.modulatorId
-        const enabled = e.target.checked
-        this.trackManager.updateModulator(modulatorId, { enabled })
-        this.updateModulatorToggleLabel(e.currentTarget.closest('.modulator-toggle'), enabled)
-      })
-    })
-
-    // Waveform shape selectors
-    container.querySelectorAll('.modulator-shape').forEach(select => {
-      select.addEventListener('change', (e) => {
-        const modulatorId = e.currentTarget.dataset.modulatorId
-        const shape = e.target.value
-        this.trackManager.updateModulator(modulatorId, { shape })
-        this.updateWaveformPreview(e.currentTarget.closest('.waveform-selector'), shape)
-      })
-    })
-
-    // Track selectors
-    container.querySelectorAll('.modulator-track').forEach(select => {
-      select.addEventListener('change', (e) => {
-        const modulatorId = e.currentTarget.dataset.modulatorId
-        const targetTrack = parseInt(e.target.value)
-        const track = this.trackManager.getTrack(targetTrack)
-        const targetLuminode = track && track.luminode ? track.luminode : null
-
-        // Update modulator with track and auto-assigned luminode
-        this.trackManager.updateModulator(modulatorId, {
-          targetTrack,
-          targetLuminode,
-          targetConfigKey: null // Reset config key when track changes
-        })
-
-        // Re-render to show updated luminode and config params
-        this.renderModulationControls()
-      })
-    })
-
-    // Config key selectors
-    container.querySelectorAll('.modulator-config-key').forEach(select => {
-      select.addEventListener('change', (e) => {
-        const modulatorId = e.currentTarget.dataset.modulatorId
-        const targetConfigKey = e.target.value || null
-        this.trackManager.updateModulator(modulatorId, { targetConfigKey })
-      })
-    })
-
-    // Rate sliders
-    container.querySelectorAll('.modulator-rate').forEach(slider => {
-      slider.addEventListener('input', (e) => {
-        const modulatorId = e.currentTarget.dataset.modulatorId
-        const rate = parseFloat(e.target.value)
-        const valueDisplay = e.currentTarget.parentElement.querySelector('.slider-value')
-        if (valueDisplay) {
-          valueDisplay.textContent = `${rate.toFixed(3)} Hz`
-        }
-        this.trackManager.updateModulator(modulatorId, { rate })
-      })
-    })
-
-    // Depth sliders
-    container.querySelectorAll('.modulator-depth').forEach(slider => {
-      slider.addEventListener('input', (e) => {
-        const modulatorId = e.currentTarget.dataset.modulatorId
-        const depth = parseFloat(e.target.value)
-        const valueDisplay = e.currentTarget.parentElement.querySelector('.slider-value')
-        if (valueDisplay) {
-          valueDisplay.textContent = `${(depth * 100).toFixed(0)}%`
-        }
-        this.trackManager.updateModulator(modulatorId, { depth })
-      })
-    })
-
-    // Offset sliders
-    container.querySelectorAll('.modulator-offset').forEach(slider => {
-      slider.addEventListener('input', (e) => {
-        const modulatorId = e.currentTarget.dataset.modulatorId
-        const offset = parseFloat(e.target.value)
-        const valueDisplay = e.currentTarget.parentElement.querySelector('.slider-value')
-        if (valueDisplay) {
-          valueDisplay.textContent = `${(offset * 100).toFixed(0)}%`
-        }
-        this.trackManager.updateModulator(modulatorId, { offset })
-      })
-    })
-  }
-
-  // Helper methods
-  updateModulatorToggleLabel (toggleElement, enabled) {
-    const label = toggleElement.querySelector('.toggle-label')
-    if (label) {
-      label.textContent = enabled ? 'Enabled' : 'Disabled'
-    }
-  }
-
-  updateWaveformPreview (selectorElement, shape) {
-    const preview = selectorElement.querySelector('.waveform-preview')
-    if (preview) {
-      const modulationSystem = this.trackManager.getModulationSystem()
-      const waveformPreview = this.createWaveformPreview(shape, 40, 20)
-      preview.innerHTML = waveformPreview
-      preview.dataset.shape = shape
-    }
   }
 }
