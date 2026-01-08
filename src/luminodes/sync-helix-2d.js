@@ -150,8 +150,6 @@ export class SyncHelix2DLuminode {
           finalY = point.y * scale
         }
         
-        // Center vertically on canvas - sine wave oscillates around y=0, so add height/2 to center
-        finalY += height / 2
         
         if (firstPoint) {
           this.ctx.moveTo(finalX, finalY)
@@ -201,14 +199,14 @@ export class SyncHelix2DLuminode {
           
           // Perspective projection
           currentX = rotX1 + (rotX1 / width) * rotZ1 * 0.001
-          currentY = rotY1 + (rotY1 / height) * rotZ1 * 0.001 - rotZ1 * 0.2 + height / 2
+          currentY = rotY1 + (rotY1 / height) * rotZ1 * 0.001 - rotZ1 * 0.2
           nextX = rotX2 + (rotX2 / width) * rotZ2 * 0.001
-          nextY = rotY2 + (rotY2 / height) * rotZ2 * 0.001 - rotZ2 * 0.2 + height / 2
+          nextY = rotY2 + (rotY2 / height) * rotZ2 * 0.001 - rotZ2 * 0.2
         } else {
           currentX = currentPoint.x * scale
-          currentY = currentPoint.y * scale + height / 2
+          currentY = currentPoint.y * scale
           nextX = nextPoint.x * scale
-          nextY = nextPoint.y * scale + height / 2
+          nextY = nextPoint.y * scale
         }
         
         this.ctx.beginPath()

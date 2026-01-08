@@ -36,7 +36,8 @@ export class ModulationSystem {
       enabled: true,
       targetTrack: 1, // 1-4
       targetConfigKey: null, // will be set via UI
-      targetLuminode: null // luminode type for config key lookup
+      targetLuminode: null, // luminode type for config key lookup
+      cubicBezier: [0.5, 0, 0.5, 1] // cubic bezier control points [x1, y1, x2, y2]
     }
 
     this.modulators.push(modulator)
@@ -84,7 +85,7 @@ export class ModulationSystem {
   /**
    * Generate LFO waveform value based on shape
    */
-  generateWaveform (shape, phase) {
+  generateWaveform (shape, phase, cubicBezier = [0.5, 0, 0.5, 1]) {
     // Normalize phase to 0-2π
     const normalizedPhase = ((phase % (Math.PI * 2)) + (Math.PI * 2)) % (Math.PI * 2)
 
@@ -101,9 +102,24 @@ export class ModulationSystem {
         }
       case 'saw':
         return (normalizedPhase / (Math.PI * 2)) * 2 - 1
+      case 'cubicBezier': {
+        const t = normalizedPhase / (Math.PI * 2)
+        const [x1, y1, x2, y2] = cubicBezier
+        const bezierValue = this.cubicBezierEval(t, y1, y2)
+        return bezierValue * 2 - 1
+      }
       default:
         return Math.sin(normalizedPhase)
     }
+  }
+
+  cubicBezierEval (t, y1, y2) {
+    const t2 = t * t
+    const t3 = t2 * t
+    const mt = 1 - t
+    const mt2 = mt * mt
+    const mt3 = mt2 * mt
+    return mt3 * 0 + 3 * mt2 * t * y1 + 3 * mt * t2 * y2 + t3 * 1
   }
 
   /**
@@ -123,7 +139,7 @@ export class ModulationSystem {
 
     const time = (performance.now() / 1000) - this.startTime
     const phase = time * modulator.rate * Math.PI * 2
-    const waveform = this.generateWaveform(modulator.shape, phase)
+    const waveform = this.generateWaveform(modulator.shape, phase, modulator.cubicBezier)
 
     // Map waveform (-1 to 1) to modulation range
     const modulationAmount = waveform * modulator.depth
@@ -203,7 +219,7 @@ export class ModulationSystem {
    * Get available waveform shapes
    */
   getWaveformShapes () {
-    return ['sine', 'square', 'triangle', 'saw']
+    return ['sine', 'square', 'triangle', 'saw', 'cubicBezier']
   }
 
   /**
@@ -214,7 +230,8 @@ export class ModulationSystem {
       sine: 'Sine',
       square: 'Square',
       triangle: 'Triangle',
-      saw: 'Sawtooth'
+      saw: 'Sawtooth',
+      cubicBezier: 'Cubic Bezier'
     }
   }
 }

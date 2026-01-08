@@ -273,6 +273,28 @@ export const SETTINGS = {
       PERSPECTIVE: 0.2,
       ENABLE_PROJECTION: true,
       USE_COLOR: false
+    },
+    RAMIEL: {
+      SIZE: 300,
+      SCALE: 1.0,
+      INSTANCES: 1,
+      INSTANCE_SPACING: 200,
+      INSTANCE_PER_NOTE: false,
+      ENABLE_ROTATION: true,
+      ROTATION_SPEED: 0.3,
+      PERSPECTIVE: 0.2,
+      ENABLE_PROJECTION: true,
+      LINE_WIDTH: 1.2,
+      USE_COLOR: false,
+      SHAPESHIFTING_MODE: false,
+      SHAPESHIFTING_RATE: 0.5,
+      SHAPESHIFTING_AMOUNT: 30,
+      AT_FIELD_SIZE: 120,
+      AT_FIELD_DURATION: 2000,
+      AT_FIELD_FOLLOW_PROJECTION: false,
+      ENABLE_RAY: false,
+      RAY_LENGTH: 400,
+      RAY_PULSE_RATE: 1.0
     }
   },
 
@@ -325,7 +347,8 @@ export const MIDI_CHANNELS = {
   'bus 20': 'diamond',
   'bus 21': 'cube',
   'bus 22': 'trefoil',
-  'bus 23': 'sphericalLens'
+  'bus 23': 'sphericalLens',
+  'bus 24': 'ramiel'
 }
 
 // Utility functions

@@ -1,904 +1,415 @@
-// Canvas controls UI management
+import { Pane } from '../lib/tweakpane.min.js'
 import { UTILS } from '../settings.js'
 
 export class CanvasUIManager {
   constructor (panel) {
     this.panel = panel
     this.settings = null
+    this.mainPane = null
   }
 
-  // Set settings reference
   setSettings (settings) {
     this.settings = settings
   }
 
-  // Render canvas and color controls
   renderCanvasControls () {
     const canvasControlsContainer = this.panel.querySelector('#canvasControlsContainer')
-    if (canvasControlsContainer) {
-      canvasControlsContainer.innerHTML = this.createCanvasControlsHTML()
-      this.setupCanvasControlsEventListeners(canvasControlsContainer)
-    }
-  }
+    if (!canvasControlsContainer) return
 
-  // Create canvas and color controls HTML
-  createCanvasControlsHTML () {
+    if (this.mainPane) {
+      this.mainPane.dispose()
+      this.mainPane = null
+    }
+
+    canvasControlsContainer.innerHTML = '<div id="canvas-pane-container"></div>'
+
+    const paneContainer = canvasControlsContainer.querySelector('#canvas-pane-container')
+    if (!paneContainer) return
+
+    this.mainPane = new Pane({ container: paneContainer })
+
+    const stylePane = () => {
+      const paneElement = paneContainer.querySelector('.tp-rotv')
+      if (paneElement) {
+        paneElement.style.width = '100%'
+        paneElement.style.margin = '0'
+        paneElement.style.padding = '0'
+        paneElement.style.background = 'transparent'
+        paneElement.style.border = 'none'
+      } else {
+        requestAnimationFrame(stylePane)
+      }
+    }
+    requestAnimationFrame(stylePane)
+
     const settings = this.settings || {}
-    const canvasSettings = settings.CANVAS || { CLEAR_ALPHA: 0.5, BACKGROUND_COLOR: '#000', CRT_MODE: false, CRT_INTENSITY: 100 }
+    const canvasSettings = settings.CANVAS || {}
     const colorSettings = settings.COLORS || {
       SOTO_PALETTE: ['#EF4136', '#005BBB', '#FCEE09', '#2E7D32', '#FFFFFF', '#4A148C', '#8B0000'],
       POLYGON_COLORS: ['#f93822', '#fcdc4d', '#00a6a6', '#90be6d', '#f94144', '#ff006e', '#8338ec']
     }
 
-    // Get current pitch color factor from UTILS
-    const currentPitchFactor = UTILS.pitchColorFactor || 30
-
-    return `
-      <div class="canvas-controls">
-        <!-- Canvas Settings -->
-        <div class="control-section">
-          <h4>Canvas Settings</h4>
-          
-          <div class="control-group">
-            <label for="clearAlpha">Clear Alpha (Ghostly Effect)</label>
-            <div class="slider-container">
-              <input type="range" 
-                     id="clearAlpha" 
-                     min="0" 
-                     max="1" 
-                     step="0.01" 
-                     value="${canvasSettings.CLEAR_ALPHA}"
-                     class="config-slider">
-              <span class="slider-value">${canvasSettings.CLEAR_ALPHA}</span>
-            </div>
-          </div>
-          
-          <div class="control-group">
-            <label for="backgroundColor">Background Color</label>
-            <input type="color" 
-                   id="backgroundColor" 
-                   value="${canvasSettings.BACKGROUND_COLOR}"
-                   class="color-picker">
-          </div>
-          
-          <div class="tablet-config-group">
-            <label>
-              <ion-icon name="tv-outline"></ion-icon>
-              CRT Mode
-            </label>
-            <label class="checkbox-container">
-              <input type="checkbox" 
-                     id="crtMode" 
-                     ${canvasSettings.CRT_MODE ? 'checked' : ''}
-                     class="config-checkbox">
-              <span class="checkmark"></span>
-              Enable CRT Effect
-            </label>
-            <div class="setting-description">
-              Adds vintage CRT monitor effect with scanlines and flickering
-            </div>
-          </div>
-          
-          <div class="tablet-config-group" id="crtIntensityGroup" style="${canvasSettings.CRT_MODE ? 'display: block;' : 'display: none;'}">
-            <label>
-              <ion-icon name="contrast-outline"></ion-icon>
-              CRT Intensity
-            </label>
-            <div class="range-container">
-              <input type="range" 
-                     id="crtIntensity" 
-                     min="80" 
-                     max="200" 
-                     step="5" 
-                     value="${canvasSettings.CRT_INTENSITY || 100}">
-              <span class="range-value">${canvasSettings.CRT_INTENSITY || 100}%</span>
-            </div>
-            <div class="setting-description">
-              Controls the strength of the CRT effect (80% = subtle, 200% = maximum)
-            </div>
-          </div>
-          
-          <div class="tablet-config-group">
-            <label>
-              <ion-icon name="blur-outline"></ion-icon>
-              Lumia Effect
-            </label>
-            <div class="range-container">
-              <input type="range" 
-                     id="lumiaEffect" 
-                     min="0" 
-                     max="100" 
-                     step="5" 
-                     value="${canvasSettings.LUMIA_EFFECT || 0}">
-              <span class="range-value">${canvasSettings.LUMIA_EFFECT || 0}px</span>
-            </div>
-            <div class="setting-description">
-              Applies blur effect to all luminodes (0 = no blur, 100px = maximum blur)
-            </div>
-          </div>
-          
-          <div class="tablet-config-group">
-            <label>
-              <ion-icon name="grid-outline"></ion-icon>
-              Background Grid
-            </label>
-            <label class="checkbox-container">
-              <input type="checkbox" 
-                     id="gridEnabled" 
-                     ${canvasSettings.GRID_ENABLED ? 'checked' : ''}
-                     class="config-checkbox">
-              <span class="checkmark"></span>
-              Enable Grid
-            </label>
-            <div class="setting-description">
-              Shows a configurable grid overlay on the canvas background
-            </div>
-          </div>
-          
-          <div class="tablet-config-group" id="gridSettingsGroup" style="${canvasSettings.GRID_ENABLED ? 'display: block;' : 'display: none;'}">
-            <div class="grid-controls">
-              <div class="grid-control-row">
-                <div class="grid-control">
-                  <label for="gridXLines">X Lines</label>
-                  <div class="slider-container">
-                    <input type="range" 
-                           id="gridXLines" 
-                           class="config-slider"
-                           min="2" 
-                           max="50" 
-                           step="1" 
-                           value="${canvasSettings.GRID_X_LINES || 10}">
-                    <span class="slider-value">${canvasSettings.GRID_X_LINES || 10}</span>
-                  </div>
-                </div>
-                <div class="grid-control">
-                  <label for="gridYLines">Y Lines</label>
-                  <div class="slider-container">
-                    <input type="range" 
-                           id="gridYLines" 
-                           class="config-slider"
-                           min="2" 
-                           max="50" 
-                           step="1" 
-                           value="${canvasSettings.GRID_Y_LINES || 10}">
-                    <span class="slider-value">${canvasSettings.GRID_Y_LINES || 10}</span>
-                  </div>
-                </div>
-              </div>
-              <div class="grid-control-row">
-                <div class="grid-control">
-                  <label for="gridColor">Grid Color</label>
-                  <input type="color" 
-                         id="gridColor" 
-                         value="${canvasSettings.GRID_COLOR || '#333333'}"
-                         class="color-picker">
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="tablet-config-group">
-            <label>
-              <ion-icon name="radio-outline"></ion-icon>
-              Noise Overlay
-            </label>
-            <label class="checkbox-container">
-              <input type="checkbox" 
-                     id="noiseOverlay" 
-                     ${canvasSettings.NOISE_OVERLAY ? 'checked' : ''}
-                     class="config-checkbox">
-              <span class="checkmark"></span>
-              Enable Noise Effect
-            </label>
-            <div class="setting-description">
-              Adds animated grain texture overlay on top of the canvas
-            </div>
-          </div>
-          
-          <div class="tablet-config-group" id="noiseSettingsGroup" style="${canvasSettings.NOISE_OVERLAY ? 'display: block;' : 'display: none;'}">
-            <div class="noise-controls">
-              <div class="noise-control-row">
-                <div class="noise-control">
-                  <label for="noiseAnimate">Animate</label>
-                  <label class="checkbox-container">
-                    <input type="checkbox" 
-                           id="noiseAnimate" 
-                           ${canvasSettings.NOISE_ANIMATE ? 'checked' : ''}
-                           class="config-checkbox">
-                    <span class="checkmark"></span>
-                    Animated Noise
-                  </label>
-                </div>
-                <div class="noise-control">
-                  <label for="noiseOpacity">Opacity</label>
-                  <div class="slider-container">
-                    <input type="range" 
-                           id="noiseOpacity" 
-                           class="config-slider"
-                           min="0.01" 
-                           max="0.2" 
-                           step="0.01" 
-                           value="${canvasSettings.NOISE_OPACITY || 0.05}">
-                    <span class="slider-value">${Math.round((canvasSettings.NOISE_OPACITY || 0.05) * 100)}%</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="noise-control-row">
-                <div class="noise-control">
-                  <label for="noisePatternWidth">Pattern Width</label>
-                  <div class="slider-container">
-                    <input type="range" 
-                           id="noisePatternWidth" 
-                           class="config-slider"
-                           min="50" 
-                           max="200" 
-                           step="10" 
-                           value="${canvasSettings.NOISE_PATTERN_WIDTH || 100}">
-                    <span class="slider-value">${canvasSettings.NOISE_PATTERN_WIDTH || 100}px</span>
-                  </div>
-                </div>
-                <div class="noise-control">
-                  <label for="noisePatternHeight">Pattern Height</label>
-                  <div class="slider-container">
-                    <input type="range" 
-                           id="noisePatternHeight" 
-                           class="config-slider"
-                           min="50" 
-                           max="200" 
-                           step="10" 
-                           value="${canvasSettings.NOISE_PATTERN_HEIGHT || 100}">
-                    <span class="slider-value">${canvasSettings.NOISE_PATTERN_HEIGHT || 100}px</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="noise-control-row">
-                <div class="noise-control">
-                  <label for="noiseDensity">Density</label>
-                  <div class="slider-container">
-                    <input type="range" 
-                           id="noiseDensity" 
-                           class="config-slider"
-                           min="0.5" 
-                           max="2" 
-                           step="0.1" 
-                           value="${canvasSettings.NOISE_DENSITY || 1}">
-                    <span class="slider-value">${canvasSettings.NOISE_DENSITY || 1}</span>
-                  </div>
-                </div>
-                <div class="noise-control">
-                  <label for="noiseWidth">Grain Width</label>
-                  <div class="slider-container">
-                    <input type="range" 
-                           id="noiseWidth" 
-                           class="config-slider"
-                           min="0.5" 
-                           max="3" 
-                           step="0.1" 
-                           value="${canvasSettings.NOISE_WIDTH || 1}">
-                    <span class="slider-value">${canvasSettings.NOISE_WIDTH || 1}px</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="noise-control-row">
-                <div class="noise-control">
-                  <label for="noiseHeight">Grain Height</label>
-                  <div class="slider-container">
-                    <input type="range" 
-                           id="noiseHeight" 
-                           class="config-slider"
-                           min="0.5" 
-                           max="3" 
-                           step="0.1" 
-                           value="${canvasSettings.NOISE_HEIGHT || 1}">
-                    <span class="slider-value">${canvasSettings.NOISE_HEIGHT || 1}px</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="tablet-config-group">
-            <label>
-              <ion-icon name="grid-outline"></ion-icon>
-              Dither Overlay
-            </label>
-            <label class="checkbox-container">
-              <input type="checkbox" 
-                     id="ditherOverlay" 
-                     ${canvasSettings.DITHER_OVERLAY ? 'checked' : ''}
-                     class="config-checkbox">
-              <span class="checkmark"></span>
-              Enable Dither Effect
-            </label>
-            <div class="setting-description">
-              Adds ordered dithering overlay on top of the canvas for retro aesthetic
-            </div>
-          </div>
-          
-          <div class="tablet-config-group" id="ditherSettingsGroup" style="${canvasSettings.DITHER_OVERLAY ? 'display: block;' : 'display: none;'}">
-            <div class="dither-controls">
-              <div class="dither-control-row">
-                <div class="dither-control">
-                  <label for="ditherSaturate">Saturation</label>
-                  <div class="slider-container">
-                    <input type="range" 
-                           id="ditherSaturate" 
-                           class="config-slider"
-                           min="0" 
-                           max="1" 
-                           step="0.1" 
-                           value="${canvasSettings.DITHER_SATURATE || 1}">
-                    <span class="slider-value">${canvasSettings.DITHER_SATURATE || 1}</span>
-                  </div>
-                </div>
-              </div>
-              <div class="dither-control-row">
-                <div class="dither-control">
-                  <label for="ditherTableValuesR">Red Table Values</label>
-                  <div class="slider-container">
-                    <input type="range" 
-                           id="ditherTableValuesR" 
-                           class="config-slider"
-                           min="0" 
-                           max="1" 
-                           step="0.1" 
-                           value="${this.parseTableValuesToSlider(canvasSettings.DITHER_TABLE_VALUES_R || '0 1')}">
-                    <span class="slider-value">${this.parseTableValuesToSlider(canvasSettings.DITHER_TABLE_VALUES_R || '0 1')}</span>
-                  </div>
-                </div>
-                <div class="dither-control">
-                  <label for="ditherTableValuesG">Green Table Values</label>
-                  <div class="slider-container">
-                    <input type="range" 
-                           id="ditherTableValuesG" 
-                           class="config-slider"
-                           min="0" 
-                           max="1" 
-                           step="0.1" 
-                           value="${this.parseTableValuesToSlider(canvasSettings.DITHER_TABLE_VALUES_G || '0 1')}">
-                    <span class="slider-value">${this.parseTableValuesToSlider(canvasSettings.DITHER_TABLE_VALUES_G || '0 1')}</span>
-                  </div>
-                </div>
-                <div class="dither-control">
-                  <label for="ditherTableValuesB">Blue Table Values</label>
-                  <div class="slider-container">
-                    <input type="range" 
-                           id="ditherTableValuesB" 
-                           class="config-slider"
-                           min="0" 
-                           max="1" 
-                           step="0.1" 
-                           value="${this.parseTableValuesToSlider(canvasSettings.DITHER_TABLE_VALUES_B || '0 1')}">
-                    <span class="slider-value">${this.parseTableValuesToSlider(canvasSettings.DITHER_TABLE_VALUES_B || '0 1')}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="tablet-config-group">
-            <label>
-              <ion-icon name="color-filter-outline"></ion-icon>
-              Chromatic Aberration
-            </label>
-            <label class="checkbox-container">
-              <input type="checkbox" 
-                     id="chromaticAberrationOverlay" 
-                     ${canvasSettings.CHROMATIC_ABERRATION_ENABLED ? 'checked' : ''}
-                     class="config-checkbox">
-              <span class="checkmark"></span>
-              Enable Chromatic Aberration
-            </label>
-            <div class="setting-description">
-              Adds chromatic aberration effect with RGB color separation
-            </div>
-          </div>
-          
-          <div class="tablet-config-group" id="chromaticAberrationSettingsGroup" style="${canvasSettings.CHROMATIC_ABERRATION_ENABLED ? 'display: block;' : 'display: none;'}">
-            <div class="chromatic-aberration-controls">
-              <div class="chromatic-aberration-control-row">
-                <div class="chromatic-aberration-control">
-                  <label for="chromaticAberrationContrast">Contrast</label>
-                  <div class="slider-container">
-                    <input type="range" 
-                           id="chromaticAberrationContrast" 
-                           class="config-slider"
-                           min="1" 
-                           max="10" 
-                           step="0.1" 
-                           value="${canvasSettings.CHROMATIC_ABERRATION_CONTRAST || 1}">
-                    <span class="slider-value">${canvasSettings.CHROMATIC_ABERRATION_CONTRAST || 1}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="tablet-config-group">
-            <label>
-              <ion-icon name="contrast-outline"></ion-icon>
-              Invert Filter
-            </label>
-            <div class="range-container">
-              <input type="range" 
-                     id="invertFilter" 
-                     min="0" 
-                     max="100" 
-                     step="1" 
-                     value="${canvasSettings.INVERT_FILTER || 0}">
-              <span class="range-value">${canvasSettings.INVERT_FILTER || 0}%</span>
-            </div>
-            <div class="setting-description">
-              Inverts the canvas colors (0% = normal, 100% = fully inverted)
-            </div>
-          </div>
-        </div>
-
-        <!-- Color Palettes -->
-        <div class="control-section">
-          <h4>Color Palettes</h4>
-          
-          <div class="control-group">
-            <label>Soto Palette</label>
-            <div class="color-palette" id="sotoPalette">
-              ${colorSettings.SOTO_PALETTE.map((color, index) => `
-                <input type="color" 
-                       class="palette-color" 
-                       data-palette="soto" 
-                       data-index="${index}"
-                       value="${color}">
-              `).join('')}
-            </div>
-            <div class="setting-info">
-              <small>Used by: Soto Grid, Gego Net, Gego Shape, and other geometric luminodes</small>
-            </div>
-          </div>
-          
-          <div class="control-group">
-            <label>Polygon Colors</label>
-            <div class="color-palette" id="polygonPalette">
-              ${colorSettings.POLYGON_COLORS.map((color, index) => `
-                <input type="color" 
-                       class="palette-color" 
-                       data-palette="polygon" 
-                       data-index="${index}"
-                       value="${color}">
-              `).join('')}
-            </div>
-            <div class="setting-info">
-              <small>Used by: Polygons luminode for multi-layered shapes</small>
-            </div>
-          </div>
-        </div>
-
-        <!-- Pitch to Color Generator -->
-        <div class="control-section">
-          <h4>Pitch to Color Generator</h4>
-          
-          <div class="control-group">
-            <label for="pitchColorFactor">Hue Factor</label>
-            <div class="slider-container">
-              <input type="range" 
-                     id="pitchColorFactor" 
-                     min="1" 
-                     max="100" 
-                     step="1" 
-                     value="${currentPitchFactor}"
-                     class="config-slider">
-              <span class="slider-value">${currentPitchFactor}</span>
-            </div>
-            <div class="setting-info">
-              <small>Affects: Sinewave, Triangle, Woven Net, Whitney Lines, Harmonograph, Lissajous, Moire Circles, Phyllotaxis</small>
-            </div>
-          </div>
-          
-          <div class="control-group">
-            <label>C Scale Example</label>
-            <div class="pitch-color-example" id="pitchColorExample">
-              <!-- Generated pitch colors will appear here -->
-            </div>
-          </div>
-        </div>
-      </div>
-    `
-  }
-
-  // Setup canvas controls event listeners
-  setupCanvasControlsEventListeners (container) {
-    // Clear alpha slider
-    const clearAlphaSlider = container.querySelector('#clearAlpha')
-    if (clearAlphaSlider) {
-      clearAlphaSlider.addEventListener('input', (e) => {
-        const value = parseFloat(e.target.value)
-        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
-        if (valueDisplay) {
-          valueDisplay.textContent = value
-        }
-        this.triggerCanvasSettingChange('CLEAR_ALPHA', value)
-      })
+    const canvasData = {
+      clearAlpha: canvasSettings.CLEAR_ALPHA || 0.4,
+      backgroundColor: canvasSettings.BACKGROUND_COLOR || '#000000',
+      crtMode: canvasSettings.CRT_MODE || false,
+      crtIntensity: canvasSettings.CRT_INTENSITY || 100,
+      lumiaEffect: canvasSettings.LUMIA_EFFECT || 0,
+      gridEnabled: canvasSettings.GRID_ENABLED || false,
+      gridXLines: canvasSettings.GRID_X_LINES || 10,
+      gridYLines: canvasSettings.GRID_Y_LINES || 10,
+      gridColor: canvasSettings.GRID_COLOR || '#333333',
+      noiseOverlay: canvasSettings.NOISE_OVERLAY || false,
+      noiseAnimate: canvasSettings.NOISE_ANIMATE || true,
+      noisePatternWidth: canvasSettings.NOISE_PATTERN_WIDTH || 100,
+      noisePatternHeight: canvasSettings.NOISE_PATTERN_HEIGHT || 100,
+      noiseOpacity: canvasSettings.NOISE_OPACITY || 0.05,
+      noiseDensity: canvasSettings.NOISE_DENSITY || 1,
+      noiseWidth: canvasSettings.NOISE_WIDTH || 1,
+      noiseHeight: canvasSettings.NOISE_HEIGHT || 1,
+      ditherOverlay: canvasSettings.DITHER_OVERLAY || false,
+      ditherSaturate: canvasSettings.DITHER_SATURATE || 1,
+      ditherTableValuesR: this.parseTableValuesToSlider(canvasSettings.DITHER_TABLE_VALUES_R || '0 1'),
+      ditherTableValuesG: this.parseTableValuesToSlider(canvasSettings.DITHER_TABLE_VALUES_G || '0 1'),
+      ditherTableValuesB: this.parseTableValuesToSlider(canvasSettings.DITHER_TABLE_VALUES_B || '0 1'),
+      chromaticAberrationEnabled: canvasSettings.CHROMATIC_ABERRATION_ENABLED || false,
+      chromaticAberrationContrast: canvasSettings.CHROMATIC_ABERRATION_CONTRAST || 1,
+      invertFilter: canvasSettings.INVERT_FILTER || 0
     }
 
-    // Background color picker
-    const backgroundColorPicker = container.querySelector('#backgroundColor')
-    if (backgroundColorPicker) {
-      backgroundColorPicker.addEventListener('change', (e) => {
-        this.triggerCanvasSettingChange('BACKGROUND_COLOR', e.target.value)
-      })
+    const pitchColorData = {
+      hueFactor: UTILS.pitchColorFactor || 30
     }
 
-    // CRT mode checkbox
-    const crtModeCheckbox = container.querySelector('#crtMode')
-    if (crtModeCheckbox) {
-      crtModeCheckbox.addEventListener('change', (e) => {
-        const isEnabled = e.target.checked
-        this.triggerCanvasSettingChange('CRT_MODE', isEnabled)
+    const canvasFolder = this.mainPane.addFolder({ title: 'Canvas Settings', expanded: true })
 
-        // Show/hide intensity slider based on CRT mode
-        const intensityGroup = container.querySelector('#crtIntensityGroup')
-        if (intensityGroup) {
-          intensityGroup.style.display = isEnabled ? 'block' : 'none'
-        }
-      })
-    }
+    canvasFolder.addBinding(canvasData, 'clearAlpha', {
+      label: 'Clear Alpha',
+      min: 0,
+      max: 1,
+      step: 0.01
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('CLEAR_ALPHA', ev.value)
+    })
 
-    // CRT intensity slider
-    const crtIntensitySlider = container.querySelector('#crtIntensity')
-    if (crtIntensitySlider) {
-      crtIntensitySlider.addEventListener('input', (e) => {
-        const value = parseInt(e.target.value)
-        const valueDisplay = e.target.parentElement.querySelector('.range-value')
-        if (valueDisplay) {
-          valueDisplay.textContent = `${value}%`
-        }
-        this.triggerCanvasSettingChange('CRT_INTENSITY', value)
-      })
-    }
+    canvasFolder.addBinding(canvasData, 'backgroundColor', {
+      label: 'Background Color',
+      picker: 'inline'
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('BACKGROUND_COLOR', ev.value)
+    })
 
-    // Lumia Effect slider
-    const lumiaEffectSlider = container.querySelector('#lumiaEffect')
-    if (lumiaEffectSlider) {
-      lumiaEffectSlider.addEventListener('input', (e) => {
-        const value = parseInt(e.target.value)
-        const valueDisplay = e.target.parentElement.querySelector('.range-value')
-        if (valueDisplay) {
-          valueDisplay.textContent = `${value}px`
-        }
-        this.triggerCanvasSettingChange('LUMIA_EFFECT', value)
-      })
-    }
+    canvasFolder.addBinding(canvasData, 'crtMode', {
+      label: 'CRT Mode'
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('CRT_MODE', ev.value)
+      this.updateFolderVisibility(crtIntensityFolder, ev.value)
+    })
 
-    // Grid enabled checkbox
-    const gridEnabledCheckbox = container.querySelector('#gridEnabled')
-    if (gridEnabledCheckbox) {
-      gridEnabledCheckbox.addEventListener('change', (e) => {
-        const isEnabled = e.target.checked
-        this.triggerCanvasSettingChange('GRID_ENABLED', isEnabled)
+    const crtIntensityFolder = canvasFolder.addFolder({ title: 'CRT Intensity', expanded: true })
+    crtIntensityFolder.addBinding(canvasData, 'crtIntensity', {
+      label: 'Intensity',
+      min: 80,
+      max: 200,
+      step: 5
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('CRT_INTENSITY', ev.value)
+    })
+    this.updateFolderVisibility(crtIntensityFolder, canvasData.crtMode)
 
-        // Show/hide grid settings based on enabled state
-        const gridSettingsGroup = container.querySelector('#gridSettingsGroup')
-        if (gridSettingsGroup) {
-          gridSettingsGroup.style.display = isEnabled ? 'block' : 'none'
-        }
-      })
-    }
+    canvasFolder.addBinding(canvasData, 'lumiaEffect', {
+      label: 'Lumia Effect',
+      min: 0,
+      max: 100,
+      step: 5
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('LUMIA_EFFECT', ev.value)
+    })
 
-    // Grid X lines slider
-    const gridXLinesSlider = container.querySelector('#gridXLines')
-    if (gridXLinesSlider) {
-      gridXLinesSlider.addEventListener('input', (e) => {
-        const value = parseInt(e.target.value)
-        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
-        if (valueDisplay) {
-          valueDisplay.textContent = value
-        }
-        this.triggerCanvasSettingChange('GRID_X_LINES', value)
-      })
-    }
+    canvasFolder.addBinding(canvasData, 'gridEnabled', {
+      label: 'Background Grid'
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('GRID_ENABLED', ev.value)
+      this.updateFolderVisibility(gridFolder, ev.value)
+    })
 
-    // Grid Y lines slider
-    const gridYLinesSlider = container.querySelector('#gridYLines')
-    if (gridYLinesSlider) {
-      gridYLinesSlider.addEventListener('input', (e) => {
-        const value = parseInt(e.target.value)
-        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
-        if (valueDisplay) {
-          valueDisplay.textContent = value
-        }
-        this.triggerCanvasSettingChange('GRID_Y_LINES', value)
-      })
-    }
+    const gridFolder = canvasFolder.addFolder({ title: 'Grid Settings', expanded: true })
+    gridFolder.addBinding(canvasData, 'gridXLines', {
+      label: 'X Lines',
+      min: 2,
+      max: 50,
+      step: 1
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('GRID_X_LINES', ev.value)
+    })
 
-    // Grid color picker
-    const gridColorPicker = container.querySelector('#gridColor')
-    if (gridColorPicker) {
-      gridColorPicker.addEventListener('change', (e) => {
-        this.triggerCanvasSettingChange('GRID_COLOR', e.target.value)
-      })
-    }
+    gridFolder.addBinding(canvasData, 'gridYLines', {
+      label: 'Y Lines',
+      min: 2,
+      max: 50,
+      step: 1
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('GRID_Y_LINES', ev.value)
+    })
 
-    // Palette color pickers
-    const paletteColors = container.querySelectorAll('.palette-color')
-    paletteColors.forEach(picker => {
-      picker.addEventListener('change', (e) => {
-        const palette = e.target.dataset.palette
-        const index = parseInt(e.target.dataset.index)
-        this.triggerColorPaletteChange(palette, index, e.target.value)
+    gridFolder.addBinding(canvasData, 'gridColor', {
+      label: 'Grid Color',
+      picker: 'inline'
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('GRID_COLOR', ev.value)
+    })
+    this.updateFolderVisibility(gridFolder, canvasData.gridEnabled)
+
+    canvasFolder.addBinding(canvasData, 'noiseOverlay', {
+      label: 'Noise Overlay'
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('NOISE_OVERLAY', ev.value)
+      this.updateFolderVisibility(noiseFolder, ev.value)
+    })
+
+    const noiseFolder = canvasFolder.addFolder({ title: 'Noise Settings', expanded: true })
+    noiseFolder.addBinding(canvasData, 'noiseAnimate', {
+      label: 'Animate'
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('NOISE_ANIMATE', ev.value)
+    })
+
+    noiseFolder.addBinding(canvasData, 'noiseOpacity', {
+      label: 'Opacity',
+      min: 0.01,
+      max: 0.2,
+      step: 0.01
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('NOISE_OPACITY', ev.value)
+    })
+
+    noiseFolder.addBinding(canvasData, 'noisePatternWidth', {
+      label: 'Pattern Width',
+      min: 50,
+      max: 200,
+      step: 10
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('NOISE_PATTERN_WIDTH', ev.value)
+    })
+
+    noiseFolder.addBinding(canvasData, 'noisePatternHeight', {
+      label: 'Pattern Height',
+      min: 50,
+      max: 200,
+      step: 10
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('NOISE_PATTERN_HEIGHT', ev.value)
+    })
+
+    noiseFolder.addBinding(canvasData, 'noiseDensity', {
+      label: 'Density',
+      min: 0.5,
+      max: 2,
+      step: 0.1
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('NOISE_DENSITY', ev.value)
+    })
+
+    noiseFolder.addBinding(canvasData, 'noiseWidth', {
+      label: 'Grain Width',
+      min: 0.5,
+      max: 3,
+      step: 0.1
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('NOISE_WIDTH', ev.value)
+    })
+
+    noiseFolder.addBinding(canvasData, 'noiseHeight', {
+      label: 'Grain Height',
+      min: 0.5,
+      max: 3,
+      step: 0.1
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('NOISE_HEIGHT', ev.value)
+    })
+    this.updateFolderVisibility(noiseFolder, canvasData.noiseOverlay)
+
+    canvasFolder.addBinding(canvasData, 'ditherOverlay', {
+      label: 'Dither Overlay'
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('DITHER_OVERLAY', ev.value)
+      this.updateFolderVisibility(ditherFolder, ev.value)
+    })
+
+    const ditherFolder = canvasFolder.addFolder({ title: 'Dither Settings', expanded: true })
+    ditherFolder.addBinding(canvasData, 'ditherSaturate', {
+      label: 'Saturation',
+      min: 0,
+      max: 1,
+      step: 0.1
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('DITHER_SATURATE', ev.value)
+    })
+
+    ditherFolder.addBinding(canvasData, 'ditherTableValuesR', {
+      label: 'Red Table Values',
+      min: 0,
+      max: 1,
+      step: 0.1
+    }).on('change', (ev) => {
+      const tableValues = this.sliderToTableValues(ev.value)
+      this.triggerCanvasSettingChange('DITHER_TABLE_VALUES_R', tableValues)
+    })
+
+    ditherFolder.addBinding(canvasData, 'ditherTableValuesG', {
+      label: 'Green Table Values',
+      min: 0,
+      max: 1,
+      step: 0.1
+    }).on('change', (ev) => {
+      const tableValues = this.sliderToTableValues(ev.value)
+      this.triggerCanvasSettingChange('DITHER_TABLE_VALUES_G', tableValues)
+    })
+
+    ditherFolder.addBinding(canvasData, 'ditherTableValuesB', {
+      label: 'Blue Table Values',
+      min: 0,
+      max: 1,
+      step: 0.1
+    }).on('change', (ev) => {
+      const tableValues = this.sliderToTableValues(ev.value)
+      this.triggerCanvasSettingChange('DITHER_TABLE_VALUES_B', tableValues)
+    })
+    this.updateFolderVisibility(ditherFolder, canvasData.ditherOverlay)
+
+    canvasFolder.addBinding(canvasData, 'chromaticAberrationEnabled', {
+      label: 'Chromatic Aberration'
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('CHROMATIC_ABERRATION_ENABLED', ev.value)
+      this.updateFolderVisibility(chromaticAberrationFolder, ev.value)
+    })
+
+    const chromaticAberrationFolder = canvasFolder.addFolder({ title: 'Chromatic Aberration Settings', expanded: true })
+    chromaticAberrationFolder.addBinding(canvasData, 'chromaticAberrationContrast', {
+      label: 'Contrast',
+      min: 1,
+      max: 10,
+      step: 0.1
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('CHROMATIC_ABERRATION_CONTRAST', ev.value)
+    })
+    this.updateFolderVisibility(chromaticAberrationFolder, canvasData.chromaticAberrationEnabled)
+
+    canvasFolder.addBinding(canvasData, 'invertFilter', {
+      label: 'Invert Filter',
+      min: 0,
+      max: 100,
+      step: 1
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('INVERT_FILTER', ev.value)
+    })
+
+    const colorPaletteFolder = this.mainPane.addFolder({ title: 'Color Palettes', expanded: true })
+
+    const sotoPaletteData = {}
+    colorSettings.SOTO_PALETTE.forEach((color, index) => {
+      sotoPaletteData[`color${index}`] = color
+    })
+
+    const sotoPaletteFolder = colorPaletteFolder.addFolder({ title: 'Soto Palette', expanded: true })
+    colorSettings.SOTO_PALETTE.forEach((color, index) => {
+      sotoPaletteFolder.addBinding(sotoPaletteData, `color${index}`, {
+        label: `Color ${index + 1}`,
+        picker: 'inline'
+      }).on('change', (ev) => {
+        this.triggerColorPaletteChange('soto', index, ev.value)
       })
     })
 
-    // Pitch color factor slider
-    const pitchColorFactor = container.querySelector('#pitchColorFactor')
-    if (pitchColorFactor) {
-      pitchColorFactor.addEventListener('input', (e) => {
-        const value = parseInt(e.target.value)
-        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
-        if (valueDisplay) {
-          valueDisplay.textContent = value
+    const polygonPaletteData = {}
+    colorSettings.POLYGON_COLORS.forEach((color, index) => {
+      polygonPaletteData[`color${index}`] = color
+    })
+
+    const polygonPaletteFolder = colorPaletteFolder.addFolder({ title: 'Polygon Colors', expanded: true })
+    colorSettings.POLYGON_COLORS.forEach((color, index) => {
+      polygonPaletteFolder.addBinding(polygonPaletteData, `color${index}`, {
+        label: `Color ${index + 1}`,
+        picker: 'inline'
+      }).on('change', (ev) => {
+        this.triggerColorPaletteChange('polygon', index, ev.value)
+      })
+    })
+
+    const pitchColorFolder = this.mainPane.addFolder({ title: 'Pitch to Color Generator', expanded: true })
+
+    pitchColorFolder.addBinding(pitchColorData, 'hueFactor', {
+      label: 'Hue Factor',
+      min: 1,
+      max: 100,
+      step: 1
+    }).on('change', (ev) => {
+      this.updatePitchColorExample(ev.value)
+      this.triggerPitchColorFactorChange(ev.value)
+    })
+
+    const exampleContainer = document.createElement('div')
+    exampleContainer.id = 'pitchColorExample'
+    exampleContainer.className = 'pitch-color-example'
+    
+    setTimeout(() => {
+      const pitchColorElement = pitchColorFolder.element || pitchColorFolder.element_ || (pitchColorFolder.controller && pitchColorFolder.controller.view && pitchColorFolder.controller.view.element)
+      if (pitchColorElement) {
+        const hueFactorBinding = pitchColorElement.querySelector('.tp-lblv')
+        if (hueFactorBinding) {
+          const parent = hueFactorBinding.closest('.tp-fldv') || hueFactorBinding.parentElement
+          if (parent) {
+            parent.appendChild(exampleContainer)
+            this.updatePitchColorExample(pitchColorData.hueFactor)
+          }
         }
-        this.updatePitchColorExample(value)
-        this.triggerPitchColorFactorChange(value)
-      })
-    }
-
-    // Noise overlay checkbox
-    const noiseOverlayCheckbox = container.querySelector('#noiseOverlay')
-    if (noiseOverlayCheckbox) {
-      noiseOverlayCheckbox.addEventListener('change', (e) => {
-        const isEnabled = e.target.checked
-        this.triggerCanvasSettingChange('NOISE_OVERLAY', isEnabled)
-
-        // Show/hide noise settings based on enabled state
-        const noiseSettingsGroup = container.querySelector('#noiseSettingsGroup')
-        if (noiseSettingsGroup) {
-          noiseSettingsGroup.style.display = isEnabled ? 'block' : 'none'
-        }
-      })
-    }
-
-    // Noise animate checkbox
-    const noiseAnimateCheckbox = container.querySelector('#noiseAnimate')
-    if (noiseAnimateCheckbox) {
-      noiseAnimateCheckbox.addEventListener('change', (e) => {
-        this.triggerCanvasSettingChange('NOISE_ANIMATE', e.target.checked)
-      })
-    }
-
-    // Noise opacity slider
-    const noiseOpacitySlider = container.querySelector('#noiseOpacity')
-    if (noiseOpacitySlider) {
-      noiseOpacitySlider.addEventListener('input', (e) => {
-        const value = parseFloat(e.target.value)
-        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
-        if (valueDisplay) {
-          valueDisplay.textContent = `${Math.round(value * 100)}%`
-        }
-        this.triggerCanvasSettingChange('NOISE_OPACITY', value)
-      })
-    }
-
-    // Noise pattern width slider
-    const noisePatternWidthSlider = container.querySelector('#noisePatternWidth')
-    if (noisePatternWidthSlider) {
-      noisePatternWidthSlider.addEventListener('input', (e) => {
-        const value = parseInt(e.target.value)
-        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
-        if (valueDisplay) {
-          valueDisplay.textContent = `${value}px`
-        }
-        this.triggerCanvasSettingChange('NOISE_PATTERN_WIDTH', value)
-      })
-    }
-
-    // Noise pattern height slider
-    const noisePatternHeightSlider = container.querySelector('#noisePatternHeight')
-    if (noisePatternHeightSlider) {
-      noisePatternHeightSlider.addEventListener('input', (e) => {
-        const value = parseInt(e.target.value)
-        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
-        if (valueDisplay) {
-          valueDisplay.textContent = `${value}px`
-        }
-        this.triggerCanvasSettingChange('NOISE_PATTERN_HEIGHT', value)
-      })
-    }
-
-    // Noise density slider
-    const noiseDensitySlider = container.querySelector('#noiseDensity')
-    if (noiseDensitySlider) {
-      noiseDensitySlider.addEventListener('input', (e) => {
-        const value = parseFloat(e.target.value)
-        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
-        if (valueDisplay) {
-          valueDisplay.textContent = value
-        }
-        this.triggerCanvasSettingChange('NOISE_DENSITY', value)
-      })
-    }
-
-    // Noise width slider
-    const noiseWidthSlider = container.querySelector('#noiseWidth')
-    if (noiseWidthSlider) {
-      noiseWidthSlider.addEventListener('input', (e) => {
-        const value = parseFloat(e.target.value)
-        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
-        if (valueDisplay) {
-          valueDisplay.textContent = `${value}px`
-        }
-        this.triggerCanvasSettingChange('NOISE_WIDTH', value)
-      })
-    }
-
-    // Noise height slider
-    const noiseHeightSlider = container.querySelector('#noiseHeight')
-    if (noiseHeightSlider) {
-      noiseHeightSlider.addEventListener('input', (e) => {
-        const value = parseFloat(e.target.value)
-        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
-        if (valueDisplay) {
-          valueDisplay.textContent = `${value}px`
-        }
-        this.triggerCanvasSettingChange('NOISE_HEIGHT', value)
-      })
-    }
-
-    // Dither overlay checkbox
-    const ditherOverlayCheckbox = container.querySelector('#ditherOverlay')
-    if (ditherOverlayCheckbox) {
-      ditherOverlayCheckbox.addEventListener('change', (e) => {
-        const isEnabled = e.target.checked
-        this.triggerCanvasSettingChange('DITHER_OVERLAY', isEnabled)
-
-        // Show/hide dither settings based on enabled state
-        const ditherSettingsGroup = container.querySelector('#ditherSettingsGroup')
-        if (ditherSettingsGroup) {
-          ditherSettingsGroup.style.display = isEnabled ? 'block' : 'none'
-        }
-      })
-    }
-
-    // Dither saturation slider
-    const ditherSaturateSlider = container.querySelector('#ditherSaturate')
-    if (ditherSaturateSlider) {
-      ditherSaturateSlider.addEventListener('input', (e) => {
-        const value = parseFloat(e.target.value)
-        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
-        if (valueDisplay) {
-          valueDisplay.textContent = value
-        }
-        this.triggerCanvasSettingChange('DITHER_SATURATE', value)
-      })
-    }
-
-    // Dither table values sliders (R, G, B)
-    const ditherTableValuesR = container.querySelector('#ditherTableValuesR')
-    if (ditherTableValuesR) {
-      ditherTableValuesR.addEventListener('input', (e) => {
-        const value = parseFloat(e.target.value)
-        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
-        if (valueDisplay) {
-          valueDisplay.textContent = value
-        }
-        // Convert slider value (0-1) to table values format "0 1" or "1 0"
-        const tableValues = this.sliderToTableValues(value)
-        this.triggerCanvasSettingChange('DITHER_TABLE_VALUES_R', tableValues)
-      })
-    }
-
-    const ditherTableValuesG = container.querySelector('#ditherTableValuesG')
-    if (ditherTableValuesG) {
-      ditherTableValuesG.addEventListener('input', (e) => {
-        const value = parseFloat(e.target.value)
-        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
-        if (valueDisplay) {
-          valueDisplay.textContent = value
-        }
-        const tableValues = this.sliderToTableValues(value)
-        this.triggerCanvasSettingChange('DITHER_TABLE_VALUES_G', tableValues)
-      })
-    }
-
-    const ditherTableValuesB = container.querySelector('#ditherTableValuesB')
-    if (ditherTableValuesB) {
-      ditherTableValuesB.addEventListener('input', (e) => {
-        const value = parseFloat(e.target.value)
-        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
-        if (valueDisplay) {
-          valueDisplay.textContent = value
-        }
-        const tableValues = this.sliderToTableValues(value)
-        this.triggerCanvasSettingChange('DITHER_TABLE_VALUES_B', tableValues)
-      })
-    }
-
-    // Chromatic aberration overlay checkbox
-    const chromaticAberrationOverlayCheckbox = container.querySelector('#chromaticAberrationOverlay')
-    if (chromaticAberrationOverlayCheckbox) {
-      chromaticAberrationOverlayCheckbox.addEventListener('change', (e) => {
-        const isEnabled = e.target.checked
-        this.triggerCanvasSettingChange('CHROMATIC_ABERRATION_ENABLED', isEnabled)
-
-        // Show/hide chromatic aberration settings based on enabled state
-        const chromaticAberrationSettingsGroup = container.querySelector('#chromaticAberrationSettingsGroup')
-        if (chromaticAberrationSettingsGroup) {
-          chromaticAberrationSettingsGroup.style.display = isEnabled ? 'block' : 'none'
-        }
-      })
-    }
-
-    // Chromatic aberration contrast slider
-    const chromaticAberrationContrastSlider = container.querySelector('#chromaticAberrationContrast')
-    if (chromaticAberrationContrastSlider) {
-      chromaticAberrationContrastSlider.addEventListener('input', (e) => {
-        const value = parseFloat(e.target.value)
-        const valueDisplay = e.target.parentElement.querySelector('.slider-value')
-        if (valueDisplay) {
-          valueDisplay.textContent = value
-        }
-        this.triggerCanvasSettingChange('CHROMATIC_ABERRATION_CONTRAST', value)
-      })
-    }
-
-    // Invert filter slider
-    const invertFilterSlider = container.querySelector('#invertFilter')
-    if (invertFilterSlider) {
-      invertFilterSlider.addEventListener('input', (e) => {
-        const value = parseInt(e.target.value)
-        const valueDisplay = e.target.parentElement.querySelector('.range-value')
-        if (valueDisplay) {
-          valueDisplay.textContent = `${value}%`
-        }
-        this.triggerCanvasSettingChange('INVERT_FILTER', value)
-      })
-    }
-
-    // Initialize pitch color example
-    this.updatePitchColorExample(30)
+      }
+    }, 100)
   }
 
-  // Helper to parse table values string to slider value (0-1)
-  // "0 1" -> 0, "1 0" -> 1, "0.5 0.5" -> 0.5, etc.
+  updateFolderVisibility (folder, visible) {
+    if (!folder) return
+    setTimeout(() => {
+      const folderElement = folder.element || folder.element_ || (folder.controller && folder.controller.view && folder.controller.view.element)
+      if (folderElement) {
+        const folderContainer = folderElement.closest('.tp-fldv') || folderElement.parentElement
+        if (folderContainer) {
+          folderContainer.style.display = visible ? '' : 'none'
+        }
+      }
+    }, 50)
+  }
+
   parseTableValuesToSlider (tableValues) {
     if (!tableValues) return 0
     const values = tableValues.split(' ').map(v => parseFloat(v.trim())).filter(v => !isNaN(v))
     if (values.length === 0) return 0
-    // Return the first value (0 means "0 1", 1 means "1 0", 0.5 means "0.5 0.5", etc.)
     return values[0]
   }
 
-  // Helper to convert slider value (0-1) to table values format
-  // 0 -> "0 1", 1 -> "1 0", 0.5 -> "0.5 0.5", etc.
   sliderToTableValues (sliderValue) {
     const value = Math.max(0, Math.min(1, sliderValue))
-    // For discrete dithering, we want "0 1" or "1 0" format
-    // But we can also support intermediate values like "0.3 0.7"
-    // For now, let's use the slider value as the first value, and 1-value as the second
     return `${value} ${1 - value}`
   }
 
-  // Update pitch color example display
   updatePitchColorExample (factor) {
     const exampleContainer = document.querySelector('#pitchColorExample')
     if (!exampleContainer) return
 
-    // C scale MIDI notes (C4 to C5)
-    const cScaleNotes = [60, 62, 64, 65, 67, 69, 71, 72] // C, D, E, F, G, A, B, C
+    const cScaleNotes = [60, 62, 64, 65, 67, 69, 71, 72]
     const noteNames = ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C']
 
     exampleContainer.innerHTML = cScaleNotes.map((note, index) => {
       const hue = (note % 14) * factor
       const color = `hsla(${hue}, 100%, 70%, 0.6)`
       return `
-        <div class="pitch-color-item" style="background-color: ${color}">
+        <div class="pitch-color-item" style="background-color: ${color};">
           <span>${noteNames[index]}</span>
         </div>
       `
     }).join('')
   }
 
-  // Event trigger methods
   triggerCanvasSettingChange (setting, value) {
     const event = new CustomEvent('canvasSettingChange', {
       detail: { setting, value }

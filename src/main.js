@@ -35,7 +35,8 @@ import {
   TrefoilKnotLuminode,
   SphericalLensLuminode,
   EpitrochoidLuminode,
-  SyncHelix2DLuminode
+  SyncHelix2DLuminode,
+  RamielLuminode
 } from './luminodes/index.js'
 
 export class GLOWVisualizer {
@@ -117,7 +118,8 @@ export class GLOWVisualizer {
       trefoil: TrefoilKnotLuminode,
       sphericalLens: SphericalLensLuminode,
       epitrochoid: EpitrochoidLuminode,
-      syncHelix2D: SyncHelix2DLuminode
+      syncHelix2D: SyncHelix2DLuminode,
+      ramiel: RamielLuminode
     }
 
     // Track-based luminode instances
@@ -909,7 +911,7 @@ export class GLOWVisualizer {
         if (!modulator.enabled) return
 
         const phase = time * modulator.rate * Math.PI * 2
-        const waveform = modulationSystem.generateWaveform(modulator.shape, phase)
+        const waveform = modulationSystem.generateWaveform(modulator.shape, phase, modulator.cubicBezier)
 
         // Accumulate modulation and offset
         totalModulation += waveform * modulator.depth
