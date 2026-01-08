@@ -14,8 +14,9 @@
     "standard": "^17.1.2"
   },
   "dependencies": {
-    "ws": "^8.14.2",
-    "node-hid": "^2.1.2"
+    "easymidi": "^3.1.0",
+    "node-hid": "^2.1.2",
+    "ws": "^8.14.2"
   },
   "keywords": [
     "visualization",
