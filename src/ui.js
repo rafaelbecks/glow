@@ -18,6 +18,7 @@ export class UIManager {
       infoModalClose: document.getElementById('infoModalClose'),
       infoModalBody: document.getElementById('infoModalBody'),
       canvasMessage: document.getElementById('canvasMessage'),
+      canvasMessageCubeIcon: document.getElementById('canvasMessageCubeIcon'),
       readTabletData: document.getElementById('readTabletData'),
       clearTablet: document.getElementById('clearTablet'),
       tabletWidth: document.getElementById('tabletWidth'),
@@ -63,6 +64,13 @@ export class UIManager {
     if (this.elements.infoButton) {
       this.elements.infoButton.addEventListener('click', () => {
         this.showInfoModal()
+      })
+    }
+
+    // Canvas message cube icon (clickable)
+    if (this.elements.canvasMessageCubeIcon) {
+      this.elements.canvasMessageCubeIcon.addEventListener('click', () => {
+        this.triggerCallback('togglePanel')
       })
     }
 

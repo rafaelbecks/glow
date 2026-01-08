@@ -67,13 +67,13 @@
       <ion-icon title="Tracks & Tablet" name="cube-outline"></ion-icon>
     </button>
     <button title="Open Project" id="openButton" class="open-toggle-btn" style="display: none;">
-      <ion-icon title="Open Project" name="shapes-outline"></ion-icon>
+      <ion-icon title="Open Project" name="folder-open-outline"></ion-icon>
     </button>
     <button title="Save Scene" id="saveButton" class="save-toggle-btn" style="display: none;">
       <ion-icon title="Save Scene" name="save-outline"></ion-icon>
     </button>
     <button title="About" id="infoButton" class="info-toggle-btn" style="display: none;">
-      <ion-icon name="triangle-outline"></ion-icon>
+      <ion-icon name="help-circle-outline"></ion-icon>
     </button>
     <canvas id="canvas"></canvas>
     <canvas id="tabletCanvas"></canvas>
@@ -117,9 +117,11 @@
       </defs>
     </svg>
     <div id="canvasMessage" class="canvas-message" style="display: none;">
-        <h3>Pick a <strong>MIDI track</strong> and a <strong>Luminode</strong>. <br /> <br /> 
-            <span>The geometry of light will unfold here</span>
-            </h3>
+        <h3>
+            <span class="step-number">1.</span> Click on tracks <span class="clickable-cube-icon" id="canvasMessageCubeIcon" title="Click to open tracks panel"><ion-icon name="cube-outline"></ion-icon></span> to map a track with a visual pattern (luminode)<br /><br />
+            <span class="step-number">2.</span> Select a <strong>MIDI device</strong> and a <strong>Luminode</strong><br /><br />
+            <span class="step-number">3.</span> <span>The geometry of light will unfold here</span>
+        </h3>
     </div>
     
     <!-- Info Modal -->
