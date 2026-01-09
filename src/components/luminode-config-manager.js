@@ -27,7 +27,9 @@ function getLuminodeSettingsKey (luminode) {
     trefoil: 'TREFOIL',
     sphericalLens: 'SPHERICAL_LENS',
     epitrochoid: 'EPITROCHOID',
-    syncHelix2D: 'SYNC_HELIX_2D'
+    syncHelix2D: 'SYNC_HELIX_2D',
+    windmill: 'WINDMILL',
+    orizuru: 'ORIZURU'
   }
   return luminodeMapping[luminode] || luminode.toUpperCase()
 }

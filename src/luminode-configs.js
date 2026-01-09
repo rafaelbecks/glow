@@ -335,6 +335,47 @@ export const LUMINODE_CONFIGS = {
       { key: 'RAY_LENGTH', label: 'Ray Length', type: 'slider', min: 100, max: 1000, step: 50, default: 400 },
       { key: 'RAY_PULSE_RATE', label: 'Ray Pulse Rate', type: 'slider', min: 0.1, max: 3, step: 0.1, default: 1.0 }
     ]
+  },
+
+  windmill: {
+    group: '3D Geometry',
+    config: [
+      { key: 'RADIUS', label: 'Radius', type: 'slider', min: 50, max: 200, step: 5, default: 50 },
+      { key: 'ROTATION_RATE', label: 'Rotation Rate', type: 'slider', min: 0.1, max: 2, step: 0.1, default: 0.4 },
+      { key: 'CHIRALITY', label: 'Chirality', type: 'slider', min: -1, max: 1, step: 2, default: 1, note: '-1 or 1' },
+      { key: 'DEPTH', label: 'Depth', type: 'slider', min: 0, max: 0.5, step: 0.01, default: 0.10 },
+      { key: 'INSTANCE_COUNT', label: 'Instance Count', type: 'number', min: 1, max: 16, step: 1, default: 3 },
+      { key: 'SPACING', label: 'Spacing', type: 'slider', min: 100, max: 500, step: 10, default: 410 },
+      { key: 'SCALE', label: 'Scale', type: 'slider', min: 0.5, max: 2, step: 0.1, default: 1.0 },
+      { key: 'LINE_WIDTH', label: 'Line Width', type: 'slider', min: 0.3, max: 2, step: 0.1, default: 1.6 },
+      { key: 'BLADE_MULTIPLIER', label: 'Blade Multiplier', type: 'number', min: 1, max: 4, step: 1, default: 4, note: 'Blades per note' },
+      { key: 'SPIRAL_SCALE', label: 'Spiral Scale', type: 'slider', min: 4, max: 15, step: 0.5, default: 5.0, note: 'Controls spiral tightness' },
+      { key: 'GOLDEN_ANGLE', label: 'Golden Angle', type: 'slider', min: 2, max: 4, step: 0.1, default: 3.4, note: 'Spiral rotation angle' },
+      { key: 'SIZE_VARIATION', label: 'Size Variation', type: 'slider', min: 0, max: 0.5, step: 0.01, default: 0.15 },
+      { key: 'BLADE_WIDTH', label: 'Blade Width', type: 'slider', min: 0.1, max: 0.8, step: 0.05, default: 0.50 },
+      { key: 'HUB_RADIUS', label: 'Hub Radius', type: 'slider', min: 3, max: 20, step: 1, default: 8 },
+      { key: 'ACCELERATION_FACTOR', label: 'Acceleration Factor', type: 'slider', min: 1, max: 5, step: 0.1, default: 3.4 },
+      { key: 'ACCELERATION_DURATION', label: 'Acceleration Duration (s)', type: 'slider', min: 0.1, max: 5, step: 0.1, default: 1.0 },
+      { key: 'PERSPECTIVE', label: 'Rotation Angle', type: 'slider', min: 0, max: Math.PI * 2, step: 0.1, default: 0.0 },
+      { key: 'ENABLE_PROJECTION', label: 'Enable Projection', type: 'checkbox', default: true },
+      { key: 'USE_COLOR', label: 'Color Mode', type: 'checkbox', default: true }
+    ]
+  },
+
+  orizuru: {
+    group: '3D Geometry',
+    config: [
+      { key: 'FOLD_AMOUNT', label: 'Fold Amount', type: 'slider', min: 0, max: 1, step: 0.01, default: 1.0, note: '0 = flat (SVG), 1 = folded (OBJ)' },
+      { key: 'PERSPECTIVE', label: 'X Rotation', type: 'slider', min: 0, max: Math.PI * 2, step: 0.1, default: 3.0 },
+      { key: 'Y_ROTATION', label: 'Y Rotation', type: 'slider', min: 0, max: Math.PI * 2, step: 0.1, default: 0.0 },
+      { key: 'SCALE', label: 'Scale', type: 'slider', min: 100, max: 600, step: 10, default: 200 },
+      { key: 'LINE_WIDTH', label: 'Line Width', type: 'slider', min: 0.3, max: 2, step: 0.1, default: 0.6 },
+      { key: 'PROJECTION_DEPTH', label: 'Projection Depth', type: 'slider', min: 0, max: 1, step: 0.05, default: 0.3 },
+      { key: 'INSTANCES', label: 'Instances', type: 'number', min: 1, max: 8, step: 1, default: 1 },
+      { key: 'SPATIAL_RADIUS', label: 'Spatial Radius', type: 'slider', min: 100, max: 500, step: 10, default: 200 },
+      { key: 'ENABLE_PROJECTION', label: 'Enable Projection', type: 'checkbox', default: true },
+      { key: 'USE_COLOR', label: 'Color Mode', type: 'checkbox', default: false }
+    ]
   }
 }
 

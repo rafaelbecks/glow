@@ -26,7 +26,9 @@ function normalizeLuminodeNameUtil (name) {
     diamond: 'Diamond',
     sphericalLens: 'Spherical Lens',
     epitrochoid: 'Epitrochoid',
-    syncHelix2D: 'Sync Helix'
+    syncHelix2D: 'Sync Helix',
+    ramiel: 'Ramiel',
+    windmill: 'Windmill'
   }
   return nameMap[name] || name
 }

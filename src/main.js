@@ -36,7 +36,9 @@ import {
   SphericalLensLuminode,
   EpitrochoidLuminode,
   SyncHelix2DLuminode,
-  RamielLuminode
+  RamielLuminode,
+  WindmillLuminode,
+  OrizuruLuminode
 } from './luminodes/index.js'
 
 export class GLOWVisualizer {
@@ -119,7 +121,9 @@ export class GLOWVisualizer {
       sphericalLens: SphericalLensLuminode,
       epitrochoid: EpitrochoidLuminode,
       syncHelix2D: SyncHelix2DLuminode,
-      ramiel: RamielLuminode
+      ramiel: RamielLuminode,
+      windmill: WindmillLuminode,
+      orizuru: OrizuruLuminode
     }
 
     // Track-based luminode instances
@@ -1001,6 +1005,10 @@ export class GLOWVisualizer {
       case 'syncHelix2D':
         const syncHelix2DColorMode = SETTINGS.MODULES.SYNC_HELIX_2D.USE_COLOR || false
         luminode.draw(t, notes, syncHelix2DColorMode, layout)
+        break
+      case 'windmill':
+        const windmillColorMode = SETTINGS.MODULES.WINDMILL.USE_COLOR || false
+        luminode.draw(t, notes, windmillColorMode, layout)
         break
       default:
         // Standard luminode drawing

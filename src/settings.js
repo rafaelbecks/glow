@@ -295,6 +295,39 @@ export const SETTINGS = {
       ENABLE_RAY: false,
       RAY_LENGTH: 400,
       RAY_PULSE_RATE: 1.0
+    },
+    WINDMILL: {
+      RADIUS: 50,
+      ROTATION_RATE: 0.4,
+      CHIRALITY: 1,
+      DEPTH: 0.10,
+      INSTANCE_COUNT: 3,
+      SPACING: 410,
+      SCALE: 1.0,
+      LINE_WIDTH: 1.6,
+      ACCELERATION_FACTOR: 3.4,
+      ACCELERATION_DURATION: 1.0,
+      PERSPECTIVE: 0.0,
+      ENABLE_PROJECTION: true,
+      BLADE_MULTIPLIER: 4,
+      SPIRAL_SCALE: 5.0,
+      GOLDEN_ANGLE: 3.4,
+      SIZE_VARIATION: 0.15,
+      BLADE_WIDTH: 0.50,
+      HUB_RADIUS: 8,
+      USE_COLOR: true
+    },
+    ORIZURU: {
+      FOLD_AMOUNT: 1.0,
+      PERSPECTIVE: 3.0,
+      Y_ROTATION: 0.0,
+      SCALE: 200,
+      LINE_WIDTH: 1.0,
+      PROJECTION_DEPTH: 0.3,
+      INSTANCES: 1,
+      SPATIAL_RADIUS: 200,
+      ENABLE_PROJECTION: true,
+      USE_COLOR: false
     }
   },
 
