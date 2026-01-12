@@ -32,7 +32,7 @@ export class MIDIManager {
       syncHelix2D: [],
       ramiel: [],
       windmill: [],
-      orizuru: []
+      orizuru: [],
     }
 
     this.inputs = new Map() // Maps channel to array of inputs

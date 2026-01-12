@@ -79,19 +79,28 @@ export class ModulationUIManager {
       const modulationSystem = this.trackManager.getModulationSystem()
       const waveformShapes = modulationSystem.getWaveformShapes()
       const waveformNames = modulationSystem.getWaveformShapeNames()
+      const modulatorTypes = modulationSystem.getModulatorTypes()
+      const modulatorTypeNames = modulationSystem.getModulatorTypeNames()
+      const easingFunctions = modulationSystem.getEasingFunctions()
+      const easingFunctionNames = modulationSystem.getEasingFunctionNames()
 
       const track = tracks.find(t => t.id === modulator.targetTrack)
       const trackLuminode = track ? track.luminode : null
+      const modulatorType = modulator.type || 'lfo'
 
       const modulatorData = {
         enabled: modulator.enabled,
-        shape: modulator.shape,
+        type: modulatorType,
+        shape: modulator.shape || 'sine',
         targetTrack: modulator.targetTrack,
         targetConfigKey: modulator.targetConfigKey || '',
-        rate: modulator.rate,
-        depth: modulator.depth,
-        offset: modulator.offset,
-        cubicBezier: modulator.cubicBezier || [0.5, 0, 0.5, 1]
+        rate: modulator.rate || 0.5,
+        depth: modulator.depth || 0.5,
+        offset: modulator.offset || 0,
+        cubicBezier: modulator.cubicBezier || [0.5, 0, 0.5, 1],
+        multiplier: modulator.multiplier !== undefined ? modulator.multiplier : 1.0,
+        easing: modulator.easing || 'linear',
+        threshold: modulator.threshold !== undefined ? modulator.threshold : 0.5
       }
 
       const modulatorFolder = this.mainPane.addFolder({ 
@@ -106,45 +115,63 @@ export class ModulationUIManager {
         this.trackManager.updateModulator(modulator.id, { enabled: ev.value })
       })
 
-      const waveformOptions = {}
-      waveformShapes.forEach(shape => {
-        waveformOptions[waveformNames[shape]] = shape
+      const typeOptions = {}
+      modulatorTypes.forEach(type => {
+        typeOptions[modulatorTypeNames[type]] = type
       })
-      waveformOptions['Cubic Bezier'] = 'cubicBezier'
 
-      const shapeBinding = modulatorFolder.addBinding(modulatorData, 'shape', {
-        options: waveformOptions,
-        label: 'Waveform'
+      const typeBinding = modulatorFolder.addBinding(modulatorData, 'type', {
+        options: typeOptions,
+        label: 'Type'
       }).on('change', (ev) => {
-        modulatorData.shape = ev.value
-        this.trackManager.updateModulator(modulator.id, { shape: ev.value })
-        this.updateWaveformPreview(modulatorFolder, ev.value)
-        this.updateCubicBezierVisibility(modulatorFolder, ev.value === 'cubicBezier')
+        modulatorData.type = ev.value
+        this.trackManager.updateModulator(modulator.id, { type: ev.value })
+        this.renderModulationControls()
       })
 
-      const waveformPreviewContainer = document.createElement('div')
-      waveformPreviewContainer.className = 'waveform-preview-container'
-      if (modulator.shape === 'cubicBezier') {
-        const bezier = modulator.cubicBezier && Array.isArray(modulator.cubicBezier) && modulator.cubicBezier.length === 4
-          ? modulator.cubicBezier
-          : [0.5, 0, 0.5, 1]
-        waveformPreviewContainer.innerHTML = this.createCubicBezierPreview(bezier, 40, 20)
-      } else {
-        waveformPreviewContainer.innerHTML = this.createWaveformPreview(modulator.shape, 40, 20)
-      }
-      
-      setTimeout(() => {
-        const shapeBindingElement = shapeBinding.controller?.view?.element || shapeBinding.element
-        if (shapeBindingElement) {
-          const labelRow = shapeBindingElement.closest('.tp-lblv') || shapeBindingElement.parentElement
-          if (labelRow) {
-            const previewRow = document.createElement('div')
-            previewRow.className = 'waveform-preview-row'
-            previewRow.appendChild(waveformPreviewContainer)
-            labelRow.parentElement.insertBefore(previewRow, labelRow.nextSibling)
-          }
+      let shapeBinding = null
+      let waveformPreviewContainer = null
+      if (modulatorType === 'lfo') {
+        const waveformOptions = {}
+        waveformShapes.forEach(shape => {
+          waveformOptions[waveformNames[shape]] = shape
+        })
+        waveformOptions['Cubic Bezier'] = 'cubicBezier'
+
+        shapeBinding = modulatorFolder.addBinding(modulatorData, 'shape', {
+          options: waveformOptions,
+          label: 'Waveform'
+        }).on('change', (ev) => {
+          modulatorData.shape = ev.value
+          this.trackManager.updateModulator(modulator.id, { shape: ev.value })
+          this.updateWaveformPreview(modulatorFolder, ev.value)
+          this.updateCubicBezierVisibility(modulatorFolder, ev.value === 'cubicBezier')
+        })
+
+        waveformPreviewContainer = document.createElement('div')
+        waveformPreviewContainer.className = 'waveform-preview-container'
+        if (modulator.shape === 'cubicBezier') {
+          const bezier = modulator.cubicBezier && Array.isArray(modulator.cubicBezier) && modulator.cubicBezier.length === 4
+            ? modulator.cubicBezier
+            : [0.5, 0, 0.5, 1]
+          waveformPreviewContainer.innerHTML = this.createCubicBezierPreview(bezier, 40, 20)
+        } else {
+          waveformPreviewContainer.innerHTML = this.createWaveformPreview(modulator.shape || 'sine', 40, 20)
         }
-      }, 100)
+        
+        setTimeout(() => {
+          const shapeBindingElement = shapeBinding.controller?.view?.element || shapeBinding.element
+          if (shapeBindingElement) {
+            const labelRow = shapeBindingElement.closest('.tp-lblv') || shapeBindingElement.parentElement
+            if (labelRow) {
+              const previewRow = document.createElement('div')
+              previewRow.className = 'waveform-preview-row'
+              previewRow.appendChild(waveformPreviewContainer)
+              labelRow.parentElement.insertBefore(previewRow, labelRow.nextSibling)
+            }
+          }
+        }, 100)
+      }
 
       const trackOptions = {}
       tracks.forEach(t => {
@@ -173,12 +200,12 @@ export class ModulationUIManager {
         const configParams = getLuminodeConfig(trackLuminode)
         const configOptions = { 'Select Parameter': '' }
         configParams
-          .filter(p => p.type === 'slider' || p.type === 'number')
+          .filter(p => p.type === 'slider' || p.type === 'number' || p.type === 'checkbox')
           .forEach(p => {
             configOptions[p.label] = p.key
           })
 
-        modulatorFolder.addBinding(modulatorData, 'targetConfigKey', {
+        const paramBinding = modulatorFolder.addBinding(modulatorData, 'targetConfigKey', {
           options: configOptions,
           label: 'Parameter'
         }).on('change', (ev) => {
@@ -187,41 +214,76 @@ export class ModulationUIManager {
             targetConfigKey: ev.value || null,
             targetLuminode: trackLuminode
           })
+          this.updateThresholdVisibility(modulatorFolder, ev.value, configParams)
+        })
+
+        if (modulator.targetConfigKey) {
+          const currentParam = configParams.find(p => p.key === modulator.targetConfigKey)
+          if (currentParam) {
+            this.updateThresholdVisibility(modulatorFolder, modulator.targetConfigKey, configParams)
+          }
+        }
+      }
+
+      if (modulatorType === 'lfo') {
+        modulatorFolder.addBinding(modulatorData, 'rate', {
+          label: 'Rate',
+          min: 0.001,
+          max: 2,
+          step: 0.001
+        }).on('change', (ev) => {
+          modulatorData.rate = ev.value
+          this.trackManager.updateModulator(modulator.id, { rate: ev.value })
+        })
+
+        modulatorFolder.addBinding(modulatorData, 'depth', {
+          label: 'Depth',
+          min: 0,
+          max: 1,
+          step: 0.01
+        }).on('change', (ev) => {
+          modulatorData.depth = ev.value
+          this.trackManager.updateModulator(modulator.id, { depth: ev.value })
+        })
+
+        modulatorFolder.addBinding(modulatorData, 'offset', {
+          label: 'Offset',
+          min: -1,
+          max: 1,
+          step: 0.01
+        }).on('change', (ev) => {
+          modulatorData.offset = ev.value
+          this.trackManager.updateModulator(modulator.id, { offset: ev.value })
         })
       }
 
-      modulatorFolder.addBinding(modulatorData, 'rate', {
-        label: 'Rate',
-        min: 0.001,
-        max: 2,
-        step: 0.001
-      }).on('change', (ev) => {
-        modulatorData.rate = ev.value
-        this.trackManager.updateModulator(modulator.id, { rate: ev.value })
-      })
+      if (modulatorType === 'numberOfNotes' || modulatorType === 'velocity') {
+        modulatorFolder.addBinding(modulatorData, 'multiplier', {
+          label: 'Multiplier',
+          min: 0.1,
+          max: 10,
+          step: 0.1
+        }).on('change', (ev) => {
+          modulatorData.multiplier = ev.value
+          this.trackManager.updateModulator(modulator.id, { multiplier: ev.value })
+        })
 
-      modulatorFolder.addBinding(modulatorData, 'depth', {
-        label: 'Depth',
-        min: 0,
-        max: 1,
-        step: 0.01
-      }).on('change', (ev) => {
-        modulatorData.depth = ev.value
-        this.trackManager.updateModulator(modulator.id, { depth: ev.value })
-      })
+        const easingOptions = {}
+        easingFunctions.forEach(easing => {
+          easingOptions[easingFunctionNames[easing]] = easing
+        })
 
-      modulatorFolder.addBinding(modulatorData, 'offset', {
-        label: 'Offset',
-        min: -1,
-        max: 1,
-        step: 0.01
-      }).on('change', (ev) => {
-        modulatorData.offset = ev.value
-        this.trackManager.updateModulator(modulator.id, { offset: ev.value })
-      })
+        modulatorFolder.addBinding(modulatorData, 'easing', {
+          options: easingOptions,
+          label: 'Easing'
+        }).on('change', (ev) => {
+          modulatorData.easing = ev.value
+          this.trackManager.updateModulator(modulator.id, { easing: ev.value })
+        })
+      }
 
       let cubicBezierBinding = null
-      if (modulator.shape === 'cubicBezier') {
+      if (modulatorType === 'lfo' && modulator.shape === 'cubicBezier') {
         const bezierValue = modulator.cubicBezier && Array.isArray(modulator.cubicBezier) && modulator.cubicBezier.length === 4
           ? modulator.cubicBezier
           : [0.5, 0, 0.5, 1]
@@ -243,6 +305,23 @@ export class ModulationUIManager {
         })
       }
 
+      let thresholdBinding = null
+      if (trackLuminode && modulator.targetConfigKey) {
+        const configParams = getLuminodeConfig(trackLuminode)
+        const currentParam = configParams.find(p => p.key === modulator.targetConfigKey)
+        if (currentParam && currentParam.type === 'checkbox') {
+          thresholdBinding = modulatorFolder.addBinding(modulatorData, 'threshold', {
+            label: 'Threshold',
+            min: 0,
+            max: 1,
+            step: 0.01
+          }).on('change', (ev) => {
+            modulatorData.threshold = ev.value
+            this.trackManager.updateModulator(modulator.id, { threshold: ev.value })
+          })
+        }
+      }
+
       modulatorFolder.addBlade({
         view: 'button',
         label: 'Delete',
@@ -256,7 +335,8 @@ export class ModulationUIManager {
         folder: modulatorFolder,
         modulatorData,
         waveformPreviewContainer,
-        cubicBezierBinding
+        cubicBezierBinding,
+        thresholdBinding
       })
     } catch (error) {
       console.error(`Failed to create modulator pane for ${modulator.id}:`, error)
@@ -385,11 +465,47 @@ export class ModulationUIManager {
     return mt3 * 0 + 3 * mt2 * t * y1 + 3 * mt * t2 * y2 + t3 * 1
   }
 
+  updateThresholdVisibility (folder, configKey, configParams) {
+    const paneData = Array.from(this.modulatorPanes.values()).find(p => p.folder === folder)
+    if (!paneData) return
+
+    const modulatorId = Array.from(this.modulatorPanes.entries()).find(([id, data]) => data.folder === folder)?.[0]
+    if (!modulatorId) return
+
+    const currentParam = configParams.find(p => p.key === configKey)
+    const isBoolean = currentParam && currentParam.type === 'checkbox'
+
+    if (isBoolean && !paneData.thresholdBinding) {
+      const modulator = this.trackManager.getModulators().find(m => m.id === modulatorId)
+      if (modulator) {
+        const threshold = modulator.threshold !== undefined ? modulator.threshold : 0.5
+        paneData.modulatorData.threshold = threshold
+        paneData.thresholdBinding = folder.addBinding(paneData.modulatorData, 'threshold', {
+          label: 'Threshold',
+          min: 0,
+          max: 1,
+          step: 0.01
+        }).on('change', (ev) => {
+          paneData.modulatorData.threshold = ev.value
+          this.trackManager.updateModulator(modulatorId, { threshold: ev.value })
+        })
+      }
+    } else if (!isBoolean && paneData.thresholdBinding) {
+      try {
+        paneData.thresholdBinding.dispose()
+      } catch (e) {
+        console.warn('Error disposing threshold binding:', e)
+      }
+      paneData.thresholdBinding = null
+    }
+  }
+
   setupAddModulatorListener () {
     const addBtn = this.panel.querySelector('#addModulatorBtn')
     if (addBtn) {
       addBtn.addEventListener('click', () => {
-        const modulatorId = this.trackManager.addModulator()
+        const modulationSystem = this.trackManager.getModulationSystem()
+        const modulatorId = modulationSystem.addModulator('lfo')
         if (modulatorId) {
           this.renderModulationControls()
         }

@@ -38,7 +38,7 @@ import {
   SyncHelix2DLuminode,
   RamielLuminode,
   WindmillLuminode,
-  OrizuruLuminode
+  OrizuruLuminode,
 } from './luminodes/index.js'
 
 export class GLOWVisualizer {
@@ -123,7 +123,7 @@ export class GLOWVisualizer {
       syncHelix2D: SyncHelix2DLuminode,
       ramiel: RamielLuminode,
       windmill: WindmillLuminode,
-      orizuru: OrizuruLuminode
+      orizuru: OrizuruLuminode,
     }
 
     // Track-based luminode instances
@@ -834,28 +834,20 @@ export class GLOWVisualizer {
 
       if (!luminode) return
 
-      // Get notes for this track's luminode
       const notes = activeNotes[track.luminode] || []
       const layout = trackLayouts[track.id] || { x: 0, y: 0, rotation: 0 }
 
-      // Apply modulation before drawing
-      const restoreValues = this.applyModulationToTrack(track.id, track.luminode)
+      const restoreValues = this.applyModulationToTrack(track.id, track.luminode, notes)
 
-      // Draw the luminode with track-specific parameters
       this.drawTrackLuminode(luminode, track.luminode, t, notes, layout)
 
-      // Restore original config values after drawing
       if (restoreValues) {
         restoreValues()
       }
     })
   }
 
-  /**
-   * Apply modulation to a track's luminode config values
-   * Returns a restore function to call after drawing
-   */
-  applyModulationToTrack (trackId, luminodeType) {
+  applyModulationToTrack (trackId, luminodeType, notes = []) {
     const modulationSystem = this.trackManager.getModulationSystem()
     const modulators = modulationSystem.getModulators().filter(m =>
       m.enabled &&
@@ -879,9 +871,14 @@ export class GLOWVisualizer {
 
     const moduleConfig = SETTINGS.MODULES[settingsKey]
     const originalValues = new Map()
-    const restoreFunctions = []
 
-    // Group modulators by config key to handle multiple modulators on same param
+    const noteData = {
+      notes: notes || [],
+      velocity: notes && notes.length > 0
+        ? notes.reduce((sum, note) => sum + (note.velocity || 0), 0) / notes.length
+        : 0
+    }
+
     const modulatorsByKey = new Map()
     modulators.forEach(modulator => {
       const configKey = modulator.targetConfigKey
@@ -891,7 +888,6 @@ export class GLOWVisualizer {
       modulatorsByKey.get(configKey).push(modulator)
     })
 
-    // Apply modulators to each config key
     modulatorsByKey.forEach((mods, configKey) => {
       const configParam = configParamMap.get(configKey)
 
@@ -899,48 +895,49 @@ export class GLOWVisualizer {
         return
       }
 
-      // Store original value
       if (!originalValues.has(configKey)) {
         originalValues.set(configKey, moduleConfig[configKey])
       }
 
-      // Calculate modulation contributions independently and sum them
       const baseValue = originalValues.get(configKey)
-      let totalModulation = 0
-      let totalOffset = 0
+      let modulatedValue = baseValue
 
-      const time = modulationSystem.getCurrentTime()
+      const lfoModulators = mods.filter(m => (m.type || 'lfo') === 'lfo')
+      const noteModulators = mods.filter(m => (m.type || 'lfo') !== 'lfo')
 
-      mods.forEach(modulator => {
+      if (lfoModulators.length > 0) {
+        let totalModulation = 0
+        let totalOffset = 0
+        const time = modulationSystem.getCurrentTime()
+
+        lfoModulators.forEach(modulator => {
+          if (!modulator.enabled) return
+
+          const phase = time * modulator.rate * Math.PI * 2
+          const waveform = modulationSystem.generateWaveform(modulator.shape, phase, modulator.cubicBezier)
+
+          totalModulation += waveform * modulator.depth
+          totalOffset += modulator.offset || 0
+        })
+
+        const min = configParam.min
+        const max = configParam.max
+        const range = max - min
+
+        modulatedValue = baseValue + (totalModulation * range) + (totalOffset * range)
+        modulatedValue = Math.max(min, Math.min(max, modulatedValue))
+      }
+
+      noteModulators.forEach(modulator => {
         if (!modulator.enabled) return
-
-        const phase = time * modulator.rate * Math.PI * 2
-        const waveform = modulationSystem.generateWaveform(modulator.shape, phase, modulator.cubicBezier)
-
-        // Accumulate modulation and offset
-        totalModulation += waveform * modulator.depth
-        totalOffset += modulator.offset
+        modulatedValue = modulationSystem.getModulatedValue(modulatedValue, modulator, configParam, noteData)
       })
 
-      // Calculate value range for this parameter
-      const min = configParam.min
-      const max = configParam.max
-      const range = max - min
-
-      // Apply combined modulation
-      let modulatedValue = baseValue + (totalModulation * range) + (totalOffset * range)
-
-      // Clamp to valid range
-      modulatedValue = Math.max(min, Math.min(max, modulatedValue))
-
-      // Round to integer if this is a number-type parameter (for parameters like SEGMENTS, RINGS, etc.)
       const finalValue = configParam.type === 'number' ? Math.round(modulatedValue) : modulatedValue
 
-      // Apply final modulated value
       moduleConfig[configKey] = finalValue
     })
 
-    // Return restore function
     return () => {
       originalValues.forEach((value, key) => {
         moduleConfig[key] = value
@@ -949,7 +946,6 @@ export class GLOWVisualizer {
   }
 
   drawTrackLuminode (luminode, luminodeType, t, notes, layout) {
-    // Handle special cases for different luminode types
     switch (luminodeType) {
       case 'sotoGrid':
         luminode.draw(t, notes, false, layout)
@@ -963,57 +959,20 @@ export class GLOWVisualizer {
       case 'phyllotaxis':
         luminode.draw(t, notes, SETTINGS.MODULES.PHYLLOTAXIS.DOTS_PER_NOTE, layout)
         break
-      case 'whitneyLines':
-        const whitneyColorMode = SETTINGS.MODULES.WHITNEY_LINES.USE_COLOR || false
-        luminode.draw(t, notes, whitneyColorMode, layout)
-        break
       case 'triangle':
         luminode.draw(t, notes, 'triangle', 1, 300, layout)
         break
-      case 'noiseValley':
-        const noiseValleyColorMode = SETTINGS.MODULES.NOISE_VALLEY.USE_COLOR || false
-        luminode.draw(t, notes, noiseValleyColorMode, layout)
+      default: {
+        const settingsKey = getLuminodeSettingsKey(luminodeType)
+        const moduleSettings = settingsKey ? SETTINGS.MODULES[settingsKey] : null
+        
+        if (moduleSettings?.hasOwnProperty('USE_COLOR')) {
+          luminode.draw(t, notes, moduleSettings.USE_COLOR || false, layout)
+        } else {
+          luminode.draw(t, notes, layout)
+        }
         break
-      case 'catenoid':
-        const catenoidColorMode = SETTINGS.MODULES.CATENOID.USE_COLOR || false
-        luminode.draw(t, notes, catenoidColorMode, layout)
-        break
-      case 'lineCylinder':
-        const lineCylinderColorMode = SETTINGS.MODULES.LINE_CYLINDER.USE_COLOR || false
-        luminode.draw(t, notes, lineCylinderColorMode, layout)
-        break
-      case 'diamond':
-        const diamondColorMode = SETTINGS.MODULES.DIAMOND.USE_COLOR || false
-        luminode.draw(t, notes, diamondColorMode, layout)
-        break
-      case 'cube':
-        const cubeColorMode = SETTINGS.MODULES.CUBE.USE_COLOR || false
-        luminode.draw(t, notes, cubeColorMode, layout)
-        break
-      case 'sphere':
-        const sphereColorMode = SETTINGS.MODULES.SPHERE.USE_COLOR || false
-        luminode.draw(t, notes, sphereColorMode, layout)
-        break
-      case 'trefoil':
-        const trefoilColorMode = SETTINGS.MODULES.TREFOIL.USE_COLOR || false
-        luminode.draw(t, notes, trefoilColorMode, layout)
-        break
-      case 'sphericalLens':
-        const sphericalLensColorMode = SETTINGS.MODULES.SPHERICAL_LENS.USE_COLOR || false
-        luminode.draw(t, notes, sphericalLensColorMode, layout)
-        break
-      case 'syncHelix2D':
-        const syncHelix2DColorMode = SETTINGS.MODULES.SYNC_HELIX_2D.USE_COLOR || false
-        luminode.draw(t, notes, syncHelix2DColorMode, layout)
-        break
-      case 'windmill':
-        const windmillColorMode = SETTINGS.MODULES.WINDMILL.USE_COLOR || false
-        luminode.draw(t, notes, windmillColorMode, layout)
-        break
-      default:
-        // Standard luminode drawing
-        luminode.draw(t, notes, layout)
-        break
+      }
     }
   }
 

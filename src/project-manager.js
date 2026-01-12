@@ -670,19 +670,35 @@ export class ProjectManager {
     modulationSystem.reset()
 
     modulationData.modulators.forEach(modulatorData => {
-      const modulatorId = modulationSystem.addModulator()
+      const modulatorType = modulatorData.type || 'lfo'
+      const modulatorId = modulationSystem.addModulator(modulatorType)
       if (modulatorId) {
-        modulationSystem.updateModulator(modulatorId, {
+        const updates = {
           id: modulatorData.id || modulatorId,
-          shape: modulatorData.shape || 'sine',
-          rate: modulatorData.rate !== undefined ? modulatorData.rate : 0.5,
-          depth: modulatorData.depth !== undefined ? modulatorData.depth : 0.5,
-          offset: modulatorData.offset !== undefined ? modulatorData.offset : 0,
+          type: modulatorType,
           enabled: modulatorData.enabled !== undefined ? modulatorData.enabled : true,
           targetTrack: modulatorData.targetTrack !== undefined ? modulatorData.targetTrack : 1,
           targetConfigKey: modulatorData.targetConfigKey || null,
           targetLuminode: modulatorData.targetLuminode || null
-        })
+        }
+
+        if (modulatorType === 'lfo') {
+          updates.shape = modulatorData.shape || 'sine'
+          updates.rate = modulatorData.rate !== undefined ? modulatorData.rate : 0.5
+          updates.depth = modulatorData.depth !== undefined ? modulatorData.depth : 0.5
+          updates.offset = modulatorData.offset !== undefined ? modulatorData.offset : 0
+          if (modulatorData.cubicBezier) {
+            updates.cubicBezier = modulatorData.cubicBezier
+          }
+        }
+
+        if (modulatorType === 'numberOfNotes' || modulatorType === 'velocity') {
+          updates.multiplier = modulatorData.multiplier !== undefined ? modulatorData.multiplier : 1.0
+          updates.easing = modulatorData.easing || 'linear'
+          updates.threshold = modulatorData.threshold !== undefined ? modulatorData.threshold : 0.5
+        }
+
+        modulationSystem.updateModulator(modulatorId, updates)
       }
     })
   }
