@@ -1,6 +1,7 @@
 // Track management system for DAW-style interface
 import { TrajectorySystem } from './trajectory-system.js'
 import { ModulationSystem } from './modulation-system.js'
+import { getAvailableLuminodes } from './luminodes/index.js'
 
 export class TrackManager {
   constructor () {
@@ -17,13 +18,7 @@ export class TrackManager {
     // Initialize modulation system
     this.modulationSystem = new ModulationSystem()
 
-    this.availableLuminodes = [
-      'lissajous', 'harmonograph', 'sphere', 'gegoNet', 'gegoShape',
-      'sotoGrid', 'sotoGridRotated', 'whitneyLines', 'phyllotaxis',
-      'moireCircles', 'wovenNet', 'sinewave', 'triangle', 'polygons',
-      'noiseValley', 'catenoid', 'lineCylinder', 'clavilux', 'diamond',
-      'cube', 'trefoil', 'sphericalLens', 'epitrochoid', 'syncHelix2D', 'ramiel', 'windmill', 'orizuru'
-    ]
+    this.availableLuminodes = getAvailableLuminodes()
 
     this.availableMidiDevices = new Map()
     this.midiInputs = new Map()

@@ -10,36 +10,8 @@ import { ProjectManager } from './project-manager.js'
 import { SaveDialog } from './components/save-dialog.js'
 import { FilePickerDialog } from './components/file-picker-dialog.js'
 import { getLuminodeConfig } from './luminode-configs.js'
-import { getLuminodeSettingsKey } from './components/luminode-config-manager.js'
 import { MIDICCMapper } from './midi-cc-mapper.js'
-import {
-  LissajousLuminode,
-  HarmonographLuminode,
-  SphereLuminode,
-  GegoNetLuminode,
-  GegoShapeLuminode,
-  SotoGridLuminode,
-  WhitneyLinesLuminode,
-  PhyllotaxisLuminode,
-  MoireCirclesLuminode,
-  WovenNetLuminode,
-  SinewaveLuminode,
-  TriangleLuminode,
-  PolygonsLuminode,
-  NoiseValleyLuminode,
-  CatenoidLuminode,
-  LineCylinderLuminode,
-  ClaviluxLuminode,
-  DiamondLuminode,
-  CubeLuminode,
-  TrefoilKnotLuminode,
-  SphericalLensLuminode,
-  EpitrochoidLuminode,
-  SyncHelix2DLuminode,
-  RamielLuminode,
-  WindmillLuminode,
-  OrizuruLuminode,
-} from './luminodes/index.js'
+import { LUMINODE_REGISTRY, getLuminodeSettingsKey } from './luminodes/index.js'
 
 export class GLOWVisualizer {
   constructor () {
@@ -95,36 +67,9 @@ export class GLOWVisualizer {
     this.chromaticAberrationCanvas = null
     this.chromaticAberrationCtx = null
 
-    // Initialize luminode factory
-    this.luminodeFactory = {
-      lissajous: LissajousLuminode,
-      harmonograph: HarmonographLuminode,
-      sphere: SphereLuminode,
-      gegoNet: GegoNetLuminode,
-      gegoShape: GegoShapeLuminode,
-      sotoGrid: SotoGridLuminode,
-      sotoGridRotated: SotoGridLuminode,
-      whitneyLines: WhitneyLinesLuminode,
-      phyllotaxis: PhyllotaxisLuminode,
-      moireCircles: MoireCirclesLuminode,
-      wovenNet: WovenNetLuminode,
-      sinewave: SinewaveLuminode,
-      triangle: TriangleLuminode,
-      polygons: PolygonsLuminode,
-      noiseValley: NoiseValleyLuminode,
-      catenoid: CatenoidLuminode,
-      lineCylinder: LineCylinderLuminode,
-      clavilux: ClaviluxLuminode,
-      diamond: DiamondLuminode,
-      cube: CubeLuminode,
-      trefoil: TrefoilKnotLuminode,
-      sphericalLens: SphericalLensLuminode,
-      epitrochoid: EpitrochoidLuminode,
-      syncHelix2D: SyncHelix2DLuminode,
-      ramiel: RamielLuminode,
-      windmill: WindmillLuminode,
-      orizuru: OrizuruLuminode,
-    }
+    this.luminodeFactory = Object.fromEntries(
+      Object.entries(LUMINODE_REGISTRY).map(([key, reg]) => [key, reg.class])
+    )
 
     // Track-based luminode instances
     this.trackLuminodes = new Map() // Maps trackId -> luminode instance

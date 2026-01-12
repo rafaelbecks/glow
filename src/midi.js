@@ -1,39 +1,17 @@
 // MIDI event handling and device management
+// TODO: Refactor to discard the legacy "Bus" assignment logic which we don't use anymore (it's not needed)
 import { SETTINGS, MIDI_CHANNELS } from './settings.js'
+import { getAvailableLuminodes } from './luminodes/index.js'
 
 export class MIDIManager {
   constructor (trackManager = null, ccMapper = null) {
     this.trackManager = trackManager
     this.ccMapper = ccMapper
-    this.activeNotes = {
-      lissajous: [],
-      harmonograph: [],
-      sphere: [],
-      gegoNet: [],
-      sinewave: [],
-      triangle: [],
-      moireCircles: [],
-      gegoShape: [],
-      sotoGrid: [],
-      sotoGridRotated: [],
-      phyllotaxis: [],
-      wovenNet: [],
-      polygons: [],
-      whitneyLines: [],
-      noiseValley: [],
-      catenoid: [],
-      lineCylinder: [],
-      clavilux: [],
-      diamond: [],
-      cube: [],
-      trefoil: [],
-      sphericalLens: [],
-      epitrochoid: [],
-      syncHelix2D: [],
-      ramiel: [],
-      windmill: [],
-      orizuru: [],
-    }
+    // Build activeNotes dynamically from available luminodes
+    this.activeNotes = {}
+    getAvailableLuminodes().forEach(luminode => {
+      this.activeNotes[luminode] = []
+    })
 
     this.inputs = new Map() // Maps channel to array of inputs
     this.deviceToChannelMap = new Map() // Maps device ID to channel name

@@ -1,39 +1,8 @@
 import { Pane } from '../lib/tweakpane.min.js'
 import { hasLuminodeConfig, getLuminodesByGroup, getLuminodeConfig } from '../luminode-configs.js'
+import { getLuminodeDisplayName, getLuminodeSettingsKey as getLuminodeSettingsKeyFromRegistry } from '../luminodes/index.js'
 
-function normalizeLuminodeNameUtil (name) {
-  const nameMap = {
-    lissajous: 'Lissajous',
-    harmonograph: 'Harmonograph',
-    sphere: 'Sphere',
-    gegoNet: 'Gego Net',
-    gegoShape: 'Gego Shape',
-    sotoGrid: 'Soto Grid',
-    sotoGridRotated: 'Soto Squares',
-    whitneyLines: 'Whitney Lines',
-    phyllotaxis: 'Phyllotaxis',
-    moireCircles: 'Moire Circles',
-    wovenNet: 'Woven Net',
-    sinewave: 'Sine Wave',
-    triangle: 'Triangle',
-    polygons: 'Polygons',
-    noiseValley: 'Noise Valley',
-    catenoid: 'Catenoid',
-    lineCylinder: 'Line Cylinder',
-    clavilux: 'Clavilux',
-    trefoil: 'Trefoil Knot',
-    cube: 'Cube',
-    diamond: 'Diamond',
-    sphericalLens: 'Spherical Lens',
-    epitrochoid: 'Epitrochoid',
-    syncHelix2D: 'Sync Helix',
-    ramiel: 'Ramiel',
-    windmill: 'Windmill'
-  }
-  return nameMap[name] || name
-}
-
-export { normalizeLuminodeNameUtil as normalizeLuminodeName }
+export { getLuminodeDisplayName as normalizeLuminodeName }
 
 export class TrackUIManager {
   constructor (trackManager, panel, luminodeConfigManager = null) {
@@ -408,33 +377,7 @@ export class TrackUIManager {
   }
 
   getLuminodeSettingsKey (luminode) {
-    const luminodeMapping = {
-      lissajous: 'LISSAJOUS',
-      sphere: 'SPHERE',
-      harmonograph: 'HARMONOGRAPH',
-      gegoNet: 'GEGO_NET',
-      gegoShape: 'GEGO_SHAPE',
-      sotoGrid: 'SOTO_GRID',
-      sotoGridRotated: 'SOTO_GRID',
-      whitneyLines: 'WHITNEY_LINES',
-      phyllotaxis: 'PHYLLOTAXIS',
-      moireCircles: 'MOIRE_CIRCLES',
-      wovenNet: 'WOVEN_NET',
-      sinewave: 'SINEWAVE',
-      triangle: 'TRIANGLE',
-      polygons: 'POLYGONS',
-      noiseValley: 'NOISE_VALLEY',
-      catenoid: 'CATENOID',
-      lineCylinder: 'LINE_CYLINDER',
-      clavilux: 'CLAVILUX',
-      diamond: 'DIAMOND',
-      cube: 'CUBE',
-      trefoil: 'TREFOIL',
-      sphericalLens: 'SPHERICAL_LENS',
-      epitrochoid: 'EPITROCHOID',
-      syncHelix2D: 'SYNC_HELIX_2D'
-    }
-    return luminodeMapping[luminode] || luminode.toUpperCase()
+    return getLuminodeSettingsKeyFromRegistry(luminode)
   }
 
   updateTrackUI (trackId, track) {
@@ -565,7 +508,7 @@ export class TrackUIManager {
   }
 
   normalizeLuminodeName (name) {
-    return normalizeLuminodeNameUtil(name)
+    return getLuminodeDisplayName(name)
   }
 
   getTrajectoryConfig (trackId) {
