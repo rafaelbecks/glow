@@ -52,6 +52,13 @@ Open `http://localhost:8000/` in Chrome.
 - Canvas 2D context support
 - File API support (for scene saving/loading)
 
+## Acknowledgements
+
+- **[gpu-io](https://github.com/amandaghassaei/gpu-io)** - Shader examples used for background composition
+- **[grained.js](https://github.com/sarathsaleem/grained)** - Noise texture library
+
+Thanks for the code and inspiration.
+
 ## License
 
 GPL-3.0
