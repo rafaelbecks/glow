@@ -35,7 +35,7 @@ export class EpitrochoidLuminode {
   }
 
   // Draw a single epitrochoid figure
-  drawEpitrochoidFigure (note, idx, lineIdx, t, notes) {
+  drawEpitrochoidFigure (note, idx, lineIdx, t, notes, useColor = false) {
     const midi = note.midi
     const velocity = note.velocity || 0
 
@@ -120,7 +120,7 @@ export class EpitrochoidLuminode {
     this.ctx.closePath()
 
     // Styling
-    if (SETTINGS.MODULES.EPITROCHOID.USE_COLOR) {
+    if (useColor) {
       this.ctx.strokeStyle = UTILS.pitchToColor(midi)
     } else {
       const alpha = 0.5 + velocity * 0.3
@@ -132,7 +132,7 @@ export class EpitrochoidLuminode {
     this.ctx.stroke()
   }
 
-  draw (t, notes, layout = { x: 0, y: 0, rotation: 0 }) {
+  draw (t, notes, useColor = false, layout = { x: 0, y: 0, rotation: 0 }) {
     if (notes.length === 0) return
 
     this.dimensions = this.canvasDrawer.getDimensions()
@@ -144,7 +144,7 @@ export class EpitrochoidLuminode {
     // Draw multiple figures per note based on linesPerNote
     notes.forEach((note, idx) => {
       for (let lineIdx = 0; lineIdx < linesPerNote; lineIdx++) {
-        this.drawEpitrochoidFigure(note, idx, lineIdx, t, notes)
+        this.drawEpitrochoidFigure(note, idx, lineIdx, t, notes, useColor)
       }
     })
 
