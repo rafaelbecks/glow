@@ -38,7 +38,15 @@ export class ProjectManager {
         ditherTableValuesB: SETTINGS.CANVAS.DITHER_TABLE_VALUES_B,
         chromaticAberrationEnabled: SETTINGS.CANVAS.CHROMATIC_ABERRATION_ENABLED,
         chromaticAberrationContrast: SETTINGS.CANVAS.CHROMATIC_ABERRATION_CONTRAST,
-        invertFilter: SETTINGS.CANVAS.INVERT_FILTER
+        invertFilter: SETTINGS.CANVAS.INVERT_FILTER,
+        shaderBackgroundEnabled: SETTINGS.CANVAS.SHADER_BACKGROUND_ENABLED,
+        shaderBackgroundMode: SETTINGS.CANVAS.SHADER_BACKGROUND_MODE,
+        shaderBackgroundTrailLength: SETTINGS.CANVAS.SHADER_BACKGROUND_TRAIL_LENGTH,
+        shaderBackgroundColorFluidBackground: SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_FLUID_BACKGROUND,
+        shaderBackgroundColorFluidTrail: SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_FLUID_TRAIL,
+        shaderBackgroundColorPressure: SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_PRESSURE,
+        shaderBackgroundColorVelocity: SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_VELOCITY,
+        shaderBackgroundCursorMode: SETTINGS.CANVAS.SHADER_BACKGROUND_CURSOR_MODE
       },
       colors: {
         sotoPalette: [...SETTINGS.COLORS.SOTO_PALETTE],
@@ -583,6 +591,46 @@ export class ProjectManager {
     if (canvasData.invertFilter !== undefined) {
       SETTINGS.CANVAS.INVERT_FILTER = canvasData.invertFilter
       this.glowVisualizer.updateInvertFilter(canvasData.invertFilter)
+    }
+
+    if (canvasData.shaderBackgroundEnabled !== undefined) {
+      SETTINGS.CANVAS.SHADER_BACKGROUND_ENABLED = canvasData.shaderBackgroundEnabled
+      this.glowVisualizer.updateFluidBackgroundEnabled(canvasData.shaderBackgroundEnabled)
+    }
+
+    if (canvasData.shaderBackgroundMode !== undefined) {
+      SETTINGS.CANVAS.SHADER_BACKGROUND_MODE = canvasData.shaderBackgroundMode
+      this.glowVisualizer.updateFluidBackgroundMode(canvasData.shaderBackgroundMode)
+    }
+
+    if (canvasData.shaderBackgroundTrailLength !== undefined) {
+      SETTINGS.CANVAS.SHADER_BACKGROUND_TRAIL_LENGTH = canvasData.shaderBackgroundTrailLength
+      this.glowVisualizer.updateFluidBackgroundTrailLength(canvasData.shaderBackgroundTrailLength)
+    }
+
+    if (canvasData.shaderBackgroundColorFluidBackground !== undefined) {
+      SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_FLUID_BACKGROUND = canvasData.shaderBackgroundColorFluidBackground
+      this.glowVisualizer.updateFluidBackgroundColorFluidBackground(canvasData.shaderBackgroundColorFluidBackground)
+    }
+
+    if (canvasData.shaderBackgroundColorFluidTrail !== undefined) {
+      SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_FLUID_TRAIL = canvasData.shaderBackgroundColorFluidTrail
+      this.glowVisualizer.updateFluidBackgroundColorFluidTrail(canvasData.shaderBackgroundColorFluidTrail)
+    }
+
+    if (canvasData.shaderBackgroundColorPressure !== undefined) {
+      SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_PRESSURE = canvasData.shaderBackgroundColorPressure
+      this.glowVisualizer.updateFluidBackgroundColorPressure(canvasData.shaderBackgroundColorPressure)
+    }
+
+    if (canvasData.shaderBackgroundColorVelocity !== undefined) {
+      SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_VELOCITY = canvasData.shaderBackgroundColorVelocity
+      this.glowVisualizer.updateFluidBackgroundColorVelocity(canvasData.shaderBackgroundColorVelocity)
+    }
+
+    if (canvasData.shaderBackgroundCursorMode !== undefined) {
+      SETTINGS.CANVAS.SHADER_BACKGROUND_CURSOR_MODE = canvasData.shaderBackgroundCursorMode
+      this.glowVisualizer.updateFluidBackgroundCursorMode(canvasData.shaderBackgroundCursorMode)
     }
   }
 

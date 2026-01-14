@@ -8,6 +8,22 @@ export class CanvasUIManager {
     this.mainPane = null
   }
 
+  rgbToHex (rgb) {
+    const r = Math.round(rgb.r * 255).toString(16).padStart(2, '0')
+    const g = Math.round(rgb.g * 255).toString(16).padStart(2, '0')
+    const b = Math.round(rgb.b * 255).toString(16).padStart(2, '0')
+    return `#${r}${g}${b}`
+  }
+
+  hexToRgb (hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+    return result ? {
+      r: parseInt(result[1], 16) / 255,
+      g: parseInt(result[2], 16) / 255,
+      b: parseInt(result[3], 16) / 255
+    } : { r: 0, g: 0, b: 0 }
+  }
+
   setSettings (settings) {
     this.settings = settings
   }
@@ -74,7 +90,15 @@ export class CanvasUIManager {
       ditherTableValuesB: this.parseTableValuesToSlider(canvasSettings.DITHER_TABLE_VALUES_B || '0 1'),
       chromaticAberrationEnabled: canvasSettings.CHROMATIC_ABERRATION_ENABLED || false,
       chromaticAberrationContrast: canvasSettings.CHROMATIC_ABERRATION_CONTRAST || 1,
-      invertFilter: canvasSettings.INVERT_FILTER || 0
+      invertFilter: canvasSettings.INVERT_FILTER || 0,
+      shaderBackgroundEnabled: canvasSettings.SHADER_BACKGROUND_ENABLED || false,
+      shaderBackgroundMode: canvasSettings.SHADER_BACKGROUND_MODE || 'Fluid',
+      shaderBackgroundTrailLength: canvasSettings.SHADER_BACKGROUND_TRAIL_LENGTH || 15,
+      shaderBackgroundColorFluidBackground: this.rgbToHex(canvasSettings.SHADER_BACKGROUND_COLOR_FLUID_BACKGROUND || { r: 0.02, g: 0.078, b: 0.157 }),
+      shaderBackgroundColorFluidTrail: this.rgbToHex(canvasSettings.SHADER_BACKGROUND_COLOR_FLUID_TRAIL || { r: 0, g: 0, b: 0.2 }),
+      shaderBackgroundColorPressure: this.rgbToHex(canvasSettings.SHADER_BACKGROUND_COLOR_PRESSURE || { r: 0.02, g: 0.078, b: 0.157 }),
+      shaderBackgroundColorVelocity: this.rgbToHex(canvasSettings.SHADER_BACKGROUND_COLOR_VELOCITY || { r: 0.259, g: 0.227, b: 0.184 }),
+      shaderBackgroundCursorMode: canvasSettings.SHADER_BACKGROUND_CURSOR_MODE !== false
     }
 
     const pitchColorData = {
@@ -303,6 +327,71 @@ export class CanvasUIManager {
     }).on('change', (ev) => {
       this.triggerCanvasSettingChange('INVERT_FILTER', ev.value)
     })
+
+    canvasFolder.addBinding(canvasData, 'shaderBackgroundEnabled', {
+      label: 'Shader Background'
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_ENABLED', ev.value)
+      this.updateFolderVisibility(shaderBackgroundFolder, ev.value)
+    })
+
+    const shaderBackgroundFolder = canvasFolder.addFolder({ title: 'Shader Background Settings', expanded: true })
+    
+    shaderBackgroundFolder.addBinding(canvasData, 'shaderBackgroundMode', {
+      label: 'Mode',
+      options: {
+        Fluid: 'Fluid',
+        Pressure: 'Pressure',
+        Velocity: 'Velocity'
+      }
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_MODE', ev.value)
+    })
+
+    shaderBackgroundFolder.addBinding(canvasData, 'shaderBackgroundTrailLength', {
+      label: 'Trail Length',
+      min: 0,
+      max: 100,
+      step: 1
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_TRAIL_LENGTH', ev.value)
+    })
+
+    shaderBackgroundFolder.addBinding(canvasData, 'shaderBackgroundColorFluidBackground', {
+      label: 'Fluid Background',
+      view: 'color'
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_COLOR_FLUID_BACKGROUND', this.hexToRgb(ev.value))
+    })
+
+    shaderBackgroundFolder.addBinding(canvasData, 'shaderBackgroundColorFluidTrail', {
+      label: 'Fluid Trail',
+      view: 'color'
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_COLOR_FLUID_TRAIL', this.hexToRgb(ev.value))
+    })
+
+    shaderBackgroundFolder.addBinding(canvasData, 'shaderBackgroundColorPressure', {
+      label: 'Pressure Color',
+      view: 'color'
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_COLOR_PRESSURE', this.hexToRgb(ev.value))
+    })
+
+    shaderBackgroundFolder.addBinding(canvasData, 'shaderBackgroundColorVelocity', {
+      label: 'Velocity Color',
+      view: 'color'
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_COLOR_VELOCITY', this.hexToRgb(ev.value))
+    })
+
+    shaderBackgroundFolder.addBinding(canvasData, 'shaderBackgroundCursorMode', {
+      label: 'Cursor Mode'
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_CURSOR_MODE', ev.value)
+    })
+
+    this.updateFolderVisibility(shaderBackgroundFolder, canvasData.shaderBackgroundEnabled)
 
     const colorPaletteFolder = this.mainPane.addFolder({ title: 'Color Palettes', expanded: true })
 

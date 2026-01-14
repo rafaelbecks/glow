@@ -15,16 +15,18 @@ export class CanvasDrawer {
   }
 
   clear () {
-    // Use background color if set, otherwise use black with clear alpha
+    if (SETTINGS.CANVAS.SHADER_BACKGROUND_ENABLED) {
+      this.ctx.clearRect(0, 0, this.width, this.height)
+      return
+    }
+
     if (SETTINGS.CANVAS.BACKGROUND_COLOR && SETTINGS.CANVAS.BACKGROUND_COLOR !== '#000') {
-      // For non-black backgrounds, use the background color with clear alpha
       const bgColor = SETTINGS.CANVAS.BACKGROUND_COLOR
       const r = parseInt(bgColor.slice(1, 3), 16)
       const g = parseInt(bgColor.slice(3, 5), 16)
       const b = parseInt(bgColor.slice(5, 7), 16)
       this.ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${SETTINGS.CANVAS.CLEAR_ALPHA})`
     } else {
-      // Default black with clear alpha
       this.ctx.fillStyle = `rgba(0, 0, 0, ${SETTINGS.CANVAS.CLEAR_ALPHA})`
     }
     this.ctx.fillRect(0, 0, this.width, this.height)

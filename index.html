@@ -75,6 +75,7 @@
     <button title="About" id="infoButton" class="info-toggle-btn" style="display: none;">
       <ion-icon name="help-circle-outline"></ion-icon>
     </button>
+    <canvas id="fluidBackgroundCanvas" style="position: absolute; top: 0; left: 0; z-index: 0; pointer-events: none;"></canvas>
     <canvas id="canvas"></canvas>
     <canvas id="tabletCanvas"></canvas>
     <div id="noiseOverlay" class="noise-overlay"></div>
@@ -195,6 +196,7 @@
     <script type="module" src="src/lib/tweakpane.min.js"></script>
     <script type="module" src="src/lib/tweakpane-plugin-essentials.min.js"></script>
     <script type="module" src="src/components/glow-logo.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gpu-io@latest/dist/gpu-io.min.js"></script>
     <script type="module" src="src/main.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/grained@0.0.2/grained.min.js"></script>

@@ -12,10 +12,12 @@ import { FilePickerDialog } from './components/file-picker-dialog.js'
 import { getLuminodeConfig } from './luminode-configs.js'
 import { MIDICCMapper } from './midi-cc-mapper.js'
 import { LUMINODE_REGISTRY, getLuminodeSettingsKey } from './luminodes/index.js'
+import { FluidBackgroundManager } from './fluid-background-manager.js'
 
 export class GLOWVisualizer {
   constructor () {
     this.canvas = document.getElementById('canvas')
+    this.fluidBackgroundCanvas = document.getElementById('fluidBackgroundCanvas')
     this.tabletCanvas = document.getElementById('tabletCanvas')
     this.canvasDrawer = new CanvasDrawer(this.canvas)
     this.trackManager = new TrackManager()
@@ -67,6 +69,9 @@ export class GLOWVisualizer {
     this.chromaticAberrationCanvas = null
     this.chromaticAberrationCtx = null
 
+    // Fluid background manager
+    this.fluidBackgroundManager = new FluidBackgroundManager(this.fluidBackgroundCanvas)
+
     this.luminodeFactory = Object.fromEntries(
       Object.entries(LUMINODE_REGISTRY).map(([key, reg]) => [key, reg.class])
     )
@@ -91,6 +96,7 @@ export class GLOWVisualizer {
   async initialize () {
     // Initial canvas setup
     this.canvasDrawer.resize()
+    this.resizeFluidBackgroundCanvas()
     this.resizeTabletCanvas()
 
     // Create CRT overlay
@@ -105,9 +111,21 @@ export class GLOWVisualizer {
     // Create chromatic aberration overlay
     this.createChromaticAberrationOverlay()
 
+    // Initialize fluid background
+    if (this.fluidBackgroundManager.init()) {
+      this.updateFluidBackgroundSettings()
+    }
+
     this.uiManager.showStatus('Connecting to MIDI devices...', 'info')
 
     await this.midiManager.setupMIDI()
+  }
+
+  resizeFluidBackgroundCanvas () {
+    if (this.fluidBackgroundCanvas) {
+      this.fluidBackgroundCanvas.width = window.innerWidth
+      this.fluidBackgroundCanvas.height = window.innerHeight
+    }
   }
 
   resizeTabletCanvas () {
@@ -234,7 +252,11 @@ export class GLOWVisualizer {
 
   handleResize () {
     this.canvasDrawer.resize()
+    this.resizeFluidBackgroundCanvas()
     this.resizeTabletCanvas()
+    if (this.fluidBackgroundManager) {
+      this.fluidBackgroundManager.resize()
+    }
   }
 
   toggleSidePanel () {
@@ -520,6 +542,22 @@ export class GLOWVisualizer {
         this.updateChromaticAberrationContrast(value)
       } else if (setting === 'INVERT_FILTER') {
         this.updateInvertFilter(value)
+      } else if (setting === 'SHADER_BACKGROUND_ENABLED') {
+        this.updateFluidBackgroundEnabled(value)
+      } else if (setting === 'SHADER_BACKGROUND_MODE') {
+        this.updateFluidBackgroundMode(value)
+      } else if (setting === 'SHADER_BACKGROUND_TRAIL_LENGTH') {
+        this.updateFluidBackgroundTrailLength(value)
+      } else if (setting === 'SHADER_BACKGROUND_COLOR_FLUID_BACKGROUND') {
+        this.updateFluidBackgroundColorFluidBackground(value)
+      } else if (setting === 'SHADER_BACKGROUND_COLOR_FLUID_TRAIL') {
+        this.updateFluidBackgroundColorFluidTrail(value)
+      } else if (setting === 'SHADER_BACKGROUND_COLOR_PRESSURE') {
+        this.updateFluidBackgroundColorPressure(value)
+      } else if (setting === 'SHADER_BACKGROUND_COLOR_VELOCITY') {
+        this.updateFluidBackgroundColorVelocity(value)
+      } else if (setting === 'SHADER_BACKGROUND_CURSOR_MODE') {
+        this.updateFluidBackgroundCursorMode(value)
       }
     }
   }
@@ -681,8 +719,15 @@ export class GLOWVisualizer {
     // Clean up old notes
     this.midiManager.cleanupOldNotes()
 
-    // Clear canvas with fade effect
+    if (SETTINGS.CANVAS.SHADER_BACKGROUND_ENABLED && this.fluidBackgroundManager) {
+      this.fluidBackgroundManager.update()
+    }
+    
     this.canvasDrawer.clear()
+    
+    if (this.fluidBackgroundCanvas) {
+      this.fluidBackgroundCanvas.style.display = SETTINGS.CANVAS.SHADER_BACKGROUND_ENABLED ? 'block' : 'none'
+    }
 
     // Draw grid background (if enabled)
     this.canvasDrawer.drawGrid()
@@ -785,6 +830,13 @@ export class GLOWVisualizer {
       const restoreValues = this.applyModulationToTrack(track.id, track.luminode, notes)
 
       this.drawTrackLuminode(luminode, track.luminode, t, notes, layout)
+
+      // Track last luminode position for fluid background
+      if (SETTINGS.CANVAS.SHADER_BACKGROUND_ENABLED && this.fluidBackgroundManager && this.fluidBackgroundManager.lastPointMode) {
+        const centerX = this.canvas.width / 2 + layout.x
+        const centerY = this.canvas.height / 2 + layout.y
+        this.fluidBackgroundManager.updateLastLuminodePosition(centerX, centerY)
+      }
 
       if (restoreValues) {
         restoreValues()
@@ -1236,6 +1288,88 @@ export class GLOWVisualizer {
     SETTINGS.CANVAS.INVERT_FILTER = invertPercent
     this.applyCanvasFilters()
     console.log(`Invert filter updated to ${invertPercent}%`)
+  }
+
+  updateFluidBackgroundSettings () {
+    if (!this.fluidBackgroundManager) return
+
+    const settings = SETTINGS.CANVAS
+    this.fluidBackgroundManager.setEnabled(settings.SHADER_BACKGROUND_ENABLED || false)
+    this.fluidBackgroundManager.setRenderMode(settings.SHADER_BACKGROUND_MODE || 'Fluid')
+    this.fluidBackgroundManager.setTrailLength(settings.SHADER_BACKGROUND_TRAIL_LENGTH || 15)
+    
+    const colorFluid = settings.SHADER_BACKGROUND_COLOR_FLUID || { r: 0.02, g: 0.078, b: 0.157 }
+    this.fluidBackgroundManager.setColorFluidBackground(colorFluid.r, colorFluid.g, colorFluid.b)
+    
+    const colorPressure = settings.SHADER_BACKGROUND_COLOR_PRESSURE || { r: 0.02, g: 0.078, b: 0.157 }
+    this.fluidBackgroundManager.setColorPressure(colorPressure.r, colorPressure.g, colorPressure.b)
+    
+    const colorVelocity = settings.SHADER_BACKGROUND_COLOR_VELOCITY || { r: 0.259, g: 0.227, b: 0.184 }
+    this.fluidBackgroundManager.setColorVelocity(colorVelocity.r, colorVelocity.g, colorVelocity.b)
+    
+    const cursorMode = settings.SHADER_BACKGROUND_CURSOR_MODE !== false
+    if (cursorMode) {
+      this.fluidBackgroundManager.setCursorMode(true)
+    }
+  }
+
+  updateFluidBackgroundEnabled (enabled) {
+    SETTINGS.CANVAS.SHADER_BACKGROUND_ENABLED = enabled
+    if (this.fluidBackgroundManager) {
+      this.fluidBackgroundManager.setEnabled(enabled)
+    }
+    console.log(`Shader background ${enabled ? 'enabled' : 'disabled'}`)
+  }
+
+  updateFluidBackgroundMode (mode) {
+    SETTINGS.CANVAS.SHADER_BACKGROUND_MODE = mode
+    if (this.fluidBackgroundManager) {
+      this.fluidBackgroundManager.setRenderMode(mode)
+    }
+    console.log(`Shader background mode set to ${mode}`)
+  }
+
+  updateFluidBackgroundTrailLength (length) {
+    SETTINGS.CANVAS.SHADER_BACKGROUND_TRAIL_LENGTH = length
+    if (this.fluidBackgroundManager) {
+      this.fluidBackgroundManager.setTrailLength(length)
+    }
+    console.log(`Shader background trail length set to ${length}`)
+  }
+
+  updateFluidBackgroundColorFluidBackground (color) {
+    SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_FLUID_BACKGROUND = color
+    if (this.fluidBackgroundManager && color) {
+      this.fluidBackgroundManager.setColorFluidBackground(color.r, color.g, color.b)
+    }
+  }
+
+  updateFluidBackgroundColorFluidTrail (color) {
+    SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_FLUID_TRAIL = color
+    if (this.fluidBackgroundManager && color) {
+      this.fluidBackgroundManager.setColorFluidTrail(color.r, color.g, color.b)
+    }
+  }
+
+  updateFluidBackgroundColorPressure (color) {
+    SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_PRESSURE = color
+    if (this.fluidBackgroundManager && color) {
+      this.fluidBackgroundManager.setColorPressure(color.r, color.g, color.b)
+    }
+  }
+
+  updateFluidBackgroundColorVelocity (color) {
+    SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_VELOCITY = color
+    if (this.fluidBackgroundManager && color) {
+      this.fluidBackgroundManager.setColorVelocity(color.r, color.g, color.b)
+    }
+  }
+
+  updateFluidBackgroundCursorMode (enabled) {
+    SETTINGS.CANVAS.SHADER_BACKGROUND_CURSOR_MODE = enabled
+    if (this.fluidBackgroundManager) {
+      this.fluidBackgroundManager.setCursorMode(enabled)
+    }
   }
 
   // Debug method to check MIDI devices
