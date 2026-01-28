@@ -24,6 +24,7 @@ import { SyncHelix2DLuminode } from './sync-helix-2d.js'
 import { RamielLuminode } from './ramiel.js'
 import { WindmillLuminode } from './windmill.js'
 import { OrizuruLuminode } from './orizuru.js'
+import { DeJongLuminode } from './de-jong.js'
 
 export {
   LissajousLuminode,
@@ -51,7 +52,8 @@ export {
   SyncHelix2DLuminode,
   RamielLuminode,
   WindmillLuminode,
-  OrizuruLuminode
+  OrizuruLuminode,
+  DeJongLuminode
 }
 
 export const LUMINODE_REGISTRY = {
@@ -189,6 +191,11 @@ export const LUMINODE_REGISTRY = {
     class: OrizuruLuminode,
     displayName: 'Orizuru',
     settingsKey: 'ORIZURU'
+  },
+  deJong: {
+    class: DeJongLuminode,
+    displayName: 'De Jong Attractor',
+    settingsKey: 'DE_JONG'
   }
 }
 

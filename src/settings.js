@@ -282,6 +282,18 @@ export const SETTINGS = {
       ENABLE_PROJECTION: true,
       USE_COLOR: false
     },
+    DE_JONG: {
+      // De Jong attractor parameters
+      A: -1.5090717287003517,
+      B: -2.0,
+      C: -1.2,
+      D: 2.0,
+      // Rendering parameters
+      SCALE: 0.9,
+      ITERATIONS: 50000,
+      POINT_SIZE: 1.5,
+      COLOR_MODE: 0 // 0 = rainbow, 1 = MIDI, 2 = black & white
+    },
     RAMIEL: {
       SIZE: 300,
       SCALE: 1.0,
@@ -389,7 +401,8 @@ export const MIDI_CHANNELS = {
   'bus 21': 'cube',
   'bus 22': 'trefoil',
   'bus 23': 'sphericalLens',
-  'bus 24': 'ramiel'
+  'bus 24': 'ramiel',
+  'bus 25': 'deJong'
 }
 
 // Utility functions
@@ -407,6 +420,31 @@ export const UTILS = {
     const g = parseInt(hex.slice(3, 5), 16)
     const b = parseInt(hex.slice(5, 7), 16)
     return `rgba(${r}, ${g}, ${b}, ${alpha})`
+  },
+
+  hslaToRgb: (hslaString) => {
+    const match = /hsla?\\(([^)]+)\\)/.exec(hslaString)
+    if (!match) return [1, 1, 1]
+  
+    const parts = match[1].split(',').map(s => s.trim())
+    const h = parseFloat(parts[0])
+    const s = parseFloat(parts[1]) / 100
+    const l = parseFloat(parts[2]) / 100
+  
+    const c = (1 - Math.abs(2 * l - 1)) * s
+    const hp = (h % 360) / 60
+    const x = c * (1 - Math.abs((hp % 2) - 1))
+  
+    let r1 = 0; let g1 = 0; let b1 = 0
+    if (hp >= 0 && hp < 1) [r1, g1, b1] = [c, x, 0]
+    else if (hp >= 1 && hp < 2) [r1, g1, b1] = [x, c, 0]
+    else if (hp >= 2 && hp < 3) [r1, g1, b1] = [0, c, x]
+    else if (hp >= 3 && hp < 4) [r1, g1, b1] = [0, x, c]
+    else if (hp >= 4 && hp < 5) [r1, g1, b1] = [x, 0, c]
+    else if (hp >= 5 && hp < 6) [r1, g1, b1] = [c, 0, x]
+  
+    const m = l - c / 2
+    return [r1 + m, g1 + m, b1 + m]
   },
 
   rotate3D: (x, y, z, angleX, angleY) => {

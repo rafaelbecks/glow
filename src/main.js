@@ -626,10 +626,13 @@ export class GLOWVisualizer {
     if (settingsKey && SETTINGS.MODULES[settingsKey]) {
       const moduleConfig = SETTINGS.MODULES[settingsKey]
       if (moduleConfig.hasOwnProperty(param)) {
-        // Ensure boolean values are properly converted for checkboxes
+        // Ensure values are properly converted based on original type
         let convertedValue = value
         if (typeof moduleConfig[param] === 'boolean') {
           convertedValue = Boolean(value)
+        } else if (typeof moduleConfig[param] === 'number') {
+          // Convert string to number for select dropdowns and other numeric inputs
+          convertedValue = typeof value === 'string' ? parseFloat(value) : Number(value)
         }
         moduleConfig[param] = convertedValue
         console.log(`Updated ${luminode} ${param} to ${convertedValue} (type: ${typeof convertedValue})`)
@@ -965,6 +968,13 @@ export class GLOWVisualizer {
         
         if (moduleSettings?.hasOwnProperty('USE_COLOR')) {
           luminode.draw(t, notes, moduleSettings.USE_COLOR || false, layout)
+        } else if (moduleSettings?.hasOwnProperty('COLOR_MODE')) {
+          // DeJong uses COLOR_MODE (0=rainbow, 1=MIDI, 2=black&white)
+          // Ensure it's a number
+          const colorMode = typeof moduleSettings.COLOR_MODE === 'number' 
+            ? moduleSettings.COLOR_MODE 
+            : parseInt(moduleSettings.COLOR_MODE, 10) || 0
+          luminode.draw(t, notes, colorMode, layout)
         } else {
           luminode.draw(t, notes, layout)
         }

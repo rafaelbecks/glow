@@ -376,6 +376,24 @@ export const LUMINODE_CONFIGS = {
       { key: 'ENABLE_PROJECTION', label: 'Enable Projection', type: 'checkbox', default: true },
       { key: 'USE_COLOR', label: 'Color Mode', type: 'checkbox', default: false }
     ]
+  },
+
+  deJong: {
+    group: '3D Geometry',
+    config: [
+      { key: 'A', label: 'Parameter a', type: 'slider', min: -3, max: 3, step: 0.01, default: -1.5090717287003517 },
+      { key: 'B', label: 'Parameter b', type: 'slider', min: -3, max: 3, step: 0.01, default: -2.0 },
+      { key: 'C', label: 'Parameter c', type: 'slider', min: -3, max: 3, step: 0.01, default: -1.2 },
+      { key: 'D', label: 'Parameter d', type: 'slider', min: -3, max: 3, step: 0.01, default: 2.0 },
+      { key: 'SCALE', label: 'Scale', type: 'slider', min: 0.2, max: 1.5, step: 0.05, default: 0.9 },
+      { key: 'ITERATIONS', label: 'Iterations per Frame', type: 'number', min: 1000, max: 200000, step: 1000, default: 50000 },
+      { key: 'POINT_SIZE', label: 'Point Size', type: 'slider', min: 0.5, max: 4, step: 0.1, default: 1.5 },
+      { key: 'COLOR_MODE', label: 'Color Mode', type: 'select', options: [
+        { value: 0, label: 'Rainbow' },
+        { value: 1, label: 'MIDI' },
+        { value: 2, label: 'Black & White' }
+      ], default: 0 }
+    ]
   }
 }
 
