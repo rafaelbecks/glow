@@ -229,7 +229,7 @@ export class ModulationUIManager {
         modulatorFolder.addBinding(modulatorData, 'rate', {
           label: 'Rate',
           min: 0.001,
-          max: 2,
+          max: 1,
           step: 0.001
         }).on('change', (ev) => {
           modulatorData.rate = ev.value

@@ -26,7 +26,7 @@ export class ModulationSystem {
       targetConfigKey: null,
       targetLuminode: null,
       shape: 'sine',
-      rate: 0.5,
+      rate: 0.1,
       depth: 0.5,
       offset: 0,
       cubicBezier: [0.5, 0, 0.5, 1],
