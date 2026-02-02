@@ -66,15 +66,10 @@ Choose from 20 unique visual patterns, each inspired by geometric art:
 - **Clavilux** - Thomas Wilfred-inspired light compositions with organic shapes
 
 **Natural Patterns:**
-- **Phyllotaxis** - Spiral patterns found in nature
-- **Moire Circles** - Concentric circles with optical effects
 - **Epitrochoid** - Closed rosette patterns created by rotating circles, forming interlacing loops that grow and transform with MIDI input
 
 **Optical Patterns:**
 - **Spherical Lens** - Lens distortion with spherical aberration, creating caustic patterns and chromatic effects
-
-**Abstract Structures:**
-- **Woven Net** - Interlaced geometric structures
 
 ---
 
@@ -215,7 +210,7 @@ Access the **🎨 Canvas tab** to customize your visual experience:
 **Pitch to Color Generator:**
 - **Hue Factor** - Adjust how MIDI notes map to colors (1-100)
 - **Real-time preview** - See how different notes will be colored
-- **Affects multiple luminodes** - Harmonograph, Lissajous, Sinewave, Triangle, Woven Net, Whitney Lines, Moire Circles, Phyllotaxis, Noise Valley, Catenoid, Line Cylinder, Trefoil Knot, Spherical Lens
+- **Affects multiple luminodes** - Harmonograph, Lissajous, Sinewave, Triangle, Whitney Lines, Phyllotaxis, Noise Valley, Catenoid, Line Cylinder, Trefoil Knot, Spherical Lens
 
 **Spherical Lens Special Features:**
 - **Spherical Aberration** - Simulates optical lens distortion where outer rays bend more than inner rays, creating caustic patterns

@@ -956,9 +956,6 @@ export class GLOWVisualizer {
       case 'lissajous':
         luminode.draw(t, notes.map(n => n.midi), layout)
         break
-      case 'phyllotaxis':
-        luminode.draw(t, notes, SETTINGS.MODULES.PHYLLOTAXIS.DOTS_PER_NOTE, layout)
-        break
       case 'triangle':
         luminode.draw(t, notes, 'triangle', 1, 300, layout)
         break

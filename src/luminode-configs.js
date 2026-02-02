@@ -225,19 +225,6 @@ export const LUMINODE_CONFIGS = {
     ]
   },
 
-  // Natural Patterns
-  phyllotaxis: {
-    group: 'Natural Patterns',
-    config: [
-      { key: 'GOLDEN_ANGLE', label: 'Golden Angle', type: 'slider', min: 2, max: 4, step: 0.1, default: Math.PI * (3 - Math.sqrt(5)) },
-      { key: 'SCALE', label: 'Scale', type: 'slider', min: 5, max: 25, step: 1, default: 12 },
-      { key: 'BASE_SIZE', label: 'Base Size', type: 'slider', min: 1, max: 8, step: 0.5, default: 3 },
-      { key: 'MAX_SIZE', label: 'Max Size', type: 'slider', min: 3, max: 15, step: 1, default: 9 },
-      { key: 'ROTATION_SPEED', label: 'Rotation Speed', type: 'slider', min: 0.05, max: 0.5, step: 0.01, default: 0.15 },
-      { key: 'DOTS_PER_NOTE', label: 'Dots Per Note', type: 'number', min: 5, max: 50, step: 1, default: 20 }
-    ]
-  },
-
   sphericalLens: {
     group: 'Natural Patterns',
     config: [
@@ -255,26 +242,6 @@ export const LUMINODE_CONFIGS = {
       { key: 'SHOW_POINT_SOURCE', label: 'Show Point Source', type: 'checkbox', default: false },
       { key: 'USE_COLOR', label: 'Color Mode', type: 'checkbox', default: false },
       { key: 'CHROMATIC_ABERRATION', label: 'Chromatic Aberration', type: 'slider', min: 0, max: 30, step: 1, default: 0 }
-    ]
-  },
-
-  moireCircles: {
-    group: 'Natural Patterns',
-    config: [
-      { key: 'BASE_COUNT', label: 'Base Count', type: 'number', min: 3, max: 15, step: 1, default: 8 },
-      { key: 'SPACING', label: 'Spacing', type: 'slider', min: 20, max: 60, step: 2, default: 35 },
-      { key: 'SPEED', label: 'Speed', type: 'slider', min: 0.0005, max: 0.005, step: 0.0001, default: 0.0015 }
-    ]
-  },
-
-  wovenNet: {
-    group: 'Natural Structures',
-    config: [
-      { key: 'BASE_GRID_SIZE', label: 'Base Grid Size', type: 'number', min: 3, max: 10, step: 1, default: 5 },
-      { key: 'GRID_SIZE_PER_NOTE', label: 'Grid Size Per Note', type: 'number', min: 1, max: 5, step: 1, default: 2 },
-      { key: 'SPACING', label: 'Spacing', type: 'slider', min: 15, max: 50, step: 2, default: 30 },
-      { key: 'BASE_SIZE', label: 'Base Size', type: 'slider', min: 10, max: 40, step: 2, default: 20 },
-      { key: 'SIZE_VARIATION', label: 'Size Variation', type: 'slider', min: 5, max: 25, step: 1, default: 15 }
     ]
   },
 

@@ -105,26 +105,6 @@ export const SETTINGS = {
       STRIPE_WIDTH: 3,
       SOLID_HEIGHT_RATIO: 0.2
     },
-    MOIRE_CIRCLES: {
-      BASE_COUNT: 8,
-      SPACING: 35,
-      SPEED: 0.0015
-    },
-    PHYLLOTAXIS: {
-      GOLDEN_ANGLE: Math.PI * (3 - Math.sqrt(5)),
-      SCALE: 12,
-      BASE_SIZE: 3,
-      MAX_SIZE: 9,
-      ROTATION_SPEED: 0.15,
-      DOTS_PER_NOTE: 20
-    },
-    WOVEN_NET: {
-      BASE_GRID_SIZE: 5,
-      GRID_SIZE_PER_NOTE: 2,
-      SPACING: 30,
-      BASE_SIZE: 20,
-      SIZE_VARIATION: 15
-    },
     POLYGONS: {
       BASE_LAYERS: 2,
       MAX_LAYERS: 3,
@@ -384,13 +364,11 @@ export const MIDI_CHANNELS = {
   'bus 4': 'gegoNet',
   'bus 5': 'sinewave',
   'bus 6': 'triangle',
-  'bus 7': 'moireCircles',
+  'bus 7': 'epitrochoid',
   'bus 8': 'gegoShape',
   'bus 9': 'sotoGrid',
   'bus 10': 'sotoGridRotated',
   'bus 11': 'scanlineGradients',
-  'bus 12': 'phyllotaxis',
-  'bus 13': 'wovenNet',
   'bus 14': 'polygons',
   'bus 15': 'whitneyLines',
   'bus 16': 'noiseValley',

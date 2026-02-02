@@ -5,9 +5,6 @@ import { GegoNetLuminode } from './gego-net.js'
 import { GegoShapeLuminode } from './gego-shape.js'
 import { SotoGridLuminode } from './soto-grid.js'
 import { WhitneyLinesLuminode } from './whitney-lines.js'
-import { PhyllotaxisLuminode } from './phyllotaxis.js'
-import { MoireCirclesLuminode } from './moire-circles.js'
-import { WovenNetLuminode } from './woven-net.js'
 import { SinewaveLuminode } from './sinewave.js'
 import { TriangleLuminode } from './triangle.js'
 import { PolygonsLuminode } from './polygons.js'
@@ -34,9 +31,6 @@ export {
   GegoShapeLuminode,
   SotoGridLuminode,
   WhitneyLinesLuminode,
-  PhyllotaxisLuminode,
-  MoireCirclesLuminode,
-  WovenNetLuminode,
   SinewaveLuminode,
   TriangleLuminode,
   PolygonsLuminode,
@@ -96,21 +90,6 @@ export const LUMINODE_REGISTRY = {
     class: WhitneyLinesLuminode,
     displayName: 'Whitney Lines',
     settingsKey: 'WHITNEY_LINES'
-  },
-  phyllotaxis: {
-    class: PhyllotaxisLuminode,
-    displayName: 'Phyllotaxis',
-    settingsKey: 'PHYLLOTAXIS'
-  },
-  moireCircles: {
-    class: MoireCirclesLuminode,
-    displayName: 'Moire Circles',
-    settingsKey: 'MOIRE_CIRCLES'
-  },
-  wovenNet: {
-    class: WovenNetLuminode,
-    displayName: 'Woven Net',
-    settingsKey: 'WOVEN_NET'
   },
   sinewave: {
     class: SinewaveLuminode,
