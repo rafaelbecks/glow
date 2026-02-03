@@ -9,7 +9,7 @@
 ![Web HID API](https://img.shields.io/badge/Web%20HID%20API-supported-green)
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 
-A generative visual playground for sound-reactive geometry. 
+An algorithmic visual playground for sound-reactive geometry. 
 
 **Live Demo**: [glow.luminode.studio](https://glow.luminode.studio/)  
 **Demos & Showcase**: [YouTube Playlist](https://www.youtube.com/playlist?list=PLPLNsAMGizPvOxgBN0TJDBIRIPvcY6njN)
