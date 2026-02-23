@@ -131,14 +131,21 @@ export class ProjectManager {
     return {
       modulators: modulators.map(modulator => ({
         id: modulator.id,
+        type: modulator.type,
         shape: modulator.shape,
         rate: modulator.rate,
         depth: modulator.depth,
         offset: modulator.offset,
+        cubicBezier: modulator.cubicBezier,
+        multiplier: modulator.multiplier,
+        easing: modulator.easing,
+        threshold: modulator.threshold,
         enabled: modulator.enabled,
+        targetDestination: modulator.targetDestination,
         targetTrack: modulator.targetTrack,
         targetConfigKey: modulator.targetConfigKey,
-        targetLuminode: modulator.targetLuminode
+        targetLuminode: modulator.targetLuminode,
+        targetCanvasFilter: modulator.targetCanvasFilter
       }))
     }
   }
@@ -725,9 +732,11 @@ export class ProjectManager {
           id: modulatorData.id || modulatorId,
           type: modulatorType,
           enabled: modulatorData.enabled !== undefined ? modulatorData.enabled : true,
+          targetDestination: modulatorData.targetDestination || 'track',
           targetTrack: modulatorData.targetTrack !== undefined ? modulatorData.targetTrack : 1,
           targetConfigKey: modulatorData.targetConfigKey || null,
-          targetLuminode: modulatorData.targetLuminode || null
+          targetLuminode: modulatorData.targetLuminode || null,
+          targetCanvasFilter: modulatorData.targetCanvasFilter || null
         }
 
         if (modulatorType === 'lfo') {

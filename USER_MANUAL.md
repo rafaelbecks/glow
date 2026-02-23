@@ -109,7 +109,7 @@ G.L.O.W. includes a modulation system that works like LFOs (Low-Frequency Oscill
 
 **Access the Modulation Tab:**
 - Open the side panel (🎛️) and click the **"MODULATION"** tab
-- Create up to 4 modulators per project
+- Add as many modulators as you need
 
 **Modulator Controls:**
 - **Waveform** - Choose from sine, square, triangle, or sawtooth shapes (with visual preview)

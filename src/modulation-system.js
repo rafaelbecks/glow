@@ -7,24 +7,21 @@
 
 export class ModulationSystem {
   constructor () {
-    this.maxModulators = 4
     this.modulators = []
     this.originalConfigValues = new Map()
     this.startTime = performance.now() / 1000
   }
 
   addModulator (type = 'lfo') {
-    if (this.modulators.length >= this.maxModulators) {
-      return null
-    }
-
     const modulator = {
       id: `modulator-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       type: type,
       enabled: true,
+      targetDestination: 'track',
       targetTrack: 1,
       targetConfigKey: null,
       targetLuminode: null,
+      targetCanvasFilter: null,
       shape: 'sine',
       rate: 0.1,
       depth: 0.5,

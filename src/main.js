@@ -10,6 +10,11 @@ import { ProjectManager } from './project-manager.js'
 import { SaveDialog } from './components/save-dialog.js'
 import { FilePickerDialog } from './components/file-picker-dialog.js'
 import { getLuminodeConfig } from './luminode-configs.js'
+import {
+  getCanvasFilterParamByKey,
+  getCanvasFilterEnableKey,
+  valueToTableValues
+} from './canvas-filter-configs.js'
 import { MIDICCMapper } from './midi-cc-mapper.js'
 import { LUMINODE_REGISTRY, getLuminodeSettingsKey } from './luminodes/index.js'
 import { FluidBackgroundManager } from './fluid-background-manager.js'
@@ -725,7 +730,8 @@ export class GLOWVisualizer {
     if (SETTINGS.CANVAS.SHADER_BACKGROUND_ENABLED && this.fluidBackgroundManager) {
       this.fluidBackgroundManager.update()
     }
-    
+
+    const restoreCanvasModulation = this.applyModulationToCanvas()
     this.canvasDrawer.clear()
     
     if (this.fluidBackgroundCanvas) {
@@ -760,7 +766,73 @@ export class GLOWVisualizer {
     // Update geometric shapes fade-out
     this.tabletManager.updateGeometricShapes()
 
+    if (restoreCanvasModulation) restoreCanvasModulation()
     this.animationId = requestAnimationFrame(() => this.animate())
+  }
+
+  applyModulationToCanvas () {
+    const modulationSystem = this.trackManager.getModulationSystem()
+    const allCanvasMods = modulationSystem.getModulators().filter(m =>
+      m.enabled &&
+      m.targetDestination === 'canvasFilter'
+    )
+    if (allCanvasMods.length === 0) return null
+
+    // Ensure any multi-parameter canvas filters are enabled when used
+    const canvasFiltersWithModulation = new Set(
+      allCanvasMods.map(m => m.targetCanvasFilter).filter(Boolean)
+    )
+    canvasFiltersWithModulation.forEach(filterId => {
+      const enableKey = getCanvasFilterEnableKey(filterId)
+      if (!enableKey) return
+      if (!SETTINGS.CANVAS[enableKey]) {
+        SETTINGS.CANVAS[enableKey] = true
+        if (enableKey === 'DITHER_OVERLAY') this.toggleDitherOverlay(true)
+      }
+    })
+
+    // Only modulators that target a specific parameter actually modulate values
+    const modulators = allCanvasMods.filter(m => m.targetConfigKey)
+    if (modulators.length === 0) {
+      return null
+    }
+
+    const originalValues = new Map()
+    const modulatorsByKey = new Map()
+    modulators.forEach(m => {
+      if (!modulatorsByKey.has(m.targetConfigKey)) modulatorsByKey.set(m.targetConfigKey, [])
+      modulatorsByKey.get(m.targetConfigKey).push(m)
+    })
+
+    modulatorsByKey.forEach((mods, configKey) => {
+      const param = getCanvasFilterParamByKey(configKey)
+      if (!param || !SETTINGS.CANVAS.hasOwnProperty(configKey)) return
+      let base = SETTINGS.CANVAS[configKey]
+      if (param.tableValues) {
+        const parts = String(base || '0 1').trim().split(/\s+/)
+        base = parts.length ? parseFloat(parts[0]) : 0
+      }
+      if (!originalValues.has(configKey)) originalValues.set(configKey, SETTINGS.CANVAS[configKey])
+      let value = base
+      const noteData = { notes: [], velocity: 0 }
+      mods.forEach(modulator => {
+        value = modulationSystem.getModulatedValue(value, modulator, param, noteData)
+      })
+      if (param.type === 'number') value = Math.round(value)
+      if (param.tableValues) value = valueToTableValues(value)
+      SETTINGS.CANVAS[configKey] = value
+    })
+    this.applyCanvasFilters()
+    if (modulatorsByKey.has('DITHER_SATURATE')) this.updateDitherSaturate(SETTINGS.CANVAS.DITHER_SATURATE)
+    if (modulatorsByKey.has('DITHER_TABLE_VALUES_R')) this.updateDitherTableValues('R', SETTINGS.CANVAS.DITHER_TABLE_VALUES_R)
+    if (modulatorsByKey.has('DITHER_TABLE_VALUES_G')) this.updateDitherTableValues('G', SETTINGS.CANVAS.DITHER_TABLE_VALUES_G)
+    if (modulatorsByKey.has('DITHER_TABLE_VALUES_B')) this.updateDitherTableValues('B', SETTINGS.CANVAS.DITHER_TABLE_VALUES_B)
+
+    return () => {
+      originalValues.forEach((v, key) => {
+        SETTINGS.CANVAS[key] = v
+      })
+    }
   }
 
   getTrackLayouts () {
@@ -851,6 +923,7 @@ export class GLOWVisualizer {
     const modulationSystem = this.trackManager.getModulationSystem()
     const modulators = modulationSystem.getModulators().filter(m =>
       m.enabled &&
+      (m.targetDestination || 'track') === 'track' &&
       m.targetTrack === trackId &&
       m.targetLuminode === luminodeType &&
       m.targetConfigKey !== null

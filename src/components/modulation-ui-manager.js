@@ -2,6 +2,14 @@
 import { Pane } from '../lib/tweakpane.min.js'
 import * as EssentialsPlugin from '../lib/tweakpane-plugin-essentials.min.js'
 import { getLuminodeConfig } from '../luminode-configs.js'
+import { getCanvasFilterConfig, getCanvasFilterIds } from '../canvas-filter-configs.js'
+
+const CANVAS_FILTER_LABELS = {
+  clearAlpha: 'Clear Alpha',
+  lumiaEffect: 'Lumia Effect',
+  invertFilter: 'Invert Filter',
+  dither: 'Dither'
+}
 
 export class ModulationUIManager {
   constructor (trackManager, panel) {
@@ -29,7 +37,7 @@ export class ModulationUIManager {
         <div class="control-section">
           <div class="modulator-header">
             <h4>Modulators</h4>
-            <button class="add-modulator-btn" id="addModulatorBtn" ${modulators.length >= 4 ? 'disabled' : ''}>
+            <button class="add-modulator-btn" id="addModulatorBtn">
               <ion-icon name="add-outline"></ion-icon>
               Add Modulator
             </button>
@@ -88,11 +96,14 @@ export class ModulationUIManager {
       const trackLuminode = track ? track.luminode : null
       const modulatorType = modulator.type || 'lfo'
 
+      const targetDestination = modulator.targetDestination || 'track'
       const modulatorData = {
         enabled: modulator.enabled,
         type: modulatorType,
         shape: modulator.shape || 'sine',
+        targetDestination,
         targetTrack: modulator.targetTrack,
+        targetCanvasFilter: modulator.targetCanvasFilter || '',
         targetConfigKey: modulator.targetConfigKey || '',
         rate: modulator.rate || 0.5,
         depth: modulator.depth || 0.5,
@@ -120,12 +131,26 @@ export class ModulationUIManager {
         typeOptions[modulatorTypeNames[type]] = type
       })
 
-      const typeBinding = modulatorFolder.addBinding(modulatorData, 'type', {
+      modulatorFolder.addBinding(modulatorData, 'type', {
         options: typeOptions,
         label: 'Type'
       }).on('change', (ev) => {
         modulatorData.type = ev.value
         this.trackManager.updateModulator(modulator.id, { type: ev.value })
+        this.renderModulationControls()
+      })
+
+      const destOptions = { Track: 'track', 'Canvas Filter': 'canvasFilter' }
+      modulatorFolder.addBinding(modulatorData, 'targetDestination', {
+        options: destOptions,
+        label: 'Destination'
+      }).on('change', (ev) => {
+        modulatorData.targetDestination = ev.value
+        this.trackManager.updateModulator(modulator.id, {
+          targetDestination: ev.value,
+          targetConfigKey: null,
+          targetCanvasFilter: ev.value === 'canvasFilter' ? null : modulatorData.targetCanvasFilter
+        })
         this.renderModulationControls()
       })
 
@@ -173,55 +198,82 @@ export class ModulationUIManager {
         }, 100)
       }
 
-      const trackOptions = {}
-      tracks.forEach(t => {
-        const label = t.luminode ? `Track ${t.id} (${t.luminode})` : `Track ${t.id}`
-        trackOptions[label] = t.id
-      })
-
-      modulatorFolder.addBinding(modulatorData, 'targetTrack', {
-        options: trackOptions,
-        label: 'Track'
-      }).on('change', (ev) => {
-        const targetTrack = ev.value
-        modulatorData.targetTrack = targetTrack
-        const newTrack = tracks.find(t => t.id === targetTrack)
-        const targetLuminode = newTrack && newTrack.luminode ? newTrack.luminode : null
-
-        this.trackManager.updateModulator(modulator.id, {
-          targetTrack,
-          targetLuminode,
-          targetConfigKey: null
+      if (targetDestination === 'track') {
+        const trackOptions = {}
+        tracks.forEach(t => {
+          const label = t.luminode ? `Track ${t.id} (${t.luminode})` : `Track ${t.id}`
+          trackOptions[label] = t.id
         })
-        this.renderModulationControls()
-      })
-
-      if (trackLuminode) {
-        const configParams = getLuminodeConfig(trackLuminode)
-        const configOptions = { 'Select Parameter': '' }
-        configParams
-          .filter(p => p.type === 'slider' || p.type === 'number' || p.type === 'checkbox')
-          .forEach(p => {
-            configOptions[p.label] = p.key
-          })
-
-        const paramBinding = modulatorFolder.addBinding(modulatorData, 'targetConfigKey', {
-          options: configOptions,
-          label: 'Parameter'
+        modulatorFolder.addBinding(modulatorData, 'targetTrack', {
+          options: trackOptions,
+          label: 'Track'
         }).on('change', (ev) => {
-          modulatorData.targetConfigKey = ev.value || ''
-          this.trackManager.updateModulator(modulator.id, { 
-            targetConfigKey: ev.value || null,
-            targetLuminode: trackLuminode
+          const targetTrack = ev.value
+          modulatorData.targetTrack = targetTrack
+          const newTrack = tracks.find(t => t.id === targetTrack)
+          const targetLuminode = newTrack && newTrack.luminode ? newTrack.luminode : null
+          this.trackManager.updateModulator(modulator.id, {
+            targetTrack,
+            targetLuminode,
+            targetConfigKey: null
           })
-          this.updateThresholdVisibility(modulatorFolder, ev.value, configParams)
+          this.renderModulationControls()
         })
 
-        if (modulator.targetConfigKey) {
-          const currentParam = configParams.find(p => p.key === modulator.targetConfigKey)
-          if (currentParam) {
+        if (trackLuminode) {
+          const configParams = getLuminodeConfig(trackLuminode)
+          const configOptions = { 'Select Parameter': '' }
+          configParams
+            .filter(p => p.type === 'slider' || p.type === 'number' || p.type === 'checkbox')
+            .forEach(p => { configOptions[p.label] = p.key })
+
+          modulatorFolder.addBinding(modulatorData, 'targetConfigKey', {
+            options: configOptions,
+            label: 'Parameter'
+          }).on('change', (ev) => {
+            modulatorData.targetConfigKey = ev.value || ''
+            this.trackManager.updateModulator(modulator.id, {
+              targetConfigKey: ev.value || null,
+              targetLuminode: trackLuminode
+            })
+            this.updateThresholdVisibility(modulatorFolder, ev.value, configParams)
+          })
+          if (modulator.targetConfigKey) {
             this.updateThresholdVisibility(modulatorFolder, modulator.targetConfigKey, configParams)
           }
+        }
+      } else {
+        const filterOptions = { 'Select Filter': '' }
+        getCanvasFilterIds().forEach(id => {
+          filterOptions[CANVAS_FILTER_LABELS[id] || id] = id
+        })
+        modulatorFolder.addBinding(modulatorData, 'targetCanvasFilter', {
+          options: filterOptions,
+          label: 'Canvas Filter'
+        }).on('change', (ev) => {
+          modulatorData.targetCanvasFilter = ev.value || ''
+          this.trackManager.updateModulator(modulator.id, {
+            targetCanvasFilter: ev.value || null,
+            targetConfigKey: null
+          })
+          this.renderModulationControls()
+        })
+
+        const canvasFilterId = modulator.targetCanvasFilter || modulatorData.targetCanvasFilter
+        if (canvasFilterId) {
+          const configParams = getCanvasFilterConfig(canvasFilterId)
+          const configOptions = { 'Select Parameter': '' }
+          configParams.forEach(p => { configOptions[p.label] = p.key })
+          modulatorFolder.addBinding(modulatorData, 'targetConfigKey', {
+            options: configOptions,
+            label: 'Parameter'
+          }).on('change', (ev) => {
+            modulatorData.targetConfigKey = ev.value || ''
+            this.trackManager.updateModulator(modulator.id, {
+              targetConfigKey: ev.value || null,
+              targetCanvasFilter: canvasFilterId
+            })
+          })
         }
       }
 
@@ -306,7 +358,7 @@ export class ModulationUIManager {
       }
 
       let thresholdBinding = null
-      if (trackLuminode && modulator.targetConfigKey) {
+      if (targetDestination === 'track' && trackLuminode && modulator.targetConfigKey) {
         const configParams = getLuminodeConfig(trackLuminode)
         const currentParam = configParams.find(p => p.key === modulator.targetConfigKey)
         if (currentParam && currentParam.type === 'checkbox') {
