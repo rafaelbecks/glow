@@ -1,94 +1,114 @@
 import easymidi from 'easymidi';
 
-const interval = parseInt(process.argv[2]) || 2000;
+// args
+const intervalMs = parseInt(process.argv[2]) || 2000;
 const deviceName = process.argv[3];
-const useSixth = process.argv[4] === 'sixth';
+const intervalMode = process.argv[4] || 'fifth'; // third | fourth | fifth | sixth
+const numberOfNotes = parseInt(process.argv[5]) || 2;
 
 console.log('Available MIDI outputs:', easymidi.getOutputs());
 
 if (!deviceName) {
-  console.error('Usage: node midi-test.js <interval_ms> <device_name> [sixth]');
+  console.error('Usage: node midi-test.js <interval_ms> <device_name> [third|fourth|fifth|sixth] <number_of_notes>');
   process.exit(1);
 }
 
+// MIDI setup
 const output = new easymidi.Output(deviceName);
-const intervalType = useSixth ? 'sixth' : 'fifth';
+
+// interval map (semitones)
+const INTERVALS = {
+  third: 4,
+  fourth: 5,
+  fifth: 7,
+  sixth: 9,
+};
+
+const step = INTERVALS[intervalMode] ?? INTERVALS.fifth;
+
 console.log(`Connected to: ${deviceName}`);
-console.log(`Sending ${intervalType} chords every ${interval}ms\n`);
+console.log(`Interval: ${intervalMode} (${step} semitones)`);
+console.log(`Notes per trigger: ${numberOfNotes}`);
+console.log(`Trigger every ${intervalMs}ms\n`);
 
-const notes = [60, 62, 64, 65, 67, 69, 71, 72]; // C major scale
-const activeNotes = new Set(); // Track currently active notes
-const timeouts = new Set(); // Track pending timeouts
+// --- note range ---
+// chromatic range across 3 octaves
+const MIN_NOTE = 48; // C3
+const MAX_NOTE = 84; // C6
 
-function sendFifthChord() {
-  const root = notes[Math.floor(Math.random() * notes.length)];
-  const intervalNote = root + (useSixth ? 9 : 7);
-  const intervalName = useSixth ? 'Sixth' : 'Fifth';
-  
-  console.log(`[${new Date().toISOString()}] ON  -> Root: ${root}, ${intervalName}: ${intervalNote}`);
-  output.send('noteon', { note: root, velocity: 100, channel: 0 });
-  output.send('noteon', { note: intervalNote, velocity: 100, channel: 0 });
-  
-  activeNotes.add(root);
-  activeNotes.add(intervalNote);
-  
+function randomRoot() {
+  return Math.floor(Math.random() * (MAX_NOTE - MIN_NOTE + 1)) + MIN_NOTE;
+}
+
+const activeNotes = new Set();
+const timeouts = new Set();
+
+function generateNotes(root) {
+  const notes = [];
+
+  for (let i = 0; i < numberOfNotes; i++) {
+    notes.push(root + step * i);
+  }
+
+  return notes;
+}
+
+function sendChord() {
+  const root = randomRoot();
+  const notesToPlay = generateNotes(root);
+
+  console.log(`[${new Date().toISOString()}] ON ->`, notesToPlay);
+
+  notesToPlay.forEach(note => {
+    output.send('noteon', { note, velocity: 100, channel: 0 });
+    activeNotes.add(note);
+  });
+
   const timeoutId = setTimeout(() => {
-    console.log(`[${new Date().toISOString()}] OFF -> Root: ${root}, ${intervalName}: ${intervalNote}`);
-    output.send('noteoff', { note: root, velocity: 0, channel: 0 });
-    output.send('noteoff', { note: intervalNote, velocity: 0, channel: 0 });
-    
-    // Remove from active notes
-    activeNotes.delete(root);
-    activeNotes.delete(intervalNote);
+    console.log(`[${new Date().toISOString()}] OFF ->`, notesToPlay);
+
+    notesToPlay.forEach(note => {
+      output.send('noteoff', { note, velocity: 0, channel: 0 });
+      activeNotes.delete(note);
+    });
+
     timeouts.delete(timeoutId);
-  }, interval - 50);
-  
+  }, intervalMs - 50);
+
   timeouts.add(timeoutId);
 }
 
-const intervalId = setInterval(sendFifthChord, interval);
-sendFifthChord();
+const intervalId = setInterval(sendChord, intervalMs);
+sendChord();
 
+// cleanup
 function cleanup() {
   console.log('\nCleaning up...');
-  
   clearInterval(intervalId);
-  
-  timeouts.forEach(timeoutId => clearTimeout(timeoutId));
+
+  timeouts.forEach(clearTimeout);
   timeouts.clear();
-  
-  if (activeNotes.size > 0) {
-    console.log(`Sending note off for ${activeNotes.size} active note(s)...`);
-    activeNotes.forEach(note => {
-      try {
-        output.send('noteoff', { note: note, velocity: 0, channel: 0 });
-        console.log(`  Note off: ${note}`);
-      } catch (error) {
-        console.error(`  Error sending note off for ${note}:`, error.message);
-      }
-    });
-    activeNotes.clear();
-  }
-  
+
+  activeNotes.forEach(note => {
+    try {
+      output.send('noteoff', { note, velocity: 0, channel: 0 });
+    } catch {}
+  });
+  activeNotes.clear();
+
   try {
     output.close();
-    console.log('MIDI connection closed.');
-  } catch (error) {
-    console.error('Error closing MIDI connection:', error.message);
-  }
-  
+  } catch {}
+
   process.exit(0);
 }
 
-process.on('SIGINT', cleanup);  // Ctrl+C
-process.on('SIGTERM', cleanup); // Termination signal
+process.on('SIGINT', cleanup);
+process.on('SIGTERM', cleanup);
 process.on('exit', () => {
-  if (activeNotes.size > 0) {
-    activeNotes.forEach(note => {
-      try {
-        output.send('noteoff', { note: note, velocity: 0, channel: 0 });
-      } catch (error) {
-      }
-    });
-  }
+  activeNotes.forEach(note => {
+    try {
+      output.send('noteoff', { note, velocity: 0, channel: 0 });
+    } catch {}
+  });
 });
