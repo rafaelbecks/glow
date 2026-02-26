@@ -1,4 +1,5 @@
 import { Pane } from '../lib/tweakpane.min.js'
+import * as RotationPlugin from 'https://unpkg.com/@0b5vr/tweakpane-plugin-rotation@0.2.0/dist/tweakpane-plugin-rotation.js'
 import { hasLuminodeConfig, getLuminodesByGroup, getLuminodeConfig } from '../luminode-configs.js'
 import { getLuminodeDisplayName, getLuminodeSettingsKey as getLuminodeSettingsKeyFromRegistry } from '../luminodes/index.js'
 
@@ -34,6 +35,7 @@ export class TrackUIManager {
     if (!paneContainer) return
 
     this.mainPane = new Pane({ container: paneContainer })
+    this.mainPane.registerPlugin(RotationPlugin)
     
     const stylePane = () => {
       const paneElement = paneContainer.querySelector('.tp-rotv')
@@ -340,6 +342,26 @@ export class TrackUIManager {
     const luminodeFolder = pane.addFolder({ title: 'Luminode Parameters', expanded: true })
 
     configParams.forEach(param => {
+      if (param.type === 'rotation') {
+        const rotationKey = param.key
+        if (!luminodeData[rotationKey] || typeof luminodeData[rotationKey] !== 'object') {
+          luminodeData[rotationKey] = { x: 0, y: 0, z: 0 }
+        }
+
+        luminodeFolder.addBinding(luminodeData, rotationKey, {
+          label: param.label,
+          view: 'rotation',
+          rotationMode: 'euler',
+          order: 'XYZ',
+          unit: 'deg',
+          picker: 'inline',
+          expanded: true
+        }).on('change', (ev) => {
+          this.triggerLuminodeConfigChange(track.id, track.luminode, rotationKey, ev.value)
+        })
+        return
+      }
+
       const bindingOptions = {
         label: param.label
       }

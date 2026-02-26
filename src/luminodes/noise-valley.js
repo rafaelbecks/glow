@@ -1,5 +1,6 @@
 // Noise Valley - topographic terrain drawing module with noise-based generation
 import { SETTINGS, UTILS } from '../settings.js'
+import { getEulerRotation, isRotationEnabled } from '../rotation-utils.js'
 
 export class NoiseValleyLuminode {
   constructor (canvasDrawer) {
@@ -91,8 +92,9 @@ export class NoiseValleyLuminode {
     this.dimensions = this.canvasDrawer.getDimensions()
 
     const { width, height } = this.dimensions
-    const density = SETTINGS.MODULES.NOISE_VALLEY.DENSITY
-    const size = SETTINGS.MODULES.NOISE_VALLEY.SIZE
+    const moduleSettings = SETTINGS.MODULES.NOISE_VALLEY
+    const density = moduleSettings.DENSITY
+    const size = moduleSettings.SIZE
 
     // Generate or regenerate terrain data if needed
     if (!this.terrainData || this.terrainData.cols !== Math.floor(width / density)) {
@@ -102,7 +104,7 @@ export class NoiseValleyLuminode {
     this.canvasDrawer.applyLayoutTransform(layout)
 
     // Apply deformation based on active notes
-    const deformationStrength = SETTINGS.MODULES.NOISE_VALLEY.DEFORMATION_STRENGTH
+    const deformationStrength = moduleSettings.DEFORMATION_STRENGTH
     const deformedTerrain = this.applyDeformation(this.terrainData.terrain, notes, deformationStrength, t)
 
     // Create a unique signature of active MIDI notes for color changes
@@ -114,19 +116,27 @@ export class NoiseValleyLuminode {
 
     // Set up drawing context
     const baseHue = this.currentBaseHue + t * 2
-    const hue = useColor ? (baseHue + notes.length * 15) % 360 : SETTINGS.MODULES.NOISE_VALLEY.BASE_HUE
+    const hue = useColor ? (baseHue + notes.length * 15) % 360 : moduleSettings.BASE_HUE
 
     this.ctx.strokeStyle = useColor ? `hsla(${hue}, 80%, 60%, 0.3)` : `hsla(${hue}, 0%, 80%, 0.3)`
     this.ctx.shadowColor = useColor ? `hsla(${hue}, 80%, 70%, 0.4)` : 'rgba(255, 255, 255, 0.4)'
-    this.ctx.lineWidth = SETTINGS.MODULES.NOISE_VALLEY.LINE_WIDTH
+    this.ctx.lineWidth = moduleSettings.LINE_WIDTH
 
     // Draw the terrain grid
     const { terrain, cols, rows } = this.terrainData
     const scaleX = (width * size) / cols
     const scaleY = (height * size) / rows
-    const heightScale = SETTINGS.MODULES.NOISE_VALLEY.HEIGHT_SCALE
-    const perspective = SETTINGS.MODULES.NOISE_VALLEY.PERSPECTIVE
-    const rotationSpeed = SETTINGS.MODULES.NOISE_VALLEY.ROTATION_SPEED
+    const heightScale = moduleSettings.HEIGHT_SCALE
+    const perspective = moduleSettings.PERSPECTIVE
+    const rotationSpeed = moduleSettings.ROTATION_SPEED
+
+    const euler = getEulerRotation(moduleSettings)
+    const rotationEnabled = isRotationEnabled(moduleSettings)
+    const baseAngleX = rotationEnabled ? t * rotationSpeed * 0.1 : 0
+    const baseAngleY = rotationEnabled ? t * rotationSpeed * 0.15 : 0
+    const angleX = baseAngleX + euler.x
+    const angleY = baseAngleY + euler.y
+    const angleZ = euler.z
 
     // Draw horizontal lines
     for (let i = 0; i < rows; i++) {
@@ -137,7 +147,14 @@ export class NoiseValleyLuminode {
         const z = deformedTerrain[i][j] * heightScale
 
         // Apply 3D rotation using the same approach as sphere
-        const [rotatedX, rotatedY, rotatedZ] = UTILS.rotate3D(x, y, z, t * rotationSpeed * 0.1, t * rotationSpeed * 0.15)
+        const [rotatedX, rotatedY, rotatedZ] = UTILS.rotate3D(
+          x,
+          y,
+          z,
+          angleX,
+          angleY,
+          angleZ
+        )
 
         // Apply perspective projection
         const perspectiveX = rotatedX + (rotatedX / width) * rotatedZ * 0.001
@@ -161,7 +178,14 @@ export class NoiseValleyLuminode {
         const z = deformedTerrain[i][j] * heightScale
 
         // Apply 3D rotation using the same approach as sphere
-        const [rotatedX, rotatedY, rotatedZ] = UTILS.rotate3D(x, y, z, t * rotationSpeed * 0.1, t * rotationSpeed * 0.15)
+        const [rotatedX, rotatedY, rotatedZ] = UTILS.rotate3D(
+          x,
+          y,
+          z,
+          angleX,
+          angleY,
+          angleZ
+        )
 
         // Apply perspective projection
         const perspectiveX = rotatedX + (rotatedX / width) * rotatedZ * 0.001

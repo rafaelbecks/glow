@@ -1,5 +1,6 @@
 // Catenoid - 3D wireframe catenoid surface with deformation
 import { SETTINGS, UTILS } from '../settings.js'
+import { getEulerRotation, isRotationEnabled } from '../rotation-utils.js'
 
 export class CatenoidLuminode {
   constructor (canvasDrawer) {
@@ -72,11 +73,12 @@ export class CatenoidLuminode {
     this.dimensions = this.canvasDrawer.getDimensions()
 
     const { width, height } = this.dimensions
-    const radius = SETTINGS.MODULES.CATENOID.RADIUS
-    const catenoidHeight = SETTINGS.MODULES.CATENOID.HEIGHT
-    const rings = SETTINGS.MODULES.CATENOID.RINGS
-    const segments = SETTINGS.MODULES.CATENOID.SEGMENTS
-    const scale = SETTINGS.MODULES.CATENOID.SCALE
+    const moduleSettings = SETTINGS.MODULES.CATENOID
+    const radius = moduleSettings.RADIUS
+    const catenoidHeight = moduleSettings.HEIGHT
+    const rings = moduleSettings.RINGS
+    const segments = moduleSettings.SEGMENTS
+    const scale = moduleSettings.SCALE
 
     this.canvasDrawer.applyLayoutTransform(layout)
 
@@ -84,7 +86,7 @@ export class CatenoidLuminode {
     const { points } = this.generateCatenoidPoints(radius, catenoidHeight, rings, segments)
 
     // Apply deformation based on active notes
-    const deformationStrength = SETTINGS.MODULES.CATENOID.DEFORMATION_STRENGTH
+    const deformationStrength = moduleSettings.DEFORMATION_STRENGTH
     const deformedPoints = this.applyDeformation(points, notes, deformationStrength, t)
 
     // Create a unique signature of active MIDI notes for color changes
@@ -96,13 +98,21 @@ export class CatenoidLuminode {
 
     // Set up drawing context
     const baseHue = this.currentBaseHue + t * 2
-    const hue = useColor ? (baseHue + notes.length * 15) % 360 : SETTINGS.MODULES.CATENOID.BASE_HUE
+    const hue = useColor ? (baseHue + notes.length * 15) % 360 : moduleSettings.BASE_HUE
 
     this.ctx.strokeStyle = useColor ? `hsla(${hue}, 80%, 60%, 0.4)` : `hsla(${hue}, 0%, 80%, 0.4)`
     this.ctx.shadowColor = useColor ? `hsla(${hue}, 80%, 70%, 0.5)` : 'rgba(255, 255, 255, 0.5)'
-    this.ctx.lineWidth = SETTINGS.MODULES.CATENOID.LINE_WIDTH
+    this.ctx.lineWidth = moduleSettings.LINE_WIDTH
 
-    const rotationSpeed = SETTINGS.MODULES.CATENOID.ROTATION_SPEED
+    const rotationSpeed = moduleSettings.ROTATION_SPEED
+
+    const euler = getEulerRotation(moduleSettings)
+    const rotationEnabled = isRotationEnabled(moduleSettings)
+    const baseAngleX = rotationEnabled ? t * rotationSpeed * 0.1 : 0
+    const baseAngleY = rotationEnabled ? t * rotationSpeed * 0.15 : 0
+    const angleX = baseAngleX + euler.x
+    const angleY = baseAngleY + euler.y
+    const angleZ = euler.z
 
     // Draw horizontal rings
     for (let i = 0; i <= rings; i++) {
@@ -115,8 +125,9 @@ export class CatenoidLuminode {
           point.x * scale,
           point.y * scale,
           point.z * scale,
-          t * rotationSpeed * 0.1,
-          t * rotationSpeed * 0.15
+          angleX,
+          angleY,
+          angleZ
         )
 
         // Apply perspective projection
@@ -143,8 +154,9 @@ export class CatenoidLuminode {
           point.x * scale,
           point.y * scale,
           point.z * scale,
-          t * rotationSpeed * 0.1,
-          t * rotationSpeed * 0.15
+          angleX,
+          angleY,
+          angleZ
         )
 
         // Apply perspective projection

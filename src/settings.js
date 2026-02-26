@@ -85,7 +85,9 @@ export const SETTINGS = {
       LON_LINES: 20,
       DEFORM_FACTOR: 1.2,
       LINE_WIDTH: 0.8,
-      USE_COLOR: false
+      USE_COLOR: false,
+      ROTATION: { x: 0, y: 0, z: 0 },
+      ROTATION_ENABLED: true
     },
     GEGO_NET: {
       BASE_NODES: 5,
@@ -145,7 +147,9 @@ export const SETTINGS = {
       BASE_HUE: 0,
       USE_COLOR: false,
       HEIGHT_SCALE: 30,
-      PERSPECTIVE: 0.6
+      PERSPECTIVE: 0.6,
+      ROTATION: { x: 0, y: 0, z: 0 },
+      ROTATION_ENABLED: true
     },
     CATENOID: {
       RADIUS: 80,
@@ -157,7 +161,9 @@ export const SETTINGS = {
       DEFORMATION_STRENGTH: 0.5,
       LINE_WIDTH: 0.8,
       BASE_HUE: 0,
-      USE_COLOR: false
+      USE_COLOR: false,
+      ROTATION: { x: 0, y: 0, z: 0 },
+      ROTATION_ENABLED: true
     },
     LINE_CYLINDER: {
       RADIUS: 100,
@@ -170,7 +176,9 @@ export const SETTINGS = {
       DEFORMATION_STRENGTH: 0.4,
       LINE_WIDTH: 0.8,
       BASE_HUE: 0,
-      USE_COLOR: false
+      USE_COLOR: false,
+      ROTATION: { x: 0, y: 0, z: 0 },
+      ROTATION_ENABLED: true
     },
     CLAVILUX: {
       BASE_SIZE: 120,
@@ -193,7 +201,9 @@ export const SETTINGS = {
       DEFORMATION_STRENGTH: 0.5,
       LINE_WIDTH: 0.8,
       BASE_HUE: 0,
-      USE_COLOR: false
+      USE_COLOR: false,
+      ROTATION: { x: 0, y: 0, z: 0 },
+      ROTATION_ENABLED: true
     },
     CUBE: {
       SIZE: 150,
@@ -202,7 +212,9 @@ export const SETTINGS = {
       ROTATION_SPEED: 0.3,
       LINE_WIDTH: 0.8,
       BASE_HUE: 0,
-      USE_COLOR: false
+      USE_COLOR: false,
+      ROTATION: { x: 0, y: 0, z: 0 },
+      ROTATION_ENABLED: true
     },
     TREFOIL: {
       SCALE: 95,
@@ -214,7 +226,9 @@ export const SETTINGS = {
       DEFORMATION_STRENGTH: 0.5,
       LINE_WIDTH: 1.5,
       BASE_HUE: 0,
-      USE_COLOR: true
+      USE_COLOR: true,
+      ROTATION: { x: 0, y: 0, z: 0 },
+      ROTATION_ENABLED: true
     },
     SPHERICAL_LENS: {
       RADIUS: 200,
@@ -260,7 +274,9 @@ export const SETTINGS = {
       SYNC_RATE: 0.7,
       PERSPECTIVE: 0.2,
       ENABLE_PROJECTION: true,
-      USE_COLOR: false
+      USE_COLOR: false,
+      ROTATION: { x: 0, y: 0, z: 0 },
+      ROTATION_ENABLED: false
     },
     DE_JONG: {
       // De Jong attractor parameters
@@ -272,7 +288,9 @@ export const SETTINGS = {
       SCALE: 0.9,
       ITERATIONS: 50000,
       POINT_SIZE: 1.5,
-      COLOR_MODE: 0 // 0 = rainbow, 1 = MIDI, 2 = black & white
+      COLOR_MODE: 0, // 0 = rainbow, 1 = MIDI, 2 = black & white
+      ROTATION: { x: 0, y: 0, z: 0 },
+      ROTATION_ENABLED: false
     },
     RAMIEL: {
       SIZE: 300,
@@ -294,7 +312,8 @@ export const SETTINGS = {
       AT_FIELD_FOLLOW_PROJECTION: false,
       ENABLE_RAY: false,
       RAY_LENGTH: 400,
-      RAY_PULSE_RATE: 1.0
+      RAY_PULSE_RATE: 1.0,
+      ROTATION: { x: 0, y: 0, z: 0 }
     },
     WINDMILL: {
       RADIUS: 50,
@@ -315,7 +334,9 @@ export const SETTINGS = {
       SIZE_VARIATION: 0.15,
       BLADE_WIDTH: 0.50,
       HUB_RADIUS: 8,
-      USE_COLOR: true
+      USE_COLOR: true,
+      ROTATION: { x: 0, y: 0, z: 0 },
+      ROTATION_ENABLED: true
     },
     ORIZURU: {
       FOLD_AMOUNT: 1.0,
@@ -327,7 +348,9 @@ export const SETTINGS = {
       INSTANCES: 1,
       SPATIAL_RADIUS: 200,
       ENABLE_PROJECTION: true,
-      USE_COLOR: false
+      USE_COLOR: false,
+      ROTATION: { x: 0, y: 0, z: 0 },
+      ROTATION_ENABLED: false
     }
   },
 
@@ -425,13 +448,26 @@ export const UTILS = {
     return [r1 + m, g1 + m, b1 + m]
   },
 
-  rotate3D: (x, y, z, angleX, angleY) => {
+  rotate3D: (x, y, z, angleX = 0, angleY = 0, angleZ = 0) => {
+    const cosX = Math.cos(angleX)
+    const sinX = Math.sin(angleX)
+    const cosY = Math.cos(angleY)
+    const sinY = Math.sin(angleY)
+    const cosZ = Math.cos(angleZ)
+    const sinZ = Math.sin(angleZ)
+
     // Rotate around X axis
-    const y1 = y * Math.cos(angleX) - z * Math.sin(angleX)
-    const z1 = y * Math.sin(angleX) + z * Math.cos(angleX)
+    const y1 = y * cosX - z * sinX
+    const z1 = y * sinX + z * cosX
+
     // Rotate around Y axis
-    const x1 = x * Math.cos(angleY) + z1 * Math.sin(angleY)
-    const z2 = -x * Math.sin(angleY) + z1 * Math.cos(angleY)
-    return [x1, y1, z2]
+    const x1 = x * cosY + z1 * sinY
+    const z2 = -x * sinY + z1 * cosY
+
+    // Rotate around Z axis
+    const x2 = x1 * cosZ - y1 * sinZ
+    const y2 = x1 * sinZ + y1 * cosZ
+
+    return [x2, y2, z2]
   }
 }

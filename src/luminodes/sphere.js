@@ -1,5 +1,6 @@
 // Wire sphere drawing module
 import { SETTINGS, UTILS } from '../settings.js'
+import { getEulerRotation, isRotationEnabled } from '../rotation-utils.js'
 
 export class SphereLuminode {
   constructor (canvasDrawer) {
@@ -18,16 +19,17 @@ export class SphereLuminode {
 
     this.canvasDrawer.applyLayoutTransform(layout)
 
-    const baseRadius = SETTINGS.MODULES.SPHERE.BASE_RADIUS
-    const latLines = SETTINGS.MODULES.SPHERE.LAT_LINES
-    const lonLines = SETTINGS.MODULES.SPHERE.LON_LINES
+    const sphereSettings = SETTINGS.MODULES.SPHERE
+    const baseRadius = sphereSettings.BASE_RADIUS
+    const latLines = sphereSettings.LAT_LINES
+    const lonLines = sphereSettings.LON_LINES
 
     const velocityAvg = notes.reduce((acc, n) => acc + n.velocity, 0) / notes.length
     const sizeFactor = 1 + velocityAvg * 0.8
     const radius = baseRadius * sizeFactor
 
     const chordSize = notes.length
-    const deformAmount = Math.min((chordSize - 1) / 9, 1) * SETTINGS.MODULES.SPHERE.DEFORM_FACTOR
+    const deformAmount = Math.min((chordSize - 1) / 9, 1) * sphereSettings.DEFORM_FACTOR
 
     // Create a unique signature of active MIDI notes
     const chordSig = notes.map(n => n.midi).sort().join('-')
@@ -48,7 +50,15 @@ export class SphereLuminode {
       this.ctx.strokeStyle = `hsla(${baseHue}, 0%, 80%, 0.4)`
       this.ctx.shadowColor = 'rgba(255, 255, 255, 0.5)'
     }
-    this.ctx.lineWidth = SETTINGS.MODULES.SPHERE.LINE_WIDTH
+    this.ctx.lineWidth = sphereSettings.LINE_WIDTH
+
+    const euler = getEulerRotation(sphereSettings)
+    const rotationEnabled = isRotationEnabled(sphereSettings)
+    const baseAngleX = rotationEnabled ? t * 0.2 : 0
+    const baseAngleY = rotationEnabled ? t * 0.3 : 0
+    const angleX = baseAngleX + euler.x
+    const angleY = baseAngleY + euler.y
+    const angleZ = euler.z
 
     // Latitudes
     for (let i = 1; i < latLines; i++) {
@@ -58,7 +68,14 @@ export class SphereLuminode {
 
       this.ctx.beginPath()
       for (let a = 0; a <= Math.PI * 2 + 0.01; a += 0.1) {
-        const [x, y1, z1] = UTILS.rotate3D(r * Math.cos(a), r * Math.sin(a), z, t * 0.2, t * 0.3)
+        const [x, y1, z1] = UTILS.rotate3D(
+          r * Math.cos(a),
+          r * Math.sin(a),
+          z,
+          angleX,
+          angleY,
+          angleZ
+        )
         const deform = 1 + deformAmount * Math.sin(t + a + phi)
         this.ctx.lineTo(x * deform, y1 * deform * 0.8 + z1 * 0.1 * deform)
       }
@@ -76,8 +93,9 @@ export class SphereLuminode {
           radius * Math.sin(phi) * Math.cos(theta),
           radius * Math.sin(phi) * Math.sin(theta),
           radius * Math.cos(phi),
-          t * 0.2,
-          t * 0.3
+          angleX,
+          angleY,
+          angleZ
         )
         const deform = 1 + deformAmount * Math.sin(t + phi + theta)
         this.ctx.lineTo(x * deform, y1 * deform * 0.8 + z1 * 0.1 * deform)

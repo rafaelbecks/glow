@@ -61,6 +61,8 @@ export const LUMINODE_CONFIGS = {
   sphere: {
     group: '3D Geometry',
     config: [
+      { key: 'ROTATION', label: 'Rotation', type: 'rotation', default: { x: 0, y: 0, z: 0 } },
+      { key: 'ROTATION_ENABLED', label: 'Rotation Enabled', type: 'checkbox', default: true },
       { key: 'BASE_RADIUS', label: 'Base Radius', type: 'slider', min: 50, max: 300, step: 10, default: 160 },
       { key: 'LAT_LINES', label: 'Latitude Lines', type: 'number', min: 3, max: 30, step: 1, default: 12 },
       { key: 'LON_LINES', label: 'Longitude Lines', type: 'number', min: 3, max: 50, step: 1, default: 20 },
@@ -73,6 +75,8 @@ export const LUMINODE_CONFIGS = {
   noiseValley: {
     group: '3D Geometry',
     config: [
+      { key: 'ROTATION', label: 'Rotation', type: 'rotation', default: { x: 0, y: 0, z: 0 } },
+      { key: 'ROTATION_ENABLED', label: 'Rotation Enabled', type: 'checkbox', default: true },
       { key: 'SIZE', label: 'Size', type: 'slider', min: 0.3, max: 1.2, step: 0.05, default: 0.8 },
       { key: 'DENSITY', label: 'Density', type: 'slider', min: 10, max: 60, step: 2, default: 40 },
       { key: 'ROTATION_SPEED', label: 'Rotation Speed', type: 'slider', min: 0.1, max: 3, step: 0.05, default: 0.3 },
@@ -88,6 +92,8 @@ export const LUMINODE_CONFIGS = {
   catenoid: {
     group: '3D Geometry',
     config: [
+      { key: 'ROTATION', label: 'Rotation', type: 'rotation', default: { x: 0, y: 0, z: 0 } },
+      { key: 'ROTATION_ENABLED', label: 'Rotation Enabled', type: 'checkbox', default: true },
       { key: 'RADIUS', label: 'Radius', type: 'slider', min: 30, max: 150, step: 5, default: 80 },
       { key: 'HEIGHT', label: 'Height', type: 'slider', min: 100, max: 400, step: 10, default: 300 },
       { key: 'RINGS', label: 'Rings', type: 'number', min: 1, max: 50, step: 2, default: 16 },
@@ -104,6 +110,8 @@ export const LUMINODE_CONFIGS = {
   lineCylinder: {
     group: '3D Geometry',
     config: [
+      // { key: 'ROTATION', label: 'Rotation', type: 'rotation', default: { x: 0, y: 0, z: 0 } },
+      // { key: 'ROTATION_ENABLED', label: 'Rotation Enabled', type: 'checkbox', default: true },
       { key: 'RADIUS', label: 'Radius', type: 'slider', min: 50, max: 200, step: 5, default: 100 },
       { key: 'HEIGHT', label: 'Height', type: 'slider', min: 100, max: 400, step: 10, default: 300 },
       { key: 'LINES_PER_NOTE', label: 'Lines Per Note', type: 'number', min: 3, max: 15, step: 1, default: 8 },
@@ -121,6 +129,8 @@ export const LUMINODE_CONFIGS = {
   diamond: {
     group: '3D Geometry',
     config: [
+      // { key: 'ROTATION', label: 'Rotation', type: 'rotation', default: { x: 0, y: 0, z: 0 } },
+      // { key: 'ROTATION_ENABLED', label: 'Rotation Enabled', type: 'checkbox', default: true },
       { key: 'RADIUS', label: 'Radius', type: 'slider', min: 30, max: 150, step: 5, default: 80 },
       { key: 'HEIGHT', label: 'Height', type: 'slider', min: 100, max: 300, step: 10, default: 200 },
       { key: 'RINGS', label: 'Rings', type: 'number', min: 1, max: 30, step: 1, default: 8 },
@@ -137,6 +147,8 @@ export const LUMINODE_CONFIGS = {
   cube: {
     group: '3D Geometry',
     config: [
+      // { key: 'ROTATION', label: 'Rotation', type: 'rotation', default: { x: 0, y: 0, z: 0 } },
+      // { key: 'ROTATION_ENABLED', label: 'Rotation Enabled', type: 'checkbox', default: true },
       { key: 'SIZE', label: 'Size', type: 'slider', min: 50, max: 300, step: 10, default: 150 },
       { key: 'SEGMENTS', label: 'Segments', type: 'number', min: 1, max: 40, step: 1, default: 5 },
       { key: 'SCALE', label: 'Scale', type: 'slider', min: 0.5, max: 2, step: 0.1, default: 1.0 },
@@ -149,6 +161,8 @@ export const LUMINODE_CONFIGS = {
   trefoil: {
     group: '3D Geometry',
     config: [
+      // { key: 'ROTATION', label: 'Rotation', type: 'rotation', default: { x: 0, y: 0, z: 0 } },
+      // { key: 'ROTATION_ENABLED', label: 'Rotation Enabled', type: 'checkbox', default: true },
       { key: 'NODE_MODE', label: 'Node Mode', type: 'checkbox', default: true },
       { key: 'NUM_LACES', label: 'Number of Laces', type: 'number', min: 1, max: 16, step: 1, default: 3 },
       { key: 'SCALE', label: 'Scale', type: 'slider', min: 20, max: 120, step: 5, default: 95 },
@@ -263,6 +277,8 @@ export const LUMINODE_CONFIGS = {
   syncHelix2D: {
     group: '3D Geometry',
     config: [
+      // { key: 'ROTATION', label: 'Rotation', type: 'rotation', default: { x: 0, y: 0, z: 0 } },
+      // { key: 'ROTATION_ENABLED', label: 'Rotation Enabled', type: 'checkbox', default: false },
       { key: 'SEGMENTS', label: 'Segments', type: 'number', min: 20, max: 300, step: 10, default: 40 },
       { key: 'AMPLITUDE', label: 'Amplitude', type: 'slider', min: 0, max: 300, step: 5, default: 200, note: '0 = auto (15% of canvas height)' },
       { key: 'FREQUENCY', label: 'Frequency', type: 'slider', min: 0.5, max: 5, step: 0.1, default: 2.2 },
@@ -281,6 +297,8 @@ export const LUMINODE_CONFIGS = {
   ramiel: {
     group: '3D Geometry',
     config: [
+      // { key: 'ROTATION', label: 'Rotation', type: 'rotation', default: { x: 0, y: 0, z: 0 } },
+      // { key: 'ROTATION_ENABLED', label: 'Rotation Enabled', type: 'checkbox', default: true },
       { key: 'SIZE', label: 'Size', type: 'slider', min: 50, max: 600, step: 10, default: 300 },
       { key: 'SCALE', label: 'Scale', type: 'slider', min: 0.5, max: 2, step: 0.1, default: 1.0 },
       { key: 'INSTANCES', label: 'Instances', type: 'number', min: 1, max: 4, step: 1, default: 1 },
@@ -307,6 +325,8 @@ export const LUMINODE_CONFIGS = {
   windmill: {
     group: '3D Geometry',
     config: [
+      // { key: 'ROTATION', label: 'Rotation', type: 'rotation', default: { x: 0, y: 0, z: 0 } },
+      // { key: 'ROTATION_ENABLED', label: 'Rotation Enabled', type: 'checkbox', default: true },
       { key: 'RADIUS', label: 'Radius', type: 'slider', min: 50, max: 200, step: 5, default: 50 },
       { key: 'ROTATION_RATE', label: 'Rotation Rate', type: 'slider', min: 0.1, max: 2, step: 0.1, default: 0.4 },
       { key: 'CHIRALITY', label: 'Chirality', type: 'slider', min: -1, max: 1, step: 2, default: 1, note: '-1 or 1' },
@@ -332,6 +352,8 @@ export const LUMINODE_CONFIGS = {
   orizuru: {
     group: '3D Geometry',
     config: [
+      // { key: 'ROTATION', label: 'Rotation', type: 'rotation', default: { x: 0, y: 0, z: 0 } },
+      // { key: 'ROTATION_ENABLED', label: 'Rotation Enabled', type: 'checkbox', default: false },
       { key: 'FOLD_AMOUNT', label: 'Fold Amount', type: 'slider', min: 0, max: 1, step: 0.01, default: 1.0, note: '0 = flat (SVG), 1 = folded (OBJ)' },
       { key: 'PERSPECTIVE', label: 'X Rotation', type: 'slider', min: 0, max: Math.PI * 2, step: 0.1, default: 3.0 },
       { key: 'Y_ROTATION', label: 'Y Rotation', type: 'slider', min: 0, max: Math.PI * 2, step: 0.1, default: 0.0 },
@@ -348,6 +370,8 @@ export const LUMINODE_CONFIGS = {
   deJong: {
     group: '3D Geometry',
     config: [
+      // { key: 'ROTATION', label: 'Rotation', type: 'rotation', default: { x: 0, y: 0, z: 0 } },
+      // { key: 'ROTATION_ENABLED', label: 'Rotation Enabled', type: 'checkbox', default: false },
       { key: 'A', label: 'Parameter a', type: 'slider', min: -3, max: 3, step: 0.01, default: -1.5090717287003517 },
       { key: 'B', label: 'Parameter b', type: 'slider', min: -3, max: 3, step: 0.01, default: -2.0 },
       { key: 'C', label: 'Parameter c', type: 'slider', min: -3, max: 3, step: 0.01, default: -1.2 },
