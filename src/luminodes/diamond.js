@@ -1,5 +1,6 @@
 // Diamond - 3D wireframe 2-cone diamond with radial replication and deformation
 import { SETTINGS, UTILS } from '../settings.js'
+import { getEulerRotation, isRotationEnabled } from '../rotation-utils.js'
 
 export class DiamondLuminode {
   constructor (canvasDrawer) {
@@ -244,7 +245,15 @@ export class DiamondLuminode {
     }
     this.ctx.lineWidth = SETTINGS.MODULES.DIAMOND.LINE_WIDTH
 
-    const rotationSpeed = SETTINGS.MODULES.DIAMOND.ROTATION_SPEED
+    const m = SETTINGS.MODULES.DIAMOND
+    const rotationSpeed = m.ROTATION_SPEED
+    const euler = getEulerRotation(m)
+    const rotationEnabled = isRotationEnabled(m)
+    const baseAngleX = rotationEnabled ? t * rotationSpeed * 0.1 : 0
+    const baseAngleY = rotationEnabled ? t * rotationSpeed * 0.15 : 0
+    const angleX = baseAngleX + euler.x
+    const angleY = baseAngleY + euler.y
+    const angleZ = euler.z
 
     // Draw K instances of the diamond
     for (let k = 0; k < K; k++) {
@@ -267,16 +276,18 @@ export class DiamondLuminode {
           A.x * scale,
           A.y * scale,
           A.z * scale,
-          t * rotationSpeed * 0.1,
-          t * rotationSpeed * 0.15
+          angleX,
+          angleY,
+          angleZ
         )
 
         const [rotatedBX, rotatedBY, rotatedBZ] = UTILS.rotate3D(
           B.x * scale,
           B.y * scale,
           B.z * scale,
-          t * rotationSpeed * 0.1,
-          t * rotationSpeed * 0.15
+          angleX,
+          angleY,
+          angleZ
         )
 
         // Apply perspective projection (same as other luminodes)

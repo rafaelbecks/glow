@@ -2,6 +2,7 @@
 // Evangelion sync chart aesthetic: parametric sine wave backbone with circular cross-sections
 // Multiple phase-shifted instances create braided interference patterns
 import { SETTINGS, UTILS } from '../settings.js'
+import { getEulerRotation } from '../rotation-utils.js'
 
 export class SyncHelix2DLuminode {
   constructor (canvasDrawer) {
@@ -99,7 +100,7 @@ export class SyncHelix2DLuminode {
   }
 
   // Draw a single tubular structure in wireframe
-  drawTubularStructure (structure, phaseOffset, t, note, useColor, enableProjection, rotationAngle) {
+  drawTubularStructure (structure, phaseOffset, t, note, useColor, enableProjection, angleX, angleY, angleZ) {
     const { width, height } = this.dimensions
     const scale = SETTINGS.MODULES.SYNC_HELIX_2D.SCALE
     const lineWidth = SETTINGS.MODULES.SYNC_HELIX_2D.LINE_WIDTH
@@ -117,9 +118,6 @@ export class SyncHelix2DLuminode {
     }
 
     this.ctx.lineWidth = lineWidth
-    const rotationAngleX = rotationAngle || 0
-    const rotationAngleY = rotationAngle * 0.75 || 0 // Slight offset for better 3D effect
-
     // Draw cross-sections (circles)
     structure.forEach((segment, segIdx) => {
       const crossSection = segment.crossSection
@@ -137,8 +135,9 @@ export class SyncHelix2DLuminode {
             point.x * scale,
             point.y * scale,
             point.z * scale,
-            rotationAngleX,
-            rotationAngleY
+            angleX,
+            angleY,
+            angleZ
           )
           
           // Perspective projection
@@ -186,15 +185,17 @@ export class SyncHelix2DLuminode {
             currentPoint.x * scale,
             currentPoint.y * scale,
             currentPoint.z * scale,
-            rotationAngleX,
-            rotationAngleY
+            angleX,
+            angleY,
+            angleZ
           )
           const [rotX2, rotY2, rotZ2] = UTILS.rotate3D(
             nextPoint.x * scale,
             nextPoint.y * scale,
             nextPoint.z * scale,
-            rotationAngleX,
-            rotationAngleY
+            angleX,
+            angleY,
+            angleZ
           )
           
           // Perspective projection
@@ -233,8 +234,13 @@ export class SyncHelix2DLuminode {
     const crossSectionPoints = SETTINGS.MODULES.SYNC_HELIX_2D.CROSS_SECTION_POINTS || 10
     const animationSpeed = SETTINGS.MODULES.SYNC_HELIX_2D.ANIMATION_SPEED
     const syncRate = SETTINGS.MODULES.SYNC_HELIX_2D.SYNC_RATE
-    const enableProjection = SETTINGS.MODULES.SYNC_HELIX_2D.ENABLE_PROJECTION
-    const rotationAngle = SETTINGS.MODULES.SYNC_HELIX_2D.PERSPECTIVE || 0.2
+    const ms = SETTINGS.MODULES.SYNC_HELIX_2D
+    const enableProjection = ms.ENABLE_PROJECTION
+    const baseView = ms.PERSPECTIVE || 0.2
+    const euler = getEulerRotation(ms)
+    const angleX = baseView + euler.x
+    const angleY = baseView * 0.75 + euler.y
+    const angleZ = euler.z
     const extensionFactor = 0.3 // Extend 30% beyond canvas on each side
 
     // Create a unique signature of active MIDI notes for color changes
@@ -278,7 +284,7 @@ export class SyncHelix2DLuminode {
       )
 
       // Draw the structure
-      this.drawTubularStructure(structure, phaseOffset, t, note, useColor, enableProjection, rotationAngle)
+      this.drawTubularStructure(structure, phaseOffset, t, note, useColor, enableProjection, angleX, angleY, angleZ)
     })
 
     this.canvasDrawer.restoreLayoutTransform()

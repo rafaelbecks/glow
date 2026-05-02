@@ -1,4 +1,5 @@
 import { SETTINGS, UTILS } from '../settings.js'
+import { getEulerRotation } from '../rotation-utils.js'
 import { ORIZURU_SVG_DATA, ORIZURU_UNFOLDED_OBJ, ORIZURU_FOLDED_OBJ, ORIZURU_FACE_DATA } from './orizuru-patterns.js'
 
 export class OrizuruLuminode {
@@ -330,24 +331,6 @@ export class OrizuruLuminode {
     return vertices
   }
 
-  // Apply 3D rotation based on X and Y angles
-  applyRotation (x, y, z, xAngle, yAngle) {
-    // First rotate around Y axis
-    const cosY = Math.cos(yAngle)
-    const sinY = Math.sin(yAngle)
-    const rotX1 = x * cosY - z * sinY
-    const rotZ1 = x * sinY + z * cosY
-    const rotY1 = y
-
-    // Then rotate around X axis
-    const cosX = Math.cos(xAngle)
-    const sinX = Math.sin(xAngle)
-    const rotY2 = rotY1 * cosX - rotZ1 * sinX
-    const rotZ2 = rotY1 * sinX + rotZ1 * cosX
-
-    return { x: rotX1, y: rotY2, z: rotZ2 }
-  }
-
   draw (t, notes, useColor = false, layout = { x: 0, y: 0, rotation: 0 }) {
     if (notes.length === 0) return
 
@@ -361,8 +344,13 @@ export class OrizuruLuminode {
     const foldAmount = SETTINGS.MODULES.ORIZURU.FOLD_AMOUNT !== undefined ? SETTINGS.MODULES.ORIZURU.FOLD_AMOUNT : 1.0
     const scale = SETTINGS.MODULES.ORIZURU.SCALE || 200
     const lineWidth = SETTINGS.MODULES.ORIZURU.LINE_WIDTH || 1.0
-    const xRotation = SETTINGS.MODULES.ORIZURU.PERSPECTIVE !== undefined ? SETTINGS.MODULES.ORIZURU.PERSPECTIVE : 3.0
-    const yRotation = SETTINGS.MODULES.ORIZURU.Y_ROTATION !== undefined ? SETTINGS.MODULES.ORIZURU.Y_ROTATION : 0.0
+    const ou = SETTINGS.MODULES.ORIZURU
+    const xRotation = ou.PERSPECTIVE !== undefined ? ou.PERSPECTIVE : 3.0
+    const yRotation = ou.Y_ROTATION !== undefined ? ou.Y_ROTATION : 0.0
+    const euler = getEulerRotation(ou)
+    const angleX = xRotation + euler.x
+    const angleY = yRotation + euler.y
+    const angleZ = euler.z
     const projectionDepth = SETTINGS.MODULES.ORIZURU.PROJECTION_DEPTH || 0.3
     const useColorMode = SETTINGS.MODULES.ORIZURU.USE_COLOR !== undefined ? SETTINGS.MODULES.ORIZURU.USE_COLOR : useColor
     const instances = SETTINGS.MODULES.ORIZURU.INSTANCES || 1
@@ -416,9 +404,10 @@ export class OrizuruLuminode {
           let y2 = v2.y * scale
           let z2 = v2.z * scale
 
-          // Apply rotation (both X and Y)
-          const rot1 = this.applyRotation(x1, y1, z1, xRotation, yRotation)
-          const rot2 = this.applyRotation(x2, y2, z2, xRotation, yRotation)
+          const [r1x, r1y, r1z] = UTILS.rotate3D(x1, y1, z1, angleX, angleY, angleZ)
+          const rot1 = { x: r1x, y: r1y, z: r1z }
+          const [r2x, r2y, r2z] = UTILS.rotate3D(x2, y2, z2, angleX, angleY, angleZ)
+          const rot2 = { x: r2x, y: r2y, z: r2z }
 
           let p1, p2
           if (enableProjection) {

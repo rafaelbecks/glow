@@ -276,7 +276,7 @@ export const SETTINGS = {
       ENABLE_PROJECTION: true,
       USE_COLOR: false,
       ROTATION: { x: 0, y: 0, z: 0 },
-      ROTATION_ENABLED: false
+      ROTATION_ENABLED: true
     },
     DE_JONG: {
       // De Jong attractor parameters
@@ -313,7 +313,8 @@ export const SETTINGS = {
       ENABLE_RAY: false,
       RAY_LENGTH: 400,
       RAY_PULSE_RATE: 1.0,
-      ROTATION: { x: 0, y: 0, z: 0 }
+      ROTATION: { x: 0, y: 0, z: 0 },
+      ROTATION_ENABLED: true
     },
     WINDMILL: {
       RADIUS: 50,
@@ -350,7 +351,7 @@ export const SETTINGS = {
       ENABLE_PROJECTION: true,
       USE_COLOR: false,
       ROTATION: { x: 0, y: 0, z: 0 },
-      ROTATION_ENABLED: false
+      ROTATION_ENABLED: true
     }
   },
 

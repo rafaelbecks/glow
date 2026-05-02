@@ -1,5 +1,6 @@
 // Trefoil knot - 3D wireframe trefoil knot with deformation
 import { SETTINGS, UTILS } from '../settings.js'
+import { getEulerRotation, isRotationEnabled } from '../rotation-utils.js'
 
 export class TrefoilKnotLuminode {
   constructor (canvasDrawer) {
@@ -87,7 +88,15 @@ export class TrefoilKnotLuminode {
       this.currentBaseHue = Math.floor(Math.random() * 360)
     }
 
-    const rotationSpeed = SETTINGS.MODULES.TREFOIL.ROTATION_SPEED
+    const m = SETTINGS.MODULES.TREFOIL
+    const rotationSpeed = m.ROTATION_SPEED
+    const euler = getEulerRotation(m)
+    const rotationEnabled = isRotationEnabled(m)
+    const baseAngleX = rotationEnabled ? t * rotationSpeed * 0.1 : 0
+    const baseAngleY = rotationEnabled ? t * rotationSpeed * 0.15 : 0
+    const angleX = baseAngleX + euler.x
+    const angleY = baseAngleY + euler.y
+    const angleZ = euler.z
 
     // Draw multiple laces (instances) of the trefoil knot
     for (let lace = 0; lace < numLaces; lace++) {
@@ -127,8 +136,9 @@ export class TrefoilKnotLuminode {
           point.x,
           point.y,
           point.z,
-          t * rotationSpeed * 0.1,
-          t * rotationSpeed * 0.15
+          angleX,
+          angleY,
+          angleZ
         )
 
         // Apply perspective projection
@@ -147,8 +157,9 @@ export class TrefoilKnotLuminode {
         firstPoint.x,
         firstPoint.y,
         firstPoint.z,
-        t * rotationSpeed * 0.1,
-        t * rotationSpeed * 0.15
+        angleX,
+        angleY,
+        angleZ
       )
       const perspectiveFirstX = rotatedFirstX + (rotatedFirstX / width) * rotatedFirstZ * 0.001
       const perspectiveFirstY = rotatedFirstY + (rotatedFirstY / height) * rotatedFirstZ * 0.001 - rotatedFirstZ * 0.3

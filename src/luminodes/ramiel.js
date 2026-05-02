@@ -1,5 +1,6 @@
 // Ramiel - Evangelion-inspired octahedron with ray and AT field
 import { SETTINGS, UTILS } from '../settings.js'
+import { getEulerRotation, isRotationEnabled } from '../rotation-utils.js'
 
 export class RamielLuminode {
   constructor (canvasDrawer) {
@@ -158,22 +159,20 @@ export class RamielLuminode {
   }
 
   // Draw octagonal AT field
-  drawATField (x, y, size, opacity, t, followProjection = false, enableProjection = false, rotationAngle = 0, width = 0, height = 0) {
+  drawATField (x, y, size, opacity, t, followProjection = false, enableProjection = false, angleX = 0, angleY = 0, angleZ = 0, width = 0, height = 0) {
     const sides = 8
     const angleStep = (Math.PI * 2) / sides
 
     // Helper to project a 3D point if projection is enabled
     const projectPoint = (px, py, pz = 0) => {
       if (followProjection && enableProjection) {
-        // Apply 3D rotation (same as diamond)
-        const rotationAngleX = rotationAngle || 0
-        const rotationAngleY = rotationAngle * 0.75 || 0
         const [rotatedX, rotatedY, rotatedZ] = UTILS.rotate3D(
           px - x,
           py - y,
           pz,
-          rotationAngleX,
-          rotationAngleY
+          angleX,
+          angleY,
+          angleZ
         )
         // Apply perspective projection (same as diamond)
         const projectedX = x + rotatedX + (rotatedX / width) * rotatedZ * 0.001
@@ -244,7 +243,7 @@ export class RamielLuminode {
   }
 
   // Draw glass-like surface with moving gradients
-  drawGlassSurface (vertices, edges, scale, useColor, note, t, enableProjection, rotationAngle, width, height, edgeToFaces = null, faceMap = null) {
+  drawGlassSurface (vertices, edges, scale, useColor, note, t, enableProjection, angleX, angleY, angleZ, width, height, edgeToFaces = null, faceMap = null) {
     // Update gradient offset for moving reflection
     this.gradientOffset += 0.02
 
@@ -261,9 +260,6 @@ export class RamielLuminode {
 
     this.ctx.lineWidth = SETTINGS.MODULES.RAMIEL.LINE_WIDTH
     this.ctx.shadowBlur = 8
-
-    const rotationAngleX = rotationAngle || 0
-    const rotationAngleY = rotationAngle * 0.75 || 0
 
     // Draw edges with gradient effect
     // When shapeshifting, only draw edges within the same face
@@ -288,15 +284,17 @@ export class RamielLuminode {
           A.x * scale,
           A.y * scale,
           A.z * scale,
-          rotationAngleX,
-          rotationAngleY
+          angleX,
+          angleY,
+          angleZ
         )
         const [rotatedBX, rotatedBY, rotatedBZ] = UTILS.rotate3D(
           B.x * scale,
           B.y * scale,
           B.z * scale,
-          rotationAngleX,
-          rotationAngleY
+          angleX,
+          angleY,
+          angleZ
         )
 
         projectedAX = rotatedAX + (rotatedAX / width) * rotatedAZ * 0.001
@@ -375,6 +373,24 @@ export class RamielLuminode {
     const rayLength = SETTINGS.MODULES.RAMIEL.RAY_LENGTH
     const rayPulseRate = SETTINGS.MODULES.RAMIEL.RAY_PULSE_RATE
 
+    const rm = SETTINGS.MODULES.RAMIEL
+    const euler = getEulerRotation(rm)
+    const rotationTimeEnabled = isRotationEnabled(rm)
+    let baseAngleX, baseAngleY
+    if (enableRotation && rotationTimeEnabled) {
+      baseAngleX = t * rotationSpeed
+      baseAngleY = t * rotationSpeed * 0.75
+    } else if (!enableRotation) {
+      baseAngleX = perspective
+      baseAngleY = perspective * 0.75
+    } else {
+      baseAngleX = 0
+      baseAngleY = 0
+    }
+    const angleX = baseAngleX + euler.x
+    const angleY = baseAngleY + euler.y
+    const angleZ = euler.z
+
     this.canvasDrawer.applyLayoutTransform(layout)
 
     // Get base geometry
@@ -442,15 +458,13 @@ export class RamielLuminode {
       let atFieldX = anim.x
       let atFieldY = anim.y
       if (enableProjection && anim.z !== undefined) {
-        // Apply rotation to AT field position
-        const rotationAngleX = enableRotation ? t * rotationSpeed : perspective
-        const rotationAngleY = rotationAngleX * 0.75
         const [rotatedX, rotatedY, rotatedZ] = UTILS.rotate3D(
           anim.x,
           anim.y,
           anim.z || 0,
-          rotationAngleX,
-          rotationAngleY
+          angleX,
+          angleY,
+          angleZ
         )
         // Apply perspective projection
         atFieldX = rotatedX + (rotatedX / width) * rotatedZ * 0.001
@@ -466,15 +480,14 @@ export class RamielLuminode {
         t,
         atFieldFollowProjection,
         enableProjection,
-        enableRotation ? t * rotationSpeed : perspective,
+        angleX,
+        angleY,
+        angleZ,
         width,
         height
       )
       return true
     })
-
-    // Calculate rotation angle
-    const rotationAngle = enableRotation ? t * rotationSpeed : perspective
 
     // Determine number of instances
     const numInstances = instancePerNote ? notes.length : instances
@@ -512,7 +525,9 @@ export class RamielLuminode {
         note,
         t,
         enableProjection,
-        rotationAngle,
+        angleX,
+        angleY,
+        angleZ,
         width,
         height,
         edgeToFaces,
@@ -528,7 +543,9 @@ export class RamielLuminode {
           rayPulseRate,
           t,
           enableProjection,
-          rotationAngle,
+          angleX,
+          angleY,
+          angleZ,
           width,
           height,
           useColor,
@@ -541,7 +558,7 @@ export class RamielLuminode {
   }
 
   // Draw glowing ray extending from vertex edge
-  drawRay (vertices, scale, rayLength, pulseRate, t, enableProjection, rotationAngle, width, height, useColor, note) {
+  drawRay (vertices, scale, rayLength, pulseRate, t, enableProjection, angleX, angleY, angleZ, width, height, useColor, note) {
     // Use base vertex 1 (right side) as ray origin
     const originVertex = vertices[1] // (s, 0, 0)
     
@@ -579,16 +596,13 @@ export class RamielLuminode {
     let originProjX, originProjY, endProjX, endProjY
     
     if (enableProjection) {
-      const rotationAngleX = rotationAngle || 0
-      const rotationAngleY = rotationAngle * 0.75 || 0
-      
-      // Project origin
       const [rotOrigX, rotOrigY, rotOrigZ] = UTILS.rotate3D(
         originVertex.x * scale,
         originVertex.y * scale,
         originVertex.z * scale,
-        rotationAngleX,
-        rotationAngleY
+        angleX,
+        angleY,
+        angleZ
       )
       originProjX = rotOrigX + (rotOrigX / width) * rotOrigZ * 0.001
       originProjY = rotOrigY + (rotOrigY / height) * rotOrigZ * 0.001 - rotOrigZ * 0.3
@@ -598,8 +612,9 @@ export class RamielLuminode {
         endX * scale,
         endY * scale,
         endZ * scale,
-        rotationAngleX,
-        rotationAngleY
+        angleX,
+        angleY,
+        angleZ
       )
       endProjX = rotEndX + (rotEndX / width) * rotEndZ * 0.001
       endProjY = rotEndY + (rotEndY / height) * rotEndZ * 0.001 - rotEndZ * 0.3

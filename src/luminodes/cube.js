@@ -1,5 +1,6 @@
 // Cube - 3D wireframe cube with configurable segments and rotation
 import { SETTINGS, UTILS } from '../settings.js'
+import { getEulerRotation, isRotationEnabled } from '../rotation-utils.js'
 
 export class CubeLuminode {
   constructor (canvasDrawer) {
@@ -97,7 +98,15 @@ export class CubeLuminode {
     this.ctx.shadowColor = useColor ? `hsla(${hue}, 80%, 70%, 0.5)` : 'rgba(255, 255, 255, 0.5)'
     this.ctx.lineWidth = SETTINGS.MODULES.CUBE.LINE_WIDTH
 
-    const rotationSpeed = SETTINGS.MODULES.CUBE.ROTATION_SPEED
+    const m = SETTINGS.MODULES.CUBE
+    const rotationSpeed = m.ROTATION_SPEED
+    const euler = getEulerRotation(m)
+    const rotationEnabled = isRotationEnabled(m)
+    const baseAngleX = rotationEnabled ? t * rotationSpeed * 0.1 : 0
+    const baseAngleY = rotationEnabled ? t * rotationSpeed * 0.15 : 0
+    const angleX = baseAngleX + euler.x
+    const angleY = baseAngleY + euler.y
+    const angleZ = euler.z
 
     // Draw horizontal lines (along X axis)
     for (let j = 0; j <= segments; j++) {
@@ -111,8 +120,9 @@ export class CubeLuminode {
             point.x * scale,
             point.y * scale,
             point.z * scale,
-            t * rotationSpeed * 0.1,
-            t * rotationSpeed * 0.15
+            angleX,
+            angleY,
+            angleZ
           )
 
           // Apply perspective projection
@@ -141,8 +151,9 @@ export class CubeLuminode {
             point.x * scale,
             point.y * scale,
             point.z * scale,
-            t * rotationSpeed * 0.1,
-            t * rotationSpeed * 0.15
+            angleX,
+            angleY,
+            angleZ
           )
 
           // Apply perspective projection
@@ -171,8 +182,9 @@ export class CubeLuminode {
             point.x * scale,
             point.y * scale,
             point.z * scale,
-            t * rotationSpeed * 0.1,
-            t * rotationSpeed * 0.15
+            angleX,
+            angleY,
+            angleZ
           )
 
           // Apply perspective projection

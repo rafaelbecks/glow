@@ -1,4 +1,5 @@
 import { SETTINGS, UTILS } from '../settings.js'
+import { getEulerRotation } from '../rotation-utils.js'
 
 export class WindmillLuminode {
   constructor (canvasDrawer) {
@@ -59,7 +60,7 @@ export class WindmillLuminode {
     }
   }
 
-  drawHub (instanceX, scale, enableProjection, rotationAngle, useColor) {
+  drawHub (instanceX, scale, enableProjection, angleX, angleY, angleZ, useColor) {
     const hubRadius = SETTINGS.MODULES.WINDMILL.HUB_RADIUS || 8
     const lineWidth = SETTINGS.MODULES.WINDMILL.LINE_WIDTH
     const { width, height } = this.dimensions
@@ -82,14 +83,13 @@ export class WindmillLuminode {
         let finalX, finalY
 
         if (enableProjection) {
-          const rotationAngleX = rotationAngle
-          const rotationAngleY = rotationAngle * 0.75
           const [rotatedX, rotatedY, rotatedZ] = UTILS.rotate3D(
             x * scale,
             y * scale,
             z * scale,
-            rotationAngleX,
-            rotationAngleY
+            angleX,
+            angleY,
+            angleZ
           )
           finalX = rotatedX + (rotatedX / width) * rotatedZ * 0.001
           finalY = rotatedY + (rotatedY / height) * rotatedZ * 0.001 - rotatedZ * 0.2
@@ -113,25 +113,30 @@ export class WindmillLuminode {
   drawWindmillInstance (notes, instanceIndex, instanceCount, spacing, t, useColor) {
     if (notes.length === 0) return
 
-    const baseRadius = SETTINGS.MODULES.WINDMILL.RADIUS
-    const baseRotationRate = SETTINGS.MODULES.WINDMILL.ROTATION_RATE
-    const chirality = SETTINGS.MODULES.WINDMILL.CHIRALITY || 1
-    const depth = SETTINGS.MODULES.WINDMILL.DEPTH
-    const scale = SETTINGS.MODULES.WINDMILL.SCALE || 1.0
-    const lineWidth = SETTINGS.MODULES.WINDMILL.LINE_WIDTH
-    const accelerationDuration = SETTINGS.MODULES.WINDMILL.ACCELERATION_DURATION || 1.0
-    const enableProjection = SETTINGS.MODULES.WINDMILL.ENABLE_PROJECTION !== false
-    const rotationAngle = SETTINGS.MODULES.WINDMILL.PERSPECTIVE || 0.2
-    const bladeMultiplier = SETTINGS.MODULES.WINDMILL.BLADE_MULTIPLIER || 1
-    const spiralScale = SETTINGS.MODULES.WINDMILL.SPIRAL_SCALE || 8
-    const goldenAngle = SETTINGS.MODULES.WINDMILL.GOLDEN_ANGLE || (Math.PI * (3 - Math.sqrt(5)))
-    const sizeVariationAmount = SETTINGS.MODULES.WINDMILL.SIZE_VARIATION || 0.15
-    const bladeWidthBase = SETTINGS.MODULES.WINDMILL.BLADE_WIDTH || 0.3
+    const wm = SETTINGS.MODULES.WINDMILL
+    const baseRadius = wm.RADIUS
+    const baseRotationRate = wm.ROTATION_RATE
+    const chirality = wm.CHIRALITY || 1
+    const depth = wm.DEPTH
+    const scale = wm.SCALE || 1.0
+    const lineWidth = wm.LINE_WIDTH
+    const accelerationDuration = wm.ACCELERATION_DURATION || 1.0
+    const enableProjection = wm.ENABLE_PROJECTION !== false
+    const baseView = wm.PERSPECTIVE || 0.2
+    const euler = getEulerRotation(wm)
+    const angleX = baseView + euler.x
+    const angleY = baseView * 0.75 + euler.y
+    const angleZ = euler.z
+    const bladeMultiplier = wm.BLADE_MULTIPLIER || 1
+    const spiralScale = wm.SPIRAL_SCALE || 8
+    const goldenAngle = wm.GOLDEN_ANGLE || (Math.PI * (3 - Math.sqrt(5)))
+    const sizeVariationAmount = wm.SIZE_VARIATION || 0.15
+    const bladeWidthBase = wm.BLADE_WIDTH || 0.3
 
     const allBlades = []
     notes.forEach((note, noteIndex) => {
-      for (let m = 0; m < bladeMultiplier; m++) {
-        allBlades.push({ note, noteIndex, multiplierIndex: m })
+      for (let mi = 0; mi < bladeMultiplier; mi++) {
+        allBlades.push({ note, noteIndex, multiplierIndex: mi })
       }
     })
 
@@ -199,14 +204,13 @@ export class WindmillLuminode {
         let finalX, finalY
 
         if (enableProjection) {
-          const rotationAngleX = rotationAngle
-          const rotationAngleY = rotationAngle * 0.75
           const [rotatedX, rotatedY, rotatedZ] = UTILS.rotate3D(
             v.x * scale,
             v.y * scale,
             v.z * scale,
-            rotationAngleX,
-            rotationAngleY
+            angleX,
+            angleY,
+            angleZ
           )
           finalX = rotatedX + (rotatedX / width) * rotatedZ * 0.001
           finalY = rotatedY + (rotatedY / height) * rotatedZ * 0.001 - rotatedZ * 0.2
@@ -234,7 +238,7 @@ export class WindmillLuminode {
       this.ctx.stroke()
     })
 
-    this.drawHub(instanceX, scale, enableProjection, rotationAngle, useColor)
+    this.drawHub(instanceX, scale, enableProjection, angleX, angleY, angleZ, useColor)
 
     const cleanupTime = t - 10
     this.noteTimestamps.forEach((timestamp, key) => {

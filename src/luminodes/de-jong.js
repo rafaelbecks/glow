@@ -5,6 +5,7 @@
 //  - MIDI-based color using UTILS.pitchToColor, like other 3D luminodes
 
 import { SETTINGS, UTILS } from '../settings.js'
+import { getEulerRotation } from '../rotation-utils.js'
 import {
   DE_JONG_VERTEX_SHADER,
   DE_JONG_FRAGMENT_SHADER
@@ -99,6 +100,9 @@ export class DeJongLuminode {
     this.uniforms.u_d = gl.getUniformLocation(this.program, 'u_d')
     this.uniforms.u_pointSize = gl.getUniformLocation(this.program, 'u_pointSize')
     this.uniforms.u_scale = gl.getUniformLocation(this.program, 'u_scale')
+    this.uniforms.u_rotX = gl.getUniformLocation(this.program, 'u_rotX')
+    this.uniforms.u_rotY = gl.getUniformLocation(this.program, 'u_rotY')
+    this.uniforms.u_rotZ = gl.getUniformLocation(this.program, 'u_rotZ')
     this.uniforms.u_colorMode = gl.getUniformLocation(this.program, 'u_colorMode')
     this.uniforms.u_midiColor = gl.getUniformLocation(this.program, 'u_midiColor')
     this.uniforms.u_time = gl.getUniformLocation(this.program, 'u_time')
@@ -182,8 +186,12 @@ export class DeJongLuminode {
     // Point size scales with devicePixelRatio so UI feels similar
     gl.uniform1f(this.uniforms.u_pointSize, pointSize * dpr)
 
-    // Scale uniform (applied in vertex shader)
     gl.uniform1f(this.uniforms.u_scale, scale)
+
+    const euler = getEulerRotation(moduleSettings)
+    gl.uniform1f(this.uniforms.u_rotX, euler.x)
+    gl.uniform1f(this.uniforms.u_rotY, euler.y)
+    gl.uniform1f(this.uniforms.u_rotZ, euler.z)
 
     // Color mode: 0 = rainbow, 1 = MIDI, 2 = black & white
     // useColor parameter can override if explicitly set, otherwise use settings

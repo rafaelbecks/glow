@@ -1,5 +1,6 @@
 // Line Cylinder - 3D wireframe cylinder with vertical lines that opens and closes
 import { SETTINGS, UTILS } from '../settings.js'
+import { getEulerRotation, isRotationEnabled } from '../rotation-utils.js'
 
 export class LineCylinderLuminode {
   constructor (canvasDrawer) {
@@ -147,28 +148,35 @@ export class LineCylinderLuminode {
     this.ctx.shadowColor = useColor ? `hsla(${hue}, 80%, 70%, 0.5)` : 'rgba(255, 255, 255, 0.5)'
     this.ctx.lineWidth = SETTINGS.MODULES.LINE_CYLINDER.LINE_WIDTH
 
-    const rotationSpeed = SETTINGS.MODULES.LINE_CYLINDER.ROTATION_SPEED
+    const m = SETTINGS.MODULES.LINE_CYLINDER
+    const rotationSpeed = m.ROTATION_SPEED
+    const euler = getEulerRotation(m)
+    const rotationEnabled = isRotationEnabled(m)
+    const baseAngleX = rotationEnabled ? t * rotationSpeed * 0.1 : 0
+    const baseAngleY = rotationEnabled ? t * rotationSpeed * 0.15 : 0
+    const angleX = baseAngleX + euler.x
+    const angleY = baseAngleY + euler.y
+    const angleZ = euler.z
 
-    // Draw vertical lines
     deformedPoints.forEach(point => {
       this.ctx.beginPath()
 
-      // Apply 3D rotation to top point
       const [rotatedTopX, rotatedTopY, rotatedTopZ] = UTILS.rotate3D(
         point.top.x * scale,
         point.top.y * scale,
         point.top.z * scale,
-        t * rotationSpeed * 0.1,
-        t * rotationSpeed * 0.15
+        angleX,
+        angleY,
+        angleZ
       )
 
-      // Apply 3D rotation to bottom point
       const [rotatedBottomX, rotatedBottomY, rotatedBottomZ] = UTILS.rotate3D(
         point.bottom.x * scale,
         point.bottom.y * scale,
         point.bottom.z * scale,
-        t * rotationSpeed * 0.1,
-        t * rotationSpeed * 0.15
+        angleX,
+        angleY,
+        angleZ
       )
 
       // Apply perspective projection to top point

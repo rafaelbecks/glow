@@ -15,6 +15,9 @@ uniform float u_c;
 uniform float u_d;
 uniform float u_pointSize;
 uniform float u_scale;
+uniform float u_rotX;
+uniform float u_rotY;
+uniform float u_rotZ;
 
 varying float v_t;
 
@@ -33,8 +36,20 @@ void main() {
   // Angle of original seed controls rainbow color
   v_t = atan(a_position.y, a_position.x) / PI;
 
-  // Project attractor into clip space with scale applied
-  gl_Position = vec4(x2 / 2.0 * u_scale, y2 / 2.0 * u_scale, 0.0, 1.0);
+  float px = x2 * 0.5 * u_scale;
+  float py = y2 * 0.5 * u_scale;
+  float pz = 0.0;
+  float cx = cos(u_rotX), sx = sin(u_rotX);
+  float y1 = py * cx - pz * sx;
+  float z1 = py * sx + pz * cx;
+  float cy = cos(u_rotY), sy = sin(u_rotY);
+  float x1 = px * cy + z1 * sy;
+  float z2 = -px * sy + z1 * cy;
+  float cz = cos(u_rotZ), sz = sin(u_rotZ);
+  float xf = x1 * cz - y1 * sz;
+  float yf = x1 * sz + y1 * cz;
+
+  gl_Position = vec4(xf, yf, 0.0, 1.0);
   gl_PointSize = u_pointSize;
 }
 `
