@@ -370,8 +370,6 @@ export const LUMINODE_CONFIGS = {
   deJong: {
     group: '3D Geometry',
     config: [
-      { key: 'ROTATION', label: 'Rotation', type: 'rotation', default: { x: 0, y: 0, z: 0 } },
-      { key: 'ROTATION_ENABLED', label: 'Rotation Enabled', type: 'checkbox', default: true },
       { key: 'A', label: 'Parameter a', type: 'slider', min: -3, max: 3, step: 0.01, default: -1.5090717287003517 },
       { key: 'B', label: 'Parameter b', type: 'slider', min: -3, max: 3, step: 0.01, default: -2.0 },
       { key: 'C', label: 'Parameter c', type: 'slider', min: -3, max: 3, step: 0.01, default: -1.2 },

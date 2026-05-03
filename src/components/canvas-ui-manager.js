@@ -1,5 +1,6 @@
 import { Pane } from '../lib/tweakpane.min.js'
 import { UTILS } from '../settings.js'
+import { FLUID_BACKGROUND_MODES, getBackgroundModePaneOptions } from '../shaders/background/registry.js'
 
 export class CanvasUIManager {
   constructor (panel) {
@@ -98,7 +99,41 @@ export class CanvasUIManager {
       shaderBackgroundColorFluidTrail: this.rgbToHex(canvasSettings.SHADER_BACKGROUND_COLOR_FLUID_TRAIL || { r: 0, g: 0, b: 0.2 }),
       shaderBackgroundColorPressure: this.rgbToHex(canvasSettings.SHADER_BACKGROUND_COLOR_PRESSURE || { r: 0.02, g: 0.078, b: 0.157 }),
       shaderBackgroundColorVelocity: this.rgbToHex(canvasSettings.SHADER_BACKGROUND_COLOR_VELOCITY || { r: 0.259, g: 0.227, b: 0.184 }),
-      shaderBackgroundCursorMode: canvasSettings.SHADER_BACKGROUND_CURSOR_MODE !== false
+      shaderBackgroundCursorMode: canvasSettings.SHADER_BACKGROUND_CURSOR_MODE !== false,
+      shaderBackgroundPortalTimeOffset: canvasSettings.SHADER_BACKGROUND_PORTAL_TIME_OFFSET ?? 4,
+      shaderBackgroundPortalTimeDivisor: canvasSettings.SHADER_BACKGROUND_PORTAL_TIME_DIVISOR ?? 15,
+      shaderBackgroundPortalBrightness: canvasSettings.SHADER_BACKGROUND_PORTAL_BRIGHTNESS ?? 0.15,
+      shaderBackgroundDiscoPaletteVariant: canvasSettings.SHADER_BACKGROUND_DISCO_PALETTE_VARIANT ?? 0,
+      shaderBackgroundDiscoPaletteBase: canvasSettings.SHADER_BACKGROUND_DISCO_PALETTE_BASE ?? 6,
+      shaderBackgroundDiscoPaletteWave: canvasSettings.SHADER_BACKGROUND_DISCO_PALETTE_WAVE ?? 50,
+      shaderBackgroundDiscoShimmer: canvasSettings.SHADER_BACKGROUND_DISCO_SHIMMER ?? 20,
+      shaderBackgroundBalatroSpinRotation: canvasSettings.SHADER_BACKGROUND_BALATRO_SPIN_ROTATION ?? -2,
+      shaderBackgroundBalatroSpinSpeed: canvasSettings.SHADER_BACKGROUND_BALATRO_SPIN_SPEED ?? 7,
+      shaderBackgroundBalatroOffsetX: canvasSettings.SHADER_BACKGROUND_BALATRO_OFFSET_X ?? 0,
+      shaderBackgroundBalatroOffsetY: canvasSettings.SHADER_BACKGROUND_BALATRO_OFFSET_Y ?? 0,
+      shaderBackgroundBalatroColor1: this.rgbToHex(canvasSettings.SHADER_BACKGROUND_BALATRO_COLOR_1 || { r: 0.871, g: 0.267, b: 0.231 }),
+      shaderBackgroundBalatroColor2: this.rgbToHex(canvasSettings.SHADER_BACKGROUND_BALATRO_COLOR_2 || { r: 0, g: 0.42, b: 0.706 }),
+      shaderBackgroundBalatroColor3: this.rgbToHex(canvasSettings.SHADER_BACKGROUND_BALATRO_COLOR_3 || { r: 0.086, g: 0.137, b: 0.145 }),
+      shaderBackgroundBalatroContrast: canvasSettings.SHADER_BACKGROUND_BALATRO_CONTRAST ?? 3.5,
+      shaderBackgroundBalatroLighting: canvasSettings.SHADER_BACKGROUND_BALATRO_LIGHTING ?? 0.4,
+      shaderBackgroundBalatroSpinAmount: canvasSettings.SHADER_BACKGROUND_BALATRO_SPIN_AMOUNT ?? 0.25,
+      shaderBackgroundBalatroPixelFilter: canvasSettings.SHADER_BACKGROUND_BALATRO_PIXEL_FILTER ?? 745,
+      shaderBackgroundBalatroSpinEase: canvasSettings.SHADER_BACKGROUND_BALATRO_SPIN_EASE ?? 1,
+      shaderBackgroundBalatroIsRotate: canvasSettings.SHADER_BACKGROUND_BALATRO_IS_ROTATE === true,
+      shaderBackgroundChromaNoiseTimeScale: canvasSettings.SHADER_BACKGROUND_CHROMA_NOISE_TIME_SCALE ?? 0.2,
+      shaderBackgroundChromaNoiseUvScale: canvasSettings.SHADER_BACKGROUND_CHROMA_NOISE_UV_SCALE ?? 0.9,
+      shaderBackgroundChromaFineNoiseScale: canvasSettings.SHADER_BACKGROUND_CHROMA_FINE_NOISE_SCALE ?? 300,
+      shaderBackgroundChromaGrainMix: canvasSettings.SHADER_BACKGROUND_CHROMA_GRAIN_MIX ?? 0.08,
+      shaderBackgroundChromaColorA: this.rgbToHex(canvasSettings.SHADER_BACKGROUND_CHROMA_COLOR_A || { r: 1, g: 0.5, b: 0 }),
+      shaderBackgroundChromaColorB: this.rgbToHex(canvasSettings.SHADER_BACKGROUND_CHROMA_COLOR_B || { r: 0.75, g: 0.3, b: 1 }),
+      shaderBackgroundChromaColorAMul: canvasSettings.SHADER_BACKGROUND_CHROMA_COLOR_A_MUL ?? 1.3,
+      shaderBackgroundChromaColorBMul: canvasSettings.SHADER_BACKGROUND_CHROMA_COLOR_B_MUL ?? 0.9,
+      shaderBackgroundChromaMixClampMin: canvasSettings.SHADER_BACKGROUND_CHROMA_MIX_CLAMP_MIN ?? -0.14,
+      shaderBackgroundChromaMixClampMax: canvasSettings.SHADER_BACKGROUND_CHROMA_MIX_CLAMP_MAX ?? 0.9,
+      shaderBackgroundChromaLayer1S: canvasSettings.SHADER_BACKGROUND_CHROMA_LAYER1_S ?? 1.2,
+      shaderBackgroundChromaLayer2S: canvasSettings.SHADER_BACKGROUND_CHROMA_LAYER2_S ?? 1.5,
+      shaderBackgroundChromaLayer1Z: canvasSettings.SHADER_BACKGROUND_CHROMA_LAYER1_Z ?? 1.1,
+      shaderBackgroundChromaLayer2Z: canvasSettings.SHADER_BACKGROUND_CHROMA_LAYER2_Z ?? 1.4
     }
 
     const pitchColorData = {
@@ -328,27 +363,33 @@ export class CanvasUIManager {
       this.triggerCanvasSettingChange('INVERT_FILTER', ev.value)
     })
 
+    const shaderBgParamFolders = {}
+    let shaderBackgroundFolder = null
+
     canvasFolder.addBinding(canvasData, 'shaderBackgroundEnabled', {
       label: 'Shader Background'
     }).on('change', (ev) => {
       this.triggerCanvasSettingChange('SHADER_BACKGROUND_ENABLED', ev.value)
-      this.updateFolderVisibility(shaderBackgroundFolder, ev.value)
+      if (shaderBackgroundFolder) {
+        this.updateFolderVisibility(shaderBackgroundFolder, ev.value)
+      }
+      this.refreshShaderBackgroundParamVisibility(ev.value, canvasData.shaderBackgroundMode, shaderBgParamFolders)
     })
 
-    const shaderBackgroundFolder = canvasFolder.addFolder({ title: 'Shader Background Settings', expanded: true })
-    
+    shaderBackgroundFolder = canvasFolder.addFolder({ title: 'Shader Background', expanded: true })
+
     shaderBackgroundFolder.addBinding(canvasData, 'shaderBackgroundMode', {
       label: 'Mode',
-      options: {
-        Fluid: 'Fluid',
-        Pressure: 'Pressure',
-        Velocity: 'Velocity'
-      }
+      options: getBackgroundModePaneOptions()
     }).on('change', (ev) => {
       this.triggerCanvasSettingChange('SHADER_BACKGROUND_MODE', ev.value)
+      this.refreshShaderBackgroundParamVisibility(canvasData.shaderBackgroundEnabled, ev.value, shaderBgParamFolders)
     })
 
-    shaderBackgroundFolder.addBinding(canvasData, 'shaderBackgroundTrailLength', {
+    const fluidShaderBgFolder = shaderBackgroundFolder.addFolder({ title: 'Fluid simulation', expanded: true })
+    shaderBgParamFolders.fluid = fluidShaderBgFolder
+
+    fluidShaderBgFolder.addBinding(canvasData, 'shaderBackgroundTrailLength', {
       label: 'Trail Length',
       min: 0,
       max: 100,
@@ -357,41 +398,310 @@ export class CanvasUIManager {
       this.triggerCanvasSettingChange('SHADER_BACKGROUND_TRAIL_LENGTH', ev.value)
     })
 
-    shaderBackgroundFolder.addBinding(canvasData, 'shaderBackgroundColorFluidBackground', {
+    fluidShaderBgFolder.addBinding(canvasData, 'shaderBackgroundColorFluidBackground', {
       label: 'Fluid Background',
       view: 'color'
     }).on('change', (ev) => {
       this.triggerCanvasSettingChange('SHADER_BACKGROUND_COLOR_FLUID_BACKGROUND', this.hexToRgb(ev.value))
     })
 
-    shaderBackgroundFolder.addBinding(canvasData, 'shaderBackgroundColorFluidTrail', {
+    fluidShaderBgFolder.addBinding(canvasData, 'shaderBackgroundColorFluidTrail', {
       label: 'Fluid Trail',
       view: 'color'
     }).on('change', (ev) => {
       this.triggerCanvasSettingChange('SHADER_BACKGROUND_COLOR_FLUID_TRAIL', this.hexToRgb(ev.value))
     })
 
-    shaderBackgroundFolder.addBinding(canvasData, 'shaderBackgroundColorPressure', {
+    fluidShaderBgFolder.addBinding(canvasData, 'shaderBackgroundColorPressure', {
       label: 'Pressure Color',
       view: 'color'
     }).on('change', (ev) => {
       this.triggerCanvasSettingChange('SHADER_BACKGROUND_COLOR_PRESSURE', this.hexToRgb(ev.value))
     })
 
-    shaderBackgroundFolder.addBinding(canvasData, 'shaderBackgroundColorVelocity', {
+    fluidShaderBgFolder.addBinding(canvasData, 'shaderBackgroundColorVelocity', {
       label: 'Velocity Color',
       view: 'color'
     }).on('change', (ev) => {
       this.triggerCanvasSettingChange('SHADER_BACKGROUND_COLOR_VELOCITY', this.hexToRgb(ev.value))
     })
 
-    shaderBackgroundFolder.addBinding(canvasData, 'shaderBackgroundCursorMode', {
+    fluidShaderBgFolder.addBinding(canvasData, 'shaderBackgroundCursorMode', {
       label: 'Cursor Mode'
     }).on('change', (ev) => {
       this.triggerCanvasSettingChange('SHADER_BACKGROUND_CURSOR_MODE', ev.value)
     })
 
+    const portalFolder = shaderBackgroundFolder.addFolder({ title: 'Portal', expanded: true })
+    shaderBgParamFolders.portal = portalFolder
+    portalFolder.addBinding(canvasData, 'shaderBackgroundPortalTimeOffset', {
+      label: 'Time offset',
+      min: -20,
+      max: 20,
+      step: 0.5
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_PORTAL_TIME_OFFSET', ev.value)
+    })
+    portalFolder.addBinding(canvasData, 'shaderBackgroundPortalTimeDivisor', {
+      label: 'Time scale divisor',
+      min: 1,
+      max: 60,
+      step: 0.5
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_PORTAL_TIME_DIVISOR', ev.value)
+    })
+    portalFolder.addBinding(canvasData, 'shaderBackgroundPortalBrightness', {
+      label: 'Brightness',
+      min: 0.02,
+      max: 0.5,
+      step: 0.01
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_PORTAL_BRIGHTNESS', ev.value)
+    })
+
+    const discoFolder = shaderBackgroundFolder.addFolder({ title: 'Disco Sun Vortex', expanded: true })
+    shaderBgParamFolders.disco = discoFolder
+    discoFolder.addBinding(canvasData, 'shaderBackgroundDiscoPaletteVariant', {
+      label: 'Palette',
+      options: { Warm: 0, Cool: 1 }
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_DISCO_PALETTE_VARIANT', ev.value)
+    })
+    discoFolder.addBinding(canvasData, 'shaderBackgroundDiscoPaletteBase', {
+      label: 'Palette depth base',
+      min: 0.5,
+      max: 20,
+      step: 0.1
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_DISCO_PALETTE_BASE', ev.value)
+    })
+    discoFolder.addBinding(canvasData, 'shaderBackgroundDiscoPaletteWave', {
+      label: 'Palette wave amp',
+      min: 1,
+      max: 120,
+      step: 1
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_DISCO_PALETTE_WAVE', ev.value)
+    })
+    discoFolder.addBinding(canvasData, 'shaderBackgroundDiscoShimmer', {
+      label: 'Shimmer strength',
+      min: 0,
+      max: 60,
+      step: 0.5
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_DISCO_SHIMMER', ev.value)
+    })
+
+    const balatroFolder = shaderBackgroundFolder.addFolder({ title: 'Balatro', expanded: true })
+    shaderBgParamFolders.balatro = balatroFolder
+    balatroFolder.addBinding(canvasData, 'shaderBackgroundBalatroColor1', {
+      label: 'Colour 1',
+      view: 'color'
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_BALATRO_COLOR_1', this.hexToRgb(ev.value))
+    })
+    balatroFolder.addBinding(canvasData, 'shaderBackgroundBalatroColor2', {
+      label: 'Colour 2',
+      view: 'color'
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_BALATRO_COLOR_2', this.hexToRgb(ev.value))
+    })
+    balatroFolder.addBinding(canvasData, 'shaderBackgroundBalatroColor3', {
+      label: 'Colour 3',
+      view: 'color'
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_BALATRO_COLOR_3', this.hexToRgb(ev.value))
+    })
+    balatroFolder.addBinding(canvasData, 'shaderBackgroundBalatroContrast', {
+      label: 'Contrast',
+      min: 0.5,
+      max: 8,
+      step: 0.1
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_BALATRO_CONTRAST', ev.value)
+    })
+    balatroFolder.addBinding(canvasData, 'shaderBackgroundBalatroLighting', {
+      label: 'Lighting',
+      min: 0,
+      max: 1.5,
+      step: 0.05
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_BALATRO_LIGHTING', ev.value)
+    })
+    balatroFolder.addBinding(canvasData, 'shaderBackgroundBalatroSpinSpeed', {
+      label: 'Spin speed',
+      min: 0,
+      max: 20,
+      step: 0.1
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_BALATRO_SPIN_SPEED', ev.value)
+    })
+    balatroFolder.addBinding(canvasData, 'shaderBackgroundBalatroSpinRotation', {
+      label: 'Spin rotation',
+      min: -10,
+      max: 10,
+      step: 0.1
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_BALATRO_SPIN_ROTATION', ev.value)
+    })
+    balatroFolder.addBinding(canvasData, 'shaderBackgroundBalatroSpinAmount', {
+      label: 'Spin amount',
+      min: 0,
+      max: 1,
+      step: 0.01
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_BALATRO_SPIN_AMOUNT', ev.value)
+    })
+    balatroFolder.addBinding(canvasData, 'shaderBackgroundBalatroPixelFilter', {
+      label: 'Pixel filter',
+      min: 100,
+      max: 2000,
+      step: 5
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_BALATRO_PIXEL_FILTER', ev.value)
+    })
+    balatroFolder.addBinding(canvasData, 'shaderBackgroundBalatroSpinEase', {
+      label: 'Spin ease',
+      min: 0,
+      max: 3,
+      step: 0.05
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_BALATRO_SPIN_EASE', ev.value)
+    })
+    balatroFolder.addBinding(canvasData, 'shaderBackgroundBalatroOffsetX', {
+      label: 'Offset X',
+      min: -0.5,
+      max: 0.5,
+      step: 0.01
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_BALATRO_OFFSET_X', ev.value)
+    })
+    balatroFolder.addBinding(canvasData, 'shaderBackgroundBalatroOffsetY', {
+      label: 'Offset Y',
+      min: -0.5,
+      max: 0.5,
+      step: 0.01
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_BALATRO_OFFSET_Y', ev.value)
+    })
+    balatroFolder.addBinding(canvasData, 'shaderBackgroundBalatroIsRotate', {
+      label: 'Rotate with time'
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_BALATRO_IS_ROTATE', ev.value)
+    })
+
+    const chromaFolder = shaderBackgroundFolder.addFolder({ title: 'Chroma gradients', expanded: true })
+    shaderBgParamFolders.chroma = chromaFolder
+    chromaFolder.addBinding(canvasData, 'shaderBackgroundChromaNoiseTimeScale', {
+      label: 'Noise time scale',
+      min: 0.01,
+      max: 1,
+      step: 0.01
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_CHROMA_NOISE_TIME_SCALE', ev.value)
+    })
+    chromaFolder.addBinding(canvasData, 'shaderBackgroundChromaNoiseUvScale', {
+      label: 'Noise UV scale',
+      min: 0.1,
+      max: 3,
+      step: 0.05
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_CHROMA_NOISE_UV_SCALE', ev.value)
+    })
+    chromaFolder.addBinding(canvasData, 'shaderBackgroundChromaFineNoiseScale', {
+      label: 'Fine noise scale',
+      min: 50,
+      max: 600,
+      step: 5
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_CHROMA_FINE_NOISE_SCALE', ev.value)
+    })
+    chromaFolder.addBinding(canvasData, 'shaderBackgroundChromaGrainMix', {
+      label: 'Grain mix',
+      min: 0,
+      max: 0.3,
+      step: 0.005
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_CHROMA_GRAIN_MIX', ev.value)
+    })
+    chromaFolder.addBinding(canvasData, 'shaderBackgroundChromaColorA', {
+      label: 'Color A',
+      view: 'color'
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_CHROMA_COLOR_A', this.hexToRgb(ev.value))
+    })
+    chromaFolder.addBinding(canvasData, 'shaderBackgroundChromaColorB', {
+      label: 'Color B',
+      view: 'color'
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_CHROMA_COLOR_B', this.hexToRgb(ev.value))
+    })
+    chromaFolder.addBinding(canvasData, 'shaderBackgroundChromaColorAMul', {
+      label: 'Color A intensity',
+      min: 0,
+      max: 3,
+      step: 0.05
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_CHROMA_COLOR_A_MUL', ev.value)
+    })
+    chromaFolder.addBinding(canvasData, 'shaderBackgroundChromaColorBMul', {
+      label: 'Color B intensity',
+      min: 0,
+      max: 3,
+      step: 0.05
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_CHROMA_COLOR_B_MUL', ev.value)
+    })
+    chromaFolder.addBinding(canvasData, 'shaderBackgroundChromaMixClampMin', {
+      label: 'Mix clamp min',
+      min: -1,
+      max: 1,
+      step: 0.02
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_CHROMA_MIX_CLAMP_MIN', ev.value)
+    })
+    chromaFolder.addBinding(canvasData, 'shaderBackgroundChromaMixClampMax', {
+      label: 'Mix clamp max',
+      min: -1,
+      max: 1.5,
+      step: 0.02
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_CHROMA_MIX_CLAMP_MAX', ev.value)
+    })
+    chromaFolder.addBinding(canvasData, 'shaderBackgroundChromaLayer1S', {
+      label: 'Layer 1 softness',
+      min: 0.2,
+      max: 3,
+      step: 0.05
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_CHROMA_LAYER1_S', ev.value)
+    })
+    chromaFolder.addBinding(canvasData, 'shaderBackgroundChromaLayer2S', {
+      label: 'Layer 2 softness',
+      min: 0.2,
+      max: 3,
+      step: 0.05
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_CHROMA_LAYER2_S', ev.value)
+    })
+    chromaFolder.addBinding(canvasData, 'shaderBackgroundChromaLayer1Z', {
+      label: 'Layer 1 Z',
+      min: 0.2,
+      max: 3,
+      step: 0.05
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_CHROMA_LAYER1_Z', ev.value)
+    })
+    chromaFolder.addBinding(canvasData, 'shaderBackgroundChromaLayer2Z', {
+      label: 'Layer 2 Z',
+      min: 0.2,
+      max: 3,
+      step: 0.05
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('SHADER_BACKGROUND_CHROMA_LAYER2_Z', ev.value)
+    })
     this.updateFolderVisibility(shaderBackgroundFolder, canvasData.shaderBackgroundEnabled)
+    this.refreshShaderBackgroundParamVisibility(canvasData.shaderBackgroundEnabled, canvasData.shaderBackgroundMode, shaderBgParamFolders)
 
     const colorPaletteFolder = this.mainPane.addFolder({ title: 'Color Palettes', expanded: true })
 
@@ -456,8 +766,25 @@ export class CanvasUIManager {
     }, 100)
   }
 
+  refreshShaderBackgroundParamVisibility (enabled, mode, folders) {
+    if (!folders) return
+    const fluidOn = enabled && FLUID_BACKGROUND_MODES.includes(mode)
+    this.updateFolderVisibility(folders.fluid, fluidOn)
+    this.updateFolderVisibility(folders.portal, enabled && mode === 'Portal')
+    this.updateFolderVisibility(folders.disco, enabled && mode === 'DiscoSunVortex')
+    this.updateFolderVisibility(folders.balatro, enabled && mode === 'Balatro')
+    this.updateFolderVisibility(folders.chroma, enabled && mode === 'ChromaGradients')
+  }
+
   updateFolderVisibility (folder, visible) {
     if (!folder) return
+    if ('hidden' in folder) {
+      try {
+        folder.hidden = !visible
+      } catch (_) {
+        /* older tweakpane */
+      }
+    }
     setTimeout(() => {
       const folderElement = folder.element || folder.element_ || (folder.controller && folder.controller.view && folder.controller.view.element)
       if (folderElement) {

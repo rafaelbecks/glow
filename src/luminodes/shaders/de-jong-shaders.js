@@ -40,14 +40,13 @@ void main() {
   float py = y2 * 0.5 * u_scale;
   float pz = 0.0;
   float cx = cos(u_rotX), sx = sin(u_rotX);
-  float y1 = py * cx - pz * sx;
-  float z1 = py * sx + pz * cx;
+  float raY = py * cx - pz * sx;
+  float raZ = py * sx + pz * cx;
   float cy = cos(u_rotY), sy = sin(u_rotY);
-  float x1 = px * cy + z1 * sy;
-  float z2 = -px * sy + z1 * cy;
+  float raX = px * cy + raZ * sy;
   float cz = cos(u_rotZ), sz = sin(u_rotZ);
-  float xf = x1 * cz - y1 * sz;
-  float yf = x1 * sz + y1 * cz;
+  float xf = raX * cz - raY * sz;
+  float yf = raX * sz + raY * cz;
 
   gl_Position = vec4(xf, yf, 0.0, 1.0);
   gl_PointSize = u_pointSize;

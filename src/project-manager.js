@@ -46,7 +46,41 @@ export class ProjectManager {
         shaderBackgroundColorFluidTrail: SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_FLUID_TRAIL,
         shaderBackgroundColorPressure: SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_PRESSURE,
         shaderBackgroundColorVelocity: SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_VELOCITY,
-        shaderBackgroundCursorMode: SETTINGS.CANVAS.SHADER_BACKGROUND_CURSOR_MODE
+        shaderBackgroundCursorMode: SETTINGS.CANVAS.SHADER_BACKGROUND_CURSOR_MODE,
+        shaderBackgroundPortalTimeOffset: SETTINGS.CANVAS.SHADER_BACKGROUND_PORTAL_TIME_OFFSET,
+        shaderBackgroundPortalTimeDivisor: SETTINGS.CANVAS.SHADER_BACKGROUND_PORTAL_TIME_DIVISOR,
+        shaderBackgroundPortalBrightness: SETTINGS.CANVAS.SHADER_BACKGROUND_PORTAL_BRIGHTNESS,
+        shaderBackgroundDiscoPaletteVariant: SETTINGS.CANVAS.SHADER_BACKGROUND_DISCO_PALETTE_VARIANT,
+        shaderBackgroundDiscoPaletteBase: SETTINGS.CANVAS.SHADER_BACKGROUND_DISCO_PALETTE_BASE,
+        shaderBackgroundDiscoPaletteWave: SETTINGS.CANVAS.SHADER_BACKGROUND_DISCO_PALETTE_WAVE,
+        shaderBackgroundDiscoShimmer: SETTINGS.CANVAS.SHADER_BACKGROUND_DISCO_SHIMMER,
+        shaderBackgroundBalatroSpinRotation: SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_SPIN_ROTATION,
+        shaderBackgroundBalatroSpinSpeed: SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_SPIN_SPEED,
+        shaderBackgroundBalatroOffsetX: SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_OFFSET_X,
+        shaderBackgroundBalatroOffsetY: SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_OFFSET_Y,
+        shaderBackgroundBalatroColor1: SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_COLOR_1,
+        shaderBackgroundBalatroColor2: SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_COLOR_2,
+        shaderBackgroundBalatroColor3: SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_COLOR_3,
+        shaderBackgroundBalatroContrast: SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_CONTRAST,
+        shaderBackgroundBalatroLighting: SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_LIGHTING,
+        shaderBackgroundBalatroSpinAmount: SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_SPIN_AMOUNT,
+        shaderBackgroundBalatroPixelFilter: SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_PIXEL_FILTER,
+        shaderBackgroundBalatroSpinEase: SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_SPIN_EASE,
+        shaderBackgroundBalatroIsRotate: SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_IS_ROTATE,
+        shaderBackgroundChromaNoiseTimeScale: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_NOISE_TIME_SCALE,
+        shaderBackgroundChromaNoiseUvScale: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_NOISE_UV_SCALE,
+        shaderBackgroundChromaFineNoiseScale: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_FINE_NOISE_SCALE,
+        shaderBackgroundChromaGrainMix: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_GRAIN_MIX,
+        shaderBackgroundChromaColorA: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_COLOR_A,
+        shaderBackgroundChromaColorB: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_COLOR_B,
+        shaderBackgroundChromaColorAMul: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_COLOR_A_MUL,
+        shaderBackgroundChromaColorBMul: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_COLOR_B_MUL,
+        shaderBackgroundChromaMixClampMin: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_MIX_CLAMP_MIN,
+        shaderBackgroundChromaMixClampMax: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_MIX_CLAMP_MAX,
+        shaderBackgroundChromaLayer1S: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_LAYER1_S,
+        shaderBackgroundChromaLayer2S: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_LAYER2_S,
+        shaderBackgroundChromaLayer1Z: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_LAYER1_Z,
+        shaderBackgroundChromaLayer2Z: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_LAYER2_Z,
       },
       colors: {
         sotoPalette: [...SETTINGS.COLORS.SOTO_PALETTE],
@@ -638,6 +672,51 @@ export class ProjectManager {
     if (canvasData.shaderBackgroundCursorMode !== undefined) {
       SETTINGS.CANVAS.SHADER_BACKGROUND_CURSOR_MODE = canvasData.shaderBackgroundCursorMode
       this.glowVisualizer.updateFluidBackgroundCursorMode(canvasData.shaderBackgroundCursorMode)
+    }
+
+    const procKeys = [
+      ['shaderBackgroundPortalTimeOffset', 'SHADER_BACKGROUND_PORTAL_TIME_OFFSET'],
+      ['shaderBackgroundPortalTimeDivisor', 'SHADER_BACKGROUND_PORTAL_TIME_DIVISOR'],
+      ['shaderBackgroundPortalBrightness', 'SHADER_BACKGROUND_PORTAL_BRIGHTNESS'],
+      ['shaderBackgroundDiscoPaletteVariant', 'SHADER_BACKGROUND_DISCO_PALETTE_VARIANT'],
+      ['shaderBackgroundDiscoPaletteBase', 'SHADER_BACKGROUND_DISCO_PALETTE_BASE'],
+      ['shaderBackgroundDiscoPaletteWave', 'SHADER_BACKGROUND_DISCO_PALETTE_WAVE'],
+      ['shaderBackgroundDiscoShimmer', 'SHADER_BACKGROUND_DISCO_SHIMMER'],
+      ['shaderBackgroundBalatroSpinRotation', 'SHADER_BACKGROUND_BALATRO_SPIN_ROTATION'],
+      ['shaderBackgroundBalatroSpinSpeed', 'SHADER_BACKGROUND_BALATRO_SPIN_SPEED'],
+      ['shaderBackgroundBalatroOffsetX', 'SHADER_BACKGROUND_BALATRO_OFFSET_X'],
+      ['shaderBackgroundBalatroOffsetY', 'SHADER_BACKGROUND_BALATRO_OFFSET_Y'],
+      ['shaderBackgroundBalatroColor1', 'SHADER_BACKGROUND_BALATRO_COLOR_1'],
+      ['shaderBackgroundBalatroColor2', 'SHADER_BACKGROUND_BALATRO_COLOR_2'],
+      ['shaderBackgroundBalatroColor3', 'SHADER_BACKGROUND_BALATRO_COLOR_3'],
+      ['shaderBackgroundBalatroContrast', 'SHADER_BACKGROUND_BALATRO_CONTRAST'],
+      ['shaderBackgroundBalatroLighting', 'SHADER_BACKGROUND_BALATRO_LIGHTING'],
+      ['shaderBackgroundBalatroSpinAmount', 'SHADER_BACKGROUND_BALATRO_SPIN_AMOUNT'],
+      ['shaderBackgroundBalatroPixelFilter', 'SHADER_BACKGROUND_BALATRO_PIXEL_FILTER'],
+      ['shaderBackgroundBalatroSpinEase', 'SHADER_BACKGROUND_BALATRO_SPIN_EASE'],
+      ['shaderBackgroundBalatroIsRotate', 'SHADER_BACKGROUND_BALATRO_IS_ROTATE'],
+      ['shaderBackgroundChromaNoiseTimeScale', 'SHADER_BACKGROUND_CHROMA_NOISE_TIME_SCALE'],
+      ['shaderBackgroundChromaNoiseUvScale', 'SHADER_BACKGROUND_CHROMA_NOISE_UV_SCALE'],
+      ['shaderBackgroundChromaFineNoiseScale', 'SHADER_BACKGROUND_CHROMA_FINE_NOISE_SCALE'],
+      ['shaderBackgroundChromaGrainMix', 'SHADER_BACKGROUND_CHROMA_GRAIN_MIX'],
+      ['shaderBackgroundChromaColorA', 'SHADER_BACKGROUND_CHROMA_COLOR_A'],
+      ['shaderBackgroundChromaColorB', 'SHADER_BACKGROUND_CHROMA_COLOR_B'],
+      ['shaderBackgroundChromaColorAMul', 'SHADER_BACKGROUND_CHROMA_COLOR_A_MUL'],
+      ['shaderBackgroundChromaColorBMul', 'SHADER_BACKGROUND_CHROMA_COLOR_B_MUL'],
+      ['shaderBackgroundChromaMixClampMin', 'SHADER_BACKGROUND_CHROMA_MIX_CLAMP_MIN'],
+      ['shaderBackgroundChromaMixClampMax', 'SHADER_BACKGROUND_CHROMA_MIX_CLAMP_MAX'],
+      ['shaderBackgroundChromaLayer1S', 'SHADER_BACKGROUND_CHROMA_LAYER1_S'],
+      ['shaderBackgroundChromaLayer2S', 'SHADER_BACKGROUND_CHROMA_LAYER2_S'],
+      ['shaderBackgroundChromaLayer1Z', 'SHADER_BACKGROUND_CHROMA_LAYER1_Z'],
+      ['shaderBackgroundChromaLayer2Z', 'SHADER_BACKGROUND_CHROMA_LAYER2_Z']
+    ]
+    for (const [dataKey, settingsKey] of procKeys) {
+      if (canvasData[dataKey] !== undefined) {
+        SETTINGS.CANVAS[settingsKey] = canvasData[dataKey]
+      }
+    }
+    if (procKeys.some(([k]) => canvasData[k] !== undefined)) {
+      this.glowVisualizer.syncShaderBackgroundEngines()
     }
   }
 

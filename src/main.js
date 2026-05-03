@@ -17,12 +17,18 @@ import {
 } from './canvas-filter-configs.js'
 import { MIDICCMapper } from './midi-cc-mapper.js'
 import { LUMINODE_REGISTRY, getLuminodeSettingsKey } from './luminodes/index.js'
-import { FluidBackgroundManager } from './fluid-background-manager.js'
+import { ShaderBackgroundManager } from './shader-background-manager.js'
+import { isFragmentBackgroundMode } from './shaders/background/registry.js'
 
 export class GLOWVisualizer {
   constructor () {
     this.canvas = document.getElementById('canvas')
     this.fluidBackgroundCanvas = document.getElementById('fluidBackgroundCanvas')
+    this.proceduralBackgroundCanvas = document.getElementById('proceduralBackgroundCanvas')
+    this.shaderBackgroundManager = new ShaderBackgroundManager(
+      this.fluidBackgroundCanvas,
+      this.proceduralBackgroundCanvas
+    )
     this.tabletCanvas = document.getElementById('tabletCanvas')
     this.canvasDrawer = new CanvasDrawer(this.canvas)
     this.trackManager = new TrackManager()
@@ -74,9 +80,6 @@ export class GLOWVisualizer {
     this.chromaticAberrationCanvas = null
     this.chromaticAberrationCtx = null
 
-    // Fluid background manager
-    this.fluidBackgroundManager = new FluidBackgroundManager(this.fluidBackgroundCanvas)
-
     this.luminodeFactory = Object.fromEntries(
       Object.entries(LUMINODE_REGISTRY).map(([key, reg]) => [key, reg.class])
     )
@@ -102,6 +105,7 @@ export class GLOWVisualizer {
     // Initial canvas setup
     this.canvasDrawer.resize()
     this.resizeFluidBackgroundCanvas()
+    this.resizeProceduralBackgroundCanvas()
     this.resizeTabletCanvas()
 
     // Create CRT overlay
@@ -116,8 +120,7 @@ export class GLOWVisualizer {
     // Create chromatic aberration overlay
     this.createChromaticAberrationOverlay()
 
-    // Initialize fluid background
-    if (this.fluidBackgroundManager.init()) {
+    if (this.shaderBackgroundManager.init()) {
       this.updateFluidBackgroundSettings()
     }
 
@@ -127,9 +130,14 @@ export class GLOWVisualizer {
   }
 
   resizeFluidBackgroundCanvas () {
-    if (this.fluidBackgroundCanvas) {
-      this.fluidBackgroundCanvas.width = window.innerWidth
-      this.fluidBackgroundCanvas.height = window.innerHeight
+    if (this.shaderBackgroundManager) {
+      this.shaderBackgroundManager.resizeFluidCanvas()
+    }
+  }
+
+  resizeProceduralBackgroundCanvas () {
+    if (this.shaderBackgroundManager) {
+      this.shaderBackgroundManager.resizeProceduralCanvas()
     }
   }
 
@@ -258,9 +266,10 @@ export class GLOWVisualizer {
   handleResize () {
     this.canvasDrawer.resize()
     this.resizeFluidBackgroundCanvas()
+    this.resizeProceduralBackgroundCanvas()
     this.resizeTabletCanvas()
-    if (this.fluidBackgroundManager) {
-      this.fluidBackgroundManager.resize()
+    if (this.shaderBackgroundManager) {
+      this.shaderBackgroundManager.resizeAll()
     }
   }
 
@@ -564,6 +573,10 @@ export class GLOWVisualizer {
       } else if (setting === 'SHADER_BACKGROUND_CURSOR_MODE') {
         this.updateFluidBackgroundCursorMode(value)
       }
+
+      if (setting.startsWith('SHADER_BACKGROUND_')) {
+        this.syncShaderBackgroundEngines()
+      }
     }
   }
 
@@ -727,16 +740,12 @@ export class GLOWVisualizer {
     // Clean up old notes
     this.midiManager.cleanupOldNotes()
 
-    if (SETTINGS.CANVAS.SHADER_BACKGROUND_ENABLED && this.fluidBackgroundManager) {
-      this.fluidBackgroundManager.update()
+    if (SETTINGS.CANVAS.SHADER_BACKGROUND_ENABLED && this.shaderBackgroundManager) {
+      this.shaderBackgroundManager.update(t)
     }
 
     const restoreCanvasModulation = this.applyModulationToCanvas()
     this.canvasDrawer.clear()
-    
-    if (this.fluidBackgroundCanvas) {
-      this.fluidBackgroundCanvas.style.display = SETTINGS.CANVAS.SHADER_BACKGROUND_ENABLED ? 'block' : 'none'
-    }
 
     // Draw grid background (if enabled)
     this.canvasDrawer.drawGrid()
@@ -906,11 +915,13 @@ export class GLOWVisualizer {
 
       this.drawTrackLuminode(luminode, track.luminode, t, notes, layout)
 
-      // Track last luminode position for fluid background
-      if (SETTINGS.CANVAS.SHADER_BACKGROUND_ENABLED && this.fluidBackgroundManager && this.fluidBackgroundManager.lastPointMode) {
+      // Track last luminode position for fluid background (not used for full-screen procedural shaders)
+      const bgMode = SETTINGS.CANVAS.SHADER_BACKGROUND_MODE || 'Fluid'
+      if (SETTINGS.CANVAS.SHADER_BACKGROUND_ENABLED && !isFragmentBackgroundMode(bgMode) &&
+          this.shaderBackgroundManager && this.shaderBackgroundManager.fluid.lastPointMode) {
         const centerX = this.canvas.width / 2 + layout.x
         const centerY = this.canvas.height / 2 + layout.y
-        this.fluidBackgroundManager.updateLastLuminodePosition(centerX, centerY)
+        this.shaderBackgroundManager.fluid.updateLastLuminodePosition(centerX, centerY)
       }
 
       if (restoreValues) {
@@ -1370,85 +1381,69 @@ export class GLOWVisualizer {
     console.log(`Invert filter updated to ${invertPercent}%`)
   }
 
-  updateFluidBackgroundSettings () {
-    if (!this.fluidBackgroundManager) return
-
-    const settings = SETTINGS.CANVAS
-    this.fluidBackgroundManager.setEnabled(settings.SHADER_BACKGROUND_ENABLED || false)
-    this.fluidBackgroundManager.setRenderMode(settings.SHADER_BACKGROUND_MODE || 'Fluid')
-    this.fluidBackgroundManager.setTrailLength(settings.SHADER_BACKGROUND_TRAIL_LENGTH || 15)
-    
-    const colorFluid = settings.SHADER_BACKGROUND_COLOR_FLUID || { r: 0.02, g: 0.078, b: 0.157 }
-    this.fluidBackgroundManager.setColorFluidBackground(colorFluid.r, colorFluid.g, colorFluid.b)
-    
-    const colorPressure = settings.SHADER_BACKGROUND_COLOR_PRESSURE || { r: 0.02, g: 0.078, b: 0.157 }
-    this.fluidBackgroundManager.setColorPressure(colorPressure.r, colorPressure.g, colorPressure.b)
-    
-    const colorVelocity = settings.SHADER_BACKGROUND_COLOR_VELOCITY || { r: 0.259, g: 0.227, b: 0.184 }
-    this.fluidBackgroundManager.setColorVelocity(colorVelocity.r, colorVelocity.g, colorVelocity.b)
-    
-    const cursorMode = settings.SHADER_BACKGROUND_CURSOR_MODE !== false
-    if (cursorMode) {
-      this.fluidBackgroundManager.setCursorMode(true)
+  syncShaderBackgroundEngines () {
+    if (this.shaderBackgroundManager) {
+      this.shaderBackgroundManager.syncEngines()
     }
+  }
+
+  updateFluidBackgroundSettings () {
+    if (!this.shaderBackgroundManager) return
+    this.shaderBackgroundManager.applyFluidSettingsFromCanvas()
   }
 
   updateFluidBackgroundEnabled (enabled) {
     SETTINGS.CANVAS.SHADER_BACKGROUND_ENABLED = enabled
-    if (this.fluidBackgroundManager) {
-      this.fluidBackgroundManager.setEnabled(enabled)
-    }
+    this.syncShaderBackgroundEngines()
     console.log(`Shader background ${enabled ? 'enabled' : 'disabled'}`)
   }
 
   updateFluidBackgroundMode (mode) {
     SETTINGS.CANVAS.SHADER_BACKGROUND_MODE = mode
-    if (this.fluidBackgroundManager) {
-      this.fluidBackgroundManager.setRenderMode(mode)
-    }
+    this.syncShaderBackgroundEngines()
     console.log(`Shader background mode set to ${mode}`)
   }
 
   updateFluidBackgroundTrailLength (length) {
     SETTINGS.CANVAS.SHADER_BACKGROUND_TRAIL_LENGTH = length
-    if (this.fluidBackgroundManager) {
-      this.fluidBackgroundManager.setTrailLength(length)
+    if (this.shaderBackgroundManager) {
+      this.shaderBackgroundManager.setFluidTrailLength(length)
     }
     console.log(`Shader background trail length set to ${length}`)
   }
 
   updateFluidBackgroundColorFluidBackground (color) {
     SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_FLUID_BACKGROUND = color
-    if (this.fluidBackgroundManager && color) {
-      this.fluidBackgroundManager.setColorFluidBackground(color.r, color.g, color.b)
+    if (this.shaderBackgroundManager && color) {
+      this.shaderBackgroundManager.setFluidColorFluidBackground(color)
     }
   }
 
   updateFluidBackgroundColorFluidTrail (color) {
     SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_FLUID_TRAIL = color
-    if (this.fluidBackgroundManager && color) {
-      this.fluidBackgroundManager.setColorFluidTrail(color.r, color.g, color.b)
+    if (this.shaderBackgroundManager && color) {
+      this.shaderBackgroundManager.setFluidColorFluidTrail(color)
     }
   }
 
   updateFluidBackgroundColorPressure (color) {
     SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_PRESSURE = color
-    if (this.fluidBackgroundManager && color) {
-      this.fluidBackgroundManager.setColorPressure(color.r, color.g, color.b)
+    if (this.shaderBackgroundManager && color) {
+      this.shaderBackgroundManager.setFluidColorPressure(color)
     }
   }
 
   updateFluidBackgroundColorVelocity (color) {
     SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_VELOCITY = color
-    if (this.fluidBackgroundManager && color) {
-      this.fluidBackgroundManager.setColorVelocity(color.r, color.g, color.b)
+    if (this.shaderBackgroundManager && color) {
+      this.shaderBackgroundManager.setFluidColorVelocity(color)
     }
   }
 
   updateFluidBackgroundCursorMode (enabled) {
     SETTINGS.CANVAS.SHADER_BACKGROUND_CURSOR_MODE = enabled
-    if (this.fluidBackgroundManager) {
-      this.fluidBackgroundManager.setCursorMode(enabled)
+    if (this.shaderBackgroundManager) {
+      this.shaderBackgroundManager.setFluidCursorMode(enabled)
     }
   }
 

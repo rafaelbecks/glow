@@ -1,4 +1,4 @@
-import { SETTINGS } from './settings.js'
+import { SETTINGS } from '../../settings.js'
 
 export class FluidBackgroundManager {
   constructor (canvas) {

@@ -26,6 +26,7 @@ A **luminode** is a visual pattern module. Think of it as an oscillator in a syn
 - **Trajectory Motion System** - Whitney-style motion patterns for spatial animation ([see docs](diagrams/03-track-system.md))
 - **Modulation System** - LFO-style parameter modulation for dynamic visual evolution
 - **Canvas Filters** - Lumia blur, invert, grid overlay, CRT effect, noise overlay, dither, chromatic aberration
+- **Shader backgrounds** - Fluid simulation (GPU-io) plus modular WebGL2 full-screen shaders under `src/shaders/background/` (many adapted from [Shadertoy](https://www.shadertoy.com/) community sketches; you can add modes dynamically — see `src/shaders/background/README.md`)
 - **MIDI Mappings** - Custom hardware controller mappings (see `midi-mappings/`)
 - **Experimental HID Canvas (Deprecated)** - Drawing tablet support for interactive control
 
@@ -55,6 +56,7 @@ Open `http://localhost:8000/` in Chrome.
 ## Acknowledgements
 
 - **[gpu-io](https://github.com/amandaghassaei/gpu-io)** - Shader examples used for background composition
+- **[Shadertoy](https://www.shadertoy.com/)** - Community GLSL ports used as full-screen canvas backgrounds (see `src/shaders/background/README.md` for how to register new ones and for per-shader attribution where applicable)
 - **[grained.js](https://github.com/sarathsaleem/grained)** - Noise texture library
 
 Thanks for the code and inspiration.
