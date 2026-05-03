@@ -133,7 +133,23 @@ export class CanvasUIManager {
       shaderBackgroundChromaLayer1S: canvasSettings.SHADER_BACKGROUND_CHROMA_LAYER1_S ?? 1.2,
       shaderBackgroundChromaLayer2S: canvasSettings.SHADER_BACKGROUND_CHROMA_LAYER2_S ?? 1.5,
       shaderBackgroundChromaLayer1Z: canvasSettings.SHADER_BACKGROUND_CHROMA_LAYER1_Z ?? 1.1,
-      shaderBackgroundChromaLayer2Z: canvasSettings.SHADER_BACKGROUND_CHROMA_LAYER2_Z ?? 1.4
+      shaderBackgroundChromaLayer2Z: canvasSettings.SHADER_BACKGROUND_CHROMA_LAYER2_Z ?? 1.4,
+      glassOverlayEnabled: canvasSettings.GLASS_OVERLAY_ENABLED || false,
+      glassOverlayMode: canvasSettings.GLASS_OVERLAY_MODE || 'single',
+      glassOverlayWidth: canvasSettings.GLASS_OVERLAY_WIDTH ?? 200,
+      glassOverlayHeight: canvasSettings.GLASS_OVERLAY_HEIGHT ?? 200,
+      glassOverlayRadius: canvasSettings.GLASS_OVERLAY_RADIUS ?? 27,
+      glassOverlayThickness: canvasSettings.GLASS_OVERLAY_THICKNESS ?? 200,
+      glassOverlayBezel: canvasSettings.GLASS_OVERLAY_BEZEL ?? 60,
+      glassOverlayIOR: canvasSettings.GLASS_OVERLAY_IOR ?? 3.0,
+      glassOverlayBlur: canvasSettings.GLASS_OVERLAY_BLUR ?? 9.5,
+      glassOverlaySpecular: canvasSettings.GLASS_OVERLAY_SPECULAR ?? 0.35,
+      glassOverlayTint: canvasSettings.GLASS_OVERLAY_TINT ?? 0,
+      glassOverlayShadow: canvasSettings.GLASS_OVERLAY_SHADOW ?? 0.0,
+      glassOverlayBrickSize: canvasSettings.GLASS_OVERLAY_BRICK_SIZE ?? 200,
+      glassOverlayBrickOffsetX: canvasSettings.GLASS_OVERLAY_BRICK_OFFSET_X ?? 0,
+      glassOverlayBrickOffsetY: canvasSettings.GLASS_OVERLAY_BRICK_OFFSET_Y ?? 0,
+      glassOverlayBrickGap: canvasSettings.GLASS_OVERLAY_BRICK_GAP ?? 8
     }
 
     const pitchColorData = {
@@ -702,6 +718,107 @@ export class CanvasUIManager {
     })
     this.updateFolderVisibility(shaderBackgroundFolder, canvasData.shaderBackgroundEnabled)
     this.refreshShaderBackgroundParamVisibility(canvasData.shaderBackgroundEnabled, canvasData.shaderBackgroundMode, shaderBgParamFolders)
+
+    const glassOverlayFolder = canvasFolder.addFolder({ title: 'Glass overlay', expanded: true })
+    glassOverlayFolder.addBinding(canvasData, 'glassOverlayEnabled', {
+      label: 'Enabled'
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('GLASS_OVERLAY_ENABLED', ev.value)
+      this.updateFolderVisibility(glassParamsFolder, ev.value)
+    })
+
+    const glassParamsFolder = glassOverlayFolder.addFolder({ title: 'Params', expanded: true })
+    glassParamsFolder.addBinding(canvasData, 'glassOverlayMode', {
+      label: 'Mode',
+      options: { Single: 'single', Bricks: 'bricks' }
+    }).on('change', (ev) => {
+      this.triggerCanvasSettingChange('GLASS_OVERLAY_MODE', ev.value)
+    })
+    glassParamsFolder.addBinding(canvasData, 'glassOverlayWidth', {
+      label: 'Width',
+      min: 20,
+      max: 2000,
+      step: 1
+    }).on('change', (ev) => this.triggerCanvasSettingChange('GLASS_OVERLAY_WIDTH', ev.value))
+    glassParamsFolder.addBinding(canvasData, 'glassOverlayHeight', {
+      label: 'Height',
+      min: 20,
+      max: 2000,
+      step: 1
+    }).on('change', (ev) => this.triggerCanvasSettingChange('GLASS_OVERLAY_HEIGHT', ev.value))
+    glassParamsFolder.addBinding(canvasData, 'glassOverlayRadius', {
+      label: 'Radius',
+      min: 2,
+      max: 200,
+      step: 1
+    }).on('change', (ev) => this.triggerCanvasSettingChange('GLASS_OVERLAY_RADIUS', ev.value))
+    glassParamsFolder.addBinding(canvasData, 'glassOverlayThickness', {
+      label: 'Thickness',
+      min: 1,
+      max: 300,
+      step: 1
+    }).on('change', (ev) => this.triggerCanvasSettingChange('GLASS_OVERLAY_THICKNESS', ev.value))
+    glassParamsFolder.addBinding(canvasData, 'glassOverlayBezel', {
+      label: 'Bezel',
+      min: 1,
+      max: 120,
+      step: 1
+    }).on('change', (ev) => this.triggerCanvasSettingChange('GLASS_OVERLAY_BEZEL', ev.value))
+    glassParamsFolder.addBinding(canvasData, 'glassOverlayIOR', {
+      label: 'IOR',
+      min: 1,
+      max: 3,
+      step: 0.05
+    }).on('change', (ev) => this.triggerCanvasSettingChange('GLASS_OVERLAY_IOR', ev.value))
+    glassParamsFolder.addBinding(canvasData, 'glassOverlayBlur', {
+      label: 'Blur',
+      min: 0,
+      max: 20,
+      step: 0.1
+    }).on('change', (ev) => this.triggerCanvasSettingChange('GLASS_OVERLAY_BLUR', ev.value))
+    glassParamsFolder.addBinding(canvasData, 'glassOverlaySpecular', {
+      label: 'Specular',
+      min: 0,
+      max: 1,
+      step: 0.01
+    }).on('change', (ev) => this.triggerCanvasSettingChange('GLASS_OVERLAY_SPECULAR', ev.value))
+    glassParamsFolder.addBinding(canvasData, 'glassOverlayTint', {
+      label: 'Tint',
+      min: 0,
+      max: 1,
+      step: 0.01
+    }).on('change', (ev) => this.triggerCanvasSettingChange('GLASS_OVERLAY_TINT', ev.value))
+    glassParamsFolder.addBinding(canvasData, 'glassOverlayShadow', {
+      label: 'Shadow',
+      min: 0,
+      max: 1,
+      step: 0.01
+    }).on('change', (ev) => this.triggerCanvasSettingChange('GLASS_OVERLAY_SHADOW', ev.value))
+    glassParamsFolder.addBinding(canvasData, 'glassOverlayBrickSize', {
+      label: 'Brick size',
+      min: 30,
+      max: 600,
+      step: 1
+    }).on('change', (ev) => this.triggerCanvasSettingChange('GLASS_OVERLAY_BRICK_SIZE', ev.value))
+    glassParamsFolder.addBinding(canvasData, 'glassOverlayBrickOffsetX', {
+      label: 'Brick offset X',
+      min: -2000,
+      max: 2000,
+      step: 1
+    }).on('change', (ev) => this.triggerCanvasSettingChange('GLASS_OVERLAY_BRICK_OFFSET_X', ev.value))
+    glassParamsFolder.addBinding(canvasData, 'glassOverlayBrickOffsetY', {
+      label: 'Brick offset Y',
+      min: -2000,
+      max: 2000,
+      step: 1
+    }).on('change', (ev) => this.triggerCanvasSettingChange('GLASS_OVERLAY_BRICK_OFFSET_Y', ev.value))
+    glassParamsFolder.addBinding(canvasData, 'glassOverlayBrickGap', {
+      label: 'Brick gap',
+      min: 0,
+      max: 80,
+      step: 1
+    }).on('change', (ev) => this.triggerCanvasSettingChange('GLASS_OVERLAY_BRICK_GAP', ev.value))
+    this.updateFolderVisibility(glassParamsFolder, canvasData.glassOverlayEnabled)
 
     const colorPaletteFolder = this.mainPane.addFolder({ title: 'Color Palettes', expanded: true })
 

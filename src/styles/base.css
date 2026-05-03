@@ -79,6 +79,17 @@ canvas {
     filter: url(#chromaticAberrationFilter) contrast(1);
 }
 
+#glassOverlayCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 6;
+    pointer-events: none;
+    display: none;
+}
+
 /* Custom cursor for pointer elements */
 button, 
 .controls button,

@@ -19,16 +19,19 @@ import { MIDICCMapper } from './midi-cc-mapper.js'
 import { LUMINODE_REGISTRY, getLuminodeSettingsKey } from './luminodes/index.js'
 import { ShaderBackgroundManager } from './shader-background-manager.js'
 import { isFragmentBackgroundMode } from './shaders/background/registry.js'
+import { GlassOverlayManager } from './glass-overlay-manager.js'
 
 export class GLOWVisualizer {
   constructor () {
     this.canvas = document.getElementById('canvas')
     this.fluidBackgroundCanvas = document.getElementById('fluidBackgroundCanvas')
     this.proceduralBackgroundCanvas = document.getElementById('proceduralBackgroundCanvas')
+    this.glassOverlayCanvas = document.getElementById('glassOverlayCanvas')
     this.shaderBackgroundManager = new ShaderBackgroundManager(
       this.fluidBackgroundCanvas,
       this.proceduralBackgroundCanvas
     )
+    this.glassOverlayManager = new GlassOverlayManager(this.glassOverlayCanvas, () => this.getGlassOverlaySources())
     this.tabletCanvas = document.getElementById('tabletCanvas')
     this.canvasDrawer = new CanvasDrawer(this.canvas)
     this.trackManager = new TrackManager()
@@ -123,6 +126,7 @@ export class GLOWVisualizer {
     if (this.shaderBackgroundManager.init()) {
       this.updateFluidBackgroundSettings()
     }
+    this.glassOverlayManager.init()
 
     this.uiManager.showStatus('Connecting to MIDI devices...', 'info')
 
@@ -268,8 +272,15 @@ export class GLOWVisualizer {
     this.resizeFluidBackgroundCanvas()
     this.resizeProceduralBackgroundCanvas()
     this.resizeTabletCanvas()
+    this.resizeGlassOverlayCanvas()
     if (this.shaderBackgroundManager) {
       this.shaderBackgroundManager.resizeAll()
+    }
+  }
+
+  resizeGlassOverlayCanvas () {
+    if (this.glassOverlayManager) {
+      this.glassOverlayManager.resize()
     }
   }
 
@@ -764,6 +775,10 @@ export class GLOWVisualizer {
     // Update chromatic aberration overlay if enabled
     if (this.chromaticAberrationModeEnabled && this.chromaticAberrationCanvas && this.chromaticAberrationCtx) {
       this.updateChromaticAberrationOverlay()
+    }
+
+    if (this.glassOverlayManager) {
+      this.glassOverlayManager.render()
     }
 
     // Update side panel activity indicators
@@ -1500,6 +1515,32 @@ export class GLOWVisualizer {
 
   destroy () {
     this.stop()
+    if (this.glassOverlayManager) {
+      this.glassOverlayManager.dispose()
+    }
+  }
+
+  getGlassOverlaySources () {
+    const sources = []
+    const mode = SETTINGS.CANVAS.SHADER_BACKGROUND_MODE || 'Fluid'
+    if (SETTINGS.CANVAS.SHADER_BACKGROUND_ENABLED) {
+      if (isFragmentBackgroundMode(mode)) {
+        if (this.proceduralBackgroundCanvas && this.proceduralBackgroundCanvas.style.display !== 'none') {
+          sources.push(this.proceduralBackgroundCanvas)
+        }
+      } else if (this.fluidBackgroundCanvas && this.fluidBackgroundCanvas.style.display !== 'none') {
+        sources.push(this.fluidBackgroundCanvas)
+      }
+    }
+    if (this.canvas) sources.push(this.canvas)
+    if (this.tabletCanvas) sources.push(this.tabletCanvas)
+    if (this.noiseModeEnabled && this.noiseOverlay) {
+      const noiseCanvas = this.noiseOverlay.querySelector('canvas')
+      if (noiseCanvas) sources.push(noiseCanvas)
+    }
+    if (this.ditherModeEnabled && this.ditherCanvas) sources.push(this.ditherCanvas)
+    if (this.chromaticAberrationModeEnabled && this.chromaticAberrationCanvas) sources.push(this.chromaticAberrationCanvas)
+    return sources
   }
 }
 

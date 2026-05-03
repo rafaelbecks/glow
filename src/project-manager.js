@@ -81,6 +81,22 @@ export class ProjectManager {
         shaderBackgroundChromaLayer2S: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_LAYER2_S,
         shaderBackgroundChromaLayer1Z: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_LAYER1_Z,
         shaderBackgroundChromaLayer2Z: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_LAYER2_Z,
+        glassOverlayEnabled: SETTINGS.CANVAS.GLASS_OVERLAY_ENABLED,
+        glassOverlayMode: SETTINGS.CANVAS.GLASS_OVERLAY_MODE,
+        glassOverlayWidth: SETTINGS.CANVAS.GLASS_OVERLAY_WIDTH,
+        glassOverlayHeight: SETTINGS.CANVAS.GLASS_OVERLAY_HEIGHT,
+        glassOverlayRadius: SETTINGS.CANVAS.GLASS_OVERLAY_RADIUS,
+        glassOverlayThickness: SETTINGS.CANVAS.GLASS_OVERLAY_THICKNESS,
+        glassOverlayBezel: SETTINGS.CANVAS.GLASS_OVERLAY_BEZEL,
+        glassOverlayIOR: SETTINGS.CANVAS.GLASS_OVERLAY_IOR,
+        glassOverlayBlur: SETTINGS.CANVAS.GLASS_OVERLAY_BLUR,
+        glassOverlaySpecular: SETTINGS.CANVAS.GLASS_OVERLAY_SPECULAR,
+        glassOverlayTint: SETTINGS.CANVAS.GLASS_OVERLAY_TINT,
+        glassOverlayShadow: SETTINGS.CANVAS.GLASS_OVERLAY_SHADOW,
+        glassOverlayBrickSize: SETTINGS.CANVAS.GLASS_OVERLAY_BRICK_SIZE,
+        glassOverlayBrickOffsetX: SETTINGS.CANVAS.GLASS_OVERLAY_BRICK_OFFSET_X,
+        glassOverlayBrickOffsetY: SETTINGS.CANVAS.GLASS_OVERLAY_BRICK_OFFSET_Y,
+        glassOverlayBrickGap: SETTINGS.CANVAS.GLASS_OVERLAY_BRICK_GAP
       },
       colors: {
         sotoPalette: [...SETTINGS.COLORS.SOTO_PALETTE],
@@ -708,7 +724,23 @@ export class ProjectManager {
       ['shaderBackgroundChromaLayer1S', 'SHADER_BACKGROUND_CHROMA_LAYER1_S'],
       ['shaderBackgroundChromaLayer2S', 'SHADER_BACKGROUND_CHROMA_LAYER2_S'],
       ['shaderBackgroundChromaLayer1Z', 'SHADER_BACKGROUND_CHROMA_LAYER1_Z'],
-      ['shaderBackgroundChromaLayer2Z', 'SHADER_BACKGROUND_CHROMA_LAYER2_Z']
+      ['shaderBackgroundChromaLayer2Z', 'SHADER_BACKGROUND_CHROMA_LAYER2_Z'],
+      ['glassOverlayEnabled', 'GLASS_OVERLAY_ENABLED'],
+      ['glassOverlayMode', 'GLASS_OVERLAY_MODE'],
+      ['glassOverlayWidth', 'GLASS_OVERLAY_WIDTH'],
+      ['glassOverlayHeight', 'GLASS_OVERLAY_HEIGHT'],
+      ['glassOverlayRadius', 'GLASS_OVERLAY_RADIUS'],
+      ['glassOverlayThickness', 'GLASS_OVERLAY_THICKNESS'],
+      ['glassOverlayBezel', 'GLASS_OVERLAY_BEZEL'],
+      ['glassOverlayIOR', 'GLASS_OVERLAY_IOR'],
+      ['glassOverlayBlur', 'GLASS_OVERLAY_BLUR'],
+      ['glassOverlaySpecular', 'GLASS_OVERLAY_SPECULAR'],
+      ['glassOverlayTint', 'GLASS_OVERLAY_TINT'],
+      ['glassOverlayShadow', 'GLASS_OVERLAY_SHADOW'],
+      ['glassOverlayBrickSize', 'GLASS_OVERLAY_BRICK_SIZE'],
+      ['glassOverlayBrickOffsetX', 'GLASS_OVERLAY_BRICK_OFFSET_X'],
+      ['glassOverlayBrickOffsetY', 'GLASS_OVERLAY_BRICK_OFFSET_Y'],
+      ['glassOverlayBrickGap', 'GLASS_OVERLAY_BRICK_GAP']
     ]
     for (const [dataKey, settingsKey] of procKeys) {
       if (canvasData[dataKey] !== undefined) {
