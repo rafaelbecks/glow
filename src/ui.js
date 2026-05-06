@@ -14,6 +14,7 @@ export class UIManager {
       openButton: document.getElementById('openButton'),
       saveButton: document.getElementById('saveButton'),
       infoButton: document.getElementById('infoButton'),
+      detachButton: document.getElementById('detachButton'),
       infoModal: document.getElementById('infoModal'),
       infoModalClose: document.getElementById('infoModalClose'),
       infoModalBody: document.getElementById('infoModalBody'),
@@ -43,6 +44,13 @@ export class UIManager {
     if (this.elements.panelToggleButton) {
       this.elements.panelToggleButton.addEventListener('click', () => {
         this.triggerCallback('togglePanel')
+      })
+    }
+
+    // Detach button
+    if (this.elements.detachButton) {
+      this.elements.detachButton.addEventListener('click', () => {
+        this.triggerCallback('detachControls')
       })
     }
 
@@ -142,7 +150,7 @@ export class UIManager {
 
   triggerCallback (event, data) {
     if (this.callbacks[event]) {
-      this.callbacks[event].forEach(callback => callback(data))
+      this.callbacks[event].forEach((callback) => callback(data))
     }
   }
 
@@ -161,11 +169,15 @@ export class UIManager {
 
   // Get current UI state
   getColorMode () {
-    return this.elements.colorToggle ? this.elements.colorToggle.checked : false
+    return this.elements.colorToggle
+      ? this.elements.colorToggle.checked
+      : false
   }
 
   getTabletWidth () {
-    return this.elements.tabletWidth ? parseInt(this.elements.tabletWidth.value) : 4
+    return this.elements.tabletWidth
+      ? parseInt(this.elements.tabletWidth.value)
+      : 4
   }
 
   // Update UI elements
@@ -201,9 +213,8 @@ export class UIManager {
     }
 
     statusEl.textContent = message
-    statusEl.style.color = type === 'error'
-      ? '#ff6b6b'
-      : type === 'success' ? '#51cf66' : 'white'
+    statusEl.style.color =
+      type === 'error' ? '#ff6b6b' : type === 'success' ? '#51cf66' : 'white'
   }
 
   hideStatus () {
@@ -235,6 +246,24 @@ export class UIManager {
   hidePanelToggleButton () {
     if (this.elements.panelToggleButton) {
       this.elements.panelToggleButton.style.display = 'none'
+    }
+  }
+
+  showDetachButton () {
+    if (this.elements.detachButton) {
+      this.elements.detachButton.style.display = 'flex'
+    }
+  }
+
+  hideDetachButton () {
+    if (this.elements.detachButton) {
+      this.elements.detachButton.style.display = 'none'
+    }
+  }
+
+  setDetachActive (active) {
+    if (this.elements.detachButton) {
+      this.elements.detachButton.classList.toggle('active', active)
     }
   }
 
@@ -293,11 +322,13 @@ export class UIManager {
           this.elements.infoModalBody.innerHTML = htmlContent
         } else {
           // Fallback if marked is not loaded
-          this.elements.infoModalBody.innerHTML = '<p>Error loading content. Please refresh the page.</p>'
+          this.elements.infoModalBody.innerHTML =
+            '<p>Error loading content. Please refresh the page.</p>'
         }
       } catch (error) {
         console.error('Error loading user manual:', error)
-        this.elements.infoModalBody.innerHTML = '<p>Error loading content. Please check if USER_MANUAL.md exists.</p>'
+        this.elements.infoModalBody.innerHTML =
+          '<p>Error loading content. Please check if USER_MANUAL.md exists.</p>'
       }
 
       this.elements.infoModal.classList.add('show')
@@ -350,6 +381,7 @@ export class UIManager {
 
   showAllIcons () {
     this.showPanelToggleButton()
+    this.showDetachButton()
     this.showOpenButton()
     this.showSaveButton()
     this.showInfoButton()
@@ -358,6 +390,7 @@ export class UIManager {
 
   hideAllIcons () {
     this.hidePanelToggleButton()
+    this.hideDetachButton()
     this.hideOpenButton()
     this.hideSaveButton()
     this.hideInfoButton()

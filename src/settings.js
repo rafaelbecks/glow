@@ -31,9 +31,9 @@ export const SETTINGS = {
     SHADER_BACKGROUND_MODE: 'Fluid',
     SHADER_BACKGROUND_TRAIL_LENGTH: 15,
     SHADER_BACKGROUND_COLOR_FLUID_BACKGROUND: { r: 0.02, g: 0.078, b: 0.157 },
-    SHADER_BACKGROUND_COLOR_FLUID_TRAIL: { r: 0, g: 0, b: 0.2 },
+    SHADER_BACKGROUND_COLOR_FLUID_TRAIL: { r: 0.506, g: 0.506, b: 0.604 },
     SHADER_BACKGROUND_COLOR_PRESSURE: { r: 0.02, g: 0.078, b: 0.157 },
-    SHADER_BACKGROUND_COLOR_VELOCITY: { r: 0.259, g: 0.227, b: 0.184 },
+    SHADER_BACKGROUND_COLOR_VELOCITY: { r: 0.506, g: 0.506, b: 0.604 },
     SHADER_BACKGROUND_CURSOR_MODE: true,
     SHADER_BACKGROUND_PORTAL_TIME_OFFSET: 4,
     SHADER_BACKGROUND_PORTAL_TIME_DIVISOR: 15,
@@ -91,12 +91,12 @@ export const SETTINGS = {
   MIDI: {
     NOTE_ON: 0x90,
     NOTE_OFF: 0x80,
-    CONTROL_CHANGE: 0xB0,
+    CONTROL_CHANGE: 0xb0,
     VELOCITY_MAX: 127
   },
 
   HARDWARE_MODE: {
-    ENABLED: false 
+    ENABLED: false
   },
 
   // Color settings
@@ -110,7 +110,15 @@ export const SETTINGS = {
       '#4A148C', // Purple
       '#8B0000' // Dark red
     ],
-    POLYGON_COLORS: ['#f93822', '#fcdc4d', '#00a6a6', '#90be6d', '#f94144', '#ff006e', '#8338ec']
+    POLYGON_COLORS: [
+      '#f93822',
+      '#fcdc4d',
+      '#00a6a6',
+      '#90be6d',
+      '#f94144',
+      '#ff006e',
+      '#8338ec'
+    ]
   },
 
   // Drawing modules configuration
@@ -370,7 +378,7 @@ export const SETTINGS = {
       RADIUS: 50,
       ROTATION_RATE: 0.4,
       CHIRALITY: 1,
-      DEPTH: 0.10,
+      DEPTH: 0.1,
       INSTANCE_COUNT: 3,
       SPACING: 410,
       SCALE: 1.0,
@@ -383,7 +391,7 @@ export const SETTINGS = {
       SPIRAL_SCALE: 5.0,
       GOLDEN_ANGLE: 3.4,
       SIZE_VARIATION: 0.15,
-      BLADE_WIDTH: 0.50,
+      BLADE_WIDTH: 0.5,
       HUB_RADIUS: 8,
       USE_COLOR: true,
       ROTATION: { x: 0, y: 0, z: 0 },
@@ -411,7 +419,7 @@ export const SETTINGS = {
     DEFAULT_LINE_WIDTH: 4,
     COORDINATE_MAX: 32767,
     PRESSURE_MAX: 65535,
-    VENDOR_ID: 0x28BD,
+    VENDOR_ID: 0x28bd,
     PRODUCT_ID: 0x2901,
     REPORT_ID: 0x07,
     // WebSocket settings for Windows HID bridge
@@ -477,24 +485,26 @@ export const UTILS = {
   hslaToRgb: (hslaString) => {
     const match = /hsla?\\(([^)]+)\\)/.exec(hslaString)
     if (!match) return [1, 1, 1]
-  
-    const parts = match[1].split(',').map(s => s.trim())
+
+    const parts = match[1].split(',').map((s) => s.trim())
     const h = parseFloat(parts[0])
     const s = parseFloat(parts[1]) / 100
     const l = parseFloat(parts[2]) / 100
-  
+
     const c = (1 - Math.abs(2 * l - 1)) * s
     const hp = (h % 360) / 60
     const x = c * (1 - Math.abs((hp % 2) - 1))
-  
-    let r1 = 0; let g1 = 0; let b1 = 0
+
+    let r1 = 0
+    let g1 = 0
+    let b1 = 0
     if (hp >= 0 && hp < 1) [r1, g1, b1] = [c, x, 0]
     else if (hp >= 1 && hp < 2) [r1, g1, b1] = [x, c, 0]
     else if (hp >= 2 && hp < 3) [r1, g1, b1] = [0, c, x]
     else if (hp >= 3 && hp < 4) [r1, g1, b1] = [0, x, c]
     else if (hp >= 4 && hp < 5) [r1, g1, b1] = [x, 0, c]
     else if (hp >= 5 && hp < 6) [r1, g1, b1] = [c, 0, x]
-  
+
     const m = l - c / 2
     return [r1 + m, g1 + m, b1 + m]
   },

@@ -5,14 +5,19 @@
 import { SETTINGS } from './settings.js'
 import { FluidBackgroundManager } from './shaders/background/fluid-background-engine.js'
 import { ProceduralBackgroundEngine } from './shaders/background/procedural-background-engine.js'
-import { isFluidBackgroundMode, isFragmentBackgroundMode } from './shaders/background/registry.js'
+import {
+  isFluidBackgroundMode,
+  isFragmentBackgroundMode
+} from './shaders/background/registry.js'
 
 export class ShaderBackgroundManager {
   constructor (fluidCanvas, proceduralCanvas) {
     this.fluidCanvas = fluidCanvas
     this.proceduralCanvas = proceduralCanvas
     this.fluid = new FluidBackgroundManager(fluidCanvas)
-    this.procedural = proceduralCanvas ? new ProceduralBackgroundEngine(proceduralCanvas) : null
+    this.procedural = proceduralCanvas
+      ? new ProceduralBackgroundEngine(proceduralCanvas)
+      : null
   }
 
   init () {
@@ -78,7 +83,8 @@ export class ShaderBackgroundManager {
       this.fluidCanvas.style.display = enabled && !fragment ? 'block' : 'none'
     }
     if (this.proceduralCanvas) {
-      this.proceduralCanvas.style.display = enabled && procReady ? 'block' : 'none'
+      this.proceduralCanvas.style.display =
+        enabled && procReady ? 'block' : 'none'
     }
 
     if (this.fluid) {
@@ -93,13 +99,29 @@ export class ShaderBackgroundManager {
     if (!this.fluid) return
     const s = SETTINGS.CANVAS
     this.fluid.setTrailLength(s.SHADER_BACKGROUND_TRAIL_LENGTH || 15)
-    const bg = s.SHADER_BACKGROUND_COLOR_FLUID_BACKGROUND || { r: 0.02, g: 0.078, b: 0.157 }
+    const bg = s.SHADER_BACKGROUND_COLOR_FLUID_BACKGROUND || {
+      r: 0.02,
+      g: 0.078,
+      b: 0.157
+    }
     this.fluid.setColorFluidBackground(bg.r, bg.g, bg.b)
-    const tr = s.SHADER_BACKGROUND_COLOR_FLUID_TRAIL || { r: 0, g: 0, b: 0.2 }
+    const tr = s.SHADER_BACKGROUND_COLOR_FLUID_TRAIL || {
+      r: 0.125,
+      g: 0.227,
+      b: 0.136
+    }
     this.fluid.setColorFluidTrail(tr.r, tr.g, tr.b)
-    const pr = s.SHADER_BACKGROUND_COLOR_PRESSURE || { r: 0.02, g: 0.078, b: 0.157 }
+    const pr = s.SHADER_BACKGROUND_COLOR_PRESSURE || {
+      r: 0.02,
+      g: 0.078,
+      b: 0.157
+    }
     this.fluid.setColorPressure(pr.r, pr.g, pr.b)
-    const vl = s.SHADER_BACKGROUND_COLOR_VELOCITY || { r: 0.259, g: 0.227, b: 0.184 }
+    const vl = s.SHADER_BACKGROUND_COLOR_VELOCITY || {
+      r: 0.259,
+      g: 0.227,
+      b: 0.184
+    }
     this.fluid.setColorVelocity(vl.r, vl.g, vl.b)
     if (s.SHADER_BACKGROUND_CURSOR_MODE !== false) {
       this.fluid.setCursorMode(true)
@@ -114,19 +136,19 @@ export class ShaderBackgroundManager {
   }
 
   setFluidColorFluidBackground (color) {
-    if (this.fluid && color) this.fluid.setColorFluidBackground(color.r, color.g, color.b)
+    if (this.fluid && color) { this.fluid.setColorFluidBackground(color.r, color.g, color.b) }
   }
 
   setFluidColorFluidTrail (color) {
-    if (this.fluid && color) this.fluid.setColorFluidTrail(color.r, color.g, color.b)
+    if (this.fluid && color) { this.fluid.setColorFluidTrail(color.r, color.g, color.b) }
   }
 
   setFluidColorPressure (color) {
-    if (this.fluid && color) this.fluid.setColorPressure(color.r, color.g, color.b)
+    if (this.fluid && color) { this.fluid.setColorPressure(color.r, color.g, color.b) }
   }
 
   setFluidColorVelocity (color) {
-    if (this.fluid && color) this.fluid.setColorVelocity(color.r, color.g, color.b)
+    if (this.fluid && color) { this.fluid.setColorVelocity(color.r, color.g, color.b) }
   }
 
   setFluidCursorMode (enabled) {

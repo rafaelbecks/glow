@@ -32,10 +32,10 @@ export class MIDICCMapper {
 
   matchesDevice (deviceId, deviceName) {
     if (!this.enabled || !this.mapping) return false
-    
+
     // Match by ID if specified
     if (this.deviceId && deviceId === this.deviceId) return true
-    
+
     // Match by name if specified (case-insensitive partial match)
     if (this.deviceName && deviceName) {
       const nameLower = deviceName.toLowerCase()
@@ -44,7 +44,7 @@ export class MIDICCMapper {
         return true
       }
     }
-    
+
     return false
   }
 
@@ -85,7 +85,7 @@ export class MIDICCMapper {
   handleTrackSelection (cc, value) {
     const trackMapping = this.mapping.trackSelection
     if (!trackMapping) return
-    
+
     // Check if this CC is mapped to a track
     for (const [trackIdStr, trackCC] of Object.entries(trackMapping)) {
       const trackId = parseInt(trackIdStr)
@@ -97,7 +97,7 @@ export class MIDICCMapper {
             // Set as current track for parameter control
             this.currentTrackId = trackId
             this.currentLuminode = track.luminode
-            
+
             // Show debug message
             if (this.mainApp && this.mainApp.showDebugMessage) {
               this.mainApp.showDebugMessage(`track ${trackId} active`)
@@ -115,11 +115,11 @@ export class MIDICCMapper {
     const availableLuminodes = this.trackManager.getAvailableLuminodes()
     const index = Math.floor((value / 127) * availableLuminodes.length)
     const selectedLuminode = availableLuminodes[Math.min(index, availableLuminodes.length - 1)]
-    
+
     if (selectedLuminode) {
       this.trackManager.setLuminode(this.currentTrackId, selectedLuminode)
       this.currentLuminode = selectedLuminode
-      
+
       if (this.mainApp && this.mainApp.showDebugMessage) {
         this.mainApp.showDebugMessage(`luminode: ${selectedLuminode}`)
       }
@@ -134,29 +134,29 @@ export class MIDICCMapper {
     const paramConfig = this.mapping.luminodeParameters
     const startCC = paramConfig.start || 0
     const maxCC = paramConfig.max || 127
-    
+
     if (cc < startCC || cc > maxCC) {
       return
     }
-    
-    const luminodeConfig = getLuminodeConfig(this.currentLuminode)    
+
+    const luminodeConfig = getLuminodeConfig(this.currentLuminode)
     if (!luminodeConfig || luminodeConfig.length === 0) {
       console.log('[MIDI CC] Luminode parameters: no config found', { luminode: this.currentLuminode })
       return
     }
-    
+
     // Map CC to parameter index (relative to startCC)
     const paramIndex = cc - startCC
-    
+
     if (paramIndex >= luminodeConfig.length) {
       return
     }
-    
+
     const param = luminodeConfig[paramIndex]
     if (!param) {
       return
     }
-    
+
     // Map normalized value to parameter range
     let paramValue
     if (param.type === 'number') {
@@ -171,15 +171,14 @@ export class MIDICCMapper {
       // For slider types, use continuous mapping
       paramValue = param.min + (normalizedValue * (param.max - param.min))
     }
-    
-   
+
     if (this.mainApp && this.mainApp.updateLuminodeConfig) {
       this.mainApp.updateLuminodeConfig({
         luminode: this.currentLuminode,
         param: param.key,
         value: paramValue
       })
-      
+
       if (this.mainApp.showDebugMessage) {
         this.mainApp.showDebugMessage(`param: ${param.label} = ${paramValue}`)
       }
@@ -194,12 +193,12 @@ export class MIDICCMapper {
     const layoutMapping = this.mapping.layout
     // Convert CC to string for JSON key lookup
     const layoutParam = layoutMapping[String(cc)]
-    
+
     if (layoutParam && this.currentTrackId) {
       const track = this.trackManager.getTrack(this.currentTrackId)
       if (track) {
         const currentLayout = track.layout || { x: 0, y: 0, rotation: 0 }
-        
+
         let newValue
         if (layoutParam === 'x') {
           newValue = (normalizedValue - 0.5) * 1000 // -500 to 500
@@ -210,12 +209,12 @@ export class MIDICCMapper {
         } else {
           return
         }
-        
+
         this.trackManager.setLayout(this.currentTrackId, {
           ...currentLayout,
           [layoutParam]: newValue
         })
-        
+
         if (this.mainApp && this.mainApp.showDebugMessage) {
           const displayValue = layoutParam === 'rotation' ? `${newValue.toFixed(1)}°` : newValue.toFixed(1)
           this.mainApp.showDebugMessage(`layout ${layoutParam}: ${displayValue}`)
@@ -230,12 +229,12 @@ export class MIDICCMapper {
     const motionMapping = this.mapping.motion
     // Convert CC to string for JSON key lookup
     const motionParam = motionMapping[String(cc)]
-    
+
     if (motionParam && this.currentTrackId) {
       const config = this.trackManager.getTrajectoryConfig(this.currentTrackId)
       if (config) {
-        let updates = {}
-        
+        const updates = {}
+
         // Map CC to trajectory parameters
         if (motionParam === 'enabled') {
           updates.enabled = normalizedValue > 0.5
@@ -248,14 +247,13 @@ export class MIDICCMapper {
           const index = Math.floor(normalizedValue * types.length)
           updates.trajectoryType = types[Math.min(index, types.length - 1)]
         }
-        
+
         if (Object.keys(updates).length > 0) {
           this.trackManager.updateTrajectoryConfig(this.currentTrackId, updates)
         }
       }
     }
   }
-
 
   /**
    * Get current state for debugging
@@ -272,4 +270,3 @@ export class MIDICCMapper {
     }
   }
 }
-

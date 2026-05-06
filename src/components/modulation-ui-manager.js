@@ -114,9 +114,9 @@ export class ModulationUIManager {
         threshold: modulator.threshold !== undefined ? modulator.threshold : 0.5
       }
 
-      const modulatorFolder = this.mainPane.addFolder({ 
-        title: `Modulator ${this.modulatorPanes.size + 1}`, 
-        expanded: true 
+      const modulatorFolder = this.mainPane.addFolder({
+        title: `Modulator ${this.modulatorPanes.size + 1}`,
+        expanded: true
       })
 
       modulatorFolder.addBinding(modulatorData, 'enabled', {
@@ -183,7 +183,7 @@ export class ModulationUIManager {
         } else {
           waveformPreviewContainer.innerHTML = this.createWaveformPreview(modulator.shape || 'sine', 40, 20)
         }
-        
+
         setTimeout(() => {
           const shapeBindingElement = shapeBinding.controller?.view?.element || shapeBinding.element
           if (shapeBindingElement) {

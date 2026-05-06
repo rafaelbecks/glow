@@ -18,4 +18,3 @@ export function isRotationEnabled (moduleSettings) {
   if (moduleSettings.ROTATION_ENABLED === undefined) return true
   return Boolean(moduleSettings.ROTATION_ENABLED)
 }
-

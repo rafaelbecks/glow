@@ -6,15 +6,37 @@ import { CanvasUIManager } from './components/canvas-ui-manager.js'
 import { ModulationUIManager } from './components/modulation-ui-manager.js'
 
 export class SidePanel {
-  constructor (trackManager, tabletManager, uiManager = null, midiManager = null) {
+  constructor (
+    trackManager,
+    tabletManager,
+    uiManager = null,
+    midiManager = null,
+    options = {}
+  ) {
     // Initialize base panel
-    this.basePanel = new SidePanelBase(trackManager, tabletManager, uiManager, midiManager)
+    this.basePanel = new SidePanelBase(
+      trackManager,
+      tabletManager,
+      uiManager,
+      midiManager,
+      options
+    )
 
     // Initialize specialized managers
-    this.luminodeConfigManager = new LuminodeConfigManager(trackManager, this.basePanel.getPanel())
-    this.trackUIManager = new TrackUIManager(trackManager, this.basePanel.getPanel(), this.luminodeConfigManager)
+    this.luminodeConfigManager = new LuminodeConfigManager(
+      trackManager,
+      this.basePanel.getPanel()
+    )
+    this.trackUIManager = new TrackUIManager(
+      trackManager,
+      this.basePanel.getPanel(),
+      this.luminodeConfigManager
+    )
     this.canvasUIManager = new CanvasUIManager(this.basePanel.getPanel())
-    this.modulationUIManager = new ModulationUIManager(trackManager, this.basePanel.getPanel())
+    this.modulationUIManager = new ModulationUIManager(
+      trackManager,
+      this.basePanel.getPanel()
+    )
 
     // Set up event delegation
     this.setupEventDelegation()
@@ -65,9 +87,11 @@ export class SidePanel {
       this.triggerCallback('colorPaletteChange', e.detail)
     })
 
-    this.basePanel.getPanel().addEventListener('pitchColorFactorChange', (e) => {
-      this.triggerCallback('pitchColorFactorChange', e.detail)
-    })
+    this.basePanel
+      .getPanel()
+      .addEventListener('pitchColorFactorChange', (e) => {
+        this.triggerCallback('pitchColorFactorChange', e.detail)
+      })
   }
 
   // Handle tab switching

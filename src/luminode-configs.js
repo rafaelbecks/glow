@@ -377,11 +377,17 @@ export const LUMINODE_CONFIGS = {
       { key: 'SCALE', label: 'Scale', type: 'slider', min: 0.2, max: 1.5, step: 0.05, default: 0.9 },
       { key: 'ITERATIONS', label: 'Iterations per Frame', type: 'number', min: 1000, max: 200000, step: 1000, default: 50000 },
       { key: 'POINT_SIZE', label: 'Point Size', type: 'slider', min: 0.5, max: 4, step: 0.1, default: 1.5 },
-      { key: 'COLOR_MODE', label: 'Color Mode', type: 'select', options: [
-        { value: 0, label: 'Rainbow' },
-        { value: 1, label: 'MIDI' },
-        { value: 2, label: 'Black & White' }
-      ], default: 0 }
+      {
+        key: 'COLOR_MODE',
+        label: 'Color Mode',
+        type: 'select',
+        options: [
+          { value: 0, label: 'Rainbow' },
+          { value: 1, label: 'MIDI' },
+          { value: 2, label: 'Black & White' }
+        ],
+        default: 0
+      }
     ]
   }
 }

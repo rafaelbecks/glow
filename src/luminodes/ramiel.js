@@ -102,7 +102,7 @@ export class RamielLuminode {
 
     const allFaces = [...topFaces, ...bottomFaces]
     const result = vertices.map(v => ({ ...v }))
-    
+
     // Create face map for edge filtering
     const faceMap = new Map()
     allFaces.forEach((face, faceIdx) => {
@@ -114,7 +114,7 @@ export class RamielLuminode {
         faceMap.get(vertIdx).push(faceKey)
       })
     })
-    
+
     // Calculate movement direction for each vertex (average of all faces it belongs to)
     const vertexMovements = vertices.map(() => ({ x: 0, y: 0, z: 0, count: 0 }))
 
@@ -230,7 +230,7 @@ export class RamielLuminode {
     const centerProj = projectPoint(x, y, 0)
     const gradient = this.ctx.createRadialGradient(centerProj.x, centerProj.y, 0, centerProj.x, centerProj.y, size * 0.5)
     gradient.addColorStop(0, `rgba(255, 200, 100, ${opacity * 0.4})`)
-    gradient.addColorStop(1, `rgba(255, 140, 0, 0)`)
+    gradient.addColorStop(1, 'rgba(255, 140, 0, 0)')
     this.ctx.fillStyle = gradient
     this.ctx.fillRect(centerProj.x - size, centerProj.y - size, size * 2, size * 2)
 
@@ -561,11 +561,11 @@ export class RamielLuminode {
   drawRay (vertices, scale, rayLength, pulseRate, t, enableProjection, angleX, angleY, angleZ, width, height, useColor, note) {
     // Use base vertex 1 (right side) as ray origin
     const originVertex = vertices[1] // (s, 0, 0)
-    
+
     // Calculate pulse (on/off similar to AT field)
     const pulsePhase = (t * pulseRate) % (Math.PI * 2)
     const pulseOpacity = (Math.sin(pulsePhase) + 1) / 2 // 0 to 1
-    
+
     if (pulseOpacity < 0.1) return // Off state
 
     // Get body color and invert it
@@ -581,20 +581,20 @@ export class RamielLuminode {
       const invertedHue = (baseHue + 180) % 360
       invertedColor = `hsla(${invertedHue}, 60%, 70%, 1.0)`
     }
-    
+
     // Ray direction extends outward from vertex
     const directionX = originVertex.x > 0 ? 1 : -1
     const directionY = 0
     const directionZ = 0
-    
+
     // Ray end point
     const endX = originVertex.x + directionX * rayLength * scale
     const endY = originVertex.y + directionY * rayLength * scale
     const endZ = originVertex.z + directionZ * rayLength * scale
-    
+
     // Project points
     let originProjX, originProjY, endProjX, endProjY
-    
+
     if (enableProjection) {
       const [rotOrigX, rotOrigY, rotOrigZ] = UTILS.rotate3D(
         originVertex.x * scale,
@@ -606,7 +606,7 @@ export class RamielLuminode {
       )
       originProjX = rotOrigX + (rotOrigX / width) * rotOrigZ * 0.001
       originProjY = rotOrigY + (rotOrigY / height) * rotOrigZ * 0.001 - rotOrigZ * 0.3
-      
+
       // Project end
       const [rotEndX, rotEndY, rotEndZ] = UTILS.rotate3D(
         endX * scale,
@@ -624,43 +624,43 @@ export class RamielLuminode {
       endProjX = endX * scale
       endProjY = endY * scale
     }
-    
+
     // Draw glowing ray with inverted color
     this.ctx.save()
-    
+
     // Convert inverted color to RGBA for gradient
     const rgbaColor = this.colorToRGBA(invertedColor, pulseOpacity)
     const rgbaColorMid = this.colorToRGBA(invertedColor, pulseOpacity * 0.7)
     const rgbaColorEnd = this.colorToRGBA(invertedColor, pulseOpacity * 0.3)
-    
+
     // Outer bright line
     const gradient = this.ctx.createLinearGradient(originProjX, originProjY, endProjX, endProjY)
     gradient.addColorStop(0, rgbaColor)
     gradient.addColorStop(0.5, rgbaColorMid)
     gradient.addColorStop(1, rgbaColorEnd)
-    
+
     this.ctx.strokeStyle = gradient
     this.ctx.lineWidth = 3
     this.ctx.shadowBlur = 15
     this.ctx.shadowColor = rgbaColor
-    
+
     this.ctx.beginPath()
     this.ctx.moveTo(originProjX, originProjY)
     this.ctx.lineTo(endProjX, endProjY)
     this.ctx.stroke()
-    
+
     // Inner core (brighter)
     const rgbaCore = this.colorToRGBA(invertedColor, pulseOpacity * 0.6)
     this.ctx.strokeStyle = rgbaCore
     this.ctx.lineWidth = 1.5
     this.ctx.shadowBlur = 25
     this.ctx.shadowColor = rgbaColor
-    
+
     this.ctx.beginPath()
     this.ctx.moveTo(originProjX, originProjY)
     this.ctx.lineTo(endProjX, endProjY)
     this.ctx.stroke()
-    
+
     this.ctx.restore()
   }
 
@@ -704,27 +704,21 @@ export class RamielLuminode {
         const h = parseFloat(match[0]) / 360
         const s = parseFloat(match[1]) / 100
         const l = parseFloat(match[2]) / 100
-        
+
         const c = (1 - Math.abs(2 * l - 1)) * s
         const x = c * (1 - Math.abs((h * 6) % 2 - 1))
         const m = l - c / 2
-        
+
         let r, g, b
-        if (h < 1/6) { r = c; g = x; b = 0 }
-        else if (h < 2/6) { r = x; g = c; b = 0 }
-        else if (h < 3/6) { r = 0; g = c; b = x }
-        else if (h < 4/6) { r = 0; g = x; b = c }
-        else if (h < 5/6) { r = x; g = 0; b = c }
-        else { r = c; g = 0; b = x }
-        
+        if (h < 1 / 6) { r = c; g = x; b = 0 } else if (h < 2 / 6) { r = x; g = c; b = 0 } else if (h < 3 / 6) { r = 0; g = c; b = x } else if (h < 4 / 6) { r = 0; g = x; b = c } else if (h < 5 / 6) { r = x; g = 0; b = c } else { r = c; g = 0; b = x }
+
         r = Math.round((r + m) * 255)
         g = Math.round((g + m) * 255)
         b = Math.round((b + m) * 255)
-        
+
         return `rgba(${r}, ${g}, ${b}, ${opacity})`
       }
     }
     return `rgba(255, 255, 255, ${opacity})`
   }
 }
-

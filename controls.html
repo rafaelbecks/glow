@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>GLOW Controls</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inconsolata:wght@200..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="src/styles/base.css">
+    <link rel="stylesheet" href="src/styles/ui-components.css">
+    <link rel="stylesheet" href="src/styles/side-panel.css">
+    <link rel="stylesheet" href="src/styles/tablet-controls.css">
+    <link rel="stylesheet" href="src/styles/modals.css">
+    <style>
+    :root {
+      --tp-base-background-color: hsla(0, 0%, 0%, 1.00);
+      --tp-base-shadow-color: hsla(0, 0%, 0%, 0.2);
+      --tp-button-background-color: hsla(0, 0%, 70%, 1.00);
+      --tp-button-background-color-active: hsla(0, 0%, 85%, 1.00);
+      --tp-button-background-color-focus: hsla(0, 0%, 80%, 1.00);
+      --tp-button-background-color-hover: hsla(0, 0%, 75%, 1.00);
+      --tp-button-foreground-color: hsla(0, 0%, 0%, 1.00);
+      --tp-container-background-color: hsla(0, 0%, 10%, 1.00);
+      --tp-container-background-color-active: hsla(0, 0%, 25%, 1.00);
+      --tp-container-background-color-focus: hsla(0, 0%, 20%, 1.00);
+      --tp-container-background-color-hover: hsla(0, 0%, 15%, 1.00);
+      --tp-container-foreground-color: hsla(0, 0%, 50%, 1.00);
+      --tp-groove-foreground-color: hsla(0, 0%, 10%, 1.00);
+      --tp-input-background-color: hsla(0, 0%, 10%, 1.00);
+      --tp-input-background-color-active: hsla(0, 0%, 25%, 1.00);
+      --tp-input-background-color-focus: hsla(0, 0%, 20%, 1.00);
+      --tp-input-background-color-hover: hsla(0, 0%, 15%, 1.00);
+      --tp-input-foreground-color: hsla(131, 59%, 59%, 1.00);
+      --tp-label-foreground-color: hsla(0, 0%, 50%, 1.00);
+      --tp-monitor-background-color: hsla(0, 0%, 8%, 1.00);
+      --tp-monitor-foreground-color: hsla(0, 0%, 48%, 1.00);
+    }
+    body {
+      margin: 0;
+      background: #000;
+      overflow: hidden;
+    }
+    </style>
+</head>
+<body>
+    <script type="module" src="src/lib/tweakpane.min.js"></script>
+    <script type="module" src="src/lib/tweakpane-plugin-essentials.min.js"></script>
+    <script type="module" src="src/detached-controls-init.js"></script>
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+</body>
+</html>

@@ -12,10 +12,12 @@ export class ModulationSystem {
     this.startTime = performance.now() / 1000
   }
 
-  addModulator (type = 'lfo') {
+  addModulator (type = 'lfo', id = null) {
     const modulator = {
-      id: `modulator-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      type: type,
+      id:
+        id ||
+        `modulator-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type,
       enabled: true,
       targetDestination: 'track',
       targetTrack: 1,
@@ -37,7 +39,7 @@ export class ModulationSystem {
   }
 
   removeModulator (modulatorId) {
-    const index = this.modulators.findIndex(m => m.id === modulatorId)
+    const index = this.modulators.findIndex((m) => m.id === modulatorId)
     if (index !== -1) {
       this.modulators.splice(index, 1)
       return true
@@ -46,7 +48,7 @@ export class ModulationSystem {
   }
 
   updateModulator (modulatorId, updates) {
-    const modulator = this.modulators.find(m => m.id === modulatorId)
+    const modulator = this.modulators.find((m) => m.id === modulatorId)
     if (modulator) {
       Object.assign(modulator, updates)
       return true
@@ -59,12 +61,13 @@ export class ModulationSystem {
   }
 
   getModulator (modulatorId) {
-    return this.modulators.find(m => m.id === modulatorId)
+    return this.modulators.find((m) => m.id === modulatorId)
   }
 
   generateWaveform (shape, phase, cubicBezier = [0.5, 0, 0.5, 1]) {
     // Normalize phase to 0-2π
-    const normalizedPhase = ((phase % (Math.PI * 2)) + (Math.PI * 2)) % (Math.PI * 2)
+    const normalizedPhase =
+      ((phase % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)
 
     switch (shape) {
       case 'sine':
@@ -129,7 +132,7 @@ export class ModulationSystem {
   }
 
   getCurrentTime () {
-    return (performance.now() / 1000) - this.startTime
+    return performance.now() / 1000 - this.startTime
   }
 
   getModulatedValue (baseValue, modulator, configParam, noteData = null) {
@@ -143,17 +146,27 @@ export class ModulationSystem {
       let normalizedValue = 0
 
       if (modulatorType === 'lfo') {
-        const time = (performance.now() / 1000) - this.startTime
+        const time = performance.now() / 1000 - this.startTime
         const phase = time * modulator.rate * Math.PI * 2
-        const waveform = this.generateWaveform(modulator.shape, phase, modulator.cubicBezier)
+        const waveform = this.generateWaveform(
+          modulator.shape,
+          phase,
+          modulator.cubicBezier
+        )
         normalizedValue = (waveform + 1) / 2
       } else if (modulatorType === 'numberOfNotes') {
         if (!noteData || !noteData.notes || noteData.notes.length === 0) {
           normalizedValue = 0
         } else {
           const noteCount = noteData.notes.length
-          normalizedValue = Math.min(1, (noteCount * (modulator.multiplier || 1.0)) / 10)
-          normalizedValue = this.applyEasing(normalizedValue, modulator.easing || 'linear')
+          normalizedValue = Math.min(
+            1,
+            (noteCount * (modulator.multiplier || 1.0)) / 10
+          )
+          normalizedValue = this.applyEasing(
+            normalizedValue,
+            modulator.easing || 'linear'
+          )
         }
       } else if (modulatorType === 'velocity') {
         if (!noteData) {
@@ -163,24 +176,36 @@ export class ModulationSystem {
           if (noteData.velocity !== undefined) {
             velocity = noteData.velocity
           } else if (noteData.notes && noteData.notes.length > 0) {
-            const velocities = noteData.notes.map(n => n.velocity || 0)
-            velocity = velocities.reduce((a, b) => a + b, 0) / velocities.length
+            const velocities = noteData.notes.map((n) => n.velocity || 0)
+            velocity =
+              velocities.reduce((a, b) => a + b, 0) / velocities.length
           }
-          normalizedValue = Math.max(0, Math.min(1, velocity * (modulator.multiplier || 1.0)))
-          normalizedValue = this.applyEasing(normalizedValue, modulator.easing || 'linear')
+          normalizedValue = Math.max(
+            0,
+            Math.min(1, velocity * (modulator.multiplier || 1.0))
+          )
+          normalizedValue = this.applyEasing(
+            normalizedValue,
+            modulator.easing || 'linear'
+          )
         }
       }
 
-      const threshold = modulator.threshold !== undefined ? modulator.threshold : 0.5
+      const threshold =
+        modulator.threshold !== undefined ? modulator.threshold : 0.5
       return normalizedValue >= threshold
     }
 
     let normalizedValue = 0
 
     if (modulatorType === 'lfo') {
-      const time = (performance.now() / 1000) - this.startTime
+      const time = performance.now() / 1000 - this.startTime
       const phase = time * modulator.rate * Math.PI * 2
-      const waveform = this.generateWaveform(modulator.shape, phase, modulator.cubicBezier)
+      const waveform = this.generateWaveform(
+        modulator.shape,
+        phase,
+        modulator.cubicBezier
+      )
       const modulationAmount = waveform * modulator.depth
       const offset = modulator.offset || 0
 
@@ -188,7 +213,8 @@ export class ModulationSystem {
       const max = configParam.max
       const range = max - min
 
-      const modulatedValue = baseValue + (modulationAmount * range) + (offset * range)
+      const modulatedValue =
+        baseValue + modulationAmount * range + offset * range
 
       return Math.max(min, Math.min(max, modulatedValue))
     } else if (modulatorType === 'numberOfNotes') {
@@ -196,8 +222,14 @@ export class ModulationSystem {
         return baseValue
       }
       const noteCount = noteData.notes.length
-      normalizedValue = Math.min(1, (noteCount * (modulator.multiplier || 1.0)) / 10)
-      normalizedValue = this.applyEasing(normalizedValue, modulator.easing || 'linear')
+      normalizedValue = Math.min(
+        1,
+        (noteCount * (modulator.multiplier || 1.0)) / 10
+      )
+      normalizedValue = this.applyEasing(
+        normalizedValue,
+        modulator.easing || 'linear'
+      )
     } else if (modulatorType === 'velocity') {
       if (!noteData) {
         return baseValue
@@ -206,13 +238,19 @@ export class ModulationSystem {
       if (noteData.velocity !== undefined) {
         velocity = noteData.velocity
       } else if (noteData.notes && noteData.notes.length > 0) {
-        const velocities = noteData.notes.map(n => n.velocity || 0)
+        const velocities = noteData.notes.map((n) => n.velocity || 0)
         velocity = velocities.reduce((a, b) => a + b, 0) / velocities.length
       } else {
         return baseValue
       }
-      normalizedValue = Math.max(0, Math.min(1, velocity * (modulator.multiplier || 1.0)))
-      normalizedValue = this.applyEasing(normalizedValue, modulator.easing || 'linear')
+      normalizedValue = Math.max(
+        0,
+        Math.min(1, velocity * (modulator.multiplier || 1.0))
+      )
+      normalizedValue = this.applyEasing(
+        normalizedValue,
+        modulator.easing || 'linear'
+      )
     } else {
       return baseValue
     }
@@ -220,7 +258,7 @@ export class ModulationSystem {
     const min = configParam.min
     const max = configParam.max
     const range = max - min
-    const mappedValue = min + (normalizedValue * range)
+    const mappedValue = min + normalizedValue * range
 
     if (configParam.type === 'number') {
       return Math.round(mappedValue)
@@ -229,12 +267,19 @@ export class ModulationSystem {
     return Math.max(min, Math.min(max, mappedValue))
   }
 
-  applyModulation (trackId, luminodeType, luminodeConfigKey, baseConfigValue, configParam) {
-    const relevantModulators = this.modulators.filter(m =>
-      m.enabled &&
-      m.targetTrack === trackId &&
-      m.targetConfigKey === luminodeConfigKey &&
-      m.targetLuminode === luminodeType
+  applyModulation (
+    trackId,
+    luminodeType,
+    luminodeConfigKey,
+    baseConfigValue,
+    configParam
+  ) {
+    const relevantModulators = this.modulators.filter(
+      (m) =>
+        m.enabled &&
+        m.targetTrack === trackId &&
+        m.targetConfigKey === luminodeConfigKey &&
+        m.targetLuminode === luminodeType
     )
 
     if (relevantModulators.length === 0) {
@@ -244,7 +289,11 @@ export class ModulationSystem {
     let modulatedValue = baseConfigValue
 
     for (const modulator of relevantModulators) {
-      modulatedValue = this.getModulatedValue(modulatedValue, modulator, configParam)
+      modulatedValue = this.getModulatedValue(
+        modulatedValue,
+        modulator,
+        configParam
+      )
     }
 
     return modulatedValue
@@ -253,11 +302,12 @@ export class ModulationSystem {
   getModulatedConfig (trackId, luminodeType, baseConfig) {
     const modulatedConfig = { ...baseConfig }
 
-    const relevantModulators = this.modulators.filter(m =>
-      m.enabled &&
-      m.targetTrack === trackId &&
-      m.targetLuminode === luminodeType &&
-      m.targetConfigKey !== null
+    const relevantModulators = this.modulators.filter(
+      (m) =>
+        m.enabled &&
+        m.targetTrack === trackId &&
+        m.targetLuminode === luminodeType &&
+        m.targetConfigKey !== null
     )
 
     if (relevantModulators.length === 0) {
@@ -299,7 +349,16 @@ export class ModulationSystem {
   }
 
   getEasingFunctions () {
-    return ['linear', 'easeIn', 'easeOut', 'easeInOut', 'easeInCubic', 'easeOutCubic', 'easeInOutCubic', 'smoothstep']
+    return [
+      'linear',
+      'easeIn',
+      'easeOut',
+      'easeInOut',
+      'easeInCubic',
+      'easeOutCubic',
+      'easeInOutCubic',
+      'smoothstep'
+    ]
   }
 
   getEasingFunctionNames () {

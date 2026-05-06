@@ -6,10 +6,42 @@ import { getAvailableLuminodes } from './luminodes/index.js'
 export class TrackManager {
   constructor () {
     this.tracks = [
-      { id: 1, name: 'Track 1', muted: false, solo: false, midiDevice: null, luminode: 'lissajous', layout: { x: 0, y: 0, rotation: 0 } },
-      { id: 2, name: 'Track 2', muted: false, solo: false, midiDevice: null, luminode: 'harmonograph', layout: { x: 0, y: 0, rotation: 0 } },
-      { id: 3, name: 'Track 3', muted: false, solo: false, midiDevice: null, luminode: 'sphere', layout: { x: 0, y: 0, rotation: 0 } },
-      { id: 4, name: 'Track 4', muted: false, solo: false, midiDevice: null, luminode: 'gegoNet', layout: { x: 0, y: 0, rotation: 0 } }
+      {
+        id: 1,
+        name: 'Track 1',
+        muted: false,
+        solo: false,
+        midiDevice: null,
+        luminode: 'lissajous',
+        layout: { x: 0, y: 0, rotation: 0 }
+      },
+      {
+        id: 2,
+        name: 'Track 2',
+        muted: false,
+        solo: false,
+        midiDevice: null,
+        luminode: 'harmonograph',
+        layout: { x: 0, y: 0, rotation: 0 }
+      },
+      {
+        id: 3,
+        name: 'Track 3',
+        muted: false,
+        solo: false,
+        midiDevice: null,
+        luminode: 'sphere',
+        layout: { x: 0, y: 0, rotation: 0 }
+      },
+      {
+        id: 4,
+        name: 'Track 4',
+        muted: false,
+        solo: false,
+        midiDevice: null,
+        luminode: 'gegoNet',
+        layout: { x: 0, y: 0, rotation: 0 }
+      }
     ]
 
     // Initialize trajectory system
@@ -35,7 +67,7 @@ export class TrackManager {
 
   triggerCallback (event, data) {
     if (this.callbacks[event]) {
-      this.callbacks[event].forEach(callback => callback(data))
+      this.callbacks[event].forEach((callback) => callback(data))
     }
   }
 
@@ -45,7 +77,7 @@ export class TrackManager {
   }
 
   getTrack (trackId) {
-    return this.tracks.find(track => track.id === trackId)
+    return this.tracks.find((track) => track.id === trackId)
   }
 
   updateTrack (trackId, updates) {
@@ -128,7 +160,10 @@ export class TrackManager {
 
   resetTrajectoryConfig (trackId) {
     this.trajectorySystem.resetTrackConfig(trackId)
-    this.triggerCallback('trajectoryUpdated', { trackId, config: this.trajectorySystem.getTrackConfig(trackId) })
+    this.triggerCallback('trajectoryUpdated', {
+      trackId,
+      config: this.trajectorySystem.getTrackConfig(trackId)
+    })
   }
 
   // Modulation management methods
@@ -136,8 +171,8 @@ export class TrackManager {
     return this.modulationSystem
   }
 
-  addModulator () {
-    return this.modulationSystem.addModulator()
+  addModulator (type = 'lfo', id = null) {
+    return this.modulationSystem.addModulator(type, id)
   }
 
   removeModulator (modulatorId) {
@@ -171,11 +206,13 @@ export class TrackManager {
   }
 
   getAvailableMidiDevices () {
-    return Array.from(this.availableMidiDevices.entries()).map(([id, device]) => ({
-      id,
-      name: device.name,
-      manufacturer: device.manufacturer
-    }))
+    return Array.from(this.availableMidiDevices.entries()).map(
+      ([id, device]) => ({
+        id,
+        name: device.name,
+        manufacturer: device.manufacturer
+      })
+    )
   }
 
   getAvailableLuminodes () {
@@ -184,12 +221,12 @@ export class TrackManager {
 
   // Get active tracks (not muted, or soloed)
   getActiveTracks () {
-    const hasSolo = this.tracks.some(track => track.solo)
+    const hasSolo = this.tracks.some((track) => track.solo)
 
     if (hasSolo) {
-      return this.tracks.filter(track => track.solo)
+      return this.tracks.filter((track) => track.solo)
     } else {
-      return this.tracks.filter(track => !track.muted)
+      return this.tracks.filter((track) => !track.muted)
     }
   }
 
@@ -214,7 +251,7 @@ export class TrackManager {
     const activeTracks = this.getActiveTracks()
     const midiData = {}
 
-    activeTracks.forEach(track => {
+    activeTracks.forEach((track) => {
       if (track.luminode && track.midiDevice) {
         const data = this.getMidiDataForTrack(track.id)
         if (data.length > 0) {
@@ -228,7 +265,7 @@ export class TrackManager {
 
   // Reset all tracks
   resetTracks () {
-    this.tracks.forEach(track => {
+    this.tracks.forEach((track) => {
       track.muted = false
       track.solo = false
       track.midiDevice = null

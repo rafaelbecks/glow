@@ -2,11 +2,18 @@
 import { TabletControls } from './tablet-controls.js'
 
 export class SidePanelBase {
-  constructor (trackManager, tabletManager, uiManager = null, midiManager = null) {
+  constructor (
+    trackManager,
+    tabletManager,
+    uiManager = null,
+    midiManager = null,
+    options = {}
+  ) {
     this.trackManager = trackManager
     this.tabletManager = tabletManager
     this.uiManager = uiManager
     this.midiManager = midiManager
+    this.options = options
     this.isVisible = false
     this.panel = null
     this.callbacks = {}
@@ -56,14 +63,14 @@ export class SidePanelBase {
             <!-- Tracks will be dynamically generated -->
           </div>
         </div>
-        
+
         <!-- Modulation Tab Content -->
         <div id="modulationTab" class="tab-content">
           <div id="modulationControlsContainer">
             <!-- Modulation controls will be dynamically generated -->
           </div>
         </div>
-        
+
         <!-- DEPRECATED: Canvas Tab Content - commented out
 
         <!-- Tablet Tab Content -->
@@ -73,7 +80,7 @@ export class SidePanelBase {
           </div>
         </div>
         -->
-        
+
         <div id="canvasTab" class="tab-content">
           <div id="canvasControlsContainer">
             <!-- Canvas and color controls will be dynamically generated -->
@@ -85,17 +92,26 @@ export class SidePanelBase {
     // Add to DOM
     document.body.appendChild(this.panel)
 
+    if (this.options.detached) {
+      this.panel.classList.add('detached')
+    }
+
     // Initially hidden
     this.hide()
   }
 
   setupEventListeners () {
-    // Click outside to close panel
-    document.addEventListener('click', (e) => {
-      if (this.isVisible && !this.panel.contains(e.target) && !e.target.closest('.panel-toggle-btn')) {
-        this.hide()
-      }
-    })
+    if (!this.options.detached) {
+      document.addEventListener('click', (e) => {
+        if (
+          this.isVisible &&
+          !this.panel.contains(e.target) &&
+          !e.target.closest('.panel-toggle-btn')
+        ) {
+          this.hide()
+        }
+      })
+    }
 
     // Prevent panel clicks from closing the panel
     this.panel.addEventListener('click', (e) => {
@@ -104,7 +120,7 @@ export class SidePanelBase {
 
     // Tab switching
     const tabBtns = this.panel.querySelectorAll('.tab-btn')
-    tabBtns.forEach(btn => {
+    tabBtns.forEach((btn) => {
       btn.addEventListener('click', async (e) => {
         const tab = e.currentTarget.dataset.tab
         await this.switchTab(tab)
@@ -147,7 +163,7 @@ export class SidePanelBase {
 
   triggerCallback (event, data) {
     if (this.callbacks[event]) {
-      this.callbacks[event].forEach(callback => callback(data))
+      this.callbacks[event].forEach((callback) => callback(data))
     }
   }
 
@@ -204,13 +220,13 @@ export class SidePanelBase {
   async switchTab (tabName) {
     // Update active tab button
     const tabBtns = this.panel.querySelectorAll('.tab-btn')
-    tabBtns.forEach(btn => {
+    tabBtns.forEach((btn) => {
       btn.classList.toggle('active', btn.dataset.tab === tabName)
     })
 
     // Update active tab content
     const tabContents = this.panel.querySelectorAll('.tab-content')
-    tabContents.forEach(content => {
+    tabContents.forEach((content) => {
       content.classList.toggle('active', content.id === `${tabName}Tab`)
     })
 
@@ -247,9 +263,12 @@ export class SidePanelBase {
 
   // Tablet-related methods (delegated to TabletControls component)
   async renderTabletControls () {
-    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    const tabletControlsContainer = this.panel.querySelector(
+      '#tabletControlsContainer'
+    )
     if (tabletControlsContainer) {
-      tabletControlsContainer.innerHTML = this.tabletControls.createTabletControlsHTML()
+      tabletControlsContainer.innerHTML =
+        this.tabletControls.createTabletControlsHTML()
       this.tabletControls.setupEventListeners(tabletControlsContainer)
 
       // Populate MIDI output devices when tablet controls are rendered
@@ -259,94 +278,135 @@ export class SidePanelBase {
 
   // Populate MIDI output devices
   async populateMidiOutputDevices () {
-    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    const tabletControlsContainer = this.panel.querySelector(
+      '#tabletControlsContainer'
+    )
     if (tabletControlsContainer && this.midiManager) {
       // Get output devices from MIDI manager
       const devices = await this.midiManager.getAvailableOutputDevices()
-      this.tabletControls.updateMidiOutputDevices(devices, tabletControlsContainer)
+      this.tabletControls.updateMidiOutputDevices(
+        devices,
+        tabletControlsContainer
+      )
     }
   }
 
   // Tablet update methods (delegated to TabletControls)
   updateTabletWidth (value) {
-    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    const tabletControlsContainer = this.panel.querySelector(
+      '#tabletControlsContainer'
+    )
     if (tabletControlsContainer) {
       this.tabletControls.updateTabletWidth(value, tabletControlsContainer)
     }
   }
 
   updateColorMode (enabled) {
-    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    const tabletControlsContainer = this.panel.querySelector(
+      '#tabletControlsContainer'
+    )
     if (tabletControlsContainer) {
       this.tabletControls.updateColorMode(enabled, tabletControlsContainer)
     }
   }
 
   updateGeometricMode (enabled) {
-    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    const tabletControlsContainer = this.panel.querySelector(
+      '#tabletControlsContainer'
+    )
     if (tabletControlsContainer) {
       this.tabletControls.updateGeometricMode(enabled, tabletControlsContainer)
     }
   }
 
   updateShapeDetectionThreshold (value) {
-    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    const tabletControlsContainer = this.panel.querySelector(
+      '#tabletControlsContainer'
+    )
     if (tabletControlsContainer) {
-      this.tabletControls.updateShapeDetectionThreshold(value, tabletControlsContainer)
+      this.tabletControls.updateShapeDetectionThreshold(
+        value,
+        tabletControlsContainer
+      )
     }
   }
 
   updateGeometricPencil (enabled) {
-    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    const tabletControlsContainer = this.panel.querySelector(
+      '#tabletControlsContainer'
+    )
     if (tabletControlsContainer) {
-      this.tabletControls.updateGeometricPencil(enabled, tabletControlsContainer)
+      this.tabletControls.updateGeometricPencil(
+        enabled,
+        tabletControlsContainer
+      )
     }
   }
 
   updatePolygonSides (sides) {
-    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    const tabletControlsContainer = this.panel.querySelector(
+      '#tabletControlsContainer'
+    )
     if (tabletControlsContainer) {
       this.tabletControls.updatePolygonSides(sides, tabletControlsContainer)
     }
   }
 
   updatePolygonSize (size) {
-    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    const tabletControlsContainer = this.panel.querySelector(
+      '#tabletControlsContainer'
+    )
     if (tabletControlsContainer) {
       this.tabletControls.updatePolygonSize(size, tabletControlsContainer)
     }
   }
 
   updateFadeDuration (duration) {
-    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    const tabletControlsContainer = this.panel.querySelector(
+      '#tabletControlsContainer'
+    )
     if (tabletControlsContainer) {
       this.tabletControls.updateFadeDuration(duration, tabletControlsContainer)
     }
   }
 
   updateMidiOutput (enabled) {
-    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    const tabletControlsContainer = this.panel.querySelector(
+      '#tabletControlsContainer'
+    )
     if (tabletControlsContainer) {
       this.tabletControls.updateMidiOutput(enabled, tabletControlsContainer)
     }
   }
 
   updateMidiOutputDevices (devices) {
-    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    const tabletControlsContainer = this.panel.querySelector(
+      '#tabletControlsContainer'
+    )
     if (tabletControlsContainer) {
-      this.tabletControls.updateMidiOutputDevices(devices, tabletControlsContainer)
+      this.tabletControls.updateMidiOutputDevices(
+        devices,
+        tabletControlsContainer
+      )
     }
   }
 
   updateMidiOutputDevice (deviceId) {
-    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    const tabletControlsContainer = this.panel.querySelector(
+      '#tabletControlsContainer'
+    )
     if (tabletControlsContainer) {
-      this.tabletControls.updateMidiOutputDevice(deviceId, tabletControlsContainer)
+      this.tabletControls.updateMidiOutputDevice(
+        deviceId,
+        tabletControlsContainer
+      )
     }
   }
 
   updateOctaveRange (range) {
-    const tabletControlsContainer = this.panel.querySelector('#tabletControlsContainer')
+    const tabletControlsContainer = this.panel.querySelector(
+      '#tabletControlsContainer'
+    )
     if (tabletControlsContainer) {
       this.tabletControls.updateOctaveRange(range, tabletControlsContainer)
     }

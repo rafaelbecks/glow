@@ -151,4 +151,3 @@ export class EpitrochoidLuminode {
     this.canvasDrawer.restoreLayoutTransform()
   }
 }
-

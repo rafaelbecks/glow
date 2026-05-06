@@ -11,8 +11,7 @@ import {
   DE_JONG_FRAGMENT_SHADER
 } from './shaders/de-jong-shaders.js'
 
-
-//TODO This should be in a separate shader-hander file, and document how to create both canvas drawing and shaders based modules.
+// TODO This should be in a separate shader-hander file, and document how to create both canvas drawing and shaders based modules.
 function createShader (gl, type, source) {
   const shader = gl.createShader(type)
   gl.shaderSource(shader, source)
@@ -77,7 +76,7 @@ export class DeJongLuminode {
     }
   }
 
-  //TODO: Same as the createProgram. There should be a separate shader-handler module for this, and it should be reusable.
+  // TODO: Same as the createProgram. There should be a separate shader-handler module for this, and it should be reusable.
   initGL () {
     if (!this.gl) return
 
@@ -200,10 +199,10 @@ export class DeJongLuminode {
       // If useColor is explicitly passed, use it (for backward compatibility)
       effectiveColorMode = typeof useColor === 'number' ? useColor : 1
     }
-    
+
     // Ensure it's an integer for the shader (clamp to valid range)
     effectiveColorMode = Math.max(0, Math.min(2, Math.floor(effectiveColorMode)))
-    
+
     gl.uniform1i(this.uniforms.u_colorMode, effectiveColorMode)
 
     // Time uniform for animated rainbow phase (matches engine's time base)
@@ -245,4 +244,3 @@ export class DeJongLuminode {
     this.canvasDrawer.restoreLayoutTransform()
   }
 }
-

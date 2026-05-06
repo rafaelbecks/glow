@@ -1,7 +1,14 @@
 import { Pane } from '../lib/tweakpane.min.js'
 import * as RotationPlugin from 'https://unpkg.com/@0b5vr/tweakpane-plugin-rotation@0.2.0/dist/tweakpane-plugin-rotation.js'
-import { hasLuminodeConfig, getLuminodesByGroup, getLuminodeConfig } from '../luminode-configs.js'
-import { getLuminodeDisplayName, getLuminodeSettingsKey as getLuminodeSettingsKeyFromRegistry } from '../luminodes/index.js'
+import {
+  hasLuminodeConfig,
+  getLuminodesByGroup,
+  getLuminodeConfig
+} from '../luminode-configs.js'
+import {
+  getLuminodeDisplayName,
+  getLuminodeSettingsKey as getLuminodeSettingsKeyFromRegistry
+} from '../luminodes/index.js'
 
 export { getLuminodeDisplayName as normalizeLuminodeName }
 
@@ -22,6 +29,7 @@ export class TrackUIManager {
   renderTracks () {
     const tracksContainer = this.panel.querySelector('#tracksContainer')
     const tracks = this.trackManager.getTracks()
+    if (!tracks.length) return
 
     if (this.mainPane) {
       this.mainPane.dispose()
@@ -29,14 +37,16 @@ export class TrackUIManager {
     }
     this.trackPanes.clear()
 
-    tracksContainer.innerHTML = `<div id="track-pane-container"></div>`
+    tracksContainer.innerHTML = '<div id="track-pane-container"></div>'
 
-    const paneContainer = tracksContainer.querySelector('#track-pane-container')
+    const paneContainer = tracksContainer.querySelector(
+      '#track-pane-container'
+    )
     if (!paneContainer) return
 
     this.mainPane = new Pane({ container: paneContainer })
     this.mainPane.registerPlugin(RotationPlugin)
-    
+
     const stylePane = () => {
       const paneElement = paneContainer.querySelector('.tp-rotv')
       if (paneElement) {
@@ -52,7 +62,7 @@ export class TrackUIManager {
     requestAnimationFrame(stylePane)
 
     const tabs = this.mainPane.addTab({
-      pages: tracks.map(track => ({ title: `Track ${track.id}` }))
+      pages: tracks.map((track) => ({ title: `Track ${track.id}` }))
     })
 
     tracks.forEach((track, index) => {
@@ -63,7 +73,7 @@ export class TrackUIManager {
   createTrackPane (tabPage, track) {
     try {
       const pane = tabPage
-      
+
       const trackControls = {
         muted: track.muted,
         solo: track.solo
@@ -81,16 +91,16 @@ export class TrackUIManager {
           <button class="solo-btn ${track.solo ? 'active' : ''}" data-action="solo" title="Solo">S</button>
         </div>
       `
-      
+
       const muteBtn = trackHeaderContainer.querySelector('.mute-btn')
       const soloBtn = trackHeaderContainer.querySelector('.solo-btn')
-      
+
       if (muteBtn) {
         muteBtn.addEventListener('click', () => {
           this.trackManager.toggleMute(track.id)
         })
       }
-      
+
       if (soloBtn) {
         soloBtn.addEventListener('click', () => {
           this.trackManager.toggleSolo(track.id)
@@ -98,17 +108,28 @@ export class TrackUIManager {
       }
 
       const insertHeader = () => {
-        const paneElement = pane.element || pane.element_ || (pane.controller && pane.controller.view && pane.controller.view.element)
+        const paneElement =
+          pane.element ||
+          pane.element_ ||
+          (pane.controller &&
+            pane.controller.view &&
+            pane.controller.view.element)
         if (paneElement) {
-          const tabContent = paneElement.querySelector('.tp-tabv_c') || paneElement.querySelector('.tp-rotv') || paneElement
+          const tabContent =
+            paneElement.querySelector('.tp-tabv_c') ||
+            paneElement.querySelector('.tp-rotv') ||
+            paneElement
           if (tabContent && tabContent.firstChild) {
-            tabContent.insertBefore(trackHeaderContainer, tabContent.firstChild)
+            tabContent.insertBefore(
+              trackHeaderContainer,
+              tabContent.firstChild
+            )
             return true
           }
         }
         return false
       }
-      
+
       if (!insertHeader()) {
         requestAnimationFrame(() => {
           if (!insertHeader()) {
@@ -119,7 +140,7 @@ export class TrackUIManager {
 
       const midiDevices = this.trackManager.getAvailableMidiDevices()
       const midiDeviceOptions = { 'Select Device': '' }
-      midiDevices.forEach(device => {
+      midiDevices.forEach((device) => {
         midiDeviceOptions[device.name] = device.id
       })
 
@@ -130,178 +151,238 @@ export class TrackUIManager {
         luminode: track.luminode || ''
       }
 
-      const midiBinding = pane.addBinding(trackData, 'midiDevice', {
-        options: midiDeviceOptions,
-        label: 'MIDI Device'
-      }).on('change', (ev) => {
-        this.trackManager.setMidiDevice(track.id, ev.value || null)
-      })
+      const midiBinding = pane
+        .addBinding(trackData, 'midiDevice', {
+          options: midiDeviceOptions,
+          label: 'MIDI Device'
+        })
+        .on('change', (ev) => {
+          this.trackManager.setMidiDevice(track.id, ev.value || null)
+        })
 
-      const luminodeBinding = pane.addBinding(trackData, 'luminode', {
-        options: groupedLuminodes,
-        label: 'Luminode'
-      }).on('change', (ev) => {
-        const newLuminode = ev.value || null
-        this.trackManager.setLuminode(track.id, newLuminode)
-        trackData.luminode = newLuminode || ''
-        this.updateLuminodeConfigPane(track.id, newLuminode)
-      })
+      const luminodeBinding = pane
+        .addBinding(trackData, 'luminode', {
+          options: groupedLuminodes,
+          label: 'Luminode'
+        })
+        .on('change', (ev) => {
+          const newLuminode = ev.value || null
+          this.trackManager.setLuminode(track.id, newLuminode)
+          trackData.luminode = newLuminode || ''
+          this.updateLuminodeConfigPane(track.id, newLuminode)
+        })
 
-    let layoutData = null
-    let trajectoryData = null
+      let layoutData = null
+      let trajectoryData = null
 
-    if (track.luminode !== 'triangle') {
-      layoutData = {
-        position: { x: track.layout.x, y: track.layout.y },
-        rotation: track.layout.rotation
-      }
+      if (track.luminode !== 'triangle') {
+        layoutData = {
+          position: { x: track.layout.x, y: track.layout.y },
+          rotation: track.layout.rotation
+        }
 
-      const layoutFolder = pane.addFolder({ title: 'Layout', expanded: true })
-      const positionBinding = layoutFolder.addBinding(layoutData, 'position', {
-        label: 'Position',
-        picker: 'inline',
-        expanded: true,
-        x: { min: -500, max: 500, step: 10 },
-        y: { min: -500, max: 500, step: 10 }
-      }).on('change', (ev) => {
-        this.trackManager.setLayout(track.id, { x: ev.value.x, y: ev.value.y })
-      })
+        const layoutFolder = pane.addFolder({
+          title: 'Layout',
+          expanded: true
+        })
+        const positionBinding = layoutFolder
+          .addBinding(layoutData, 'position', {
+            label: 'Position',
+            picker: 'inline',
+            expanded: true,
+            x: { min: -500, max: 500, step: 10 },
+            y: { min: -500, max: 500, step: 10 }
+          })
+          .on('change', (ev) => {
+            this.trackManager.setLayout(track.id, {
+              x: ev.value.x,
+              y: ev.value.y
+            })
+          })
 
-      setTimeout(() => {
-        const positionElement = positionBinding.element
-        if (positionElement) {
-          const textContainer = positionElement.querySelector('.tp-pndtxtv')
-          if (textContainer) {
-            const inputs = textContainer.querySelectorAll('.tp-pndtxtv_a input')
-            if (inputs.length >= 2) {
-              const xInput = inputs[0]
-              const yInput = inputs[1]
-              if (xInput && !xInput.parentElement.querySelector('.axis-label-x')) {
-                const xLabel = document.createElement('span')
-                xLabel.className = 'axis-label axis-label-x'
-                xLabel.textContent = 'X:'
-                xInput.parentElement.insertBefore(xLabel, xInput)
-              }
-              if (yInput && !yInput.parentElement.querySelector('.axis-label-y')) {
-                const yLabel = document.createElement('span')
-                yLabel.className = 'axis-label axis-label-y'
-                yLabel.textContent = 'Y:'
-                yInput.parentElement.insertBefore(yLabel, yInput)
+        setTimeout(() => {
+          const positionElement = positionBinding.element
+          if (positionElement) {
+            const textContainer = positionElement.querySelector('.tp-pndtxtv')
+            if (textContainer) {
+              const inputs = textContainer.querySelectorAll(
+                '.tp-pndtxtv_a input'
+              )
+              if (inputs.length >= 2) {
+                const xInput = inputs[0]
+                const yInput = inputs[1]
+                if (
+                  xInput &&
+                  !xInput.parentElement.querySelector('.axis-label-x')
+                ) {
+                  const xLabel = document.createElement('span')
+                  xLabel.className = 'axis-label axis-label-x'
+                  xLabel.textContent = 'X:'
+                  xInput.parentElement.insertBefore(xLabel, xInput)
+                }
+                if (
+                  yInput &&
+                  !yInput.parentElement.querySelector('.axis-label-y')
+                ) {
+                  const yLabel = document.createElement('span')
+                  yLabel.className = 'axis-label axis-label-y'
+                  yLabel.textContent = 'Y:'
+                  yInput.parentElement.insertBefore(yLabel, yInput)
+                }
               }
             }
           }
+        }, 150)
+
+        layoutFolder
+          .addBinding(layoutData, 'rotation', {
+            label: 'R',
+            min: -180,
+            max: 180,
+            step: 5
+          })
+          .on('change', (ev) => {
+            this.trackManager.setLayout(track.id, { rotation: ev.value })
+          })
+
+        const trajectoryConfig = this.getTrajectoryConfig(track.id)
+        trajectoryData = {
+          enabled: trajectoryConfig.enabled,
+          trajectoryType: trajectoryConfig.trajectoryType,
+          motionRate: trajectoryConfig.motionRate,
+          amplitude: trajectoryConfig.amplitude,
+          ratioA: trajectoryConfig.ratioA,
+          ratioB: trajectoryConfig.ratioB,
+          ratioC: trajectoryConfig.ratioC,
+          inversion: trajectoryConfig.inversion
         }
-      }, 150)
 
-      layoutFolder.addBinding(layoutData, 'rotation', {
-        label: 'R',
-        min: -180,
-        max: 180,
-        step: 5
-      }).on('change', (ev) => {
-        this.trackManager.setLayout(track.id, { rotation: ev.value })
-      })
+        const typeNames = this.trackManager.getTrajectoryTypeNames()
+        const typeOptions = Object.fromEntries(
+          Object.entries(typeNames).map(([value, label]) => [label, value])
+        )
 
-      const trajectoryConfig = this.getTrajectoryConfig(track.id)
-      trajectoryData = {
-        enabled: trajectoryConfig.enabled,
-        trajectoryType: trajectoryConfig.trajectoryType,
-        motionRate: trajectoryConfig.motionRate,
-        amplitude: trajectoryConfig.amplitude,
-        ratioA: trajectoryConfig.ratioA,
-        ratioB: trajectoryConfig.ratioB,
-        ratioC: trajectoryConfig.ratioC,
-        inversion: trajectoryConfig.inversion
+        const trajectoryFolder = pane.addFolder({
+          title: 'Trajectory Motion',
+          expanded: true
+        })
+        trajectoryFolder
+          .addBinding(trajectoryData, 'enabled', {
+            label: 'Enable Motion'
+          })
+          .on('change', (ev) => {
+            this.trackManager.updateTrajectoryConfig(track.id, {
+              enabled: ev.value
+            })
+          })
+
+        trajectoryFolder
+          .addBinding(trajectoryData, 'trajectoryType', {
+            options: typeOptions,
+            label: 'Type'
+          })
+          .on('change', (ev) => {
+            this.trackManager.updateTrajectoryConfig(track.id, {
+              trajectoryType: ev.value
+            })
+          })
+
+        trajectoryFolder
+          .addBinding(trajectoryData, 'motionRate', {
+            label: 'Rate',
+            min: 0.01,
+            max: 2.0,
+            step: 0.01
+          })
+          .on('change', (ev) => {
+            this.trackManager.updateTrajectoryConfig(track.id, {
+              motionRate: ev.value
+            })
+          })
+
+        trajectoryFolder
+          .addBinding(trajectoryData, 'amplitude', {
+            label: 'Amplitude',
+            min: 0,
+            max: 200,
+            step: 1
+          })
+          .on('change', (ev) => {
+            this.trackManager.updateTrajectoryConfig(track.id, {
+              amplitude: ev.value
+            })
+          })
+
+        trajectoryFolder
+          .addBinding(trajectoryData, 'ratioA', {
+            label: 'Ratio A',
+            min: 0.1,
+            max: 5.0,
+            step: 0.1
+          })
+          .on('change', (ev) => {
+            this.trackManager.updateTrajectoryConfig(track.id, {
+              ratioA: ev.value
+            })
+          })
+
+        trajectoryFolder
+          .addBinding(trajectoryData, 'ratioB', {
+            label: 'Ratio B',
+            min: 0.1,
+            max: 5.0,
+            step: 0.1
+          })
+          .on('change', (ev) => {
+            this.trackManager.updateTrajectoryConfig(track.id, {
+              ratioB: ev.value
+            })
+          })
+
+        trajectoryFolder
+          .addBinding(trajectoryData, 'ratioC', {
+            label: 'Ratio C',
+            min: 0.1,
+            max: 5.0,
+            step: 0.1
+          })
+          .on('change', (ev) => {
+            this.trackManager.updateTrajectoryConfig(track.id, {
+              ratioC: ev.value
+            })
+          })
+
+        trajectoryFolder
+          .addBinding(trajectoryData, 'inversion', {
+            label: 'Invert Motion'
+          })
+          .on('change', (ev) => {
+            this.trackManager.updateTrajectoryConfig(track.id, {
+              inversion: ev.value
+            })
+          })
       }
 
-      const typeNames = this.trackManager.getTrajectoryTypeNames()
-      const typeOptions = Object.fromEntries(
-        Object.entries(typeNames).map(([value, label]) => [label, value])
-      )
+      let luminodeFolder = null
+      if (track.luminode && hasLuminodeConfig(track.luminode)) {
+        luminodeFolder = this.createLuminodeConfigFolder(pane, track)
+      }
 
-      const trajectoryFolder = pane.addFolder({ title: 'Trajectory Motion', expanded: true })
-      trajectoryFolder.addBinding(trajectoryData, 'enabled', {
-        label: 'Enable Motion'
-      }).on('change', (ev) => {
-        this.trackManager.updateTrajectoryConfig(track.id, { enabled: ev.value })
+      this.trackPanes.set(track.id, {
+        pane,
+        trackData,
+        layoutData,
+        trajectoryData,
+        luminodeFolder,
+        midiBinding,
+        luminodeBinding,
+        trackHeaderContainer
       })
-
-      trajectoryFolder.addBinding(trajectoryData, 'trajectoryType', {
-        options: typeOptions,
-        label: 'Type'
-      }).on('change', (ev) => {
-        this.trackManager.updateTrajectoryConfig(track.id, { trajectoryType: ev.value })
-      })
-
-      trajectoryFolder.addBinding(trajectoryData, 'motionRate', {
-        label: 'Rate',
-        min: 0.01,
-        max: 2.0,
-        step: 0.01
-      }).on('change', (ev) => {
-        this.trackManager.updateTrajectoryConfig(track.id, { motionRate: ev.value })
-      })
-
-      trajectoryFolder.addBinding(trajectoryData, 'amplitude', {
-        label: 'Amplitude',
-        min: 0,
-        max: 200,
-        step: 1
-      }).on('change', (ev) => {
-        this.trackManager.updateTrajectoryConfig(track.id, { amplitude: ev.value })
-      })
-
-      trajectoryFolder.addBinding(trajectoryData, 'ratioA', {
-        label: 'Ratio A',
-        min: 0.1,
-        max: 5.0,
-        step: 0.1
-      }).on('change', (ev) => {
-        this.trackManager.updateTrajectoryConfig(track.id, { ratioA: ev.value })
-      })
-
-      trajectoryFolder.addBinding(trajectoryData, 'ratioB', {
-        label: 'Ratio B',
-        min: 0.1,
-        max: 5.0,
-        step: 0.1
-      }).on('change', (ev) => {
-        this.trackManager.updateTrajectoryConfig(track.id, { ratioB: ev.value })
-      })
-
-      trajectoryFolder.addBinding(trajectoryData, 'ratioC', {
-        label: 'Ratio C',
-        min: 0.1,
-        max: 5.0,
-        step: 0.1
-      }).on('change', (ev) => {
-        this.trackManager.updateTrajectoryConfig(track.id, { ratioC: ev.value })
-      })
-
-      trajectoryFolder.addBinding(trajectoryData, 'inversion', {
-        label: 'Invert Motion'
-      }).on('change', (ev) => {
-        this.trackManager.updateTrajectoryConfig(track.id, { inversion: ev.value })
-      })
-    }
-
-    let luminodeFolder = null
-    if (track.luminode && hasLuminodeConfig(track.luminode)) {
-      luminodeFolder = this.createLuminodeConfigFolder(pane, track)
-    }
-
-    this.trackPanes.set(track.id, {
-      pane,
-      trackData,
-      layoutData,
-      trajectoryData,
-      luminodeFolder,
-      midiBinding,
-      luminodeBinding,
-      trackHeaderContainer
-    })
     } catch (error) {
-      console.error(`Failed to create track pane for track ${track.id}:`, error)
+      console.error(
+        `Failed to create track pane for track ${track.id}:`,
+        error
+      )
     }
   }
 
@@ -310,7 +391,7 @@ export class TrackUIManager {
     const options = { 'Select Luminode': '' }
 
     Object.entries(groupedLuminodes).forEach(([groupName, luminodes]) => {
-      luminodes.forEach(luminode => {
+      luminodes.forEach((luminode) => {
         const displayName = `${this.normalizeLuminodeName(luminode)} (${groupName})`
         options[displayName] = luminode
       })
@@ -333,32 +414,46 @@ export class TrackUIManager {
     }
 
     const luminodeData = {}
-    configParams.forEach(param => {
-      luminodeData[param.key] = currentValues[param.key] !== undefined 
-        ? currentValues[param.key] 
-        : param.default
+    configParams.forEach((param) => {
+      luminodeData[param.key] =
+        currentValues[param.key] !== undefined
+          ? currentValues[param.key]
+          : param.default
     })
 
-    const luminodeFolder = pane.addFolder({ title: 'Luminode Parameters', expanded: true })
+    const luminodeFolder = pane.addFolder({
+      title: 'Luminode Parameters',
+      expanded: true
+    })
 
-    configParams.forEach(param => {
+    configParams.forEach((param) => {
       if (param.type === 'rotation') {
         const rotationKey = param.key
-        if (!luminodeData[rotationKey] || typeof luminodeData[rotationKey] !== 'object') {
+        if (
+          !luminodeData[rotationKey] ||
+          typeof luminodeData[rotationKey] !== 'object'
+        ) {
           luminodeData[rotationKey] = { x: 0, y: 0, z: 0 }
         }
 
-        luminodeFolder.addBinding(luminodeData, rotationKey, {
-          label: param.label,
-          view: 'rotation',
-          rotationMode: 'euler',
-          order: 'XYZ',
-          unit: 'deg',
-          picker: 'inline',
-          expanded: true
-        }).on('change', (ev) => {
-          this.triggerLuminodeConfigChange(track.id, track.luminode, rotationKey, ev.value)
-        })
+        luminodeFolder
+          .addBinding(luminodeData, rotationKey, {
+            label: param.label,
+            view: 'rotation',
+            rotationMode: 'euler',
+            order: 'XYZ',
+            unit: 'deg',
+            picker: 'inline',
+            expanded: true
+          })
+          .on('change', (ev) => {
+            this.triggerLuminodeConfigChange(
+              track.id,
+              track.luminode,
+              rotationKey,
+              ev.value
+            )
+          })
         return
       }
 
@@ -373,13 +468,19 @@ export class TrackUIManager {
       } else if (param.type === 'select') {
         const options = param.options || []
         bindingOptions.options = Object.fromEntries(
-          options.map(opt => [opt.label, opt.value])
+          options.map((opt) => [opt.label, opt.value])
         )
       }
 
-      luminodeFolder.addBinding(luminodeData, param.key, bindingOptions)
+      luminodeFolder
+        .addBinding(luminodeData, param.key, bindingOptions)
         .on('change', (ev) => {
-          this.triggerLuminodeConfigChange(track.id, track.luminode, param.key, ev.value)
+          this.triggerLuminodeConfigChange(
+            track.id,
+            track.luminode,
+            param.key,
+            ev.value
+          )
         })
     })
 
@@ -414,11 +515,16 @@ export class TrackUIManager {
 
     paneData.trackData.midiDevice = track.midiDevice || ''
     paneData.trackData.luminode = track.luminode || ''
-    
+
     if (track.luminode !== 'triangle' && paneData.layoutData) {
       paneData.layoutData.position = { x: track.layout.x, y: track.layout.y }
       paneData.layoutData.rotation = track.layout.rotation
     }
+
+    // Repaint MIDI device and luminode dropdowns with latest values
+    try {
+      paneData.pane.refresh()
+    } catch (_) {}
 
     this.updateLuminodeConfigPane(trackId, track.luminode)
   }
@@ -444,7 +550,10 @@ export class TrackUIManager {
       if (track) {
         const updatedTrack = { ...track, luminode }
         try {
-          paneData.luminodeFolder = this.createLuminodeConfigFolder(paneData.pane, updatedTrack)
+          paneData.luminodeFolder = this.createLuminodeConfigFolder(
+            paneData.pane,
+            updatedTrack
+          )
           if (paneData.luminodeFolder) {
             paneData.pane.refresh()
           }
@@ -452,7 +561,9 @@ export class TrackUIManager {
           console.error('Error creating luminode config folder:', e)
         }
       } else {
-        console.warn(`Track ${trackId} not found when updating luminode config`)
+        console.warn(
+          `Track ${trackId} not found when updating luminode config`
+        )
       }
     }
   }
@@ -479,7 +590,7 @@ export class TrackUIManager {
 
       const midiDevices = this.trackManager.getAvailableMidiDevices()
       const midiDeviceOptions = { 'Select Device': '' }
-      midiDevices.forEach(device => {
+      midiDevices.forEach((device) => {
         midiDeviceOptions[device.name] = device.id
       })
 
@@ -490,7 +601,9 @@ export class TrackUIManager {
           if (valueController.props) {
             valueController.props.set('options', midiDeviceOptions)
             const currentDeviceId = paneData.trackData.midiDevice
-            const deviceName = Object.keys(midiDeviceOptions).find(k => midiDeviceOptions[k] === currentDeviceId)
+            const deviceName = Object.keys(midiDeviceOptions).find(
+              (k) => midiDeviceOptions[k] === currentDeviceId
+            )
             if (currentDeviceId && !deviceName) {
               paneData.trackData.midiDevice = ''
               this.trackManager.setMidiDevice(trackId, null)
@@ -498,8 +611,8 @@ export class TrackUIManager {
           }
         }
       } catch (error) {
-        console.warn(`Failed to update MIDI device dropdown for track ${trackId}:`, error)
-        this.renderTracks()
+        // Swallow — calling renderTracks() here causes an infinite loop
+        // because forEach visits new Map entries added during iteration.
       }
     })
   }
@@ -507,12 +620,17 @@ export class TrackUIManager {
   updateActivityIndicators (activeNotes) {
     const tracks = this.trackManager.getTracks()
 
-    tracks.forEach(track => {
+    tracks.forEach((track) => {
       const paneData = this.trackPanes.get(track.id)
       if (paneData && paneData.trackHeaderContainer) {
-        const indicator = paneData.trackHeaderContainer.querySelector(`#activity-${track.id}`)
+        const indicator = paneData.trackHeaderContainer.querySelector(
+          `#activity-${track.id}`
+        )
         if (indicator) {
-          const hasActivity = track.luminode && activeNotes[track.luminode] && activeNotes[track.luminode].length > 0
+          const hasActivity =
+            track.luminode &&
+            activeNotes[track.luminode] &&
+            activeNotes[track.luminode].length > 0
           indicator.classList.toggle('active', hasActivity)
         }
       }
@@ -520,12 +638,7 @@ export class TrackUIManager {
   }
 
   getTrackColor (trackId) {
-    const colors = [
-      '#EF4136',
-      '#005BBB',
-      '#fca309',
-      '#2E7D32'
-    ]
+    const colors = ['#EF4136', '#005BBB', '#fca309', '#2E7D32']
     return colors[(trackId - 1) % colors.length]
   }
 

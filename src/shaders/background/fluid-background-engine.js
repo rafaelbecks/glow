@@ -14,7 +14,7 @@ export class FluidBackgroundManager {
     this.cursorMode = true
     this.lastPointMode = false
     this.lastLuminodePosition = null
-    
+
     this.velocityState = null
     this.divergenceState = null
     this.pressureState = null
@@ -22,11 +22,11 @@ export class FluidBackgroundManager {
     this.particleInitialState = null
     this.particleAgeState = null
     this.trailState = null
-    
+
     this.programs = {}
     this.activeTouches = {}
     this.eventHandlers = {}
-    
+
     this.TOUCH_FORCE_SCALE = 2
     this.PARTICLE_DENSITY = 0.1
     this.MAX_NUM_PARTICLES = 100000
@@ -38,7 +38,7 @@ export class FluidBackgroundManager {
     this.VELOCITY_SCALE_FACTOR = 8
     this.MAX_VELOCITY = 30
     this.POSITION_NUM_COMPONENTS = 4
-    
+
     this.NUM_PARTICLES = 0
   }
 
@@ -62,7 +62,7 @@ export class FluidBackgroundManager {
     } = window.GPUIO
 
     this.composer = new GPUComposer({ canvas: this.canvas })
-    
+
     const width = this.canvas.width
     const height = this.canvas.height
     this.NUM_PARTICLES = this.calcNumParticles(width, height)
@@ -414,15 +414,15 @@ export class FluidBackgroundManager {
     const width = this.canvas.width
     const height = this.canvas.height
     const positions = new Float32Array(this.NUM_PARTICLES * this.POSITION_NUM_COMPONENTS)
-    
+
     for (let i = 0; i < positions.length / this.POSITION_NUM_COMPONENTS; i++) {
       positions[this.POSITION_NUM_COMPONENTS * i] = Math.random() * width
       positions[this.POSITION_NUM_COMPONENTS * i + 1] = Math.random() * height
     }
-    
+
     this.particlePositionState.resize(this.NUM_PARTICLES, positions)
     this.particleInitialState.resize(this.NUM_PARTICLES, positions)
-    
+
     const ages = new Int16Array(this.NUM_PARTICLES)
     for (let i = 0; i < this.NUM_PARTICLES; i++) {
       ages[i] = Math.round(Math.random() * this.PARTICLE_LIFETIME)
@@ -432,13 +432,13 @@ export class FluidBackgroundManager {
 
   setupEventListeners () {
     this.removeEventListeners()
-    
+
     if (this.cursorMode) {
       this.eventHandlers.pointermove = (e) => this.onPointerMove(e)
       this.eventHandlers.pointerup = (e) => this.onPointerStop(e)
       this.eventHandlers.pointerout = (e) => this.onPointerStop(e)
       this.eventHandlers.pointercancel = (e) => this.onPointerStop(e)
-      
+
       window.addEventListener('pointermove', this.eventHandlers.pointermove)
       window.addEventListener('pointerup', this.eventHandlers.pointerup)
       window.addEventListener('pointerout', this.eventHandlers.pointerout)
@@ -458,30 +458,30 @@ export class FluidBackgroundManager {
 
   onPointerMove (e) {
     if (!this.cursorMode || !this.composer) return
-    
+
     const rect = this.canvas.getBoundingClientRect()
     const scaleX = this.canvas.width / rect.width
     const scaleY = this.canvas.height / rect.height
-    
+
     const canvasX = (e.clientX - rect.left) * scaleX
     const canvasY = (e.clientY - rect.top) * scaleY
-    
+
     if (this.activeTouches[e.pointerId] === undefined) {
       this.activeTouches[e.pointerId] = { current: [canvasX, canvasY] }
       return
     }
-    
+
     this.activeTouches[e.pointerId].last = this.activeTouches[e.pointerId].current
     this.activeTouches[e.pointerId].current = [canvasX, canvasY]
-    
+
     const { current, last } = this.activeTouches[e.pointerId]
     if (current[0] === last[0] && current[1] === last[1]) return
-    
+
     this.programs.touch.setUniform('u_vector', [
       current[0] - last[0],
       -(current[1] - last[1])
     ])
-    
+
     this.composer.stepSegment({
       program: this.programs.touch,
       input: this.velocityState,
@@ -505,15 +505,15 @@ export class FluidBackgroundManager {
 
   applyLastPointTouch () {
     if (!this.lastPointMode || !this.lastLuminodePosition) return
-    
+
     const current = [this.lastLuminodePosition.x, this.lastLuminodePosition.y]
     const last = this.lastLuminodePosition.last || current
-    
+
     this.programs.touch.setUniform('u_vector', [
       current[0] - last[0],
       -(current[1] - last[1])
     ])
-    
+
     this.composer.stepSegment({
       program: this.programs.touch,
       input: this.velocityState,
@@ -523,7 +523,7 @@ export class FluidBackgroundManager {
       thickness: 30,
       endCaps: true
     })
-    
+
     this.lastLuminodePosition.last = current
   }
 
@@ -705,12 +705,12 @@ export class FluidBackgroundManager {
 
   dispose () {
     this.removeEventListeners()
-    
+
     if (this.composer) {
       Object.values(this.programs).forEach(program => {
         if (program && program.dispose) program.dispose()
       })
-      
+
       if (this.velocityState) this.velocityState.dispose()
       if (this.divergenceState) this.divergenceState.dispose()
       if (this.pressureState) this.pressureState.dispose()
@@ -718,7 +718,7 @@ export class FluidBackgroundManager {
       if (this.particleInitialState) this.particleInitialState.dispose()
       if (this.particleAgeState) this.particleAgeState.dispose()
       if (this.trailState) this.trailState.dispose()
-      
+
       this.composer.dispose()
     }
   }

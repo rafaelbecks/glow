@@ -11,5 +11,5 @@ export const PROCEDURAL_BACKGROUND_MODULES = [
   portalBackgroundShader,
   discoSunBackgroundShader,
   balatroBackgroundShader,
-  chromaGradientsBackgroundShader,
+  chromaGradientsBackgroundShader
 ]

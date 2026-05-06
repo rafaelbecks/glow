@@ -16,39 +16,58 @@ import {
   valueToTableValues
 } from './canvas-filter-configs.js'
 import { MIDICCMapper } from './midi-cc-mapper.js'
-import { LUMINODE_REGISTRY, getLuminodeSettingsKey } from './luminodes/index.js'
+import {
+  LUMINODE_REGISTRY,
+  getLuminodeSettingsKey
+} from './luminodes/index.js'
 import { ShaderBackgroundManager } from './shader-background-manager.js'
 import { isFragmentBackgroundMode } from './shaders/background/registry.js'
 import { GlassOverlayManager } from './glass-overlay-manager.js'
+import { ControlsManager } from './controls-manager.js'
 
 export class GLOWVisualizer {
   constructor () {
     this.canvas = document.getElementById('canvas')
-    this.fluidBackgroundCanvas = document.getElementById('fluidBackgroundCanvas')
-    this.proceduralBackgroundCanvas = document.getElementById('proceduralBackgroundCanvas')
+    this.fluidBackgroundCanvas = document.getElementById(
+      'fluidBackgroundCanvas'
+    )
+    this.proceduralBackgroundCanvas = document.getElementById(
+      'proceduralBackgroundCanvas'
+    )
     this.glassOverlayCanvas = document.getElementById('glassOverlayCanvas')
     this.shaderBackgroundManager = new ShaderBackgroundManager(
       this.fluidBackgroundCanvas,
       this.proceduralBackgroundCanvas
     )
-    this.glassOverlayManager = new GlassOverlayManager(this.glassOverlayCanvas, () => this.getGlassOverlaySources())
+    this.glassOverlayManager = new GlassOverlayManager(
+      this.glassOverlayCanvas,
+      () => this.getGlassOverlaySources()
+    )
     this.tabletCanvas = document.getElementById('tabletCanvas')
     this.canvasDrawer = new CanvasDrawer(this.canvas)
     this.trackManager = new TrackManager()
-    
+
     this.ccMapper = null
     if (SETTINGS.HARDWARE_MODE.ENABLED) {
       this.ccMapper = new MIDICCMapper(this.trackManager, this)
     }
-    
+
     this.midiManager = new MIDIManager(this.trackManager, this.ccMapper)
     if (this.ccMapper) {
       this.midiManager.setCCMapper(this.ccMapper)
     }
-    this.tabletManager = new TabletManager(this.tabletCanvas, { midiManager: this.midiManager })
+    this.tabletManager = new TabletManager(this.tabletCanvas, {
+      midiManager: this.midiManager
+    })
     this.uiManager = new UIManager()
-    this.sidePanel = new SidePanel(this.trackManager, this.tabletManager, this.uiManager, this.midiManager)
+    this.sidePanel = new SidePanel(
+      this.trackManager,
+      this.tabletManager,
+      this.uiManager,
+      this.midiManager
+    )
     this.sidePanel.setSettings(SETTINGS)
+    this.controlsManager = new ControlsManager(this)
     this.projectManager = new ProjectManager(this)
     this.saveDialog = new SaveDialog()
     this.filePickerDialog = new FilePickerDialog(this.projectManager)
@@ -101,7 +120,9 @@ export class GLOWVisualizer {
     this.setupSaveDialog()
     this.setupFilePickerDialog()
     this.setupLogoButtons()
-    this.initialize().catch(error => console.error('Failed to initialize:', error))
+    this.initialize().catch((error) =>
+      console.error('Failed to initialize:', error)
+    )
   }
 
   async initialize () {
@@ -156,39 +177,74 @@ export class GLOWVisualizer {
     this.uiManager.on('connectTablet', () => this.connectTablet())
     this.uiManager.on('clearTablet', () => this.clearTablet())
     this.uiManager.on('clearCanvas', () => this.clearCanvas())
-    this.uiManager.on('tabletWidthChange', (width) => this.setTabletWidth(width))
+    this.uiManager.on('tabletWidthChange', (width) =>
+      this.setTabletWidth(width)
+    )
     this.uiManager.on('resize', () => this.handleResize())
     this.uiManager.on('togglePanel', () => this.toggleSidePanel())
+    this.uiManager.on('detachControls', () => this.controlsManager.toggle())
     this.uiManager.on('openFile', () => this.openFile())
     this.uiManager.on('saveFile', () => this.saveFile())
-    this.uiManager.on('toggleMute', (trackId) => this.trackManager.toggleMute(trackId))
-    this.uiManager.on('toggleSolo', (trackId) => this.trackManager.toggleSolo(trackId))
+    this.uiManager.on('toggleMute', (trackId) =>
+      this.trackManager.toggleMute(trackId)
+    )
+    this.uiManager.on('toggleSolo', (trackId) =>
+      this.trackManager.toggleSolo(trackId)
+    )
     this.uiManager.on('enableHardwareMode', () => this.enableHardwareMode())
     this.uiManager.on('toggleDebugOverlay', () => this.toggleDebugOverlay())
 
     // Side panel events (now includes both tracks and tablet functionality)
-    this.sidePanel.on('luminodeConfigChange', (data) => this.updateLuminodeConfig(data))
+    this.sidePanel.on('luminodeConfigChange', (data) =>
+      this.updateLuminodeConfig(data)
+    )
     this.sidePanel.on('connectTablet', () => this.connectTablet())
     this.sidePanel.on('clearTablet', () => this.clearTablet())
-    this.sidePanel.on('tabletWidthChange', (width) => this.setTabletWidth(width))
-    this.sidePanel.on('geometricModeChange', (enabled) => this.setGeometricMode(enabled))
-    this.sidePanel.on('shapeDetectionThresholdChange', (threshold) => this.setShapeDetectionThreshold(threshold))
-    this.sidePanel.on('geometricPencilChange', (enabled) => this.setGeometricPencilMode(enabled))
-    this.sidePanel.on('polygonSidesChange', (sides) => this.setPolygonSides(sides))
+    this.sidePanel.on('tabletWidthChange', (width) =>
+      this.setTabletWidth(width)
+    )
+    this.sidePanel.on('geometricModeChange', (enabled) =>
+      this.setGeometricMode(enabled)
+    )
+    this.sidePanel.on('shapeDetectionThresholdChange', (threshold) =>
+      this.setShapeDetectionThreshold(threshold)
+    )
+    this.sidePanel.on('geometricPencilChange', (enabled) =>
+      this.setGeometricPencilMode(enabled)
+    )
+    this.sidePanel.on('polygonSidesChange', (sides) =>
+      this.setPolygonSides(sides)
+    )
     this.sidePanel.on('polygonSizeChange', (size) => this.setPolygonSize(size))
-    this.sidePanel.on('fadeDurationChange', (duration) => this.setFadeDuration(duration))
-    this.sidePanel.on('midiOutputChange', (enabled) => this.setMidiOutputEnabled(enabled))
-    this.sidePanel.on('midiOutputDeviceChange', (deviceId) => this.setMidiOutputDevice(deviceId))
-    this.sidePanel.on('octaveRangeChange', (range) => this.setOctaveRange(range))
+    this.sidePanel.on('fadeDurationChange', (duration) =>
+      this.setFadeDuration(duration)
+    )
+    this.sidePanel.on('midiOutputChange', (enabled) =>
+      this.setMidiOutputEnabled(enabled)
+    )
+    this.sidePanel.on('midiOutputDeviceChange', (deviceId) =>
+      this.setMidiOutputDevice(deviceId)
+    )
+    this.sidePanel.on('octaveRangeChange', (range) =>
+      this.setOctaveRange(range)
+    )
 
     // Track manager events
-    this.trackManager.on('luminodeChanged', (data) => this.handleLuminodeChange(data))
+    this.trackManager.on('luminodeChanged', (data) =>
+      this.handleLuminodeChange(data)
+    )
     this.trackManager.on('trackUpdated', () => this.markProjectChanged())
 
     // Canvas and color settings
-    this.sidePanel.on('canvasSettingChange', (data) => this.updateCanvasSetting(data))
-    this.sidePanel.on('colorPaletteChange', (data) => this.updateColorPalette(data))
-    this.sidePanel.on('pitchColorFactorChange', (data) => this.updatePitchColorFactor(data))
+    this.sidePanel.on('canvasSettingChange', (data) =>
+      this.updateCanvasSetting(data)
+    )
+    this.sidePanel.on('colorPaletteChange', (data) =>
+      this.updateColorPalette(data)
+    )
+    this.sidePanel.on('pitchColorFactorChange', (data) =>
+      this.updatePitchColorFactor(data)
+    )
   }
 
   setupSaveDialog () {
@@ -198,7 +254,9 @@ export class GLOWVisualizer {
   }
 
   setupFilePickerDialog () {
-    this.filePickerDialog.on('fileSelected', (data) => this.handleProjectLoad(data))
+    this.filePickerDialog.on('fileSelected', (data) =>
+      this.handleProjectLoad(data)
+    )
     this.filePickerDialog.setupEventListeners()
   }
 
@@ -215,6 +273,7 @@ export class GLOWVisualizer {
       this.uiManager.hideStartButton()
       this.uiManager.hideLogoContainer()
       this.uiManager.showPanelToggleButton()
+      this.uiManager.showDetachButton()
       this.uiManager.showOpenButton()
       this.uiManager.showSaveButton()
       this.uiManager.showInfoButton()
@@ -232,7 +291,10 @@ export class GLOWVisualizer {
       await this.populateMidiOutputDevices()
     } catch (error) {
       console.error('Failed to start visualizer:', error)
-      this.uiManager.showStatus('Failed to start. Check console for details.', 'error')
+      this.uiManager.showStatus(
+        'Failed to start. Check console for details.',
+        'error'
+      )
       this.uiManager.showStartButton()
     }
   }
@@ -245,7 +307,10 @@ export class GLOWVisualizer {
       if (success) {
         this.uiManager.showStatus('Tablet connected successfully!', 'success')
       } else {
-        this.uiManager.showStatus('No tablet found or connection failed.', 'error')
+        this.uiManager.showStatus(
+          'No tablet found or connection failed.',
+          'error'
+        )
       }
     } catch (error) {
       console.error('Tablet connection error:', error)
@@ -305,7 +370,8 @@ export class GLOWVisualizer {
       if (this.projectManager.hasOpenFile()) {
         const result = await this.projectManager.saveExistingProject()
         if (result.success) {
-          this.projectManager.savedState = this.projectManager.getCurrentState()
+          this.projectManager.savedState =
+            this.projectManager.getCurrentState()
           this.projectManager.hasUnsavedChanges = false
           this.updateProjectName(this.projectManager.getCurrentProjectName())
           this.updateUnsavedChangesIndicator()
@@ -320,7 +386,10 @@ export class GLOWVisualizer {
       }
     } catch (error) {
       console.error('Error saving project:', error)
-      this.uiManager.showStatus('Error saving project. Check console for details.', 'error')
+      this.uiManager.showStatus(
+        'Error saving project. Check console for details.',
+        'error'
+      )
     }
   }
 
@@ -334,12 +403,18 @@ export class GLOWVisualizer {
         this.projectManager.hasUnsavedChanges = false
         this.updateProjectName(result.projectName)
         this.updateUnsavedChangesIndicator()
-        this.uiManager.showStatus(`Project "${result.projectName}" saved successfully!`, 'success')
+        this.uiManager.showStatus(
+          `Project "${result.projectName}" saved successfully!`,
+          'success'
+        )
       } else if (result.cancelled) {
       }
     } catch (error) {
       console.error('Error saving project:', error)
-      this.uiManager.showStatus('Error saving project. Check console for details.', 'error')
+      this.uiManager.showStatus(
+        'Error saving project. Check console for details.',
+        'error'
+      )
     }
   }
 
@@ -357,11 +432,18 @@ export class GLOWVisualizer {
       this.clearCurrentState()
 
       if (!data.fileHandle || !data.projectData) {
-        this.uiManager.showStatus('Error loading project: missing file data.', 'error')
+        this.uiManager.showStatus(
+          'Error loading project: missing file data.',
+          'error'
+        )
         return
       }
 
-      const result = await this.projectManager.openProjectWithData(data.fileHandle, data.projectData, data.file)
+      const result = await this.projectManager.openProjectWithData(
+        data.fileHandle,
+        data.projectData,
+        data.file
+      )
 
       if (result.success) {
         const projectName = this.projectManager.getCurrentProjectName()
@@ -377,28 +459,44 @@ export class GLOWVisualizer {
         this.uiManager.showCanvasMessage()
         this.visualizerStarted = true
         this.isRunning = true
-        this.uiManager.showStatus(`Project "${projectName}" loaded successfully!`, 'success')
+        this.uiManager.showStatus(
+          `Project "${projectName}" loaded successfully!`,
+          'success'
+        )
       } else {
-        this.uiManager.showStatus('Error loading project. Check console for details.', 'error')
+        this.uiManager.showStatus(
+          'Error loading project. Check console for details.',
+          'error'
+        )
       }
     } catch (error) {
       console.error('Error loading project:', error)
-      this.uiManager.showStatus('Error loading project. Check console for details.', 'error')
+      this.uiManager.showStatus(
+        'Error loading project. Check console for details.',
+        'error'
+      )
     }
   }
 
   async promptUnsavedChanges () {
     return new Promise((resolve) => {
-      const message = 'You have unsaved changes. Do you want to save them before continuing?'
-      const shouldSave = confirm(message + '\n\nClick OK to save, Cancel to discard changes.')
+      const message =
+        'You have unsaved changes. Do you want to save them before continuing?'
+      const shouldSave = confirm(
+        message + '\n\nClick OK to save, Cancel to discard changes.'
+      )
 
       if (shouldSave) {
-        this.saveFile().then(() => {
-          resolve(true)
-        }).catch(() => {
-          const proceed = confirm('Save was cancelled. Do you want to discard changes and continue?')
-          resolve(proceed)
-        })
+        this.saveFile()
+          .then(() => {
+            resolve(true)
+          })
+          .catch(() => {
+            const proceed = confirm(
+              'Save was cancelled. Do you want to discard changes and continue?'
+            )
+            resolve(proceed)
+          })
       } else {
         resolve(true)
       }
@@ -594,10 +692,15 @@ export class GLOWVisualizer {
   updateColorPalette (data) {
     const { palette, index, color } = data
 
-    if (SETTINGS.COLORS && SETTINGS.COLORS[palette.toUpperCase() + '_PALETTE']) {
+    if (
+      SETTINGS.COLORS &&
+      SETTINGS.COLORS[palette.toUpperCase() + '_PALETTE']
+    ) {
       const paletteKey = palette.toUpperCase() + '_PALETTE'
       SETTINGS.COLORS[paletteKey][index] = color
-      console.log(`Updated ${palette} palette color at index ${index} to ${color}`)
+      console.log(
+        `Updated ${palette} palette color at index ${index} to ${color}`
+      )
 
       // Mark as changed
       this.markProjectChanged()
@@ -661,10 +764,13 @@ export class GLOWVisualizer {
           convertedValue = Boolean(value)
         } else if (typeof moduleConfig[param] === 'number') {
           // Convert string to number for select dropdowns and other numeric inputs
-          convertedValue = typeof value === 'string' ? parseFloat(value) : Number(value)
+          convertedValue =
+            typeof value === 'string' ? parseFloat(value) : Number(value)
         }
         moduleConfig[param] = convertedValue
-        console.log(`Updated ${luminode} ${param} to ${convertedValue} (type: ${typeof convertedValue})`)
+        console.log(
+          `Updated ${luminode} ${param} to ${convertedValue} (type: ${typeof convertedValue})`
+        )
 
         // Mark as changed
         this.markProjectChanged()
@@ -672,12 +778,13 @@ export class GLOWVisualizer {
     }
   }
 
-
   loadCCMapping (mappingConfig) {
     if (this.ccMapper) {
       this.ccMapper.loadMapping(mappingConfig)
     } else {
-      console.warn('Hardware mode is not enabled. Set SETTINGS.HARDWARE_MODE.ENABLED = true')
+      console.warn(
+        'Hardware mode is not enabled. Set SETTINGS.HARDWARE_MODE.ENABLED = true'
+      )
     }
   }
 
@@ -728,14 +835,21 @@ export class GLOWVisualizer {
 
     // Load Arturia KeyLab Essential 49 mk3 mapping
     try {
-      const response = await fetch('midi-mappings/arturia-keylab-essential-49-mk3.json')
+      const response = await fetch(
+        'midi-mappings/arturia-keylab-essential-49-mk3.json'
+      )
       if (!response.ok) {
         throw new Error(`Failed to load mapping: ${response.statusText}`)
       }
       const mapping = await response.json()
       this.loadCCMapping(mapping)
-      console.log('Hardware mode enabled with Arturia KeyLab Essential 49 mk3 mapping')
-      this.uiManager.showStatus('Hardware mode enabled (Arturia KeyLab)', 'success')
+      console.log(
+        'Hardware mode enabled with Arturia KeyLab Essential 49 mk3 mapping'
+      )
+      this.uiManager.showStatus(
+        'Hardware mode enabled (Arturia KeyLab)',
+        'success'
+      )
     } catch (error) {
       console.error('Failed to load Arturia mapping:', error)
       this.uiManager.showStatus('Failed to load hardware mapping', 'error')
@@ -751,7 +865,10 @@ export class GLOWVisualizer {
     // Clean up old notes
     this.midiManager.cleanupOldNotes()
 
-    if (SETTINGS.CANVAS.SHADER_BACKGROUND_ENABLED && this.shaderBackgroundManager) {
+    if (
+      SETTINGS.CANVAS.SHADER_BACKGROUND_ENABLED &&
+      this.shaderBackgroundManager
+    ) {
       this.shaderBackgroundManager.update(t)
     }
 
@@ -773,7 +890,11 @@ export class GLOWVisualizer {
     }
 
     // Update chromatic aberration overlay if enabled
-    if (this.chromaticAberrationModeEnabled && this.chromaticAberrationCanvas && this.chromaticAberrationCtx) {
+    if (
+      this.chromaticAberrationModeEnabled &&
+      this.chromaticAberrationCanvas &&
+      this.chromaticAberrationCtx
+    ) {
       this.updateChromaticAberrationOverlay()
     }
 
@@ -796,17 +917,16 @@ export class GLOWVisualizer {
 
   applyModulationToCanvas () {
     const modulationSystem = this.trackManager.getModulationSystem()
-    const allCanvasMods = modulationSystem.getModulators().filter(m =>
-      m.enabled &&
-      m.targetDestination === 'canvasFilter'
-    )
+    const allCanvasMods = modulationSystem
+      .getModulators()
+      .filter((m) => m.enabled && m.targetDestination === 'canvasFilter')
     if (allCanvasMods.length === 0) return null
 
     // Ensure any multi-parameter canvas filters are enabled when used
     const canvasFiltersWithModulation = new Set(
-      allCanvasMods.map(m => m.targetCanvasFilter).filter(Boolean)
+      allCanvasMods.map((m) => m.targetCanvasFilter).filter(Boolean)
     )
-    canvasFiltersWithModulation.forEach(filterId => {
+    canvasFiltersWithModulation.forEach((filterId) => {
       const enableKey = getCanvasFilterEnableKey(filterId)
       if (!enableKey) return
       if (!SETTINGS.CANVAS[enableKey]) {
@@ -816,15 +936,15 @@ export class GLOWVisualizer {
     })
 
     // Only modulators that target a specific parameter actually modulate values
-    const modulators = allCanvasMods.filter(m => m.targetConfigKey)
+    const modulators = allCanvasMods.filter((m) => m.targetConfigKey)
     if (modulators.length === 0) {
       return null
     }
 
     const originalValues = new Map()
     const modulatorsByKey = new Map()
-    modulators.forEach(m => {
-      if (!modulatorsByKey.has(m.targetConfigKey)) modulatorsByKey.set(m.targetConfigKey, [])
+    modulators.forEach((m) => {
+      if (!modulatorsByKey.has(m.targetConfigKey)) { modulatorsByKey.set(m.targetConfigKey, []) }
       modulatorsByKey.get(m.targetConfigKey).push(m)
     })
 
@@ -833,24 +953,31 @@ export class GLOWVisualizer {
       if (!param || !SETTINGS.CANVAS.hasOwnProperty(configKey)) return
       let base = SETTINGS.CANVAS[configKey]
       if (param.tableValues) {
-        const parts = String(base || '0 1').trim().split(/\s+/)
+        const parts = String(base || '0 1')
+          .trim()
+          .split(/\s+/)
         base = parts.length ? parseFloat(parts[0]) : 0
       }
-      if (!originalValues.has(configKey)) originalValues.set(configKey, SETTINGS.CANVAS[configKey])
+      if (!originalValues.has(configKey)) { originalValues.set(configKey, SETTINGS.CANVAS[configKey]) }
       let value = base
       const noteData = { notes: [], velocity: 0 }
-      mods.forEach(modulator => {
-        value = modulationSystem.getModulatedValue(value, modulator, param, noteData)
+      mods.forEach((modulator) => {
+        value = modulationSystem.getModulatedValue(
+          value,
+          modulator,
+          param,
+          noteData
+        )
       })
       if (param.type === 'number') value = Math.round(value)
       if (param.tableValues) value = valueToTableValues(value)
       SETTINGS.CANVAS[configKey] = value
     })
     this.applyCanvasFilters()
-    if (modulatorsByKey.has('DITHER_SATURATE')) this.updateDitherSaturate(SETTINGS.CANVAS.DITHER_SATURATE)
-    if (modulatorsByKey.has('DITHER_TABLE_VALUES_R')) this.updateDitherTableValues('R', SETTINGS.CANVAS.DITHER_TABLE_VALUES_R)
-    if (modulatorsByKey.has('DITHER_TABLE_VALUES_G')) this.updateDitherTableValues('G', SETTINGS.CANVAS.DITHER_TABLE_VALUES_G)
-    if (modulatorsByKey.has('DITHER_TABLE_VALUES_B')) this.updateDitherTableValues('B', SETTINGS.CANVAS.DITHER_TABLE_VALUES_B)
+    if (modulatorsByKey.has('DITHER_SATURATE')) { this.updateDitherSaturate(SETTINGS.CANVAS.DITHER_SATURATE) }
+    if (modulatorsByKey.has('DITHER_TABLE_VALUES_R')) { this.updateDitherTableValues('R', SETTINGS.CANVAS.DITHER_TABLE_VALUES_R) }
+    if (modulatorsByKey.has('DITHER_TABLE_VALUES_G')) { this.updateDitherTableValues('G', SETTINGS.CANVAS.DITHER_TABLE_VALUES_G) }
+    if (modulatorsByKey.has('DITHER_TABLE_VALUES_B')) { this.updateDitherTableValues('B', SETTINGS.CANVAS.DITHER_TABLE_VALUES_B) }
 
     return () => {
       originalValues.forEach((v, key) => {
@@ -864,16 +991,20 @@ export class GLOWVisualizer {
     const tracks = this.trackManager.getTracks()
     const time = performance.now() / 1000
 
-    tracks.forEach(track => {
+    tracks.forEach((track) => {
       if (track.luminode) {
         const baseLayout = track.layout || { x: 0, y: 0, rotation: 0 }
 
         // Apply trajectory motion to the layout
-        const trajectoryPosition = this.trackManager.getTrajectoryPosition(track.id, time, {
-          x: baseLayout.x,
-          y: baseLayout.y,
-          z: 0
-        })
+        const trajectoryPosition = this.trackManager.getTrajectoryPosition(
+          track.id,
+          time,
+          {
+            x: baseLayout.x,
+            y: baseLayout.y,
+            z: 0
+          }
+        )
 
         // Use track ID as key to support multiple instances of same luminode type
         layouts[track.id] = {
@@ -889,7 +1020,9 @@ export class GLOWVisualizer {
 
   drawLuminodes (t, activeNotes) {
     // Check if any drawing is active
-    const hasActiveNotes = Object.values(activeNotes).some(notes => notes.length > 0)
+    const hasActiveNotes = Object.values(activeNotes).some(
+      (notes) => notes.length > 0
+    )
     const hasTabletStrokes = this.tabletManager.strokes.length > 0
     const isDrawingActive = hasActiveNotes || hasTabletStrokes
 
@@ -912,7 +1045,7 @@ export class GLOWVisualizer {
     const trackLayouts = this.getTrackLayouts()
 
     // Draw luminodes only for active tracks that have luminodes assigned
-    activeTracks.forEach(track => {
+    activeTracks.forEach((track) => {
       if (!track.luminode || !track.midiDevice) return
 
       // Get or create luminode instance for this track
@@ -926,17 +1059,28 @@ export class GLOWVisualizer {
       const notes = activeNotes[track.luminode] || []
       const layout = trackLayouts[track.id] || { x: 0, y: 0, rotation: 0 }
 
-      const restoreValues = this.applyModulationToTrack(track.id, track.luminode, notes)
+      const restoreValues = this.applyModulationToTrack(
+        track.id,
+        track.luminode,
+        notes
+      )
 
       this.drawTrackLuminode(luminode, track.luminode, t, notes, layout)
 
       // Track last luminode position for fluid background (not used for full-screen procedural shaders)
       const bgMode = SETTINGS.CANVAS.SHADER_BACKGROUND_MODE || 'Fluid'
-      if (SETTINGS.CANVAS.SHADER_BACKGROUND_ENABLED && !isFragmentBackgroundMode(bgMode) &&
-          this.shaderBackgroundManager && this.shaderBackgroundManager.fluid.lastPointMode) {
+      if (
+        SETTINGS.CANVAS.SHADER_BACKGROUND_ENABLED &&
+        !isFragmentBackgroundMode(bgMode) &&
+        this.shaderBackgroundManager &&
+        this.shaderBackgroundManager.fluid.lastPointMode
+      ) {
         const centerX = this.canvas.width / 2 + layout.x
         const centerY = this.canvas.height / 2 + layout.y
-        this.shaderBackgroundManager.fluid.updateLastLuminodePosition(centerX, centerY)
+        this.shaderBackgroundManager.fluid.updateLastLuminodePosition(
+          centerX,
+          centerY
+        )
       }
 
       if (restoreValues) {
@@ -947,13 +1091,16 @@ export class GLOWVisualizer {
 
   applyModulationToTrack (trackId, luminodeType, notes = []) {
     const modulationSystem = this.trackManager.getModulationSystem()
-    const modulators = modulationSystem.getModulators().filter(m =>
-      m.enabled &&
-      (m.targetDestination || 'track') === 'track' &&
-      m.targetTrack === trackId &&
-      m.targetLuminode === luminodeType &&
-      m.targetConfigKey !== null
-    )
+    const modulators = modulationSystem
+      .getModulators()
+      .filter(
+        (m) =>
+          m.enabled &&
+          (m.targetDestination || 'track') === 'track' &&
+          m.targetTrack === trackId &&
+          m.targetLuminode === luminodeType &&
+          m.targetConfigKey !== null
+      )
 
     if (modulators.length === 0) {
       return null
@@ -961,7 +1108,7 @@ export class GLOWVisualizer {
 
     // Get luminode config definition for min/max ranges
     const configParams = getLuminodeConfig(luminodeType)
-    const configParamMap = new Map(configParams.map(p => [p.key, p]))
+    const configParamMap = new Map(configParams.map((p) => [p.key, p]))
 
     const settingsKey = getLuminodeSettingsKey(luminodeType)
     if (!settingsKey || !SETTINGS.MODULES[settingsKey]) {
@@ -973,13 +1120,15 @@ export class GLOWVisualizer {
 
     const noteData = {
       notes: notes || [],
-      velocity: notes && notes.length > 0
-        ? notes.reduce((sum, note) => sum + (note.velocity || 0), 0) / notes.length
-        : 0
+      velocity:
+        notes && notes.length > 0
+          ? notes.reduce((sum, note) => sum + (note.velocity || 0), 0) /
+            notes.length
+          : 0
     }
 
     const modulatorsByKey = new Map()
-    modulators.forEach(modulator => {
+    modulators.forEach((modulator) => {
       const configKey = modulator.targetConfigKey
       if (!modulatorsByKey.has(configKey)) {
         modulatorsByKey.set(configKey, [])
@@ -1001,19 +1150,23 @@ export class GLOWVisualizer {
       const baseValue = originalValues.get(configKey)
       let modulatedValue = baseValue
 
-      const lfoModulators = mods.filter(m => (m.type || 'lfo') === 'lfo')
-      const noteModulators = mods.filter(m => (m.type || 'lfo') !== 'lfo')
+      const lfoModulators = mods.filter((m) => (m.type || 'lfo') === 'lfo')
+      const noteModulators = mods.filter((m) => (m.type || 'lfo') !== 'lfo')
 
       if (lfoModulators.length > 0) {
         let totalModulation = 0
         let totalOffset = 0
         const time = modulationSystem.getCurrentTime()
 
-        lfoModulators.forEach(modulator => {
+        lfoModulators.forEach((modulator) => {
           if (!modulator.enabled) return
 
           const phase = time * modulator.rate * Math.PI * 2
-          const waveform = modulationSystem.generateWaveform(modulator.shape, phase, modulator.cubicBezier)
+          const waveform = modulationSystem.generateWaveform(
+            modulator.shape,
+            phase,
+            modulator.cubicBezier
+          )
 
           totalModulation += waveform * modulator.depth
           totalOffset += modulator.offset || 0
@@ -1023,16 +1176,25 @@ export class GLOWVisualizer {
         const max = configParam.max
         const range = max - min
 
-        modulatedValue = baseValue + (totalModulation * range) + (totalOffset * range)
+        modulatedValue =
+          baseValue + totalModulation * range + totalOffset * range
         modulatedValue = Math.max(min, Math.min(max, modulatedValue))
       }
 
-      noteModulators.forEach(modulator => {
+      noteModulators.forEach((modulator) => {
         if (!modulator.enabled) return
-        modulatedValue = modulationSystem.getModulatedValue(modulatedValue, modulator, configParam, noteData)
+        modulatedValue = modulationSystem.getModulatedValue(
+          modulatedValue,
+          modulator,
+          configParam,
+          noteData
+        )
       })
 
-      const finalValue = configParam.type === 'number' ? Math.round(modulatedValue) : modulatedValue
+      const finalValue =
+        configParam.type === 'number'
+          ? Math.round(modulatedValue)
+          : modulatedValue
 
       moduleConfig[configKey] = finalValue
     })
@@ -1053,23 +1215,30 @@ export class GLOWVisualizer {
         luminode.draw(t, notes, true, layout)
         break
       case 'lissajous':
-        luminode.draw(t, notes.map(n => n.midi), layout)
+        luminode.draw(
+          t,
+          notes.map((n) => n.midi),
+          layout
+        )
         break
       case 'triangle':
         luminode.draw(t, notes, 'triangle', 1, 300, layout)
         break
       default: {
         const settingsKey = getLuminodeSettingsKey(luminodeType)
-        const moduleSettings = settingsKey ? SETTINGS.MODULES[settingsKey] : null
-        
+        const moduleSettings = settingsKey
+          ? SETTINGS.MODULES[settingsKey]
+          : null
+
         if (moduleSettings?.hasOwnProperty('USE_COLOR')) {
           luminode.draw(t, notes, moduleSettings.USE_COLOR || false, layout)
         } else if (moduleSettings?.hasOwnProperty('COLOR_MODE')) {
           // DeJong uses COLOR_MODE (0=rainbow, 1=MIDI, 2=black&white)
           // Ensure it's a number
-          const colorMode = typeof moduleSettings.COLOR_MODE === 'number' 
-            ? moduleSettings.COLOR_MODE 
-            : parseInt(moduleSettings.COLOR_MODE, 10) || 0
+          const colorMode =
+            typeof moduleSettings.COLOR_MODE === 'number'
+              ? moduleSettings.COLOR_MODE
+              : parseInt(moduleSettings.COLOR_MODE, 10) || 0
           luminode.draw(t, notes, colorMode, layout)
         } else {
           luminode.draw(t, notes, layout)
@@ -1134,7 +1303,10 @@ export class GLOWVisualizer {
     // Update CSS custom properties for dynamic intensity
     this.crtOverlay.style.setProperty('--crt-opacity', intensity * 1.2) // Base opacity (increased)
     this.crtOverlay.style.setProperty('--scanline-opacity', intensity * 0.9) // Scanline opacity (increased)
-    this.crtOverlay.style.setProperty('--color-separation-opacity', intensity * 0.7) // Color separation opacity (increased)
+    this.crtOverlay.style.setProperty(
+      '--color-separation-opacity',
+      intensity * 0.7
+    ) // Color separation opacity (increased)
     this.crtOverlay.style.setProperty('--flicker-intensity', intensity) // Flicker intensity
   }
 
@@ -1234,7 +1406,7 @@ export class GLOWVisualizer {
     if (!ditherImages.length) return
 
     const size = 8 / window.devicePixelRatio
-    Array.from(ditherImages).forEach(img => {
+    Array.from(ditherImages).forEach((img) => {
       img.setAttribute('width', size)
       img.setAttribute('height', size)
     })
@@ -1260,7 +1432,12 @@ export class GLOWVisualizer {
     if (!this.ditherCanvas || !this.ditherCtx || !this.canvas) return
 
     // Clear the dither canvas
-    this.ditherCtx.clearRect(0, 0, this.ditherCanvas.width, this.ditherCanvas.height)
+    this.ditherCtx.clearRect(
+      0,
+      0,
+      this.ditherCanvas.width,
+      this.ditherCanvas.height
+    )
 
     // Check if lumia effect (blur) is enabled
     const lumiaBlur = SETTINGS.CANVAS.LUMIA_EFFECT || 0
@@ -1275,7 +1452,13 @@ export class GLOWVisualizer {
 
     // Copy the main canvas to the dither canvas
     // If blur is enabled, the content will be blurred before dithering
-    this.ditherCtx.drawImage(this.canvas, 0, 0, this.ditherCanvas.width, this.ditherCanvas.height)
+    this.ditherCtx.drawImage(
+      this.canvas,
+      0,
+      0,
+      this.ditherCanvas.width,
+      this.ditherCanvas.height
+    )
 
     // Reset filter for next frame
     this.ditherCtx.filter = 'none'
@@ -1299,7 +1482,10 @@ export class GLOWVisualizer {
     if (!filter) return
 
     // Parse table values (e.g., "0 1" or "1 0")
-    const values = tableValues.split(' ').map(v => v.trim()).filter(v => v)
+    const values = tableValues
+      .split(' ')
+      .map((v) => v.trim())
+      .filter((v) => v)
     if (values.length === 0) return
 
     const tableValueString = values.join(' ')
@@ -1318,13 +1504,17 @@ export class GLOWVisualizer {
 
     if (funcElement) {
       funcElement.setAttribute('tableValues', tableValueString)
-      console.log(`Dither ${channel} channel table values updated to ${tableValueString}`)
+      console.log(
+        `Dither ${channel} channel table values updated to ${tableValueString}`
+      )
     }
   }
 
   // Create chromatic aberration overlay element
   createChromaticAberrationOverlay () {
-    this.chromaticAberrationOverlay = document.getElementById('chromaticAberrationOverlay')
+    this.chromaticAberrationOverlay = document.getElementById(
+      'chromaticAberrationOverlay'
+    )
     if (!this.chromaticAberrationOverlay) {
       console.error('Chromatic aberration overlay element not found')
       return
@@ -1338,7 +1528,8 @@ export class GLOWVisualizer {
     this.chromaticAberrationCanvas.style.height = '100%'
     this.chromaticAberrationCanvas.style.display = 'block'
     this.chromaticAberrationOverlay.appendChild(this.chromaticAberrationCanvas)
-    this.chromaticAberrationCtx = this.chromaticAberrationCanvas.getContext('2d')
+    this.chromaticAberrationCtx =
+      this.chromaticAberrationCanvas.getContext('2d')
 
     // Set initial contrast value
     const initialContrast = SETTINGS.CANVAS.CHROMATIC_ABERRATION_CONTRAST || 1
@@ -1364,18 +1555,35 @@ export class GLOWVisualizer {
       }
     }
 
-    console.log(`Chromatic aberration overlay ${enabled ? 'enabled' : 'disabled'}`)
+    console.log(
+      `Chromatic aberration overlay ${enabled ? 'enabled' : 'disabled'}`
+    )
   }
 
   // Update chromatic aberration overlay by copying canvas content
   updateChromaticAberrationOverlay () {
-    if (!this.chromaticAberrationCanvas || !this.chromaticAberrationCtx || !this.canvas) return
+    if (
+      !this.chromaticAberrationCanvas ||
+      !this.chromaticAberrationCtx ||
+      !this.canvas
+    ) { return }
 
     // Clear the chromatic aberration canvas
-    this.chromaticAberrationCtx.clearRect(0, 0, this.chromaticAberrationCanvas.width, this.chromaticAberrationCanvas.height)
+    this.chromaticAberrationCtx.clearRect(
+      0,
+      0,
+      this.chromaticAberrationCanvas.width,
+      this.chromaticAberrationCanvas.height
+    )
 
     // Copy the main canvas to the chromatic aberration canvas
-    this.chromaticAberrationCtx.drawImage(this.canvas, 0, 0, this.chromaticAberrationCanvas.width, this.chromaticAberrationCanvas.height)
+    this.chromaticAberrationCtx.drawImage(
+      this.canvas,
+      0,
+      0,
+      this.chromaticAberrationCanvas.width,
+      this.chromaticAberrationCanvas.height
+    )
   }
 
   // Update chromatic aberration contrast value
@@ -1467,7 +1675,10 @@ export class GLOWVisualizer {
     console.log('=== MIDI Debug Info ===')
     console.log('Legacy system devices:', this.midiManager.getDeviceInfo())
     console.log('Track system devices:', this.midiManager.getAllMidiDevices())
-    console.log('TrackManager devices:', this.trackManager.getAvailableMidiDevices())
+    console.log(
+      'TrackManager devices:',
+      this.trackManager.getAvailableMidiDevices()
+    )
     console.log('Current tracks:', this.trackManager.getTracks())
   }
 
@@ -1498,13 +1709,16 @@ export class GLOWVisualizer {
     this.tabletManager.clear()
 
     const tracks = this.trackManager.getTracks()
-    tracks.forEach(track => {
+    tracks.forEach((track) => {
       track.midiDevice = null
       track.luminode = null
       track.muted = false
       track.solo = false
       track.layout = { x: 0, y: 0, rotation: 0 }
-      this.trackManager.triggerCallback('trackUpdated', { trackId: track.id, track })
+      this.trackManager.triggerCallback('trackUpdated', {
+        trackId: track.id,
+        track
+      })
     })
 
     this.midiManager.setOutputDevice(null)
@@ -1525,10 +1739,16 @@ export class GLOWVisualizer {
     const mode = SETTINGS.CANVAS.SHADER_BACKGROUND_MODE || 'Fluid'
     if (SETTINGS.CANVAS.SHADER_BACKGROUND_ENABLED) {
       if (isFragmentBackgroundMode(mode)) {
-        if (this.proceduralBackgroundCanvas && this.proceduralBackgroundCanvas.style.display !== 'none') {
+        if (
+          this.proceduralBackgroundCanvas &&
+          this.proceduralBackgroundCanvas.style.display !== 'none'
+        ) {
           sources.push(this.proceduralBackgroundCanvas)
         }
-      } else if (this.fluidBackgroundCanvas && this.fluidBackgroundCanvas.style.display !== 'none') {
+      } else if (
+        this.fluidBackgroundCanvas &&
+        this.fluidBackgroundCanvas.style.display !== 'none'
+      ) {
         sources.push(this.fluidBackgroundCanvas)
       }
     }
@@ -1538,8 +1758,8 @@ export class GLOWVisualizer {
       const noiseCanvas = this.noiseOverlay.querySelector('canvas')
       if (noiseCanvas) sources.push(noiseCanvas)
     }
-    if (this.ditherModeEnabled && this.ditherCanvas) sources.push(this.ditherCanvas)
-    if (this.chromaticAberrationModeEnabled && this.chromaticAberrationCanvas) sources.push(this.chromaticAberrationCanvas)
+    if (this.ditherModeEnabled && this.ditherCanvas) { sources.push(this.ditherCanvas) }
+    if (this.chromaticAberrationModeEnabled && this.chromaticAberrationCanvas) { sources.push(this.chromaticAberrationCanvas) }
     return sources
   }
 }

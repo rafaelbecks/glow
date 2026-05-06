@@ -26,13 +26,13 @@ export class OrizuruLuminode {
     const parser = new DOMParser()
     const svgDoc = parser.parseFromString(ORIZURU_SVG_DATA, 'image/svg+xml')
     const lines = svgDoc.querySelectorAll('line')
-    
+
     const viewBox = svgDoc.querySelector('svg').getAttribute('viewBox').split(' ').map(Number)
     const [vbX, vbY, vbWidth, vbHeight] = viewBox
     const centerX = vbX + vbWidth / 2
     const centerY = vbY + vbHeight / 2
     const maxDim = Math.max(vbWidth, vbHeight)
-    
+
     this.svgLines = []
     lines.forEach(line => {
       const x1 = parseFloat(line.getAttribute('x1'))
@@ -41,7 +41,7 @@ export class OrizuruLuminode {
       const y2 = parseFloat(line.getAttribute('y2'))
       const stroke = line.getAttribute('stroke') || '#000'
       const opacity = parseFloat(line.getAttribute('opacity') || '1')
-      
+
       // Determine crease type from color
       // Red (#f00, #ff0000) = mountain, Blue (#00f, #0000ff) = valley, Yellow (#ff0, #ffff00) = facet
       let creaseType = 'facet' // default
@@ -53,7 +53,7 @@ export class OrizuruLuminode {
       } else if (strokeLower === '#ff0' || strokeLower === '#ffff00' || strokeLower === 'yellow') {
         creaseType = 'facet'
       }
-      
+
       this.svgLines.push({
         x1: (x1 - centerX) / maxDim,
         y1: (y1 - centerY) / maxDim,
@@ -64,12 +64,12 @@ export class OrizuruLuminode {
         creaseType
       })
     })
-    
+
     const vertexMap = new Map()
     this.svgLines.forEach(line => {
       const key1 = `${Math.round(line.x1 * 100) / 100},${Math.round(line.y1 * 100) / 100}`
       const key2 = `${Math.round(line.x2 * 100) / 100},${Math.round(line.y2 * 100) / 100}`
-      
+
       if (!vertexMap.has(key1)) {
         vertexMap.set(key1, { x: line.x1, y: line.y1, z: 0 })
       }
@@ -77,7 +77,7 @@ export class OrizuruLuminode {
         vertexMap.set(key2, { x: line.x2, y: line.y2, z: 0 })
       }
     })
-    
+
     this.flatVertices = Array.from(vertexMap.values())
   }
 
@@ -92,9 +92,9 @@ export class OrizuruLuminode {
       }
     })
 
-    let minX = Infinity, maxX = -Infinity
-    let minY = Infinity, maxY = -Infinity
-    let minZ = Infinity, maxZ = -Infinity
+    let minX = Infinity; let maxX = -Infinity
+    let minY = Infinity; let maxY = -Infinity
+    let minZ = Infinity; let maxZ = -Infinity
 
     rawVertices.forEach(v => {
       minX = Math.min(minX, v.x)
@@ -125,38 +125,38 @@ export class OrizuruLuminode {
   parseOBJData () {
     // Parse unfolded vertices (0 state)
     this.unfoldedVertices = this.parseOBJVertices(ORIZURU_UNFOLDED_OBJ)
-    
+
     // Parse folded vertices (1 state)
     this.foldedVertices = this.parseOBJVertices(ORIZURU_FOLDED_OBJ)
 
     // Parse face data to build edges
     const faceLines = ORIZURU_FACE_DATA.split('\n').filter(line => line.trim().startsWith('f '))
     const edgeSet = new Set()
-    
+
     faceLines.forEach(line => {
       const parts = line.trim().split(/\s+/)
       const v1 = parseInt(parts[1].split('/')[0]) - 1
       const v2 = parseInt(parts[2].split('/')[0]) - 1
       const v3 = parseInt(parts[3].split('/')[0]) - 1
-      
+
       const e1 = v1 < v2 ? `${v1},${v2}` : `${v2},${v1}`
       const e2 = v2 < v3 ? `${v2},${v3}` : `${v3},${v2}`
       const e3 = v1 < v3 ? `${v1},${v3}` : `${v3},${v1}`
-      
+
       edgeSet.add(e1)
       edgeSet.add(e2)
       edgeSet.add(e3)
     })
-    
+
     this.edges = Array.from(edgeSet).map(edge => {
       const [v1, v2] = edge.split(',').map(Number)
       return { v1, v2 }
     })
-    
+
     // Map edges to crease types from SVG lines and build vertex crease influence
     this.edgeCreaseTypes = new Map()
     this.vertexCreaseInfluence = [] // Array of maps: [{mountain: count, valley: count, facet: count}, ...]
-    
+
     if (this.svgLines && this.unfoldedVertices) {
       // Initialize vertex crease influence
       this.vertexCreaseInfluence = this.unfoldedVertices.map(() => ({
@@ -164,17 +164,17 @@ export class OrizuruLuminode {
         valley: 0,
         facet: 0
       }))
-      
+
       // For each edge, try to find matching SVG line and get its crease type
       this.edges.forEach(edge => {
         const v1 = this.unfoldedVertices[edge.v1]
         const v2 = this.unfoldedVertices[edge.v2]
         if (!v1 || !v2) return
-        
+
         // Find closest SVG line
         let bestMatch = null
         let bestDist = Infinity
-        
+
         this.svgLines.forEach(svgLine => {
           const dist1 = Math.sqrt(
             Math.pow(svgLine.x1 - v1.x, 2) + Math.pow(svgLine.y1 - v1.y, 2)
@@ -187,17 +187,17 @@ export class OrizuruLuminode {
             Math.pow(svgLine.x2 - v1.x, 2) + Math.pow(svgLine.y2 - v1.y, 2)
           )
           const dist = Math.min(dist1, dist2)
-          
+
           if (dist < bestDist && dist < 0.1) {
             bestDist = dist
             bestMatch = svgLine.creaseType
           }
         })
-        
+
         if (bestMatch) {
           const edgeKey = `${edge.v1},${edge.v2}`
           this.edgeCreaseTypes.set(edgeKey, bestMatch)
-          
+
           // Update vertex crease influence
           if (this.vertexCreaseInfluence[edge.v1]) {
             this.vertexCreaseInfluence[edge.v1][bestMatch]++
@@ -290,18 +290,18 @@ export class OrizuruLuminode {
       const creaseInfluence = this.vertexCreaseInfluence && this.vertexCreaseInfluence[idx]
         ? this.vertexCreaseInfluence[idx]
         : { mountain: 0, valley: 0, facet: 1 }
-      
+
       const totalInfluence = creaseInfluence.mountain + creaseInfluence.valley + creaseInfluence.facet
-      
+
       // Calculate crease-based easing factor
       // Mountain and valley creases should fold more aggressively, facets stay flatter
       let easingFactor = foldAmount
-      
+
       if (totalInfluence > 0) {
         const mountainRatio = creaseInfluence.mountain / totalInfluence
         const valleyRatio = creaseInfluence.valley / totalInfluence
         const facetRatio = creaseInfluence.facet / totalInfluence
-        
+
         // Mountain and valley creases use more aggressive easing (faster initial, slower end)
         // Facet creases use gentler easing (slower initial, faster end)
         if (mountainRatio + valleyRatio > facetRatio) {
@@ -324,7 +324,7 @@ export class OrizuruLuminode {
         y: unfoldedVert.y + (foldedVert.y - unfoldedVert.y) * easingFactor,
         z: unfoldedVert.z + (foldedVert.z - unfoldedVert.z) * easingFactor
       }
-      
+
       vertices.push(result)
     })
 
@@ -336,7 +336,7 @@ export class OrizuruLuminode {
 
     this.dimensions = this.canvasDrawer.getDimensions()
     const { width, height } = this.dimensions
-    
+
     // Get context after layout transform is applied
     this.canvasDrawer.applyLayoutTransform(layout)
     const ctx = this.canvasDrawer.getContext()
@@ -371,7 +371,7 @@ export class OrizuruLuminode {
       // When instances = 1, it should be centered (no offset)
       let offsetX = 0
       let offsetY = 0
-      
+
       if (instances > 1) {
         const angle = (instanceIndex / instances) * Math.PI * 2
         offsetX = spatialRadius * Math.cos(angle)
@@ -390,56 +390,56 @@ export class OrizuruLuminode {
 
       const interpolatedVertices = this.getInterpolatedVertices(foldAmount)
 
-        this.edges.forEach(edge => {
-          const v1 = interpolatedVertices[edge.v1]
-          const v2 = interpolatedVertices[edge.v2]
+      this.edges.forEach(edge => {
+        const v1 = interpolatedVertices[edge.v1]
+        const v2 = interpolatedVertices[edge.v2]
 
-          if (!v1 || !v2) return
+        if (!v1 || !v2) return
 
-          // Scale vertices
-          let x1 = v1.x * scale
-          let y1 = v1.y * scale
-          let z1 = v1.z * scale
-          let x2 = v2.x * scale
-          let y2 = v2.y * scale
-          let z2 = v2.z * scale
+        // Scale vertices
+        const x1 = v1.x * scale
+        const y1 = v1.y * scale
+        const z1 = v1.z * scale
+        const x2 = v2.x * scale
+        const y2 = v2.y * scale
+        const z2 = v2.z * scale
 
-          const [r1x, r1y, r1z] = UTILS.rotate3D(x1, y1, z1, angleX, angleY, angleZ)
-          const rot1 = { x: r1x, y: r1y, z: r1z }
-          const [r2x, r2y, r2z] = UTILS.rotate3D(x2, y2, z2, angleX, angleY, angleZ)
-          const rot2 = { x: r2x, y: r2y, z: r2z }
+        const [r1x, r1y, r1z] = UTILS.rotate3D(x1, y1, z1, angleX, angleY, angleZ)
+        const rot1 = { x: r1x, y: r1y, z: r1z }
+        const [r2x, r2y, r2z] = UTILS.rotate3D(x2, y2, z2, angleX, angleY, angleZ)
+        const rot2 = { x: r2x, y: r2y, z: r2z }
 
-          let p1, p2
-          if (enableProjection) {
-            // Apply 3D projection for depth effect
-            p1 = {
-              x: rot1.x + (rot1.x / width) * rot1.z * projectionDepth * 0.001,
-              y: rot1.y + (rot1.y / height) * rot1.z * projectionDepth * 0.001 - rot1.z * 0.2
-            }
-            p2 = {
-              x: rot2.x + (rot2.x / width) * rot2.z * projectionDepth * 0.001,
-              y: rot2.y + (rot2.y / height) * rot2.z * projectionDepth * 0.001 - rot2.z * 0.2
-            }
-          } else {
-            p1 = { x: rot1.x, y: rot1.y }
-            p2 = { x: rot2.x, y: rot2.y }
+        let p1, p2
+        if (enableProjection) {
+          // Apply 3D projection for depth effect
+          p1 = {
+            x: rot1.x + (rot1.x / width) * rot1.z * projectionDepth * 0.001,
+            y: rot1.y + (rot1.y / height) * rot1.z * projectionDepth * 0.001 - rot1.z * 0.2
           }
-
-          // Use standard color rendering (no crease type colors)
-          if (useColorMode && colorPalette.length > 0) {
-            const randomColor = colorPalette[Math.floor(Math.random() * colorPalette.length)]
-            ctx.strokeStyle = randomColor
-            ctx.shadowColor = randomColor
-          } else {
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'
-            ctx.shadowColor = 'rgba(255, 255, 255, 0.5)'
+          p2 = {
+            x: rot2.x + (rot2.x / width) * rot2.z * projectionDepth * 0.001,
+            y: rot2.y + (rot2.y / height) * rot2.z * projectionDepth * 0.001 - rot2.z * 0.2
           }
+        } else {
+          p1 = { x: rot1.x, y: rot1.y }
+          p2 = { x: rot2.x, y: rot2.y }
+        }
 
-          ctx.beginPath()
-          ctx.moveTo(p1.x, p1.y)
-          ctx.lineTo(p2.x, p2.y)
-          ctx.stroke()
-        })
+        // Use standard color rendering (no crease type colors)
+        if (useColorMode && colorPalette.length > 0) {
+          const randomColor = colorPalette[Math.floor(Math.random() * colorPalette.length)]
+          ctx.strokeStyle = randomColor
+          ctx.shadowColor = randomColor
+        } else {
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'
+          ctx.shadowColor = 'rgba(255, 255, 255, 0.5)'
+        }
+
+        ctx.beginPath()
+        ctx.moveTo(p1.x, p1.y)
+        ctx.lineTo(p2.x, p2.y)
+        ctx.stroke()
+      })
 
       ctx.restore()
     }

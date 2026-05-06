@@ -12,7 +12,7 @@ export class WindmillLuminode {
   generateBlade (spiralRadius, spiralAngle, bladeWidth, sizeVariation) {
     const center = { x: 0, y: 0, z: 0 }
     const radius = spiralRadius * sizeVariation
-    
+
     const v1 = this.polarToCartesian(radius, spiralAngle - bladeWidth / 2)
     const v2 = this.polarToCartesian(radius, spiralAngle + bladeWidth / 2)
 
@@ -41,7 +41,7 @@ export class WindmillLuminode {
 
     const noteAge = t - noteTimestamp
     const accelerationFactor = SETTINGS.MODULES.WINDMILL.ACCELERATION_FACTOR || 2.0
-    
+
     if (noteAge < accelerationDuration) {
       const progress = noteAge / accelerationDuration
       const easedProgress = this.easeOutCubic(progress)
@@ -70,11 +70,11 @@ export class WindmillLuminode {
       this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'
       this.ctx.shadowColor = 'rgba(255, 255, 255, 0.5)'
     }
-    
+
     for (let i = 0; i < 2; i++) {
       const radius = hubRadius * (i === 0 ? 1 : 0.6)
       this.ctx.beginPath()
-      
+
       for (let angle = 0; angle <= Math.PI * 2; angle += 0.1) {
         const x = radius * Math.cos(angle) + instanceX
         const y = radius * Math.sin(angle)
@@ -104,7 +104,7 @@ export class WindmillLuminode {
           this.ctx.lineTo(finalX, finalY)
         }
       }
-      
+
       this.ctx.closePath()
       this.ctx.stroke()
     }
@@ -167,7 +167,7 @@ export class WindmillLuminode {
       const i = bladeIndex
       const spiralAngle = i * goldenAngle + rotation
       const spiralRadius = baseRadius * (0.3 + spiralScale * Math.sqrt(i + 1) / Math.sqrt(bladeCount))
-      
+
       const sizeVariation = 1.0 + sizeVariationAmount * Math.sin(spiralAngle * 2) * (0.5 + velocityFactor * 0.5)
       const bladeWidth = bladeWidthBase * (0.8 + 0.4 * Math.sqrt(i + 1) / Math.sqrt(bladeCount))
 
@@ -264,4 +264,3 @@ export class WindmillLuminode {
     this.canvasDrawer.restoreLayoutTransform()
   }
 }
-

@@ -20,15 +20,15 @@ export class SyncHelix2DLuminode {
     const points = []
     const extendedSegments = Math.floor(segments * (1 + extensionFactor * 2))
     const startOffset = -extensionFactor
-    
+
     for (let i = 0; i <= extendedSegments; i++) {
       const u = startOffset + (i / extendedSegments) * (1 + extensionFactor * 2) // Extended range
       const x = (u - 0.5) * width // Can go beyond canvas
       const y = amplitude * Math.sin(u * Math.PI * 2 * frequency + phase)
-      
+
       points.push({ x, y, u })
     }
-    
+
     return points
   }
 
@@ -36,11 +36,11 @@ export class SyncHelix2DLuminode {
   // The circle is oriented perpendicular to the wave direction
   generateCrossSection (backbonePoint, nextPoint, radius, crossSectionPoints) {
     const circle = []
-    
+
     // Calculate direction vector (tangent to the wave)
     let dx = 0
     let dy = 1 // Default vertical if no next point
-    
+
     if (nextPoint) {
       dx = nextPoint.x - backbonePoint.x
       dy = nextPoint.y - backbonePoint.y
@@ -50,23 +50,23 @@ export class SyncHelix2DLuminode {
         dy /= length
       }
     }
-    
+
     // Perpendicular vector (normal to the wave direction)
     const perpX = -dy
     const perpY = dx
-    
+
     // Generate circle points in the plane perpendicular to the wave
     for (let i = 0; i < crossSectionPoints; i++) {
       const angle = (i / crossSectionPoints) * Math.PI * 2
       const cosA = Math.cos(angle)
       const sinA = Math.sin(angle)
-      
+
       // Circle in the plane perpendicular to wave direction
       // Use perpendicular vector and a "depth" vector (z-axis simulation)
       const circleX = backbonePoint.x + radius * cosA * perpX
       const circleY = backbonePoint.y + radius * cosA * perpY
       const circleZ = radius * sinA // Simulated depth
-      
+
       circle.push({
         x: circleX,
         y: circleY,
@@ -75,7 +75,7 @@ export class SyncHelix2DLuminode {
         pointIndex: i
       })
     }
-    
+
     return circle
   }
 
@@ -83,19 +83,19 @@ export class SyncHelix2DLuminode {
   generateTubularStructure (width, amplitude, frequency, phase, segments, crossSectionRadius, crossSectionPoints, extensionFactor = 0.3) {
     const backbone = this.generateSineWaveBackbone(width, amplitude, frequency, phase, segments, extensionFactor)
     const structure = []
-    
+
     // Generate cross-sections at each backbone point
     backbone.forEach((point, index) => {
       const nextPoint = index < backbone.length - 1 ? backbone[index + 1] : null
       const crossSection = this.generateCrossSection(point, nextPoint, crossSectionRadius, crossSectionPoints)
-      
+
       structure.push({
         backbonePoint: point,
         crossSection,
         segmentIndex: index
       })
     })
-    
+
     return structure
   }
 
@@ -121,14 +121,14 @@ export class SyncHelix2DLuminode {
     // Draw cross-sections (circles)
     structure.forEach((segment, segIdx) => {
       const crossSection = segment.crossSection
-      
+
       // Draw the circle
       this.ctx.beginPath()
       let firstPoint = true
-      
+
       crossSection.forEach((point, pointIdx) => {
         let finalX, finalY
-        
+
         if (enableProjection) {
           // Apply 3D rotation using manual rotation angle
           const [rotatedX, rotatedY, rotatedZ] = UTILS.rotate3D(
@@ -139,7 +139,7 @@ export class SyncHelix2DLuminode {
             angleY,
             angleZ
           )
-          
+
           // Perspective projection
           finalX = rotatedX + (rotatedX / width) * rotatedZ * 0.001
           finalY = rotatedY + (rotatedY / height) * rotatedZ * 0.001 - rotatedZ * 0.2
@@ -148,8 +148,7 @@ export class SyncHelix2DLuminode {
           finalX = point.x * scale
           finalY = point.y * scale
         }
-        
-        
+
         if (firstPoint) {
           this.ctx.moveTo(finalX, finalY)
           firstPoint = false
@@ -157,7 +156,7 @@ export class SyncHelix2DLuminode {
           this.ctx.lineTo(finalX, finalY)
         }
       })
-      
+
       // Close the circle
       this.ctx.closePath()
       this.ctx.stroke()
@@ -167,18 +166,18 @@ export class SyncHelix2DLuminode {
     for (let segIdx = 0; segIdx < structure.length - 1; segIdx++) {
       const currentSegment = structure[segIdx]
       const nextSegment = structure[segIdx + 1]
-      
+
       const currentCrossSection = currentSegment.crossSection
       const nextCrossSection = nextSegment.crossSection
-      
+
       // Connect corresponding points
       const minPoints = Math.min(currentCrossSection.length, nextCrossSection.length)
       for (let pointIdx = 0; pointIdx < minPoints; pointIdx++) {
         const currentPoint = currentCrossSection[pointIdx]
         const nextPoint = nextCrossSection[pointIdx]
-        
+
         let currentX, currentY, nextX, nextY
-        
+
         if (enableProjection) {
           // Apply 3D rotation using manual rotation angle
           const [rotX1, rotY1, rotZ1] = UTILS.rotate3D(
@@ -197,7 +196,7 @@ export class SyncHelix2DLuminode {
             angleY,
             angleZ
           )
-          
+
           // Perspective projection
           currentX = rotX1 + (rotX1 / width) * rotZ1 * 0.001
           currentY = rotY1 + (rotY1 / height) * rotZ1 * 0.001 - rotZ1 * 0.2
@@ -209,7 +208,7 @@ export class SyncHelix2DLuminode {
           nextX = nextPoint.x * scale
           nextY = nextPoint.y * scale
         }
-        
+
         this.ctx.beginPath()
         this.ctx.moveTo(currentX, currentY)
         this.ctx.lineTo(nextX, nextY)
@@ -257,17 +256,17 @@ export class SyncHelix2DLuminode {
 
       // Frequency scaling based on MIDI note
       const frequency = baseFrequency * (0.8 + (midi / 127) * 0.4)
-      
+
       // Phase offset based on MIDI note and time
       const basePhase = (midi / 127) * Math.PI * 2
-      
+
       // Phase modulation for sync/desync animation
       const phaseModulation = Math.sin(t * animationSpeed * syncRate + noteIndex * Math.PI * 2 / notes.length)
       const phaseOffset = basePhase + phaseModulation * Math.PI * 0.5
-      
+
       // Amplitude affected by velocity
       const noteAmplitude = amplitude * (0.7 + (velocity / 127) * 0.6)
-      
+
       // Cross-section radius affected by velocity
       const noteRadius = crossSectionRadius * (0.8 + (velocity / 127) * 0.4)
 
