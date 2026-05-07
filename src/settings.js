@@ -410,6 +410,20 @@ export const SETTINGS = {
       USE_COLOR: false,
       ROTATION: { x: 0, y: 0, z: 0 },
       ROTATION_ENABLED: true
+    },
+    SQUARE_TUNNEL: {
+      LINE_WIDTH: 1.0,
+      ANIMATION_SPEED: 0.5, // signed: positive=forward, negative=backward
+      ROTATION_ANGLE: 0, // static tilt in degrees
+      ROTATION_SPEED: 0, // auto-rotation speed
+      SCALE: 1.0,
+      ASPECT_RATIO: 1.0, // width/height ratio of the rectangles
+      FIXED_LINE_COUNT: 20, // squares when not using lines-per-note
+      LINES_PER_NOTE: 5, // lines per note when enabled
+      LINES_PER_NOTE_ENABLED: false,
+      PERSPECTIVE: false, // true = 3D perspective projection
+      SHADOW_BLUR: 15,
+      USE_COLOR: false
     }
   },
 
@@ -462,7 +476,11 @@ export const MIDI_CHANNELS = {
   'bus 22': 'trefoil',
   'bus 23': 'sphericalLens',
   'bus 24': 'ramiel',
-  'bus 25': 'deJong'
+  'bus 25': 'deJong',
+  'bus 26': 'syncHelix2D',
+  'bus 27': 'windmill',
+  'bus 28': 'orizuru',
+  'bus 29': 'squareTunnel'
 }
 
 // Utility functions

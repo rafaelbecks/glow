@@ -22,6 +22,7 @@ import { RamielLuminode } from './ramiel.js'
 import { WindmillLuminode } from './windmill.js'
 import { OrizuruLuminode } from './orizuru.js'
 import { DeJongLuminode } from './de-jong.js'
+import { SquareTunnelLuminode } from './square-tunnel.js'
 
 export {
   LissajousLuminode,
@@ -47,7 +48,8 @@ export {
   RamielLuminode,
   WindmillLuminode,
   OrizuruLuminode,
-  DeJongLuminode
+  DeJongLuminode,
+  SquareTunnelLuminode
 }
 
 export const LUMINODE_REGISTRY = {
@@ -175,6 +177,11 @@ export const LUMINODE_REGISTRY = {
     class: DeJongLuminode,
     displayName: 'De Jong Attractor',
     settingsKey: 'DE_JONG'
+  },
+  squareTunnel: {
+    class: SquareTunnelLuminode,
+    displayName: 'Square Tunnel',
+    settingsKey: 'SQUARE_TUNNEL'
   }
 }
 
