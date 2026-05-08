@@ -2,8 +2,8 @@
 .side-panel {
     position: fixed;
     top: 0;
-    right: -330px;
-    width: 330px;
+    right: -380px;
+    width: 380px;
     height: 100vh;
     background: #000;
     border-left: 1px solid #333;

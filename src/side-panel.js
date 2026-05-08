@@ -4,6 +4,7 @@ import { TrackUIManager } from './components/track-ui-manager.js'
 import { LuminodeConfigManager } from './components/luminode-config-manager.js'
 import { CanvasUIManager } from './components/canvas-ui-manager.js'
 import { ModulationUIManager } from './components/modulation-ui-manager.js'
+import { TabletUIManager } from './components/tablet-ui-manager.js'
 
 export class SidePanel {
   constructor (
@@ -36,6 +37,11 @@ export class SidePanel {
     this.modulationUIManager = new ModulationUIManager(
       trackManager,
       this.basePanel.getPanel()
+    )
+    this.tabletUIManager = new TabletUIManager(
+      this.basePanel.getPanel(),
+      tabletManager,
+      midiManager
     )
 
     // Set up event delegation
@@ -92,16 +98,24 @@ export class SidePanel {
       .addEventListener('pitchColorFactorChange', (e) => {
         this.triggerCallback('pitchColorFactorChange', e.detail)
       })
+
+    // Route tablet control events to callbacks
+    this.basePanel.getPanel().addEventListener('tabletControlChange', (e) => {
+      const { action, data } = e.detail
+      this.triggerCallback(action, data)
+    })
   }
 
   // Handle tab switching
   async handleTabSwitch (tabName) {
+    this.modulationUIManager.setMonitorActive(tabName === 'modulation')
+
     if (tabName === 'tracks') {
       this.trackUIManager.renderTracks()
     } else if (tabName === 'modulation') {
       this.modulationUIManager.renderModulationControls()
     } else if (tabName === 'tablet') {
-      await this.basePanel.renderTabletControls()
+      await this.tabletUIManager.renderTabletControls()
     } else if (tabName === 'canvas') {
       this.canvasUIManager.renderCanvasControls()
     }
@@ -132,54 +146,8 @@ export class SidePanel {
     return this.basePanel.isPanelVisible()
   }
 
-  // Delegate tablet methods
-  updateTabletWidth (value) {
-    this.basePanel.updateTabletWidth(value)
-  }
-
-  updateColorMode (enabled) {
-    this.basePanel.updateColorMode(enabled)
-  }
-
-  updateGeometricMode (enabled) {
-    this.basePanel.updateGeometricMode(enabled)
-  }
-
-  updateShapeDetectionThreshold (value) {
-    this.basePanel.updateShapeDetectionThreshold(value)
-  }
-
-  updateGeometricPencil (enabled) {
-    this.basePanel.updateGeometricPencil(enabled)
-  }
-
-  updatePolygonSides (sides) {
-    this.basePanel.updatePolygonSides(sides)
-  }
-
-  updatePolygonSize (size) {
-    this.basePanel.updatePolygonSize(size)
-  }
-
-  updateFadeDuration (duration) {
-    this.basePanel.updateFadeDuration(duration)
-  }
-
-  updateMidiOutput (enabled) {
-    this.basePanel.updateMidiOutput(enabled)
-  }
-
-  updateMidiOutputDevices (devices) {
-    this.basePanel.updateMidiOutputDevices(devices)
-  }
-
-  updateMidiOutputDevice (deviceId) {
-    this.basePanel.updateMidiOutputDevice(deviceId)
-  }
-
-  updateOctaveRange (range) {
-    this.basePanel.updateOctaveRange(range)
-  }
+  // Devices are fetched by TabletUIManager when the tab is rendered
+  updateMidiOutputDevices (devices) {}
 
   // Delegate track UI methods
   renderTracks () {

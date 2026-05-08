@@ -263,7 +263,6 @@ export class ModulationSystem {
     if (configParam.type === 'number') {
       return Math.round(mappedValue)
     }
-
     return Math.max(min, Math.min(max, mappedValue))
   }
 
@@ -295,7 +294,7 @@ export class ModulationSystem {
         configParam
       )
     }
-
+    console.log('modulator', modulatedValue)
     return modulatedValue
   }
 

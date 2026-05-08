@@ -1,17 +1,18 @@
-import { SETTINGS, UTILS } from './settings.js'
+import { SETTINGS, UTILS } from "./settings.js";
+import { getLuminodeSettingsKey } from "./luminodes/index.js";
 
 export class ProjectManager {
-  constructor (glowVisualizer) {
-    this.glowVisualizer = glowVisualizer
-    this.currentFileHandle = null
-    this.currentProjectName = 'Untitled Project'
-    this.savedState = null
-    this.hasUnsavedChanges = false
+  constructor(glowVisualizer) {
+    this.glowVisualizer = glowVisualizer;
+    this.currentFileHandle = null;
+    this.currentProjectName = "Untitled Project";
+    this.savedState = null;
+    this.hasUnsavedChanges = false;
   }
 
-  collectProjectState () {
+  collectProjectState() {
     const state = {
-      version: '1.0.0',
+      version: "1.0.0",
       timestamp: new Date().toISOString(),
       canvas: {
         clearAlpha: SETTINGS.CANVAS.CLEAR_ALPHA,
@@ -36,51 +37,93 @@ export class ProjectManager {
         ditherTableValuesR: SETTINGS.CANVAS.DITHER_TABLE_VALUES_R,
         ditherTableValuesG: SETTINGS.CANVAS.DITHER_TABLE_VALUES_G,
         ditherTableValuesB: SETTINGS.CANVAS.DITHER_TABLE_VALUES_B,
-        chromaticAberrationEnabled: SETTINGS.CANVAS.CHROMATIC_ABERRATION_ENABLED,
-        chromaticAberrationContrast: SETTINGS.CANVAS.CHROMATIC_ABERRATION_CONTRAST,
+        chromaticAberrationEnabled:
+          SETTINGS.CANVAS.CHROMATIC_ABERRATION_ENABLED,
+        chromaticAberrationContrast:
+          SETTINGS.CANVAS.CHROMATIC_ABERRATION_CONTRAST,
         invertFilter: SETTINGS.CANVAS.INVERT_FILTER,
         shaderBackgroundEnabled: SETTINGS.CANVAS.SHADER_BACKGROUND_ENABLED,
         shaderBackgroundMode: SETTINGS.CANVAS.SHADER_BACKGROUND_MODE,
-        shaderBackgroundTrailLength: SETTINGS.CANVAS.SHADER_BACKGROUND_TRAIL_LENGTH,
-        shaderBackgroundColorFluidBackground: SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_FLUID_BACKGROUND,
-        shaderBackgroundColorFluidTrail: SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_FLUID_TRAIL,
-        shaderBackgroundColorPressure: SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_PRESSURE,
-        shaderBackgroundColorVelocity: SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_VELOCITY,
-        shaderBackgroundCursorMode: SETTINGS.CANVAS.SHADER_BACKGROUND_CURSOR_MODE,
-        shaderBackgroundPortalTimeOffset: SETTINGS.CANVAS.SHADER_BACKGROUND_PORTAL_TIME_OFFSET,
-        shaderBackgroundPortalTimeDivisor: SETTINGS.CANVAS.SHADER_BACKGROUND_PORTAL_TIME_DIVISOR,
-        shaderBackgroundPortalBrightness: SETTINGS.CANVAS.SHADER_BACKGROUND_PORTAL_BRIGHTNESS,
-        shaderBackgroundDiscoPaletteVariant: SETTINGS.CANVAS.SHADER_BACKGROUND_DISCO_PALETTE_VARIANT,
-        shaderBackgroundDiscoPaletteBase: SETTINGS.CANVAS.SHADER_BACKGROUND_DISCO_PALETTE_BASE,
-        shaderBackgroundDiscoPaletteWave: SETTINGS.CANVAS.SHADER_BACKGROUND_DISCO_PALETTE_WAVE,
-        shaderBackgroundDiscoShimmer: SETTINGS.CANVAS.SHADER_BACKGROUND_DISCO_SHIMMER,
-        shaderBackgroundBalatroSpinRotation: SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_SPIN_ROTATION,
-        shaderBackgroundBalatroSpinSpeed: SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_SPIN_SPEED,
-        shaderBackgroundBalatroOffsetX: SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_OFFSET_X,
-        shaderBackgroundBalatroOffsetY: SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_OFFSET_Y,
-        shaderBackgroundBalatroColor1: SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_COLOR_1,
-        shaderBackgroundBalatroColor2: SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_COLOR_2,
-        shaderBackgroundBalatroColor3: SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_COLOR_3,
-        shaderBackgroundBalatroContrast: SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_CONTRAST,
-        shaderBackgroundBalatroLighting: SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_LIGHTING,
-        shaderBackgroundBalatroSpinAmount: SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_SPIN_AMOUNT,
-        shaderBackgroundBalatroPixelFilter: SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_PIXEL_FILTER,
-        shaderBackgroundBalatroSpinEase: SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_SPIN_EASE,
-        shaderBackgroundBalatroIsRotate: SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_IS_ROTATE,
-        shaderBackgroundChromaNoiseTimeScale: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_NOISE_TIME_SCALE,
-        shaderBackgroundChromaNoiseUvScale: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_NOISE_UV_SCALE,
-        shaderBackgroundChromaFineNoiseScale: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_FINE_NOISE_SCALE,
-        shaderBackgroundChromaGrainMix: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_GRAIN_MIX,
-        shaderBackgroundChromaColorA: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_COLOR_A,
-        shaderBackgroundChromaColorB: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_COLOR_B,
-        shaderBackgroundChromaColorAMul: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_COLOR_A_MUL,
-        shaderBackgroundChromaColorBMul: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_COLOR_B_MUL,
-        shaderBackgroundChromaMixClampMin: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_MIX_CLAMP_MIN,
-        shaderBackgroundChromaMixClampMax: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_MIX_CLAMP_MAX,
-        shaderBackgroundChromaLayer1S: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_LAYER1_S,
-        shaderBackgroundChromaLayer2S: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_LAYER2_S,
-        shaderBackgroundChromaLayer1Z: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_LAYER1_Z,
-        shaderBackgroundChromaLayer2Z: SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_LAYER2_Z,
+        shaderBackgroundTrailLength:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_TRAIL_LENGTH,
+        shaderBackgroundColorFluidBackground:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_FLUID_BACKGROUND,
+        shaderBackgroundColorFluidTrail:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_FLUID_TRAIL,
+        shaderBackgroundColorPressure:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_PRESSURE,
+        shaderBackgroundColorVelocity:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_VELOCITY,
+        shaderBackgroundCursorMode:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_CURSOR_MODE,
+        shaderBackgroundPortalTimeOffset:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_PORTAL_TIME_OFFSET,
+        shaderBackgroundPortalTimeDivisor:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_PORTAL_TIME_DIVISOR,
+        shaderBackgroundPortalBrightness:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_PORTAL_BRIGHTNESS,
+        shaderBackgroundDiscoPaletteVariant:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_DISCO_PALETTE_VARIANT,
+        shaderBackgroundDiscoPaletteBase:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_DISCO_PALETTE_BASE,
+        shaderBackgroundDiscoPaletteWave:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_DISCO_PALETTE_WAVE,
+        shaderBackgroundDiscoShimmer:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_DISCO_SHIMMER,
+        shaderBackgroundBalatroSpinRotation:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_SPIN_ROTATION,
+        shaderBackgroundBalatroSpinSpeed:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_SPIN_SPEED,
+        shaderBackgroundBalatroOffsetX:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_OFFSET_X,
+        shaderBackgroundBalatroOffsetY:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_OFFSET_Y,
+        shaderBackgroundBalatroColor1:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_COLOR_1,
+        shaderBackgroundBalatroColor2:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_COLOR_2,
+        shaderBackgroundBalatroColor3:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_COLOR_3,
+        shaderBackgroundBalatroContrast:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_CONTRAST,
+        shaderBackgroundBalatroLighting:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_LIGHTING,
+        shaderBackgroundBalatroSpinAmount:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_SPIN_AMOUNT,
+        shaderBackgroundBalatroPixelFilter:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_PIXEL_FILTER,
+        shaderBackgroundBalatroSpinEase:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_SPIN_EASE,
+        shaderBackgroundBalatroIsRotate:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_BALATRO_IS_ROTATE,
+        shaderBackgroundChromaNoiseTimeScale:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_NOISE_TIME_SCALE,
+        shaderBackgroundChromaNoiseUvScale:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_NOISE_UV_SCALE,
+        shaderBackgroundChromaFineNoiseScale:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_FINE_NOISE_SCALE,
+        shaderBackgroundChromaGrainMix:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_GRAIN_MIX,
+        shaderBackgroundChromaColorA:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_COLOR_A,
+        shaderBackgroundChromaColorB:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_COLOR_B,
+        shaderBackgroundChromaColorAMul:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_COLOR_A_MUL,
+        shaderBackgroundChromaColorBMul:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_COLOR_B_MUL,
+        shaderBackgroundChromaMixClampMin:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_MIX_CLAMP_MIN,
+        shaderBackgroundChromaMixClampMax:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_MIX_CLAMP_MAX,
+        shaderBackgroundChromaLayer1S:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_LAYER1_S,
+        shaderBackgroundChromaLayer2S:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_LAYER2_S,
+        shaderBackgroundChromaLayer1Z:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_LAYER1_Z,
+        shaderBackgroundChromaLayer2Z:
+          SETTINGS.CANVAS.SHADER_BACKGROUND_CHROMA_LAYER2_Z,
         glassOverlayEnabled: SETTINGS.CANVAS.GLASS_OVERLAY_ENABLED,
         glassOverlayMode: SETTINGS.CANVAS.GLASS_OVERLAY_MODE,
         glassOverlayWidth: SETTINGS.CANVAS.GLASS_OVERLAY_WIDTH,
@@ -96,44 +139,47 @@ export class ProjectManager {
         glassOverlayBrickSize: SETTINGS.CANVAS.GLASS_OVERLAY_BRICK_SIZE,
         glassOverlayBrickOffsetX: SETTINGS.CANVAS.GLASS_OVERLAY_BRICK_OFFSET_X,
         glassOverlayBrickOffsetY: SETTINGS.CANVAS.GLASS_OVERLAY_BRICK_OFFSET_Y,
-        glassOverlayBrickGap: SETTINGS.CANVAS.GLASS_OVERLAY_BRICK_GAP
+        glassOverlayBrickGap: SETTINGS.CANVAS.GLASS_OVERLAY_BRICK_GAP,
       },
       colors: {
         sotoPalette: [...SETTINGS.COLORS.SOTO_PALETTE],
         polygonColors: [...SETTINGS.COLORS.POLYGON_COLORS],
-        pitchColorFactor: UTILS.pitchColorFactor
+        pitchColorFactor: UTILS.pitchColorFactor,
       },
       modules: this.collectModuleSettings(),
       tracks: this.collectTrackSettings(),
       trajectories: this.collectTrajectorySettings(),
       modulation: this.collectModulationSettings(),
       tablet: this.collectTabletSettings(),
-      midi: this.collectMidiSettings()
-    }
+      midi: this.collectMidiSettings(),
+    };
 
-    return state
+    return state;
   }
 
-  collectModuleSettings () {
-    const modules = {}
-    const tracks = this.glowVisualizer.trackManager.getTracks()
+  collectModuleSettings() {
+    const modules = {};
+    const tracks = this.glowVisualizer.trackManager.getTracks();
 
-    tracks.forEach(track => {
-      if (track.luminode && SETTINGS.MODULES[track.luminode.toUpperCase()]) {
-        const moduleKey = track.luminode.toUpperCase()
-        modules[moduleKey] = { ...SETTINGS.MODULES[moduleKey] }
+    tracks.forEach((track) => {
+      if (track.luminode) {
+        const moduleKey = getLuminodeSettingsKey(track.luminode);
+        if (SETTINGS.MODULES[moduleKey]) {
+          modules[moduleKey] = { ...SETTINGS.MODULES[moduleKey] };
+        }
       }
-    })
+    });
 
-    return modules
+    return modules;
   }
 
-  collectTrackSettings () {
-    const tracks = this.glowVisualizer.trackManager.getTracks()
-    const availableDevices = this.glowVisualizer.trackManager.getAvailableMidiDevices()
+  collectTrackSettings() {
+    const tracks = this.glowVisualizer.trackManager.getTracks();
+    const availableDevices =
+      this.glowVisualizer.trackManager.getAvailableMidiDevices();
 
     return {
-      tracks: tracks.map(track => {
+      tracks: tracks.map((track) => {
         const trackData = {
           id: track.id,
           name: track.name,
@@ -141,45 +187,50 @@ export class ProjectManager {
           solo: track.solo,
           midiDevice: track.midiDevice,
           luminode: track.luminode,
-          layout: { ...track.layout }
-        }
+          layout: { ...track.layout },
+        };
 
         if (track.midiDevice) {
-          const device = availableDevices.find(d => d.id === track.midiDevice)
+          const device = availableDevices.find(
+            (d) => d.id === track.midiDevice,
+          );
           if (device) {
             trackData.midiDeviceInfo = {
               id: device.id,
               name: device.name,
-              manufacturer: device.manufacturer
-            }
+              manufacturer: device.manufacturer,
+            };
           }
         }
 
-        return trackData
-      })
-    }
+        return trackData;
+      }),
+    };
   }
 
-  collectTrajectorySettings () {
-    const tracks = this.glowVisualizer.trackManager.getTracks()
-    const trajectories = {}
+  collectTrajectorySettings() {
+    const tracks = this.glowVisualizer.trackManager.getTracks();
+    const trajectories = {};
 
-    tracks.forEach(track => {
-      const config = this.glowVisualizer.trackManager.getTrajectoryConfig(track.id)
+    tracks.forEach((track) => {
+      const config = this.glowVisualizer.trackManager.getTrajectoryConfig(
+        track.id,
+      );
       if (config) {
-        trajectories[track.id] = { ...config }
+        trajectories[track.id] = { ...config };
       }
-    })
+    });
 
-    return trajectories
+    return trajectories;
   }
 
-  collectModulationSettings () {
-    const modulationSystem = this.glowVisualizer.trackManager.getModulationSystem()
-    const modulators = modulationSystem.getModulators()
+  collectModulationSettings() {
+    const modulationSystem =
+      this.glowVisualizer.trackManager.getModulationSystem();
+    const modulators = modulationSystem.getModulators();
 
     return {
-      modulators: modulators.map(modulator => ({
+      modulators: modulators.map((modulator) => ({
         id: modulator.id,
         type: modulator.type,
         shape: modulator.shape,
@@ -195,13 +246,13 @@ export class ProjectManager {
         targetTrack: modulator.targetTrack,
         targetConfigKey: modulator.targetConfigKey,
         targetLuminode: modulator.targetLuminode,
-        targetCanvasFilter: modulator.targetCanvasFilter
-      }))
-    }
+        targetCanvasFilter: modulator.targetCanvasFilter,
+      })),
+    };
   }
 
-  collectTabletSettings () {
-    const tabletManager = this.glowVisualizer.tabletManager
+  collectTabletSettings() {
+    const tabletManager = this.glowVisualizer.tabletManager;
 
     return {
       lineWidth: tabletManager.baseLineWidth || 4,
@@ -211,681 +262,848 @@ export class ProjectManager {
       polygonSides: tabletManager.polygonSides || 3,
       polygonSize: tabletManager.polygonSize || 50,
       fadeDuration: tabletManager.fadeDuration || 3000,
-      connectionMode: tabletManager.websocketMode ? 'websocket' : 'webhid',
-      websocketHost: tabletManager.websocketHost || 'localhost',
-      websocketPort: tabletManager.websocketPort || 5678
-    }
+      connectionMode: tabletManager.websocketMode ? "websocket" : "webhid",
+      websocketHost: tabletManager.websocketHost || "localhost",
+      websocketPort: tabletManager.websocketPort || 5678,
+    };
   }
 
-  collectMidiSettings () {
-    const midiManager = this.glowVisualizer.midiManager
+  collectMidiSettings() {
+    const midiManager = this.glowVisualizer.midiManager;
 
     return {
       outputEnabled: midiManager.outputEnabled || false,
       outputDevice: midiManager.outputDevice || null,
-      octaveRange: midiManager.octaveRange || 3
-    }
+      octaveRange: midiManager.octaveRange || 3,
+    };
   }
 
-  generateProjectFile (projectName) {
-    const state = this.collectProjectState()
-    state.name = projectName
-    return JSON.stringify(state, null, 2)
+  generateProjectFile(projectName) {
+    const state = this.collectProjectState();
+    state.name = projectName;
+    return JSON.stringify(state, null, 2);
   }
 
-  getCurrentState () {
-    return this.collectProjectState()
+  getCurrentState() {
+    return this.collectProjectState();
   }
 
-  checkForUnsavedChanges () {
+  checkForUnsavedChanges() {
     if (!this.savedState) {
-      return this.currentFileHandle !== null
+      return this.currentFileHandle !== null;
     }
 
-    const currentState = this.getCurrentState()
-    const savedStateCopy = { ...this.savedState }
-    const currentStateCopy = { ...currentState }
+    const currentState = this.getCurrentState();
+    const savedStateCopy = { ...this.savedState };
+    const currentStateCopy = { ...currentState };
 
-    delete savedStateCopy.timestamp
-    delete currentStateCopy.timestamp
+    delete savedStateCopy.timestamp;
+    delete currentStateCopy.timestamp;
 
-    const currentStateStr = JSON.stringify(currentStateCopy)
-    const savedStateStr = JSON.stringify(savedStateCopy)
+    const currentStateStr = JSON.stringify(currentStateCopy);
+    const savedStateStr = JSON.stringify(savedStateCopy);
 
-    return currentStateStr !== savedStateStr
+    return currentStateStr !== savedStateStr;
   }
 
-  updateUnsavedChangesFlag () {
-    this.hasUnsavedChanges = this.checkForUnsavedChanges()
-    return this.hasUnsavedChanges
+  updateUnsavedChangesFlag() {
+    this.hasUnsavedChanges = this.checkForUnsavedChanges();
+    return this.hasUnsavedChanges;
   }
 
-  async saveNewProject (projectName) {
+  async saveNewProject(projectName) {
     try {
-      if (!('showSaveFilePicker' in window)) {
-        throw new Error('File System Access API is not supported in this browser')
+      if (!("showSaveFilePicker" in window)) {
+        throw new Error(
+          "File System Access API is not supported in this browser",
+        );
       }
 
-      const content = this.generateProjectFile(projectName)
-      const blob = new Blob([content], { type: 'application/json' })
+      const content = this.generateProjectFile(projectName);
+      const blob = new Blob([content], { type: "application/json" });
 
-      document.body.classList.add('loading')
-      let fileHandle
+      document.body.classList.add("loading");
+      let fileHandle;
       try {
         fileHandle = await window.showSaveFilePicker({
           suggestedName: `${projectName}.glow`,
-          types: [{
-            description: 'Glow Project Files',
-            accept: {
-              'application/json': ['.glow']
-            }
-          }]
-        })
+          types: [
+            {
+              description: "Glow Project Files",
+              accept: {
+                "application/json": [".glow"],
+              },
+            },
+          ],
+        });
       } finally {
-        document.body.classList.remove('loading')
+        document.body.classList.remove("loading");
       }
 
-      const writable = await fileHandle.createWritable()
-      await writable.write(blob)
-      await writable.close()
+      const writable = await fileHandle.createWritable();
+      await writable.write(blob);
+      await writable.close();
 
-      this.currentFileHandle = fileHandle
-      this.currentProjectName = projectName
-      this.savedState = this.getCurrentState()
-      this.hasUnsavedChanges = false
+      this.currentFileHandle = fileHandle;
+      this.currentProjectName = projectName;
+      this.savedState = this.getCurrentState();
+      this.hasUnsavedChanges = false;
 
-      this.addToRecentProjects(fileHandle, projectName)
+      this.addToRecentProjects(fileHandle, projectName);
 
-      return { success: true, fileHandle, projectName }
+      return { success: true, fileHandle, projectName };
     } catch (error) {
-      document.body.classList.remove('loading')
-      if (error.name === 'AbortError') {
-        return { success: false, cancelled: true }
+      document.body.classList.remove("loading");
+      if (error.name === "AbortError") {
+        return { success: false, cancelled: true };
       }
-      throw error
+      throw error;
     }
   }
 
-  async saveExistingProject () {
+  async saveExistingProject() {
     if (!this.currentFileHandle) {
-      return this.saveNewProject(this.currentProjectName)
+      return this.saveNewProject(this.currentProjectName);
     }
 
     try {
-      const content = this.generateProjectFile(this.currentProjectName)
-      const blob = new Blob([content], { type: 'application/json' })
+      const content = this.generateProjectFile(this.currentProjectName);
+      const blob = new Blob([content], { type: "application/json" });
 
-      const writable = await this.currentFileHandle.createWritable()
-      await writable.write(blob)
-      await writable.close()
+      const writable = await this.currentFileHandle.createWritable();
+      await writable.write(blob);
+      await writable.close();
 
-      this.savedState = this.getCurrentState()
-      this.hasUnsavedChanges = false
+      this.savedState = this.getCurrentState();
+      this.hasUnsavedChanges = false;
 
-      this.addToRecentProjects(this.currentFileHandle, this.currentProjectName)
+      this.addToRecentProjects(this.currentFileHandle, this.currentProjectName);
 
-      return { success: true }
+      return { success: true };
     } catch (error) {
-      if (error.name === 'PermissionDeniedError') {
-        return this.saveNewProject(this.currentProjectName)
+      if (error.name === "PermissionDeniedError") {
+        return this.saveNewProject(this.currentProjectName);
       }
-      throw error
+      throw error;
     }
   }
 
-  async saveProject (projectName = null) {
+  async saveProject(projectName = null) {
     if (projectName && !this.currentFileHandle) {
-      return this.saveNewProject(projectName)
+      return this.saveNewProject(projectName);
     } else if (this.currentFileHandle) {
-      return this.saveExistingProject()
+      return this.saveExistingProject();
     } else {
-      throw new Error('No file handle and no project name provided')
+      throw new Error("No file handle and no project name provided");
     }
   }
 
-  async openProject (fileHandle = null) {
+  async openProject(fileHandle = null) {
     try {
-      if (!('showOpenFilePicker' in window)) {
-        throw new Error('File System Access API is not supported in this browser')
+      if (!("showOpenFilePicker" in window)) {
+        throw new Error(
+          "File System Access API is not supported in this browser",
+        );
       }
 
-      let handle = fileHandle
+      let handle = fileHandle;
 
       if (!handle) {
-        document.body.classList.add('loading')
+        document.body.classList.add("loading");
         try {
           const [selectedHandle] = await window.showOpenFilePicker({
-            types: [{
-              description: 'Glow Project Files',
-              accept: {
-                'application/json': ['.glow']
-              }
-            }],
-            multiple: false
-          })
-          handle = selectedHandle
+            types: [
+              {
+                description: "Glow Project Files",
+                accept: {
+                  "application/json": [".glow"],
+                },
+              },
+            ],
+            multiple: false,
+          });
+          handle = selectedHandle;
         } finally {
-          document.body.classList.remove('loading')
+          document.body.classList.remove("loading");
         }
       }
 
-      const file = await handle.getFile()
-      const content = await file.text()
-      const projectData = JSON.parse(content)
+      const file = await handle.getFile();
+      const content = await file.text();
+      const projectData = JSON.parse(content);
 
-      return await this.openProjectWithData(handle, projectData, file)
+      return await this.openProjectWithData(handle, projectData, file);
     } catch (error) {
-      document.body.classList.remove('loading')
-      if (error.name === 'AbortError') {
-        return { cancelled: true }
+      document.body.classList.remove("loading");
+      if (error.name === "AbortError") {
+        return { cancelled: true };
       }
-      throw error
+      throw error;
     }
   }
 
-  async openProjectWithData (fileHandle, projectData, file) {
+  async openProjectWithData(fileHandle, projectData, file) {
     try {
-      this.validateProjectFile(projectData)
+      this.validateProjectFile(projectData);
 
-      this.currentFileHandle = fileHandle
-      this.currentProjectName = projectData.name || file.name.replace('.glow', '')
+      this.currentFileHandle = fileHandle;
+      this.currentProjectName =
+        projectData.name || file.name.replace(".glow", "");
 
-      const loadSuccess = await this.loadProjectState(projectData)
+      const loadSuccess = await this.loadProjectState(projectData);
 
       if (!loadSuccess) {
-        this.currentFileHandle = null
-        this.currentProjectName = 'Untitled Project'
-        throw new Error('Failed to load project state')
+        this.currentFileHandle = null;
+        this.currentProjectName = "Untitled Project";
+        throw new Error("Failed to load project state");
       }
 
-      this.savedState = this.getCurrentState()
-      this.hasUnsavedChanges = false
+      this.savedState = this.getCurrentState();
+      this.hasUnsavedChanges = false;
 
-      this.addToRecentProjects(fileHandle, this.currentProjectName)
+      this.addToRecentProjects(fileHandle, this.currentProjectName);
 
-      return { success: true, file, projectData, fileHandle }
+      return { success: true, file, projectData, fileHandle };
     } catch (error) {
-      this.currentFileHandle = null
-      this.currentProjectName = 'Untitled Project'
-      throw error
+      this.currentFileHandle = null;
+      this.currentProjectName = "Untitled Project";
+      throw error;
     }
   }
 
-  getRecentProjects () {
+  getRecentProjects() {
     try {
-      const recent = localStorage.getItem('glow_recent_projects')
-      if (!recent) return []
-      return JSON.parse(recent)
+      const recent = localStorage.getItem("glow_recent_projects");
+      if (!recent) return [];
+      return JSON.parse(recent);
     } catch (error) {
-      console.error('Error reading recent projects:', error)
-      return []
+      console.error("Error reading recent projects:", error);
+      return [];
     }
   }
 
-  async addToRecentProjects (fileHandle, projectName) {
+  async addToRecentProjects(fileHandle, projectName) {
     try {
-      const file = await fileHandle.getFile()
-      const fileName = file.name
+      const file = await fileHandle.getFile();
+      const fileName = file.name;
 
-      const recentProjects = this.getRecentProjects()
+      const recentProjects = this.getRecentProjects();
 
-      const existingIndex = recentProjects.findIndex(p => p.fileName === fileName)
+      const existingIndex = recentProjects.findIndex(
+        (p) => p.fileName === fileName,
+      );
       if (existingIndex !== -1) {
-        recentProjects.splice(existingIndex, 1)
+        recentProjects.splice(existingIndex, 1);
       }
 
       const projectInfo = {
         fileName,
         projectName,
-        lastOpened: Date.now()
-      }
+        lastOpened: Date.now(),
+      };
 
-      recentProjects.unshift(projectInfo)
+      recentProjects.unshift(projectInfo);
 
-      const maxRecent = 5
+      const maxRecent = 5;
       if (recentProjects.length > maxRecent) {
-        recentProjects.splice(maxRecent)
+        recentProjects.splice(maxRecent);
       }
 
-      localStorage.setItem('glow_recent_projects', JSON.stringify(recentProjects))
+      localStorage.setItem(
+        "glow_recent_projects",
+        JSON.stringify(recentProjects),
+      );
     } catch (error) {
-      console.error('Error saving recent projects:', error)
+      console.error("Error saving recent projects:", error);
     }
   }
 
-  clearProject () {
-    this.currentFileHandle = null
-    this.currentProjectName = 'Untitled Project'
-    this.savedState = null
-    this.hasUnsavedChanges = false
+  clearProject() {
+    this.currentFileHandle = null;
+    this.currentProjectName = "Untitled Project";
+    this.savedState = null;
+    this.hasUnsavedChanges = false;
   }
 
-  getCurrentProjectName () {
-    return this.currentProjectName
+  getCurrentProjectName() {
+    return this.currentProjectName;
   }
 
-  setCurrentProjectName (name) {
-    this.currentProjectName = name
+  setCurrentProjectName(name) {
+    this.currentProjectName = name;
     if (this.currentFileHandle) {
-      this.updateUnsavedChangesFlag()
+      this.updateUnsavedChangesFlag();
     }
   }
 
-  hasOpenFile () {
-    return this.currentFileHandle !== null
+  hasOpenFile() {
+    return this.currentFileHandle !== null;
   }
 
-  validateProjectFile (projectData) {
-    const requiredFields = ['version', 'canvas', 'colors', 'modules', 'tracks', 'tablet', 'midi']
+  validateProjectFile(projectData) {
+    const requiredFields = [
+      "version",
+      "canvas",
+      "colors",
+      "modules",
+      "tracks",
+      "tablet",
+      "midi",
+    ];
 
     for (const field of requiredFields) {
       if (!projectData.hasOwnProperty(field)) {
-        throw new Error(`Invalid project file: missing required field '${field}'`)
+        throw new Error(
+          `Invalid project file: missing required field '${field}'`,
+        );
       }
     }
 
-    return true
+    return true;
   }
 
   // Load project state from project data
-  async loadProjectState (projectData) {
+  async loadProjectState(projectData) {
     try {
-      this.validateProjectFile(projectData)
+      this.validateProjectFile(projectData);
 
-      console.log('Loading project:', projectData.name || 'Unnamed Project')
+      console.log("Loading project:", projectData.name || "Unnamed Project");
 
       // Load canvas settings
-      this.loadCanvasSettings(projectData.canvas)
+      this.loadCanvasSettings(projectData.canvas);
 
       // Load color settings
-      this.loadColorSettings(projectData.colors)
+      this.loadColorSettings(projectData.colors);
 
       // Load module settings
-      this.loadModuleSettings(projectData.modules)
+      this.loadModuleSettings(projectData.modules);
 
       // Load track settings
-      await this.loadTrackSettings(projectData.tracks)
+      await this.loadTrackSettings(projectData.tracks);
 
       // Load trajectory settings
-      this.loadTrajectorySettings(projectData.trajectories || {})
+      this.loadTrajectorySettings(projectData.trajectories || {});
 
       // Load modulation settings
-      this.loadModulationSettings(projectData.modulation || {})
+      this.loadModulationSettings(projectData.modulation || {});
 
       // Load MIDI settings
-      await this.loadMidiSettings(projectData.midi)
+      await this.loadMidiSettings(projectData.midi);
 
-      this.glowVisualizer.sidePanel.renderTracks()
-      this.glowVisualizer.sidePanel.modulationUIManager.renderModulationControls()
+      this.glowVisualizer.sidePanel.renderTracks();
+      this.glowVisualizer.sidePanel.modulationUIManager.renderModulationControls();
 
-      console.log('Project loaded successfully')
-      return true
+      console.log("Project loaded successfully");
+      return true;
     } catch (error) {
-      console.error('Error loading project:', error)
-      return false
+      console.error("Error loading project:", error);
+      return false;
     }
   }
 
-  loadCanvasSettings (canvasData) {
-    if (!canvasData) return
+  loadCanvasSettings(canvasData) {
+    if (!canvasData) return;
 
     if (canvasData.clearAlpha !== undefined) {
-      SETTINGS.CANVAS.CLEAR_ALPHA = canvasData.clearAlpha
-      this.glowVisualizer.canvasDrawer.setClearAlpha(canvasData.clearAlpha)
+      SETTINGS.CANVAS.CLEAR_ALPHA = canvasData.clearAlpha;
+      this.glowVisualizer.canvasDrawer.setClearAlpha(canvasData.clearAlpha);
     }
 
     if (canvasData.backgroundColor !== undefined) {
-      SETTINGS.CANVAS.BACKGROUND_COLOR = canvasData.backgroundColor
-      this.glowVisualizer.canvasDrawer.setBackgroundColor(canvasData.backgroundColor)
+      SETTINGS.CANVAS.BACKGROUND_COLOR = canvasData.backgroundColor;
+      this.glowVisualizer.canvasDrawer.setBackgroundColor(
+        canvasData.backgroundColor,
+      );
     }
 
     if (canvasData.crtMode !== undefined) {
-      SETTINGS.CANVAS.CRT_MODE = canvasData.crtMode
-      this.glowVisualizer.toggleCRTMode(canvasData.crtMode)
+      SETTINGS.CANVAS.CRT_MODE = canvasData.crtMode;
+      this.glowVisualizer.toggleCRTMode(canvasData.crtMode);
     }
 
     if (canvasData.crtIntensity !== undefined) {
-      SETTINGS.CANVAS.CRT_INTENSITY = canvasData.crtIntensity
-      this.glowVisualizer.setCRTIntensity(canvasData.crtIntensity)
+      SETTINGS.CANVAS.CRT_INTENSITY = canvasData.crtIntensity;
+      this.glowVisualizer.setCRTIntensity(canvasData.crtIntensity);
     }
 
     if (canvasData.lumiaEffect !== undefined) {
-      SETTINGS.CANVAS.LUMIA_EFFECT = canvasData.lumiaEffect
-      this.glowVisualizer.updateLumiaEffect(canvasData.lumiaEffect)
+      SETTINGS.CANVAS.LUMIA_EFFECT = canvasData.lumiaEffect;
+      this.glowVisualizer.updateLumiaEffect(canvasData.lumiaEffect);
     }
 
     if (canvasData.gridEnabled !== undefined) {
-      SETTINGS.CANVAS.GRID_ENABLED = canvasData.gridEnabled
+      SETTINGS.CANVAS.GRID_ENABLED = canvasData.gridEnabled;
     }
 
     if (canvasData.gridXLines !== undefined) {
-      SETTINGS.CANVAS.GRID_X_LINES = canvasData.gridXLines
+      SETTINGS.CANVAS.GRID_X_LINES = canvasData.gridXLines;
     }
 
     if (canvasData.gridYLines !== undefined) {
-      SETTINGS.CANVAS.GRID_Y_LINES = canvasData.gridYLines
+      SETTINGS.CANVAS.GRID_Y_LINES = canvasData.gridYLines;
     }
 
     if (canvasData.gridColor !== undefined) {
-      SETTINGS.CANVAS.GRID_COLOR = canvasData.gridColor
+      SETTINGS.CANVAS.GRID_COLOR = canvasData.gridColor;
     }
 
     if (canvasData.noiseOverlay !== undefined) {
-      SETTINGS.CANVAS.NOISE_OVERLAY = canvasData.noiseOverlay
-      this.glowVisualizer.toggleNoiseOverlay(canvasData.noiseOverlay)
+      SETTINGS.CANVAS.NOISE_OVERLAY = canvasData.noiseOverlay;
+      this.glowVisualizer.toggleNoiseOverlay(canvasData.noiseOverlay);
     }
 
     if (canvasData.noiseAnimate !== undefined) {
-      SETTINGS.CANVAS.NOISE_ANIMATE = canvasData.noiseAnimate
-      this.glowVisualizer.updateNoiseOptions({ animate: canvasData.noiseAnimate })
+      SETTINGS.CANVAS.NOISE_ANIMATE = canvasData.noiseAnimate;
+      this.glowVisualizer.updateNoiseOptions({
+        animate: canvasData.noiseAnimate,
+      });
     }
 
     if (canvasData.noisePatternWidth !== undefined) {
-      SETTINGS.CANVAS.NOISE_PATTERN_WIDTH = canvasData.noisePatternWidth
-      this.glowVisualizer.updateNoiseOptions({ patternWidth: canvasData.noisePatternWidth })
+      SETTINGS.CANVAS.NOISE_PATTERN_WIDTH = canvasData.noisePatternWidth;
+      this.glowVisualizer.updateNoiseOptions({
+        patternWidth: canvasData.noisePatternWidth,
+      });
     }
 
     if (canvasData.noisePatternHeight !== undefined) {
-      SETTINGS.CANVAS.NOISE_PATTERN_HEIGHT = canvasData.noisePatternHeight
-      this.glowVisualizer.updateNoiseOptions({ patternHeight: canvasData.noisePatternHeight })
+      SETTINGS.CANVAS.NOISE_PATTERN_HEIGHT = canvasData.noisePatternHeight;
+      this.glowVisualizer.updateNoiseOptions({
+        patternHeight: canvasData.noisePatternHeight,
+      });
     }
 
     if (canvasData.noiseOpacity !== undefined) {
-      SETTINGS.CANVAS.NOISE_OPACITY = canvasData.noiseOpacity
-      this.glowVisualizer.updateNoiseOptions({ grainOpacity: canvasData.noiseOpacity })
+      SETTINGS.CANVAS.NOISE_OPACITY = canvasData.noiseOpacity;
+      this.glowVisualizer.updateNoiseOptions({
+        grainOpacity: canvasData.noiseOpacity,
+      });
     }
 
     if (canvasData.noiseDensity !== undefined) {
-      SETTINGS.CANVAS.NOISE_DENSITY = canvasData.noiseDensity
-      this.glowVisualizer.updateNoiseOptions({ grainDensity: canvasData.noiseDensity })
+      SETTINGS.CANVAS.NOISE_DENSITY = canvasData.noiseDensity;
+      this.glowVisualizer.updateNoiseOptions({
+        grainDensity: canvasData.noiseDensity,
+      });
     }
 
     if (canvasData.noiseWidth !== undefined) {
-      SETTINGS.CANVAS.NOISE_WIDTH = canvasData.noiseWidth
-      this.glowVisualizer.updateNoiseOptions({ grainWidth: canvasData.noiseWidth })
+      SETTINGS.CANVAS.NOISE_WIDTH = canvasData.noiseWidth;
+      this.glowVisualizer.updateNoiseOptions({
+        grainWidth: canvasData.noiseWidth,
+      });
     }
 
     if (canvasData.noiseHeight !== undefined) {
-      SETTINGS.CANVAS.NOISE_HEIGHT = canvasData.noiseHeight
-      this.glowVisualizer.updateNoiseOptions({ grainHeight: canvasData.noiseHeight })
+      SETTINGS.CANVAS.NOISE_HEIGHT = canvasData.noiseHeight;
+      this.glowVisualizer.updateNoiseOptions({
+        grainHeight: canvasData.noiseHeight,
+      });
     }
 
     if (canvasData.ditherOverlay !== undefined) {
-      SETTINGS.CANVAS.DITHER_OVERLAY = canvasData.ditherOverlay
-      this.glowVisualizer.toggleDitherOverlay(canvasData.ditherOverlay)
+      SETTINGS.CANVAS.DITHER_OVERLAY = canvasData.ditherOverlay;
+      this.glowVisualizer.toggleDitherOverlay(canvasData.ditherOverlay);
     }
 
     if (canvasData.ditherSaturate !== undefined) {
-      SETTINGS.CANVAS.DITHER_SATURATE = canvasData.ditherSaturate
-      this.glowVisualizer.updateDitherSaturate(canvasData.ditherSaturate)
+      SETTINGS.CANVAS.DITHER_SATURATE = canvasData.ditherSaturate;
+      this.glowVisualizer.updateDitherSaturate(canvasData.ditherSaturate);
     }
 
     if (canvasData.ditherTableValuesR !== undefined) {
-      SETTINGS.CANVAS.DITHER_TABLE_VALUES_R = canvasData.ditherTableValuesR
-      this.glowVisualizer.updateDitherTableValues('R', canvasData.ditherTableValuesR)
+      SETTINGS.CANVAS.DITHER_TABLE_VALUES_R = canvasData.ditherTableValuesR;
+      this.glowVisualizer.updateDitherTableValues(
+        "R",
+        canvasData.ditherTableValuesR,
+      );
     }
 
     if (canvasData.ditherTableValuesG !== undefined) {
-      SETTINGS.CANVAS.DITHER_TABLE_VALUES_G = canvasData.ditherTableValuesG
-      this.glowVisualizer.updateDitherTableValues('G', canvasData.ditherTableValuesG)
+      SETTINGS.CANVAS.DITHER_TABLE_VALUES_G = canvasData.ditherTableValuesG;
+      this.glowVisualizer.updateDitherTableValues(
+        "G",
+        canvasData.ditherTableValuesG,
+      );
     }
 
     if (canvasData.ditherTableValuesB !== undefined) {
-      SETTINGS.CANVAS.DITHER_TABLE_VALUES_B = canvasData.ditherTableValuesB
-      this.glowVisualizer.updateDitherTableValues('B', canvasData.ditherTableValuesB)
+      SETTINGS.CANVAS.DITHER_TABLE_VALUES_B = canvasData.ditherTableValuesB;
+      this.glowVisualizer.updateDitherTableValues(
+        "B",
+        canvasData.ditherTableValuesB,
+      );
     }
 
     if (canvasData.chromaticAberrationEnabled !== undefined) {
-      SETTINGS.CANVAS.CHROMATIC_ABERRATION_ENABLED = canvasData.chromaticAberrationEnabled
-      this.glowVisualizer.toggleChromaticAberrationOverlay(canvasData.chromaticAberrationEnabled)
+      SETTINGS.CANVAS.CHROMATIC_ABERRATION_ENABLED =
+        canvasData.chromaticAberrationEnabled;
+      this.glowVisualizer.toggleChromaticAberrationOverlay(
+        canvasData.chromaticAberrationEnabled,
+      );
     }
 
     if (canvasData.chromaticAberrationContrast !== undefined) {
-      SETTINGS.CANVAS.CHROMATIC_ABERRATION_CONTRAST = canvasData.chromaticAberrationContrast
-      this.glowVisualizer.updateChromaticAberrationContrast(canvasData.chromaticAberrationContrast)
+      SETTINGS.CANVAS.CHROMATIC_ABERRATION_CONTRAST =
+        canvasData.chromaticAberrationContrast;
+      this.glowVisualizer.updateChromaticAberrationContrast(
+        canvasData.chromaticAberrationContrast,
+      );
     }
 
     if (canvasData.invertFilter !== undefined) {
-      SETTINGS.CANVAS.INVERT_FILTER = canvasData.invertFilter
-      this.glowVisualizer.updateInvertFilter(canvasData.invertFilter)
+      SETTINGS.CANVAS.INVERT_FILTER = canvasData.invertFilter;
+      this.glowVisualizer.updateInvertFilter(canvasData.invertFilter);
     }
 
     if (canvasData.shaderBackgroundEnabled !== undefined) {
-      SETTINGS.CANVAS.SHADER_BACKGROUND_ENABLED = canvasData.shaderBackgroundEnabled
-      this.glowVisualizer.updateFluidBackgroundEnabled(canvasData.shaderBackgroundEnabled)
+      SETTINGS.CANVAS.SHADER_BACKGROUND_ENABLED =
+        canvasData.shaderBackgroundEnabled;
+      this.glowVisualizer.updateFluidBackgroundEnabled(
+        canvasData.shaderBackgroundEnabled,
+      );
     }
 
     if (canvasData.shaderBackgroundMode !== undefined) {
-      SETTINGS.CANVAS.SHADER_BACKGROUND_MODE = canvasData.shaderBackgroundMode
-      this.glowVisualizer.updateFluidBackgroundMode(canvasData.shaderBackgroundMode)
+      SETTINGS.CANVAS.SHADER_BACKGROUND_MODE = canvasData.shaderBackgroundMode;
+      this.glowVisualizer.updateFluidBackgroundMode(
+        canvasData.shaderBackgroundMode,
+      );
     }
 
     if (canvasData.shaderBackgroundTrailLength !== undefined) {
-      SETTINGS.CANVAS.SHADER_BACKGROUND_TRAIL_LENGTH = canvasData.shaderBackgroundTrailLength
-      this.glowVisualizer.updateFluidBackgroundTrailLength(canvasData.shaderBackgroundTrailLength)
+      SETTINGS.CANVAS.SHADER_BACKGROUND_TRAIL_LENGTH =
+        canvasData.shaderBackgroundTrailLength;
+      this.glowVisualizer.updateFluidBackgroundTrailLength(
+        canvasData.shaderBackgroundTrailLength,
+      );
     }
 
     if (canvasData.shaderBackgroundColorFluidBackground !== undefined) {
-      SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_FLUID_BACKGROUND = canvasData.shaderBackgroundColorFluidBackground
-      this.glowVisualizer.updateFluidBackgroundColorFluidBackground(canvasData.shaderBackgroundColorFluidBackground)
+      SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_FLUID_BACKGROUND =
+        canvasData.shaderBackgroundColorFluidBackground;
+      this.glowVisualizer.updateFluidBackgroundColorFluidBackground(
+        canvasData.shaderBackgroundColorFluidBackground,
+      );
     }
 
     if (canvasData.shaderBackgroundColorFluidTrail !== undefined) {
-      SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_FLUID_TRAIL = canvasData.shaderBackgroundColorFluidTrail
-      this.glowVisualizer.updateFluidBackgroundColorFluidTrail(canvasData.shaderBackgroundColorFluidTrail)
+      SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_FLUID_TRAIL =
+        canvasData.shaderBackgroundColorFluidTrail;
+      this.glowVisualizer.updateFluidBackgroundColorFluidTrail(
+        canvasData.shaderBackgroundColorFluidTrail,
+      );
     }
 
     if (canvasData.shaderBackgroundColorPressure !== undefined) {
-      SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_PRESSURE = canvasData.shaderBackgroundColorPressure
-      this.glowVisualizer.updateFluidBackgroundColorPressure(canvasData.shaderBackgroundColorPressure)
+      SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_PRESSURE =
+        canvasData.shaderBackgroundColorPressure;
+      this.glowVisualizer.updateFluidBackgroundColorPressure(
+        canvasData.shaderBackgroundColorPressure,
+      );
     }
 
     if (canvasData.shaderBackgroundColorVelocity !== undefined) {
-      SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_VELOCITY = canvasData.shaderBackgroundColorVelocity
-      this.glowVisualizer.updateFluidBackgroundColorVelocity(canvasData.shaderBackgroundColorVelocity)
+      SETTINGS.CANVAS.SHADER_BACKGROUND_COLOR_VELOCITY =
+        canvasData.shaderBackgroundColorVelocity;
+      this.glowVisualizer.updateFluidBackgroundColorVelocity(
+        canvasData.shaderBackgroundColorVelocity,
+      );
     }
 
     if (canvasData.shaderBackgroundCursorMode !== undefined) {
-      SETTINGS.CANVAS.SHADER_BACKGROUND_CURSOR_MODE = canvasData.shaderBackgroundCursorMode
-      this.glowVisualizer.updateFluidBackgroundCursorMode(canvasData.shaderBackgroundCursorMode)
+      SETTINGS.CANVAS.SHADER_BACKGROUND_CURSOR_MODE =
+        canvasData.shaderBackgroundCursorMode;
+      this.glowVisualizer.updateFluidBackgroundCursorMode(
+        canvasData.shaderBackgroundCursorMode,
+      );
     }
 
     const procKeys = [
-      ['shaderBackgroundPortalTimeOffset', 'SHADER_BACKGROUND_PORTAL_TIME_OFFSET'],
-      ['shaderBackgroundPortalTimeDivisor', 'SHADER_BACKGROUND_PORTAL_TIME_DIVISOR'],
-      ['shaderBackgroundPortalBrightness', 'SHADER_BACKGROUND_PORTAL_BRIGHTNESS'],
-      ['shaderBackgroundDiscoPaletteVariant', 'SHADER_BACKGROUND_DISCO_PALETTE_VARIANT'],
-      ['shaderBackgroundDiscoPaletteBase', 'SHADER_BACKGROUND_DISCO_PALETTE_BASE'],
-      ['shaderBackgroundDiscoPaletteWave', 'SHADER_BACKGROUND_DISCO_PALETTE_WAVE'],
-      ['shaderBackgroundDiscoShimmer', 'SHADER_BACKGROUND_DISCO_SHIMMER'],
-      ['shaderBackgroundBalatroSpinRotation', 'SHADER_BACKGROUND_BALATRO_SPIN_ROTATION'],
-      ['shaderBackgroundBalatroSpinSpeed', 'SHADER_BACKGROUND_BALATRO_SPIN_SPEED'],
-      ['shaderBackgroundBalatroOffsetX', 'SHADER_BACKGROUND_BALATRO_OFFSET_X'],
-      ['shaderBackgroundBalatroOffsetY', 'SHADER_BACKGROUND_BALATRO_OFFSET_Y'],
-      ['shaderBackgroundBalatroColor1', 'SHADER_BACKGROUND_BALATRO_COLOR_1'],
-      ['shaderBackgroundBalatroColor2', 'SHADER_BACKGROUND_BALATRO_COLOR_2'],
-      ['shaderBackgroundBalatroColor3', 'SHADER_BACKGROUND_BALATRO_COLOR_3'],
-      ['shaderBackgroundBalatroContrast', 'SHADER_BACKGROUND_BALATRO_CONTRAST'],
-      ['shaderBackgroundBalatroLighting', 'SHADER_BACKGROUND_BALATRO_LIGHTING'],
-      ['shaderBackgroundBalatroSpinAmount', 'SHADER_BACKGROUND_BALATRO_SPIN_AMOUNT'],
-      ['shaderBackgroundBalatroPixelFilter', 'SHADER_BACKGROUND_BALATRO_PIXEL_FILTER'],
-      ['shaderBackgroundBalatroSpinEase', 'SHADER_BACKGROUND_BALATRO_SPIN_EASE'],
-      ['shaderBackgroundBalatroIsRotate', 'SHADER_BACKGROUND_BALATRO_IS_ROTATE'],
-      ['shaderBackgroundChromaNoiseTimeScale', 'SHADER_BACKGROUND_CHROMA_NOISE_TIME_SCALE'],
-      ['shaderBackgroundChromaNoiseUvScale', 'SHADER_BACKGROUND_CHROMA_NOISE_UV_SCALE'],
-      ['shaderBackgroundChromaFineNoiseScale', 'SHADER_BACKGROUND_CHROMA_FINE_NOISE_SCALE'],
-      ['shaderBackgroundChromaGrainMix', 'SHADER_BACKGROUND_CHROMA_GRAIN_MIX'],
-      ['shaderBackgroundChromaColorA', 'SHADER_BACKGROUND_CHROMA_COLOR_A'],
-      ['shaderBackgroundChromaColorB', 'SHADER_BACKGROUND_CHROMA_COLOR_B'],
-      ['shaderBackgroundChromaColorAMul', 'SHADER_BACKGROUND_CHROMA_COLOR_A_MUL'],
-      ['shaderBackgroundChromaColorBMul', 'SHADER_BACKGROUND_CHROMA_COLOR_B_MUL'],
-      ['shaderBackgroundChromaMixClampMin', 'SHADER_BACKGROUND_CHROMA_MIX_CLAMP_MIN'],
-      ['shaderBackgroundChromaMixClampMax', 'SHADER_BACKGROUND_CHROMA_MIX_CLAMP_MAX'],
-      ['shaderBackgroundChromaLayer1S', 'SHADER_BACKGROUND_CHROMA_LAYER1_S'],
-      ['shaderBackgroundChromaLayer2S', 'SHADER_BACKGROUND_CHROMA_LAYER2_S'],
-      ['shaderBackgroundChromaLayer1Z', 'SHADER_BACKGROUND_CHROMA_LAYER1_Z'],
-      ['shaderBackgroundChromaLayer2Z', 'SHADER_BACKGROUND_CHROMA_LAYER2_Z'],
-      ['glassOverlayEnabled', 'GLASS_OVERLAY_ENABLED'],
-      ['glassOverlayMode', 'GLASS_OVERLAY_MODE'],
-      ['glassOverlayWidth', 'GLASS_OVERLAY_WIDTH'],
-      ['glassOverlayHeight', 'GLASS_OVERLAY_HEIGHT'],
-      ['glassOverlayRadius', 'GLASS_OVERLAY_RADIUS'],
-      ['glassOverlayThickness', 'GLASS_OVERLAY_THICKNESS'],
-      ['glassOverlayBezel', 'GLASS_OVERLAY_BEZEL'],
-      ['glassOverlayIOR', 'GLASS_OVERLAY_IOR'],
-      ['glassOverlayBlur', 'GLASS_OVERLAY_BLUR'],
-      ['glassOverlaySpecular', 'GLASS_OVERLAY_SPECULAR'],
-      ['glassOverlayTint', 'GLASS_OVERLAY_TINT'],
-      ['glassOverlayShadow', 'GLASS_OVERLAY_SHADOW'],
-      ['glassOverlayBrickSize', 'GLASS_OVERLAY_BRICK_SIZE'],
-      ['glassOverlayBrickOffsetX', 'GLASS_OVERLAY_BRICK_OFFSET_X'],
-      ['glassOverlayBrickOffsetY', 'GLASS_OVERLAY_BRICK_OFFSET_Y'],
-      ['glassOverlayBrickGap', 'GLASS_OVERLAY_BRICK_GAP']
-    ]
+      [
+        "shaderBackgroundPortalTimeOffset",
+        "SHADER_BACKGROUND_PORTAL_TIME_OFFSET",
+      ],
+      [
+        "shaderBackgroundPortalTimeDivisor",
+        "SHADER_BACKGROUND_PORTAL_TIME_DIVISOR",
+      ],
+      [
+        "shaderBackgroundPortalBrightness",
+        "SHADER_BACKGROUND_PORTAL_BRIGHTNESS",
+      ],
+      [
+        "shaderBackgroundDiscoPaletteVariant",
+        "SHADER_BACKGROUND_DISCO_PALETTE_VARIANT",
+      ],
+      [
+        "shaderBackgroundDiscoPaletteBase",
+        "SHADER_BACKGROUND_DISCO_PALETTE_BASE",
+      ],
+      [
+        "shaderBackgroundDiscoPaletteWave",
+        "SHADER_BACKGROUND_DISCO_PALETTE_WAVE",
+      ],
+      ["shaderBackgroundDiscoShimmer", "SHADER_BACKGROUND_DISCO_SHIMMER"],
+      [
+        "shaderBackgroundBalatroSpinRotation",
+        "SHADER_BACKGROUND_BALATRO_SPIN_ROTATION",
+      ],
+      [
+        "shaderBackgroundBalatroSpinSpeed",
+        "SHADER_BACKGROUND_BALATRO_SPIN_SPEED",
+      ],
+      ["shaderBackgroundBalatroOffsetX", "SHADER_BACKGROUND_BALATRO_OFFSET_X"],
+      ["shaderBackgroundBalatroOffsetY", "SHADER_BACKGROUND_BALATRO_OFFSET_Y"],
+      ["shaderBackgroundBalatroColor1", "SHADER_BACKGROUND_BALATRO_COLOR_1"],
+      ["shaderBackgroundBalatroColor2", "SHADER_BACKGROUND_BALATRO_COLOR_2"],
+      ["shaderBackgroundBalatroColor3", "SHADER_BACKGROUND_BALATRO_COLOR_3"],
+      ["shaderBackgroundBalatroContrast", "SHADER_BACKGROUND_BALATRO_CONTRAST"],
+      ["shaderBackgroundBalatroLighting", "SHADER_BACKGROUND_BALATRO_LIGHTING"],
+      [
+        "shaderBackgroundBalatroSpinAmount",
+        "SHADER_BACKGROUND_BALATRO_SPIN_AMOUNT",
+      ],
+      [
+        "shaderBackgroundBalatroPixelFilter",
+        "SHADER_BACKGROUND_BALATRO_PIXEL_FILTER",
+      ],
+      [
+        "shaderBackgroundBalatroSpinEase",
+        "SHADER_BACKGROUND_BALATRO_SPIN_EASE",
+      ],
+      [
+        "shaderBackgroundBalatroIsRotate",
+        "SHADER_BACKGROUND_BALATRO_IS_ROTATE",
+      ],
+      [
+        "shaderBackgroundChromaNoiseTimeScale",
+        "SHADER_BACKGROUND_CHROMA_NOISE_TIME_SCALE",
+      ],
+      [
+        "shaderBackgroundChromaNoiseUvScale",
+        "SHADER_BACKGROUND_CHROMA_NOISE_UV_SCALE",
+      ],
+      [
+        "shaderBackgroundChromaFineNoiseScale",
+        "SHADER_BACKGROUND_CHROMA_FINE_NOISE_SCALE",
+      ],
+      ["shaderBackgroundChromaGrainMix", "SHADER_BACKGROUND_CHROMA_GRAIN_MIX"],
+      ["shaderBackgroundChromaColorA", "SHADER_BACKGROUND_CHROMA_COLOR_A"],
+      ["shaderBackgroundChromaColorB", "SHADER_BACKGROUND_CHROMA_COLOR_B"],
+      [
+        "shaderBackgroundChromaColorAMul",
+        "SHADER_BACKGROUND_CHROMA_COLOR_A_MUL",
+      ],
+      [
+        "shaderBackgroundChromaColorBMul",
+        "SHADER_BACKGROUND_CHROMA_COLOR_B_MUL",
+      ],
+      [
+        "shaderBackgroundChromaMixClampMin",
+        "SHADER_BACKGROUND_CHROMA_MIX_CLAMP_MIN",
+      ],
+      [
+        "shaderBackgroundChromaMixClampMax",
+        "SHADER_BACKGROUND_CHROMA_MIX_CLAMP_MAX",
+      ],
+      ["shaderBackgroundChromaLayer1S", "SHADER_BACKGROUND_CHROMA_LAYER1_S"],
+      ["shaderBackgroundChromaLayer2S", "SHADER_BACKGROUND_CHROMA_LAYER2_S"],
+      ["shaderBackgroundChromaLayer1Z", "SHADER_BACKGROUND_CHROMA_LAYER1_Z"],
+      ["shaderBackgroundChromaLayer2Z", "SHADER_BACKGROUND_CHROMA_LAYER2_Z"],
+      ["glassOverlayEnabled", "GLASS_OVERLAY_ENABLED"],
+      ["glassOverlayMode", "GLASS_OVERLAY_MODE"],
+      ["glassOverlayWidth", "GLASS_OVERLAY_WIDTH"],
+      ["glassOverlayHeight", "GLASS_OVERLAY_HEIGHT"],
+      ["glassOverlayRadius", "GLASS_OVERLAY_RADIUS"],
+      ["glassOverlayThickness", "GLASS_OVERLAY_THICKNESS"],
+      ["glassOverlayBezel", "GLASS_OVERLAY_BEZEL"],
+      ["glassOverlayIOR", "GLASS_OVERLAY_IOR"],
+      ["glassOverlayBlur", "GLASS_OVERLAY_BLUR"],
+      ["glassOverlaySpecular", "GLASS_OVERLAY_SPECULAR"],
+      ["glassOverlayTint", "GLASS_OVERLAY_TINT"],
+      ["glassOverlayShadow", "GLASS_OVERLAY_SHADOW"],
+      ["glassOverlayBrickSize", "GLASS_OVERLAY_BRICK_SIZE"],
+      ["glassOverlayBrickOffsetX", "GLASS_OVERLAY_BRICK_OFFSET_X"],
+      ["glassOverlayBrickOffsetY", "GLASS_OVERLAY_BRICK_OFFSET_Y"],
+      ["glassOverlayBrickGap", "GLASS_OVERLAY_BRICK_GAP"],
+    ];
     for (const [dataKey, settingsKey] of procKeys) {
       if (canvasData[dataKey] !== undefined) {
-        SETTINGS.CANVAS[settingsKey] = canvasData[dataKey]
+        SETTINGS.CANVAS[settingsKey] = canvasData[dataKey];
       }
     }
     if (procKeys.some(([k]) => canvasData[k] !== undefined)) {
-      this.glowVisualizer.syncShaderBackgroundEngines()
+      this.glowVisualizer.syncShaderBackgroundEngines();
     }
   }
 
-  loadColorSettings (colorData) {
-    if (!colorData) return
+  loadColorSettings(colorData) {
+    if (!colorData) return;
 
     if (colorData.sotoPalette) {
-      SETTINGS.COLORS.SOTO_PALETTE = [...colorData.sotoPalette]
+      SETTINGS.COLORS.SOTO_PALETTE = [...colorData.sotoPalette];
     }
 
     if (colorData.polygonColors) {
-      SETTINGS.COLORS.POLYGON_COLORS = [...colorData.polygonColors]
+      SETTINGS.COLORS.POLYGON_COLORS = [...colorData.polygonColors];
     }
 
     if (colorData.pitchColorFactor !== undefined) {
-      UTILS.pitchColorFactor = colorData.pitchColorFactor
+      UTILS.pitchColorFactor = colorData.pitchColorFactor;
     }
   }
 
-  loadModuleSettings (moduleData) {
-    if (!moduleData) return
+  loadModuleSettings(moduleData) {
+    if (!moduleData) return;
 
-    Object.keys(moduleData).forEach(moduleKey => {
+    Object.keys(moduleData).forEach((moduleKey) => {
       if (SETTINGS.MODULES[moduleKey]) {
-        Object.assign(SETTINGS.MODULES[moduleKey], moduleData[moduleKey])
+        Object.assign(SETTINGS.MODULES[moduleKey], moduleData[moduleKey]);
       }
-    })
+    });
   }
 
-  async loadTrackSettings (trackData) {
-    if (!trackData || !trackData.tracks) return
+  async loadTrackSettings(trackData) {
+    if (!trackData || !trackData.tracks) return;
 
-    const tracks = this.glowVisualizer.trackManager.getTracks()
-    const availableDevices = this.glowVisualizer.trackManager.getAvailableMidiDevices()
+    const tracks = this.glowVisualizer.trackManager.getTracks();
+    const availableDevices =
+      this.glowVisualizer.trackManager.getAvailableMidiDevices();
 
-    this.glowVisualizer.trackLuminodes.clear()
+    this.glowVisualizer.trackLuminodes.clear();
 
     trackData.tracks.forEach((trackConfig, index) => {
       if (index < tracks.length) {
-        const track = tracks[index]
+        const track = tracks[index];
 
-        track.name = trackConfig.name || track.name
-        track.muted = trackConfig.muted || false
-        track.solo = trackConfig.solo || false
-        track.layout = { ...track.layout, ...(trackConfig.layout || {}) }
+        track.name = trackConfig.name || track.name;
+        track.muted = trackConfig.muted || false;
+        track.solo = trackConfig.solo || false;
+        track.layout = { ...track.layout, ...(trackConfig.layout || {}) };
 
         if (trackConfig.luminode) {
-          track.luminode = trackConfig.luminode
-          this.glowVisualizer.createLuminodeForTrack(track.id, trackConfig.luminode)
+          track.luminode = trackConfig.luminode;
+          this.glowVisualizer.createLuminodeForTrack(
+            track.id,
+            trackConfig.luminode,
+          );
         }
 
         if (trackConfig.midiDevice && trackConfig.midiDeviceInfo) {
-          const deviceExists = availableDevices.find(d => d.id === trackConfig.midiDevice)
+          const deviceExists = availableDevices.find(
+            (d) => d.id === trackConfig.midiDevice,
+          );
           if (deviceExists) {
-            track.midiDevice = trackConfig.midiDevice
+            track.midiDevice = trackConfig.midiDevice;
           } else {
-            track.midiDevice = null
-            console.warn(`MIDI device "${trackConfig.midiDeviceInfo.name}" not available`)
+            track.midiDevice = null;
+            console.warn(
+              `MIDI device "${trackConfig.midiDeviceInfo.name}" not available`,
+            );
           }
         } else {
-          track.midiDevice = null
+          track.midiDevice = null;
         }
 
-        this.glowVisualizer.trackManager.triggerCallback('trackUpdated', { trackId: track.id, track })
+        this.glowVisualizer.trackManager.triggerCallback("trackUpdated", {
+          trackId: track.id,
+          track,
+        });
       }
-    })
+    });
   }
 
-  loadTrajectorySettings (trajectoryData) {
-    if (!trajectoryData) return
+  loadTrajectorySettings(trajectoryData) {
+    if (!trajectoryData) return;
 
-    Object.keys(trajectoryData).forEach(trackId => {
-      const config = trajectoryData[trackId]
+    Object.keys(trajectoryData).forEach((trackId) => {
+      const config = trajectoryData[trackId];
       if (config) {
-        this.glowVisualizer.trackManager.updateTrajectoryConfig(parseInt(trackId), config)
+        this.glowVisualizer.trackManager.updateTrajectoryConfig(
+          parseInt(trackId),
+          config,
+        );
       }
-    })
+    });
   }
 
-  loadModulationSettings (modulationData) {
-    if (!modulationData || !modulationData.modulators) return
+  loadModulationSettings(modulationData) {
+    if (!modulationData || !modulationData.modulators) return;
 
-    const modulationSystem = this.glowVisualizer.trackManager.getModulationSystem()
+    const modulationSystem =
+      this.glowVisualizer.trackManager.getModulationSystem();
 
-    modulationSystem.reset()
+    modulationSystem.reset();
 
-    modulationData.modulators.forEach(modulatorData => {
-      const modulatorType = modulatorData.type || 'lfo'
-      const modulatorId = modulationSystem.addModulator(modulatorType)
+    modulationData.modulators.forEach((modulatorData) => {
+      const modulatorType = modulatorData.type || "lfo";
+      const modulatorId = modulationSystem.addModulator(modulatorType);
       if (modulatorId) {
         const updates = {
           id: modulatorData.id || modulatorId,
           type: modulatorType,
-          enabled: modulatorData.enabled !== undefined ? modulatorData.enabled : true,
-          targetDestination: modulatorData.targetDestination || 'track',
-          targetTrack: modulatorData.targetTrack !== undefined ? modulatorData.targetTrack : 1,
+          enabled:
+            modulatorData.enabled !== undefined ? modulatorData.enabled : true,
+          targetDestination: modulatorData.targetDestination || "track",
+          targetTrack:
+            modulatorData.targetTrack !== undefined
+              ? modulatorData.targetTrack
+              : 1,
           targetConfigKey: modulatorData.targetConfigKey || null,
           targetLuminode: modulatorData.targetLuminode || null,
-          targetCanvasFilter: modulatorData.targetCanvasFilter || null
-        }
+          targetCanvasFilter: modulatorData.targetCanvasFilter || null,
+        };
 
-        if (modulatorType === 'lfo') {
-          updates.shape = modulatorData.shape || 'sine'
-          updates.rate = modulatorData.rate !== undefined ? modulatorData.rate : 0.5
-          updates.depth = modulatorData.depth !== undefined ? modulatorData.depth : 0.5
-          updates.offset = modulatorData.offset !== undefined ? modulatorData.offset : 0
+        if (modulatorType === "lfo") {
+          updates.shape = modulatorData.shape || "sine";
+          updates.rate =
+            modulatorData.rate !== undefined ? modulatorData.rate : 0.5;
+          updates.depth =
+            modulatorData.depth !== undefined ? modulatorData.depth : 0.5;
+          updates.offset =
+            modulatorData.offset !== undefined ? modulatorData.offset : 0;
           if (modulatorData.cubicBezier) {
-            updates.cubicBezier = modulatorData.cubicBezier
+            updates.cubicBezier = modulatorData.cubicBezier;
           }
         }
 
-        if (modulatorType === 'numberOfNotes' || modulatorType === 'velocity') {
-          updates.multiplier = modulatorData.multiplier !== undefined ? modulatorData.multiplier : 1.0
-          updates.easing = modulatorData.easing || 'linear'
-          updates.threshold = modulatorData.threshold !== undefined ? modulatorData.threshold : 0.5
+        if (modulatorType === "numberOfNotes" || modulatorType === "velocity") {
+          updates.multiplier =
+            modulatorData.multiplier !== undefined
+              ? modulatorData.multiplier
+              : 1.0;
+          updates.easing = modulatorData.easing || "linear";
+          updates.threshold =
+            modulatorData.threshold !== undefined
+              ? modulatorData.threshold
+              : 0.5;
         }
 
-        modulationSystem.updateModulator(modulatorId, updates)
+        modulationSystem.updateModulator(modulatorId, updates);
       }
-    })
+    });
   }
 
-  async loadMidiSettings (midiData) {
-    if (!midiData) return
+  async loadMidiSettings(midiData) {
+    if (!midiData) return;
 
-    const midiManager = this.glowVisualizer.midiManager
+    const midiManager = this.glowVisualizer.midiManager;
 
     if (midiData.outputDevice) {
-      const availableDevices = await midiManager.getAvailableOutputDevices()
-      const deviceExists = availableDevices.find(d => d.id === midiData.outputDevice)
+      const availableDevices = await midiManager.getAvailableOutputDevices();
+      const deviceExists = availableDevices.find(
+        (d) => d.id === midiData.outputDevice,
+      );
 
       if (deviceExists) {
-        midiManager.setOutputDevice(midiData.outputDevice)
-        midiManager.initializeOutput()
+        midiManager.setOutputDevice(midiData.outputDevice);
+        midiManager.initializeOutput();
       } else {
-        console.warn(`MIDI output device not available: ${midiData.outputDevice}`)
-        midiManager.setOutputDevice(null)
+        console.warn(
+          `MIDI output device not available: ${midiData.outputDevice}`,
+        );
+        midiManager.setOutputDevice(null);
       }
     }
   }

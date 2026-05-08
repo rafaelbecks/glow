@@ -1,6 +1,7 @@
 // Modulation controls UI management
 import { Pane } from '../lib/tweakpane.min.js'
 import * as EssentialsPlugin from '../lib/tweakpane-plugin-essentials.min.js'
+import * as WaveformPlugin from '../lib/tweakpane-plugin-waveform.min.js'
 import { getLuminodeConfig } from '../luminode-configs.js'
 import { getCanvasFilterConfig, getCanvasFilterIds } from '../canvas-filter-configs.js'
 
@@ -17,6 +18,8 @@ export class ModulationUIManager {
     this.panel = panel
     this.modulatorPanes = new Map()
     this.mainPane = null
+    this.monitorAnimationFrame = null
+    this.monitorSampleCount = 64
   }
 
   renderModulationControls () {
@@ -27,6 +30,7 @@ export class ModulationUIManager {
       this.mainPane.dispose()
       this.mainPane = null
     }
+    this.stopMonitorLoop()
     this.modulatorPanes.clear()
 
     const modulators = this.trackManager.getModulators()
@@ -60,6 +64,7 @@ export class ModulationUIManager {
       if (paneContainer) {
         this.mainPane = new Pane({ container: paneContainer })
         this.mainPane.registerPlugin(EssentialsPlugin)
+        this.mainPane.registerPlugin(WaveformPlugin)
 
         const stylePane = () => {
           const paneElement = paneContainer.querySelector('.tp-rotv')
@@ -78,6 +83,7 @@ export class ModulationUIManager {
         modulators.forEach(modulator => {
           this.createModulatorPane(modulator, tracks)
         })
+        this.startMonitorLoop()
       }
     }
   }
@@ -155,7 +161,6 @@ export class ModulationUIManager {
       })
 
       let shapeBinding = null
-      let waveformPreviewContainer = null
       if (modulatorType === 'lfo') {
         const waveformOptions = {}
         waveformShapes.forEach(shape => {
@@ -169,33 +174,8 @@ export class ModulationUIManager {
         }).on('change', (ev) => {
           modulatorData.shape = ev.value
           this.trackManager.updateModulator(modulator.id, { shape: ev.value })
-          this.updateWaveformPreview(modulatorFolder, ev.value)
           this.updateCubicBezierVisibility(modulatorFolder, ev.value === 'cubicBezier')
         })
-
-        waveformPreviewContainer = document.createElement('div')
-        waveformPreviewContainer.className = 'waveform-preview-container'
-        if (modulator.shape === 'cubicBezier') {
-          const bezier = modulator.cubicBezier && Array.isArray(modulator.cubicBezier) && modulator.cubicBezier.length === 4
-            ? modulator.cubicBezier
-            : [0.5, 0, 0.5, 1]
-          waveformPreviewContainer.innerHTML = this.createCubicBezierPreview(bezier, 40, 20)
-        } else {
-          waveformPreviewContainer.innerHTML = this.createWaveformPreview(modulator.shape || 'sine', 40, 20)
-        }
-
-        setTimeout(() => {
-          const shapeBindingElement = shapeBinding.controller?.view?.element || shapeBinding.element
-          if (shapeBindingElement) {
-            const labelRow = shapeBindingElement.closest('.tp-lblv') || shapeBindingElement.parentElement
-            if (labelRow) {
-              const previewRow = document.createElement('div')
-              previewRow.className = 'waveform-preview-row'
-              previewRow.appendChild(waveformPreviewContainer)
-              labelRow.parentElement.insertBefore(previewRow, labelRow.nextSibling)
-            }
-          }
-        }, 100)
       }
 
       if (targetDestination === 'track') {
@@ -309,6 +289,18 @@ export class ModulationUIManager {
         })
       }
 
+      const waveformMonitorData = {
+        values: this.createMonitorSamples(modulator, this.monitorSampleCount)
+      }
+      modulatorFolder.addBinding(waveformMonitorData, 'values', {
+        view: 'waveform',
+        label: 'Monitor',
+        min: -1,
+        max: 1,
+        interval: 50,
+        style: 'bezier'
+      })
+
       if (modulatorType === 'numberOfNotes' || modulatorType === 'velocity') {
         modulatorFolder.addBinding(modulatorData, 'multiplier', {
           label: 'Multiplier',
@@ -350,10 +342,6 @@ export class ModulationUIManager {
           const bezierValue = Array.isArray(ev.value) && ev.value.length === 4 ? ev.value : [0.5, 0, 0.5, 1]
           modulatorData.cubicBezier = bezierValue
           this.trackManager.updateModulator(modulator.id, { cubicBezier: bezierValue })
-          const paneData = this.modulatorPanes.get(modulator.id)
-          if (paneData && paneData.waveformPreviewContainer) {
-            paneData.waveformPreviewContainer.innerHTML = this.createCubicBezierPreview(bezierValue, 40, 20)
-          }
         })
       }
 
@@ -386,26 +374,12 @@ export class ModulationUIManager {
       this.modulatorPanes.set(modulator.id, {
         folder: modulatorFolder,
         modulatorData,
-        waveformPreviewContainer,
+        waveformMonitorData,
         cubicBezierBinding,
         thresholdBinding
       })
     } catch (error) {
       console.error(`Failed to create modulator pane for ${modulator.id}:`, error)
-    }
-  }
-
-  updateWaveformPreview (folder, shape) {
-    const paneData = Array.from(this.modulatorPanes.values()).find(p => p.folder === folder)
-    if (paneData && paneData.waveformPreviewContainer) {
-      if (shape === 'cubicBezier') {
-        const bezier = paneData.modulatorData.cubicBezier && Array.isArray(paneData.modulatorData.cubicBezier) && paneData.modulatorData.cubicBezier.length === 4
-          ? paneData.modulatorData.cubicBezier
-          : [0.5, 0, 0.5, 1]
-        paneData.waveformPreviewContainer.innerHTML = this.createCubicBezierPreview(bezier, 40, 20)
-      } else {
-        paneData.waveformPreviewContainer.innerHTML = this.createWaveformPreview(shape, 40, 20)
-      }
     }
   }
 
@@ -433,9 +407,6 @@ export class ModulationUIManager {
         const bezierValue = Array.isArray(ev.value) && ev.value.length === 4 ? ev.value : [0.5, 0, 0.5, 1]
         paneData.modulatorData.cubicBezier = bezierValue
         this.trackManager.updateModulator(modulatorId, { cubicBezier: bezierValue })
-        if (paneData.waveformPreviewContainer) {
-          paneData.waveformPreviewContainer.innerHTML = this.createCubicBezierPreview(bezierValue, 40, 20)
-        }
       })
     } else if (!show && paneData.cubicBezierBinding) {
       try {
@@ -447,74 +418,66 @@ export class ModulationUIManager {
     }
   }
 
-  createWaveformPreview (shape, width, height) {
-    const viewBox = `0 0 ${width} ${height}`
-    const centerY = height / 2
-    let pathData = ''
-
-    switch (shape) {
-      case 'sine':
-        pathData = `M 0,${centerY} ` + Array.from({ length: width }, (_, i) => {
-          const x = i
-          const y = centerY + Math.sin((i / width) * Math.PI * 4) * (height / 3)
-          return `L ${x},${y}`
-        }).join(' ')
-        break
-      case 'square':
-        pathData = `M 0,${height * 0.25} L ${width / 4},${height * 0.25} L ${width / 4},${height * 0.75} L ${width * 3 / 4},${height * 0.75} L ${width * 3 / 4},${height * 0.25} L ${width},${height * 0.25}`
-        break
-      case 'triangle':
-        pathData = `M 0,${height * 0.75} L ${width / 2},${height * 0.25} L ${width},${height * 0.75}`
-        break
-      case 'saw':
-        pathData = `M 0,${height * 0.75} L ${width / 2},${height * 0.25} L ${width},${height * 0.75}`
-        break
-      default:
-        pathData = `M 0,${centerY} L ${width},${centerY}`
+  startMonitorLoop () {
+    this.stopMonitorLoop()
+    const update = () => {
+      const modulationSystem = this.trackManager.getModulationSystem()
+      this.modulatorPanes.forEach((paneData, modulatorId) => {
+        const modulator = modulationSystem.getModulator(modulatorId)
+        if (!modulator || !paneData.waveformMonitorData) return
+        paneData.waveformMonitorData.values = this.createMonitorSamples(modulator, this.monitorSampleCount)
+      })
+      this.monitorAnimationFrame = requestAnimationFrame(update)
     }
-
-    return `
-      <svg width="${width}" height="${height}" viewBox="${viewBox}" class="waveform-svg">
-        <path d="${pathData}" stroke="currentColor" stroke-width="1.5" fill="none"/>
-      </svg>
-    `
+    this.monitorAnimationFrame = requestAnimationFrame(update)
   }
 
-  createCubicBezierPreview (bezierPoints, width, height) {
-    if (!bezierPoints || !Array.isArray(bezierPoints) || bezierPoints.length !== 4) {
-      bezierPoints = [0.5, 0, 0.5, 1]
+  stopMonitorLoop () {
+    if (this.monitorAnimationFrame) {
+      cancelAnimationFrame(this.monitorAnimationFrame)
+      this.monitorAnimationFrame = null
     }
-    const [x1, y1, x2, y2] = bezierPoints
-    const viewBox = `0 0 ${width} ${height}`
-    const centerY = height / 2
-    const scaleX = width
-    const scaleY = height / 2
-
-    const points = []
-    for (let i = 0; i <= width; i++) {
-      const t = i / width
-      const y = this.cubicBezierEval(t, y1, y2)
-      const x = i
-      const mappedY = centerY - (y * scaleY)
-      points.push(`${x},${mappedY}`)
-    }
-
-    const pathData = `M ${points[0]} L ${points.slice(1).map(p => p).join(' L ')}`
-
-    return `
-      <svg width="${width}" height="${height}" viewBox="${viewBox}" class="waveform-svg">
-        <path d="${pathData}" stroke="currentColor" stroke-width="1.5" fill="none"/>
-      </svg>
-    `
   }
 
-  cubicBezierEval (t, y1, y2) {
-    const t2 = t * t
-    const t3 = t2 * t
-    const mt = 1 - t
-    const mt2 = mt * mt
-    const mt3 = mt2 * mt
-    return mt3 * 0 + 3 * mt2 * t * y1 + 3 * mt * t2 * y2 + t3 * 1
+  setMonitorActive (active) {
+    if (active) {
+      if (this.modulatorPanes.size > 0) {
+        this.startMonitorLoop()
+      }
+      return
+    }
+    this.stopMonitorLoop()
+  }
+
+  createMonitorSamples (modulator, sampleCount = 64) {
+    const modulationSystem = this.trackManager.getModulationSystem()
+    const values = new Array(sampleCount).fill(0)
+    if (!modulator || !modulator.enabled) {
+      return values
+    }
+
+    if (modulator.type === 'lfo') {
+      const now = modulationSystem.getCurrentTime()
+      const windowSeconds = 2
+      const rate = Math.max(0.001, modulator.rate || 0.1)
+      const depth = modulator.depth || 0
+      const offset = modulator.offset || 0
+      const sampleStep = windowSeconds / Math.max(1, sampleCount - 1)
+
+      for (let i = 0; i < sampleCount; i++) {
+        const sampleTime = now - (windowSeconds - i * sampleStep)
+        const phase = sampleTime * rate * Math.PI * 2
+        const waveform = modulationSystem.generateWaveform(
+          modulator.shape || 'sine',
+          phase,
+          modulator.cubicBezier
+        )
+        values[i] = Math.max(-1, Math.min(1, waveform * depth + offset))
+      }
+      return values
+    }
+
+    return values
   }
 
   updateThresholdVisibility (folder, configKey, configParams) {
