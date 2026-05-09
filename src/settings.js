@@ -424,6 +424,22 @@ export const SETTINGS = {
       PERSPECTIVE: false, // true = 3D perspective projection
       SHADOW_BLUR: 15,
       USE_COLOR: false
+    },
+    MOIRE_CIRCLES: {
+      USE_COLOR: false,
+      COLOR_BLEND: true,
+      CIRCLE_COUNT_FROM_NOTES: true,
+      FIXED_CIRCLE_COUNT: 3,
+      SCALE: 1.0,
+      STRIPE_SPACING: 7,
+      MAX_RADIUS: 340,
+      LINE_WIDTH: 1.0,
+      MOTION_RATE: 1.0,
+      MOTION_MODE: 'orbit',
+      FORMATION_RADIUS: 130,
+      MOTION_AMPLITUDE: 72,
+      RING_PHASE_SKEW: 1.2,
+      SHADOW_BLUR: 0
     }
   },
 
@@ -480,7 +496,8 @@ export const MIDI_CHANNELS = {
   'bus 26': 'syncHelix2D',
   'bus 27': 'windmill',
   'bus 28': 'orizuru',
-  'bus 29': 'squareTunnel'
+  'bus 29': 'squareTunnel',
+  'bus 30': 'moireCircles'
 }
 
 // Utility functions

@@ -23,6 +23,7 @@ import { WindmillLuminode } from './windmill.js'
 import { OrizuruLuminode } from './orizuru.js'
 import { DeJongLuminode } from './de-jong.js'
 import { SquareTunnelLuminode } from './square-tunnel.js'
+import { MoireCirclesLuminode } from './moire-circles.js'
 
 export {
   LissajousLuminode,
@@ -49,7 +50,8 @@ export {
   WindmillLuminode,
   OrizuruLuminode,
   DeJongLuminode,
-  SquareTunnelLuminode
+  SquareTunnelLuminode,
+  MoireCirclesLuminode
 }
 
 export const LUMINODE_REGISTRY = {
@@ -182,6 +184,11 @@ export const LUMINODE_REGISTRY = {
     class: SquareTunnelLuminode,
     displayName: 'Square Tunnel',
     settingsKey: 'SQUARE_TUNNEL'
+  },
+  moireCircles: {
+    class: MoireCirclesLuminode,
+    displayName: 'Moiré Circles',
+    settingsKey: 'MOIRE_CIRCLES'
   }
 }
 

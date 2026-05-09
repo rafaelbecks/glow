@@ -2145,6 +2145,133 @@ export const LUMINODE_CONFIGS = {
         default: 15
       }
     ]
+  },
+
+  moireCircles: {
+    group: 'Classic Patterns',
+    config: [
+      {
+        key: 'USE_COLOR',
+        label: 'Color Mode',
+        type: 'checkbox',
+        default: false
+      },
+      {
+        key: 'COLOR_BLEND',
+        label: 'Screen Blend (color)',
+        type: 'checkbox',
+        default: true
+      },
+      {
+        key: 'CIRCLE_COUNT_FROM_NOTES',
+        label: 'Circle Count From Notes',
+        type: 'checkbox',
+        default: true
+      },
+      {
+        key: 'FIXED_CIRCLE_COUNT',
+        label: 'Fixed Circle Count',
+        type: 'number',
+        min: 1,
+        max: 16,
+        step: 1,
+        default: 3
+      },
+      {
+        key: 'SCALE',
+        label: 'Scale',
+        type: 'slider',
+        min: 0.25,
+        max: 2.5,
+        step: 0.05,
+        default: 1.0
+      },
+      {
+        key: 'STRIPE_SPACING',
+        label: 'Ring Spacing',
+        type: 'slider',
+        min: 3,
+        max: 24,
+        step: 0.5,
+        default: 7
+      },
+      {
+        key: 'MAX_RADIUS',
+        label: 'Max Radius',
+        type: 'slider',
+        min: 80,
+        max: 520,
+        step: 5,
+        default: 340
+      },
+      {
+        key: 'LINE_WIDTH',
+        label: 'Line Width',
+        type: 'slider',
+        min: 0.4,
+        max: 3,
+        step: 0.05,
+        default: 1.0
+      },
+      {
+        key: 'MOTION_RATE',
+        label: 'Motion Rate',
+        type: 'slider',
+        min: 0,
+        max: 3,
+        step: 0.05,
+        default: 1.0
+      },
+      {
+        key: 'MOTION_MODE',
+        label: 'Motion',
+        type: 'select',
+        options: [
+          { value: 'orbit', label: 'Orbit & weave' },
+          { value: 'lissajous', label: 'Lissajous drift' },
+          { value: 'breathe', label: 'Breathe' },
+          { value: 'drift', label: 'Slow drift' },
+          { value: 'choreo', label: 'Pulse & intersect' }
+        ],
+        default: 'orbit'
+      },
+      {
+        key: 'FORMATION_RADIUS',
+        label: 'Formation Size',
+        type: 'slider',
+        min: 20,
+        max: 320,
+        step: 5,
+        default: 130
+      },
+      {
+        key: 'MOTION_AMPLITUDE',
+        label: 'Motion Depth',
+        type: 'slider',
+        min: 0,
+        max: 200,
+        step: 2,
+        default: 72
+      },
+      {
+        key: 'RING_PHASE_SKEW',
+        label: 'Ring Phase Skew',
+        type: 'slider',
+        min: 0,
+        max: 6,
+        step: 0.1,
+        default: 1.2
+      },
+      {
+        key: 'SHADOW_BLUR',
+        label: 'Shadow Blur',
+        type: 'slider',
+        min: 0,
+        max: 40,
+        step: 1,
+        default: 0
+      }
+    ]
   }
 }
 
