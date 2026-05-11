@@ -190,13 +190,91 @@ void main() {
   fragColor = vec4(color, alpha);
 }`
 
+// Rain Screen — Jakob Thomsen, Shadertoy 4ljXDy (CC BY-NC-SA 3.0)
+// Adapted to WebGL2; samples scene as u_sceneTex (Shadertoy iChannel0).
+const RAIN_FRAGMENT = `#version 300 es
+precision highp float;
+in vec2 vUv;
+out vec4 fragColor;
+
+uniform sampler2D u_sceneTex;
+uniform vec2 u_resolution;
+uniform float u_time;
+uniform float u_distortion;
+uniform float u_noiseScale;
+uniform float u_timeScale;
+uniform float u_patternDrift;
+uniform float u_sharpness;
+
+#define PI 3.1415926
+
+vec2 hash(vec2 p) {
+  p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+  return fract(sin(p) * 18.5453);
+}
+
+float grid_noise(float t, vec2 v) {
+  vec2 fl = floor(v), fr = fract(v);
+  float mindist = 1e9;
+  for (int y = -1; y <= 1; y++) {
+    for (int x = -1; x <= 1; x++) {
+      vec2 offset = vec2(float(x), float(y));
+      vec2 pos = 0.5 + 0.5 * cos(2.0 * PI * (t * u_patternDrift + hash(fl + offset)) + vec2(0.0, 1.6));
+      mindist = min(mindist, length(pos + offset - fr));
+    }
+  }
+  return mindist;
+}
+
+float blob_noise(float t, vec2 v, float s) {
+  return pow(0.5 + 0.5 * cos(PI * clamp(grid_noise(t, v) * 2.0, 0.0, 1.0)), s);
+}
+
+vec3 blob_noise_normal(float t, vec2 v, float s) {
+  vec2 e = vec2(0.01, 0.0);
+  return normalize(vec3(
+    blob_noise(t, v + e.xy, s) - blob_noise(t, v - e.xy, s),
+    blob_noise(t, v + e.yx, s) - blob_noise(t, v - e.yx, s),
+    1.0));
+}
+
+float blob_noises(float t, vec2 p, float s) {
+  float h = 0.0;
+  const float n = 3.0;
+  for (float i = 0.0; i < n; i++) {
+    vec2 q = vec2(0.0, 1.0 * t * (i + 1.0) / n) + 1.0 * p;
+    h += pow(0.5 + 0.5 * cos(PI * clamp(grid_noise(t, q * (i + 1.0)) * 2.0, 0.0, 1.0)), s);
+  }
+  return h / n;
+}
+
+vec3 blob_noises_normal(float t, vec2 p, float s) {
+  float d = 0.01;
+  return normalize(vec3(
+    blob_noises(t, p + vec2(d, 0.0), s) - blob_noises(t, p + vec2(-d, 0.0), s),
+    blob_noises(t, p + vec2(0.0, d), s) - blob_noises(t, p + vec2(0.0, -d), s),
+    d));
+}
+
+void main() {
+  float t = u_time * u_timeScale;
+  vec2 p = vec2(vUv.x, 1.0 - vUv.y);
+  vec2 r = vec2(1.0, u_resolution.y / u_resolution.x);
+  vec3 n = blob_noises_normal(t, u_noiseScale * p * r, u_sharpness);
+  vec2 uv = clamp(p + u_distortion * n.xy, vec2(0.0), vec2(1.0));
+  fragColor = texture(u_sceneTex, uv);
+  fragColor.a = 1.0;
+}`
+
 export class GlassOverlayManager {
   constructor (overlayCanvas, sourceProvider) {
     this.canvas = overlayCanvas
     this.sourceProvider = sourceProvider
     this.gl = null
-    this.program = null
-    this.uniforms = null
+    this.glassProgram = null
+    this.rainProgram = null
+    this.glassUniforms = null
+    this.rainUniforms = null
     this.sceneTexture = null
     this.captureCanvas = document.createElement('canvas')
     this.captureCtx = this.captureCanvas.getContext('2d', { alpha: false, willReadFrequently: false })
@@ -220,25 +298,36 @@ export class GlassOverlayManager {
     const gl = this.canvas.getContext('webgl2', { alpha: true, antialias: false, premultipliedAlpha: true })
     if (!gl) return false
     this.gl = gl
-    this.program = linkProgram(gl, VERTEX, FRAGMENT)
-    if (!this.program) return false
-    this.uniforms = {
-      u_sceneTex: gl.getUniformLocation(this.program, 'u_sceneTex'),
-      u_resolution: gl.getUniformLocation(this.program, 'u_resolution'),
-      u_center: gl.getUniformLocation(this.program, 'u_center'),
-      u_size: gl.getUniformLocation(this.program, 'u_size'),
-      u_radius: gl.getUniformLocation(this.program, 'u_radius'),
-      u_bezel: gl.getUniformLocation(this.program, 'u_bezel'),
-      u_thickness: gl.getUniformLocation(this.program, 'u_thickness'),
-      u_ior: gl.getUniformLocation(this.program, 'u_ior'),
-      u_blur: gl.getUniformLocation(this.program, 'u_blur'),
-      u_specular: gl.getUniformLocation(this.program, 'u_specular'),
-      u_tint: gl.getUniformLocation(this.program, 'u_tint'),
-      u_shadow: gl.getUniformLocation(this.program, 'u_shadow'),
-      u_mode: gl.getUniformLocation(this.program, 'u_mode'),
-      u_brickSize: gl.getUniformLocation(this.program, 'u_brickSize'),
-      u_brickOffset: gl.getUniformLocation(this.program, 'u_brickOffset'),
-      u_brickGap: gl.getUniformLocation(this.program, 'u_brickGap')
+    this.glassProgram = linkProgram(gl, VERTEX, FRAGMENT)
+    this.rainProgram = linkProgram(gl, VERTEX, RAIN_FRAGMENT)
+    if (!this.glassProgram || !this.rainProgram) return false
+    this.glassUniforms = {
+      u_sceneTex: gl.getUniformLocation(this.glassProgram, 'u_sceneTex'),
+      u_resolution: gl.getUniformLocation(this.glassProgram, 'u_resolution'),
+      u_center: gl.getUniformLocation(this.glassProgram, 'u_center'),
+      u_size: gl.getUniformLocation(this.glassProgram, 'u_size'),
+      u_radius: gl.getUniformLocation(this.glassProgram, 'u_radius'),
+      u_bezel: gl.getUniformLocation(this.glassProgram, 'u_bezel'),
+      u_thickness: gl.getUniformLocation(this.glassProgram, 'u_thickness'),
+      u_ior: gl.getUniformLocation(this.glassProgram, 'u_ior'),
+      u_blur: gl.getUniformLocation(this.glassProgram, 'u_blur'),
+      u_specular: gl.getUniformLocation(this.glassProgram, 'u_specular'),
+      u_tint: gl.getUniformLocation(this.glassProgram, 'u_tint'),
+      u_shadow: gl.getUniformLocation(this.glassProgram, 'u_shadow'),
+      u_mode: gl.getUniformLocation(this.glassProgram, 'u_mode'),
+      u_brickSize: gl.getUniformLocation(this.glassProgram, 'u_brickSize'),
+      u_brickOffset: gl.getUniformLocation(this.glassProgram, 'u_brickOffset'),
+      u_brickGap: gl.getUniformLocation(this.glassProgram, 'u_brickGap')
+    }
+    this.rainUniforms = {
+      u_sceneTex: gl.getUniformLocation(this.rainProgram, 'u_sceneTex'),
+      u_resolution: gl.getUniformLocation(this.rainProgram, 'u_resolution'),
+      u_time: gl.getUniformLocation(this.rainProgram, 'u_time'),
+      u_distortion: gl.getUniformLocation(this.rainProgram, 'u_distortion'),
+      u_noiseScale: gl.getUniformLocation(this.rainProgram, 'u_noiseScale'),
+      u_timeScale: gl.getUniformLocation(this.rainProgram, 'u_timeScale'),
+      u_patternDrift: gl.getUniformLocation(this.rainProgram, 'u_patternDrift'),
+      u_sharpness: gl.getUniformLocation(this.rainProgram, 'u_sharpness')
     }
 
     this.sceneTexture = gl.createTexture()
@@ -317,9 +406,9 @@ export class GlassOverlayManager {
     return true
   }
 
-  render () {
+  render (timeSeconds = 0) {
     const c = SETTINGS.CANVAS
-    if (!this.gl || !this.program || !c.GLASS_OVERLAY_ENABLED) {
+    if (!this.gl || !this.glassProgram || !this.rainProgram || !c.GLASS_OVERLAY_ENABLED) {
       if (this.canvas) this.canvas.style.display = 'none'
       return
     }
@@ -327,31 +416,45 @@ export class GlassOverlayManager {
     if (!this.captureScene()) return
 
     const gl = this.gl
+    const isRain = c.GLASS_OVERLAY_MODE === 'rain'
+    const program = isRain ? this.rainProgram : this.glassProgram
+    const uniforms = isRain ? this.rainUniforms : this.glassUniforms
+
     gl.disable(gl.DEPTH_TEST)
     gl.disable(gl.BLEND)
     gl.viewport(0, 0, this.canvas.width, this.canvas.height)
-    gl.useProgram(this.program)
+    gl.useProgram(program)
 
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, this.sceneTexture)
     gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, this.captureCanvas)
 
-    gl.uniform1i(this.uniforms.u_sceneTex, 0)
-    gl.uniform2f(this.uniforms.u_resolution, this.canvas.width, this.canvas.height)
-    gl.uniform2f(this.uniforms.u_center, this.center.x, this.center.y)
-    gl.uniform2f(this.uniforms.u_size, c.GLASS_OVERLAY_WIDTH ?? 200, c.GLASS_OVERLAY_HEIGHT ?? 200)
-    gl.uniform1f(this.uniforms.u_radius, c.GLASS_OVERLAY_RADIUS ?? 27)
-    gl.uniform1f(this.uniforms.u_bezel, c.GLASS_OVERLAY_BEZEL ?? 60)
-    gl.uniform1f(this.uniforms.u_thickness, c.GLASS_OVERLAY_THICKNESS ?? 200)
-    gl.uniform1f(this.uniforms.u_ior, c.GLASS_OVERLAY_IOR ?? 3.0)
-    gl.uniform1f(this.uniforms.u_blur, c.GLASS_OVERLAY_BLUR ?? 9.5)
-    gl.uniform1f(this.uniforms.u_specular, c.GLASS_OVERLAY_SPECULAR ?? 0.35)
-    gl.uniform1f(this.uniforms.u_tint, c.GLASS_OVERLAY_TINT ?? 0)
-    gl.uniform1f(this.uniforms.u_shadow, c.GLASS_OVERLAY_SHADOW ?? 0.0)
-    gl.uniform1i(this.uniforms.u_mode, c.GLASS_OVERLAY_MODE === 'bricks' ? 1 : 0)
-    gl.uniform2f(this.uniforms.u_brickSize, c.GLASS_OVERLAY_BRICK_SIZE ?? 200, c.GLASS_OVERLAY_BRICK_SIZE ?? 200)
-    gl.uniform2f(this.uniforms.u_brickOffset, c.GLASS_OVERLAY_BRICK_OFFSET_X ?? 0, c.GLASS_OVERLAY_BRICK_OFFSET_Y ?? 0)
-    gl.uniform1f(this.uniforms.u_brickGap, c.GLASS_OVERLAY_BRICK_GAP ?? 8)
+    gl.uniform1i(uniforms.u_sceneTex, 0)
+    gl.uniform2f(uniforms.u_resolution, this.canvas.width, this.canvas.height)
+
+    if (isRain) {
+      gl.uniform1f(uniforms.u_time, timeSeconds)
+      gl.uniform1f(uniforms.u_distortion, c.SHADER_OVERLAY_RAIN_DISTORTION ?? 0.05)
+      gl.uniform1f(uniforms.u_noiseScale, c.SHADER_OVERLAY_RAIN_SCALE ?? 25.0)
+      gl.uniform1f(uniforms.u_timeScale, c.SHADER_OVERLAY_RAIN_TIME_SCALE ?? 1.0)
+      gl.uniform1f(uniforms.u_patternDrift, c.SHADER_OVERLAY_RAIN_PATTERN_DRIFT ?? 0.1)
+      gl.uniform1f(uniforms.u_sharpness, c.SHADER_OVERLAY_RAIN_SHARPNESS ?? 1.0)
+    } else {
+      gl.uniform2f(uniforms.u_center, this.center.x, this.center.y)
+      gl.uniform2f(uniforms.u_size, c.GLASS_OVERLAY_WIDTH ?? 200, c.GLASS_OVERLAY_HEIGHT ?? 200)
+      gl.uniform1f(uniforms.u_radius, c.GLASS_OVERLAY_RADIUS ?? 27)
+      gl.uniform1f(uniforms.u_bezel, c.GLASS_OVERLAY_BEZEL ?? 60)
+      gl.uniform1f(uniforms.u_thickness, c.GLASS_OVERLAY_THICKNESS ?? 200)
+      gl.uniform1f(uniforms.u_ior, c.GLASS_OVERLAY_IOR ?? 3.0)
+      gl.uniform1f(uniforms.u_blur, c.GLASS_OVERLAY_BLUR ?? 9.5)
+      gl.uniform1f(uniforms.u_specular, c.GLASS_OVERLAY_SPECULAR ?? 0.35)
+      gl.uniform1f(uniforms.u_tint, c.GLASS_OVERLAY_TINT ?? 0)
+      gl.uniform1f(uniforms.u_shadow, c.GLASS_OVERLAY_SHADOW ?? 0.0)
+      gl.uniform1i(uniforms.u_mode, c.GLASS_OVERLAY_MODE === 'bricks' ? 1 : 0)
+      gl.uniform2f(uniforms.u_brickSize, c.GLASS_OVERLAY_BRICK_SIZE ?? 200, c.GLASS_OVERLAY_BRICK_SIZE ?? 200)
+      gl.uniform2f(uniforms.u_brickOffset, c.GLASS_OVERLAY_BRICK_OFFSET_X ?? 0, c.GLASS_OVERLAY_BRICK_OFFSET_Y ?? 0)
+      gl.uniform1f(uniforms.u_brickGap, c.GLASS_OVERLAY_BRICK_GAP ?? 8)
+    }
 
     gl.drawArrays(gl.TRIANGLES, 0, 3)
     gl.bindTexture(gl.TEXTURE_2D, null)
@@ -363,9 +466,11 @@ export class GlassOverlayManager {
     window.removeEventListener('pointerup', this.handlePointerUp)
     window.removeEventListener('pointercancel', this.handlePointerUp)
     if (this.gl && this.sceneTexture) this.gl.deleteTexture(this.sceneTexture)
-    if (this.gl && this.program) this.gl.deleteProgram(this.program)
+    if (this.gl && this.glassProgram) this.gl.deleteProgram(this.glassProgram)
+    if (this.gl && this.rainProgram) this.gl.deleteProgram(this.rainProgram)
     this.sceneTexture = null
-    this.program = null
+    this.glassProgram = null
+    this.rainProgram = null
     this.gl = null
   }
 }

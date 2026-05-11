@@ -277,7 +277,17 @@ export class CanvasUIManager {
         canvasSettings.GLASS_OVERLAY_BRICK_OFFSET_X ?? 0,
       glassOverlayBrickOffsetY:
         canvasSettings.GLASS_OVERLAY_BRICK_OFFSET_Y ?? 0,
-      glassOverlayBrickGap: canvasSettings.GLASS_OVERLAY_BRICK_GAP ?? 8
+      glassOverlayBrickGap: canvasSettings.GLASS_OVERLAY_BRICK_GAP ?? 8,
+      shaderOverlayRainDistortion:
+        canvasSettings.SHADER_OVERLAY_RAIN_DISTORTION ?? 0.05,
+      shaderOverlayRainScale:
+        canvasSettings.SHADER_OVERLAY_RAIN_SCALE ?? 25,
+      shaderOverlayRainTimeScale:
+        canvasSettings.SHADER_OVERLAY_RAIN_TIME_SCALE ?? 1,
+      shaderOverlayRainPatternDrift:
+        canvasSettings.SHADER_OVERLAY_RAIN_PATTERN_DRIFT ?? 0.1,
+      shaderOverlayRainSharpness:
+        canvasSettings.SHADER_OVERLAY_RAIN_SHARPNESS ?? 1
     }
 
     const pitchColorData = {
@@ -1161,8 +1171,9 @@ export class CanvasUIManager {
       shaderBgParamFolders
     )
 
+    const shaderOverlayParamFolders = {}
     const glassOverlayFolder = canvasFolder.addFolder({
-      title: 'Glass overlay',
+      title: 'Shader overlays',
       expanded: true
     })
     glassOverlayFolder
@@ -1171,21 +1182,35 @@ export class CanvasUIManager {
       })
       .on('change', (ev) => {
         this.triggerCanvasSettingChange('GLASS_OVERLAY_ENABLED', ev.value)
-        this.updateFolderVisibility(glassParamsFolder, ev.value)
+        this.refreshShaderOverlayParamVisibility(
+          ev.value,
+          canvasData.glassOverlayMode,
+          shaderOverlayParamFolders
+        )
       })
 
-    const glassParamsFolder = glassOverlayFolder.addFolder({
-      title: 'Params',
-      expanded: true
-    })
-    glassParamsFolder
+    glassOverlayFolder
       .addBinding(canvasData, 'glassOverlayMode', {
-        label: 'Mode',
-        options: { Single: 'single', Bricks: 'bricks' }
+        label: 'Effect',
+        options: {
+          'Glass (single)': 'single',
+          'Glass (bricks)': 'bricks',
+          'Rain screen': 'rain'
+        }
       })
       .on('change', (ev) => {
         this.triggerCanvasSettingChange('GLASS_OVERLAY_MODE', ev.value)
+        this.refreshShaderOverlayParamVisibility(
+          canvasData.glassOverlayEnabled,
+          ev.value,
+          shaderOverlayParamFolders
+        )
       })
+
+    const glassParamsFolder = glassOverlayFolder.addFolder({
+      title: 'Glass',
+      expanded: true
+    })
     glassParamsFolder
       .addBinding(canvasData, 'glassOverlayWidth', {
         label: 'Width',
@@ -1332,9 +1357,80 @@ export class CanvasUIManager {
       .on('change', (ev) =>
         this.triggerCanvasSettingChange('GLASS_OVERLAY_BRICK_GAP', ev.value)
       )
-    this.updateFolderVisibility(
-      glassParamsFolder,
-      canvasData.glassOverlayEnabled
+
+    const rainParamsFolder = glassOverlayFolder.addFolder({
+      title: 'Rain screen',
+      expanded: true
+    })
+    rainParamsFolder
+      .addBinding(canvasData, 'shaderOverlayRainDistortion', {
+        label: 'Distortion',
+        min: 0,
+        max: 0.2,
+        step: 0.001
+      })
+      .on('change', (ev) =>
+        this.triggerCanvasSettingChange(
+          'SHADER_OVERLAY_RAIN_DISTORTION',
+          ev.value
+        )
+      )
+    rainParamsFolder
+      .addBinding(canvasData, 'shaderOverlayRainScale', {
+        label: 'Drop scale',
+        min: 4,
+        max: 80,
+        step: 0.5
+      })
+      .on('change', (ev) =>
+        this.triggerCanvasSettingChange('SHADER_OVERLAY_RAIN_SCALE', ev.value)
+      )
+    rainParamsFolder
+      .addBinding(canvasData, 'shaderOverlayRainTimeScale', {
+        label: 'Time scale',
+        min: 0,
+        max: 4,
+        step: 0.05
+      })
+      .on('change', (ev) =>
+        this.triggerCanvasSettingChange(
+          'SHADER_OVERLAY_RAIN_TIME_SCALE',
+          ev.value
+        )
+      )
+    rainParamsFolder
+      .addBinding(canvasData, 'shaderOverlayRainPatternDrift', {
+        label: 'Pattern drift',
+        min: 0,
+        max: 0.5,
+        step: 0.005
+      })
+      .on('change', (ev) =>
+        this.triggerCanvasSettingChange(
+          'SHADER_OVERLAY_RAIN_PATTERN_DRIFT',
+          ev.value
+        )
+      )
+    rainParamsFolder
+      .addBinding(canvasData, 'shaderOverlayRainSharpness', {
+        label: 'Sharpness',
+        min: 0.2,
+        max: 4,
+        step: 0.05
+      })
+      .on('change', (ev) =>
+        this.triggerCanvasSettingChange(
+          'SHADER_OVERLAY_RAIN_SHARPNESS',
+          ev.value
+        )
+      )
+
+    shaderOverlayParamFolders.glass = glassParamsFolder
+    shaderOverlayParamFolders.rain = rainParamsFolder
+    this.refreshShaderOverlayParamVisibility(
+      canvasData.glassOverlayEnabled,
+      canvasData.glassOverlayMode,
+      shaderOverlayParamFolders
     )
 
     const colorPaletteFolder = this.mainPane.addFolder({
@@ -1423,6 +1519,15 @@ export class CanvasUIManager {
         }
       }
     }, 100)
+  }
+
+  refreshShaderOverlayParamVisibility (enabled, mode, folders) {
+    if (!folders) return
+    const glassOn =
+      enabled && (mode === 'single' || mode === 'bricks')
+    const rainOn = enabled && mode === 'rain'
+    this.updateFolderVisibility(folders.glass, glassOn)
+    this.updateFolderVisibility(folders.rain, rainOn)
   }
 
   refreshShaderBackgroundParamVisibility (enabled, mode, folders) {

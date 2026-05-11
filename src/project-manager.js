@@ -140,6 +140,15 @@ export class ProjectManager {
         glassOverlayBrickOffsetX: SETTINGS.CANVAS.GLASS_OVERLAY_BRICK_OFFSET_X,
         glassOverlayBrickOffsetY: SETTINGS.CANVAS.GLASS_OVERLAY_BRICK_OFFSET_Y,
         glassOverlayBrickGap: SETTINGS.CANVAS.GLASS_OVERLAY_BRICK_GAP,
+        shaderOverlayRainDistortion:
+          SETTINGS.CANVAS.SHADER_OVERLAY_RAIN_DISTORTION,
+        shaderOverlayRainScale: SETTINGS.CANVAS.SHADER_OVERLAY_RAIN_SCALE,
+        shaderOverlayRainTimeScale:
+          SETTINGS.CANVAS.SHADER_OVERLAY_RAIN_TIME_SCALE,
+        shaderOverlayRainPatternDrift:
+          SETTINGS.CANVAS.SHADER_OVERLAY_RAIN_PATTERN_DRIFT,
+        shaderOverlayRainSharpness:
+          SETTINGS.CANVAS.SHADER_OVERLAY_RAIN_SHARPNESS,
       },
       colors: {
         sotoPalette: [...SETTINGS.COLORS.SOTO_PALETTE],
@@ -927,6 +936,23 @@ export class ProjectManager {
       ["glassOverlayBrickOffsetX", "GLASS_OVERLAY_BRICK_OFFSET_X"],
       ["glassOverlayBrickOffsetY", "GLASS_OVERLAY_BRICK_OFFSET_Y"],
       ["glassOverlayBrickGap", "GLASS_OVERLAY_BRICK_GAP"],
+      [
+        "shaderOverlayRainDistortion",
+        "SHADER_OVERLAY_RAIN_DISTORTION",
+      ],
+      ["shaderOverlayRainScale", "SHADER_OVERLAY_RAIN_SCALE"],
+      [
+        "shaderOverlayRainTimeScale",
+        "SHADER_OVERLAY_RAIN_TIME_SCALE",
+      ],
+      [
+        "shaderOverlayRainPatternDrift",
+        "SHADER_OVERLAY_RAIN_PATTERN_DRIFT",
+      ],
+      [
+        "shaderOverlayRainSharpness",
+        "SHADER_OVERLAY_RAIN_SHARPNESS",
+      ],
     ];
     for (const [dataKey, settingsKey] of procKeys) {
       if (canvasData[dataKey] !== undefined) {

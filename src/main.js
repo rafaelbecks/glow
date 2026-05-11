@@ -899,7 +899,7 @@ export class GLOWVisualizer {
     }
 
     if (this.glassOverlayManager) {
-      this.glassOverlayManager.render()
+      this.glassOverlayManager.render(t)
     }
 
     // Update side panel activity indicators
