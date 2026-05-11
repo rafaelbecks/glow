@@ -304,7 +304,7 @@ export class TrackUIManager {
           .addBinding(trajectoryData, 'amplitude', {
             label: 'Amplitude',
             min: 0,
-            max: 200,
+            max: 600,
             step: 1
           })
           .on('change', (ev) => {
@@ -313,44 +313,44 @@ export class TrackUIManager {
             })
           })
 
-        trajectoryFolder
-          .addBinding(trajectoryData, 'ratioA', {
-            label: 'Ratio A',
-            min: 0.1,
-            max: 5.0,
-            step: 0.1
-          })
-          .on('change', (ev) => {
-            this.trackManager.updateTrajectoryConfig(track.id, {
-              ratioA: ev.value
-            })
-          })
+        // trajectoryFolder
+        //   .addBinding(trajectoryData, 'ratioA', {
+        //     label: 'Ratio A',
+        //     min: 0.1,
+        //     max: 5.0,
+        //     step: 0.1
+        //   })
+        //   .on('change', (ev) => {
+        //     this.trackManager.updateTrajectoryConfig(track.id, {
+        //       ratioA: ev.value
+        //     })
+        //   })
 
-        trajectoryFolder
-          .addBinding(trajectoryData, 'ratioB', {
-            label: 'Ratio B',
-            min: 0.1,
-            max: 5.0,
-            step: 0.1
-          })
-          .on('change', (ev) => {
-            this.trackManager.updateTrajectoryConfig(track.id, {
-              ratioB: ev.value
-            })
-          })
+        // trajectoryFolder
+        //   .addBinding(trajectoryData, 'ratioB', {
+        //     label: 'Ratio B',
+        //     min: 0.1,
+        //     max: 5.0,
+        //     step: 0.1
+        //   })
+        //   .on('change', (ev) => {
+        //     this.trackManager.updateTrajectoryConfig(track.id, {
+        //       ratioB: ev.value
+        //     })
+        //   })
 
-        trajectoryFolder
-          .addBinding(trajectoryData, 'ratioC', {
-            label: 'Ratio C',
-            min: 0.1,
-            max: 5.0,
-            step: 0.1
-          })
-          .on('change', (ev) => {
-            this.trackManager.updateTrajectoryConfig(track.id, {
-              ratioC: ev.value
-            })
-          })
+        // trajectoryFolder
+        //   .addBinding(trajectoryData, 'ratioC', {
+        //     label: 'Ratio C',
+        //     min: 0.1,
+        //     max: 5.0,
+        //     step: 0.1
+        //   })
+        //   .on('change', (ev) => {
+        //     this.trackManager.updateTrajectoryConfig(track.id, {
+        //       ratioC: ev.value
+        //     })
+        //   })
 
         trajectoryFolder
           .addBinding(trajectoryData, 'inversion', {
