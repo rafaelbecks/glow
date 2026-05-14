@@ -445,6 +445,39 @@ export const SETTINGS = {
       MOTION_AMPLITUDE: 72,
       RING_PHASE_SKEW: 1.2,
       SHADOW_BLUR: 0
+    },
+    DOUBLE_PENDULUM: {
+      USE_COLOR: false,
+      COLOR_BLEND: true,
+      PENDULUM_COUNT: 2,
+      MAX_PENDULUM_COUNT: 5,
+      RELEASE_FROM_REST: false,
+      LAUNCH_STRENGTH_MAX: 1000,
+      START_DIRECTION: 'right',
+      LAUNCH_STRENGTH: 480,
+      REST_TWIST: 0.1,
+      PENDULUM_PHASE_GAP: 0.08,
+      ARM_LENGTH: 95,
+      ARM_RATIO: 1.0,
+      M1: 1.0,
+      M2: 1.0,
+      G: 14,
+      DAMPING: 0.012,
+      MOTION_SPEED: 1.0,
+      MOTION_SPEED_HANG: 5.0,
+      SIM_SPEED: 1.0,
+      MAX_STEP_DT: 0.012,
+      SCALE: 1.35,
+      HORIZONTAL_SPACING: 210,
+      SHOW_TRACE: true,
+      TRACE_MAX_POINTS: 4200,
+      TRACE_LINE_WIDTH: 1.1,
+      TRACE_OPACITY_BW: 0.42,
+      SHOW_ARMS: true,
+      SHOW_JOINTS: true,
+      JOINT_RADIUS: 5,
+      ARM_LINE_WIDTH: 2.2,
+      SHADOW_BLUR: 12
     }
   },
 
@@ -502,7 +535,8 @@ export const MIDI_CHANNELS = {
   'bus 27': 'windmill',
   'bus 28': 'orizuru',
   'bus 29': 'squareTunnel',
-  'bus 30': 'moireCircles'
+  'bus 30': 'moireCircles',
+  'bus 31': 'doublePendulum'
 }
 
 // Utility functions

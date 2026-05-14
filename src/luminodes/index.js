@@ -24,6 +24,7 @@ import { OrizuruLuminode } from './orizuru.js'
 import { DeJongLuminode } from './de-jong.js'
 import { SquareTunnelLuminode } from './square-tunnel.js'
 import { MoireCirclesLuminode } from './moire-circles.js'
+import { DoublePendulumLuminode } from './double-pendulum.js'
 
 export {
   LissajousLuminode,
@@ -51,7 +52,8 @@ export {
   OrizuruLuminode,
   DeJongLuminode,
   SquareTunnelLuminode,
-  MoireCirclesLuminode
+  MoireCirclesLuminode,
+  DoublePendulumLuminode
 }
 
 export const LUMINODE_REGISTRY = {
@@ -189,6 +191,11 @@ export const LUMINODE_REGISTRY = {
     class: MoireCirclesLuminode,
     displayName: 'Moiré Circles',
     settingsKey: 'MOIRE_CIRCLES'
+  },
+  doublePendulum: {
+    class: DoublePendulumLuminode,
+    displayName: 'Chaotic Pendulum',
+    settingsKey: 'DOUBLE_PENDULUM'
   }
 }
 

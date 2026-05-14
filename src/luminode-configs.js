@@ -2272,6 +2272,167 @@ export const LUMINODE_CONFIGS = {
         default: 0
       }
     ]
+  },
+
+  doublePendulum: {
+    group: 'Natural Patterns',
+    config: [
+      {
+        key: 'USE_COLOR',
+        label: 'Color Mode',
+        type: 'checkbox',
+        default: false
+      },
+      {
+        key: 'COLOR_BLEND',
+        label: 'Screen Blend (color)',
+        type: 'checkbox',
+        default: true
+      },
+      {
+        key: 'PENDULUM_COUNT',
+        label: 'Pendulums (side by side)',
+        type: 'number',
+        min: 1,
+        max: 5,
+        step: 1,
+        default: 2
+      },
+      {
+        key: 'RELEASE_FROM_REST',
+        label: 'Hang & release (physical start, slower)',
+        type: 'checkbox',
+        default: false
+      },
+      {
+        key: 'START_DIRECTION',
+        label: 'Start side / spin bias',
+        type: 'select',
+        options: [
+          { value: 'left', label: 'Left' },
+          { value: 'right', label: 'Right' },
+          { value: 'alternate', label: 'Alternate (L / R / L)' }
+        ],
+        default: 'right'
+      },
+      {
+        key: 'LAUNCH_STRENGTH',
+        label: 'Launch strength (impulse speed or pull depth)',
+        type: 'slider',
+        min: 0,
+        max: 1000,
+        step: 10,
+        default: 480
+      },
+      {
+        key: 'REST_TWIST',
+        label: 'Arm twist at rest (chaos)',
+        type: 'slider',
+        min: 0,
+        max: 0.45,
+        step: 0.01,
+        default: 0.1
+      },
+      {
+        key: 'PENDULUM_PHASE_GAP',
+        label: 'Extra twist per copy',
+        type: 'slider',
+        min: 0,
+        max: 0.25,
+        step: 0.005,
+        default: 0.08
+      },
+      {
+        key: 'ARM_LENGTH',
+        label: 'Arm length',
+        type: 'slider',
+        min: 50,
+        max: 150,
+        step: 2,
+        default: 95
+      },
+      {
+        key: 'ARM_RATIO',
+        label: 'Lower / upper arm length',
+        type: 'slider',
+        min: 0.55,
+        max: 1.45,
+        step: 0.02,
+        default: 1.0
+      },
+      {
+        key: 'MOTION_SPEED',
+        label: 'Motion speed (impulse / kick mode)',
+        type: 'slider',
+        min: 0.35,
+        max: 10,
+        step: 0.05,
+        default: 1.0
+      },
+      {
+        key: 'MOTION_SPEED_HANG',
+        label: 'Motion speed (hang & release)',
+        type: 'slider',
+        min: 0.35,
+        max: 10,
+        step: 0.05,
+        default: 5.0
+      },
+      {
+        key: 'DAMPING',
+        label: 'Damping',
+        type: 'slider',
+        min: 0,
+        max: 0.28,
+        step: 0.002,
+        default: 0.012
+      },
+      {
+        key: 'HORIZONTAL_SPACING',
+        label: 'Horizontal spacing',
+        type: 'slider',
+        min: 80,
+        max: 420,
+        step: 5,
+        default: 210
+      },
+      {
+        key: 'SCALE',
+        label: 'Visual scale',
+        type: 'slider',
+        min: 0.4,
+        max: 2.8,
+        step: 0.05,
+        default: 1.35
+      },
+      {
+        key: 'SHOW_TRACE',
+        label: 'Tip trace',
+        type: 'checkbox',
+        default: true
+      },
+      {
+        key: 'TRACE_MAX_POINTS',
+        label: 'Trace length',
+        type: 'number',
+        min: 400,
+        max: 12000,
+        step: 200,
+        default: 4200
+      },
+      {
+        key: 'SHOW_ARMS',
+        label: 'Show arms',
+        type: 'checkbox',
+        default: true
+      },
+      {
+        key: 'SHOW_JOINTS',
+        label: 'Show joints',
+        type: 'checkbox',
+        default: true
+      }
+    ]
   }
 }
 
