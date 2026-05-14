@@ -1433,6 +1433,40 @@ export class CanvasUIManager {
       shaderOverlayParamFolders
     )
 
+    const exportData = { format: 'svg', pngScale: 2 }
+    const exportFolder = this.mainPane.addFolder({
+      title: 'Export (⌘P / Ctrl+P → PNG)',
+      expanded: false
+    })
+    const pngExportFolder = exportFolder.addFolder({
+      title: 'PNG options',
+      expanded: true
+    })
+    pngExportFolder.addBinding(exportData, 'pngScale', {
+      label: 'Output scale',
+      min: 1,
+      max: 3,
+      step: 1
+    })
+    exportFolder
+      .addBinding(exportData, 'format', {
+        label: 'Format',
+        options: { SVG: 'svg', PNG: 'png' }
+      })
+      .on('change', () => {
+        this.updateFolderVisibility(
+          pngExportFolder,
+          exportData.format === 'png'
+        )
+      })
+    this.updateFolderVisibility(pngExportFolder, exportData.format === 'png')
+    exportFolder.addButton({ title: 'Download snapshot' }).on('click', () => {
+      this.triggerCanvasExport({
+        format: exportData.format,
+        pngScale: exportData.pngScale
+      })
+    })
+
     const colorPaletteFolder = this.mainPane.addFolder({
       title: 'Color Palettes',
       expanded: true
@@ -1605,6 +1639,10 @@ export class CanvasUIManager {
       `
       })
       .join('')
+  }
+
+  triggerCanvasExport (detail) {
+    this.panel.dispatchEvent(new CustomEvent('canvasExport', { detail }))
   }
 
   triggerCanvasSettingChange (setting, value) {

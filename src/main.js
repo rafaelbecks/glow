@@ -24,6 +24,7 @@ import { ShaderBackgroundManager } from './shader-background-manager.js'
 import { isFragmentBackgroundMode } from './shaders/background/registry.js'
 import { GlassOverlayManager } from './glass-overlay-manager.js'
 import { ControlsManager } from './controls-manager.js'
+import { downloadPngSnapshot, downloadSvgSnapshot } from './canvas-export.js'
 
 export class GLOWVisualizer {
   constructor () {
@@ -244,6 +245,11 @@ export class GLOWVisualizer {
     )
     this.sidePanel.on('pitchColorFactorChange', (data) =>
       this.updatePitchColorFactor(data)
+    )
+    this.sidePanel.on('canvasExport', (data) => this.exportSnapshot(data))
+
+    this.uiManager.on('exportSnapshotHotkey', () =>
+      this.exportSnapshot({ format: 'png', pngScale: 2 })
     )
   }
 
@@ -1732,6 +1738,11 @@ export class GLOWVisualizer {
     if (this.glassOverlayManager) {
       this.glassOverlayManager.dispose()
     }
+  }
+
+  exportSnapshot ({ format, pngScale }) {
+    if (format === 'svg') downloadSvgSnapshot(this)
+    else void downloadPngSnapshot(this, pngScale ?? 1)
   }
 
   getGlassOverlaySources () {

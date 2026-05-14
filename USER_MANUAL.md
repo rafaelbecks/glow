@@ -95,6 +95,7 @@ The toolbar at the top of the screen provides quick access to essential function
 - **Cmd+U / Ctrl+U** - Clear the canvas
 - **Cmd+I / Ctrl+I** - Toggle UI icons and project name visibility
 - **Cmd+S / Ctrl+S** - Quick save scene
+- **Cmd+P / Ctrl+P** - Export a PNG snapshot of the viewport (layered composite, 2× scale). Use **Canvas → Export** to choose SVG or change PNG scale.
 
 ### Track Management
 1. **Open the track panel** by clicking the 🎛️ button

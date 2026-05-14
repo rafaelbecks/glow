@@ -131,6 +131,9 @@ export class UIManager {
       } else if ((e.metaKey || e.ctrlKey) && e.key === 'm') {
         e.preventDefault()
         this.triggerCallback('enableHardwareMode')
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'p') {
+        e.preventDefault()
+        this.triggerCallback('exportSnapshotHotkey')
       }
     })
 

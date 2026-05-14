@@ -99,6 +99,10 @@ export class SidePanel {
         this.triggerCallback('pitchColorFactorChange', e.detail)
       })
 
+    this.basePanel.getPanel().addEventListener('canvasExport', (e) => {
+      this.triggerCallback('canvasExport', e.detail)
+    })
+
     // Route tablet control events to callbacks
     this.basePanel.getPanel().addEventListener('tabletControlChange', (e) => {
       const { action, data } = e.detail
