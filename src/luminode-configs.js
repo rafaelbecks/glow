@@ -968,6 +968,24 @@ export const LUMINODE_CONFIGS = {
         max: 0.8,
         step: 0.05,
         default: 0.3
+      },
+      {
+        key: 'LINE_WIDTH',
+        label: 'Line Width',
+        type: 'slider',
+        min: 0.1,
+        max: 2,
+        step: 0.05,
+        default: 0.5
+      },
+      {
+        key: 'OPACITY',
+        label: 'Opacity',
+        type: 'slider',
+        min: 0.1,
+        max: 1,
+        step: 0.05,
+        default: 0.7
       }
     ]
   },

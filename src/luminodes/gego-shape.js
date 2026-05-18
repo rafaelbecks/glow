@@ -87,7 +87,8 @@ export class GegoShapeLuminode {
       const uy = dy / dist
 
       this.ctx.beginPath()
-      this.ctx.strokeStyle = 'hsla(0, 0%, 100%, 0.4)'
+      this.ctx.strokeStyle = `hsla(0, 0%, 100%, ${SETTINGS.MODULES.GEGO_SHAPE.OPACITY})`
+      this.ctx.lineWidth = SETTINGS.MODULES.GEGO_SHAPE.LINE_WIDTH
       this.ctx.moveTo(x1 + ux * r, y1 + uy * r)
       this.ctx.lineTo(x2 - ux * r, y2 - uy * r)
       this.ctx.stroke()
@@ -104,8 +105,8 @@ export class GegoShapeLuminode {
 
       this.ctx.beginPath()
       this.ctx.arc(px, py, dotSize, 0, Math.PI * 2)
-      this.ctx.strokeStyle = 'hsla(0, 0%, 100%, 0.4)'
-      this.ctx.lineWidth = 0.5
+      this.ctx.strokeStyle = `hsla(0, 0%, 100%, ${SETTINGS.MODULES.GEGO_SHAPE.OPACITY})`
+      this.ctx.lineWidth = SETTINGS.MODULES.GEGO_SHAPE.LINE_WIDTH
       this.ctx.stroke()
     })
 

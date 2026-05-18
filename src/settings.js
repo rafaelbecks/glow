@@ -162,7 +162,9 @@ export const SETTINGS = {
       BASE_NODES: 4,
       NODES_PER_NOTE: 2,
       BASE_SIZE: 240,
-      CONNECTION_PROBABILITY: 0.3
+      CONNECTION_PROBABILITY: 0.3,
+      LINE_WIDTH: 0.5,
+      OPACITY: 0.7
     },
     SOTO_GRID: {
       BASE_SIZE: 80,
