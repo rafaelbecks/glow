@@ -19,7 +19,7 @@ export class TrajectorySystem {
     this.trackConfigs = new Map()
 
     // Available trajectory types
-    this.trajectoryTypes = ['whitney', 'lissajous', 'orbit', 'xAxis', 'yAxis', 'triangle', 'circle']
+    this.trajectoryTypes = ['whitney', 'lissajous', 'xAxis', 'yAxis', 'triangle', 'circle']
 
     // Initialize default configurations for existing tracks
     this.initializeDefaultConfigs()
@@ -217,7 +217,6 @@ export class TrajectorySystem {
     return {
       whitney: 'Whitney Oscillations',
       lissajous: 'Lissajous Curves',
-      orbit: 'Precessing Orbit',
       xAxis: 'X-Axis Movement',
       yAxis: 'Y-Axis Movement',
       triangle: 'Triangle Wave',

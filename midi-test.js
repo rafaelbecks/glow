@@ -1,15 +1,27 @@
 import easymidi from 'easymidi'
 
-// args
-const intervalMs = parseInt(process.argv[2]) || 2000
+// args: interval_ms controls how often a new chord fires (lower = faster test loop)
+const intervalMs = parseInt(process.argv[2], 10) || 2000
 const deviceName = process.argv[3]
 const intervalMode = process.argv[4] || 'fifth' // third | fourth | fifth | sixth
-const numberOfNotes = parseInt(process.argv[5]) || 2
+const numberOfNotes = parseInt(process.argv[5], 10) || 2
+const rawVel = parseInt(process.argv[6], 10)
+const noteOnVelocity = Number.isFinite(rawVel)
+  ? Math.min(127, Math.max(1, rawVel))
+  : 100
 
 console.log('Available MIDI outputs:', easymidi.getOutputs())
 
 if (!deviceName) {
-  console.error('Usage: node midi-test.js <interval_ms> <device_name> [third|fourth|fifth|sixth] <number_of_notes>')
+  console.error(
+    'Usage: node midi-test.js <interval_ms> <device_name> [third|fourth|fifth|sixth] <number_of_notes> [note_on_velocity]'
+  )
+  console.error(
+    '  interval_ms: ms between chord triggers (e.g. 250 for fast runs).'
+  )
+  console.error(
+    '  note_on_velocity: 1–127 sent on note-on (default 100). GLOW normalizes this for luminodes (e.g. double pendulum “MIDI velocity → pull”).'
+  )
   process.exit(1)
 }
 
@@ -29,6 +41,7 @@ const step = INTERVALS[intervalMode] ?? INTERVALS.fifth
 console.log(`Connected to: ${deviceName}`)
 console.log(`Interval: ${intervalMode} (${step} semitones)`)
 console.log(`Notes per trigger: ${numberOfNotes}`)
+console.log(`Note-on velocity: ${noteOnVelocity}`)
 console.log(`Trigger every ${intervalMs}ms\n`)
 
 // --- note range ---
@@ -60,7 +73,7 @@ function sendChord () {
   console.log(`[${new Date().toISOString()}] ON ->`, notesToPlay)
 
   notesToPlay.forEach(note => {
-    output.send('noteon', { note, velocity: 100, channel: 0 })
+    output.send('noteon', { note, velocity: noteOnVelocity, channel: 0 })
     activeNotes.add(note)
   })
 
