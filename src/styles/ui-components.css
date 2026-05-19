@@ -80,10 +80,9 @@
 
 .canvas-message h3 {
     color: white;
-    font-size: 18px;
+    font-size: 14px;
     font-weight: 300;
     margin: 0;
-    font-style: italic;
     letter-spacing: 1px;
     font-family: "Inconsolata", monospace;
     text-align: center;
@@ -112,23 +111,10 @@
 .canvas-message .clickable-cube-icon {
     display: inline-flex;
     align-items: center;
-    cursor: pointer;
     pointer-events: auto;
     margin: 0 4px;
     vertical-align: middle;
-    transition:
-        opacity 0.2s ease,
-        transform 0.2s ease;
     color: #51cf66;
-}
-
-.canvas-message .clickable-cube-icon:hover {
-    opacity: 0.8;
-    transform: scale(1.1);
-}
-
-.canvas-message .clickable-cube-icon ion-icon {
-    font-size: 20px;
 }
 
 #startButton {
