@@ -3,8 +3,34 @@ export class UIManager {
   constructor () {
     this.elements = {}
     this.callbacks = {}
+    this.isSetModeActive = false
+    this.setSceneCount = 0
     this.initializeElements()
     this.setupEventListeners()
+  }
+
+  setSetModeActive (active, sceneCount = 0) {
+    this.isSetModeActive = active
+    this.setSceneCount = active ? sceneCount : 0
+  }
+
+  isTextInputTarget (target) {
+    if (!target) return false
+    const tag = target.tagName
+    return (
+      tag === 'INPUT' ||
+      tag === 'TEXTAREA' ||
+      tag === 'SELECT' ||
+      target.isContentEditable
+    )
+  }
+
+  isDialogOpen () {
+    return Boolean(
+      document.querySelector(
+        '.save-dialog.show, .create-set-dialog.show, .file-picker-dialog.show'
+      )
+    )
   }
 
   initializeElements () {
@@ -117,25 +143,44 @@ export class UIManager {
       })
     }
 
-    // Keyboard shortcuts
-    window.addEventListener('keydown', (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'u') {
-        e.preventDefault()
-        this.triggerCallback('clearCanvas')
-      } else if ((e.metaKey || e.ctrlKey) && e.key === 'i') {
-        e.preventDefault()
-        this.toggleIcons()
-      } else if ((e.metaKey || e.ctrlKey) && e.key === 's') {
-        e.preventDefault()
-        this.triggerCallback('saveFile')
-      } else if ((e.metaKey || e.ctrlKey) && e.key === 'm') {
-        e.preventDefault()
-        this.triggerCallback('enableHardwareMode')
-      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'p') {
-        e.preventDefault()
-        this.triggerCallback('exportSnapshotHotkey')
-      }
-    })
+    // Keyboard shortcuts (capture phase so set scene keys work over Tweakpane)
+    window.addEventListener(
+      'keydown',
+      (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'u') {
+          e.preventDefault()
+          this.triggerCallback('clearCanvas')
+        } else if ((e.metaKey || e.ctrlKey) && e.key === 'i') {
+          e.preventDefault()
+          this.toggleIcons()
+        } else if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+          e.preventDefault()
+          this.triggerCallback('saveFile')
+        } else if ((e.metaKey || e.ctrlKey) && e.key === 'm') {
+          e.preventDefault()
+          this.triggerCallback('enableHardwareMode')
+        } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'p') {
+          e.preventDefault()
+          this.triggerCallback('exportSnapshotHotkey')
+        } else if (
+          this.isSetModeActive &&
+          !e.metaKey &&
+          !e.ctrlKey &&
+          !e.altKey &&
+          !e.shiftKey &&
+          !this.isTextInputTarget(e.target) &&
+          !this.isDialogOpen()
+        ) {
+          const digit = parseInt(e.key, 10)
+          if (digit >= 1 && digit <= this.setSceneCount) {
+            e.preventDefault()
+            e.stopPropagation()
+            this.triggerCallback('switchSetScene', digit - 1)
+          }
+        }
+      },
+      true
+    )
 
     // Window resize
     window.addEventListener('resize', () => {

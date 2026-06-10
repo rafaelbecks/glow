@@ -389,13 +389,16 @@ export class TrackUIManager {
   }
 
   createLuminodeConfigFolder (pane, track) {
-    const configParams = getLuminodeConfig(track.luminode)
+    const luminodeName = track.luminode
+    if (!luminodeName) return null
+
+    const configParams = getLuminodeConfig(luminodeName)
     if (!configParams || configParams.length === 0) return null
 
     let currentValues = {}
     if (this.settings) {
       const settingsModule = this.settings.MODULES || this.settings
-      const luminodeKey = this.getLuminodeSettingsKey(track.luminode)
+      const luminodeKey = this.getLuminodeSettingsKey(luminodeName)
       if (settingsModule[luminodeKey]) {
         currentValues = settingsModule[luminodeKey]
       }
@@ -437,7 +440,7 @@ export class TrackUIManager {
           .on('change', (ev) => {
             this.triggerLuminodeConfigChange(
               track.id,
-              track.luminode,
+              luminodeName,
               rotationKey,
               ev.value
             )
@@ -465,7 +468,7 @@ export class TrackUIManager {
         .on('change', (ev) => {
           this.triggerLuminodeConfigChange(
             track.id,
-            track.luminode,
+            luminodeName,
             param.key,
             ev.value
           )

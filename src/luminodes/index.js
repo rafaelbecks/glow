@@ -208,6 +208,7 @@ export function getLuminodeDisplayName (name) {
 }
 
 export function getLuminodeSettingsKey (name) {
+  if (!name) return null
   return LUMINODE_REGISTRY[name]?.settingsKey || name.toUpperCase()
 }
 
