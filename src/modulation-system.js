@@ -24,6 +24,7 @@ export class ModulationSystem {
       targetConfigKey: null,
       targetLuminode: null,
       targetCanvasFilter: null,
+      targetShaderOverlay: null,
       shape: 'sine',
       rate: 0.1,
       depth: 0.5,

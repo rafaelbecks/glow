@@ -4,12 +4,20 @@ import * as EssentialsPlugin from '../lib/tweakpane-plugin-essentials.min.js'
 import * as WaveformPlugin from '../lib/tweakpane-plugin-waveform.min.js'
 import { getLuminodeConfig } from '../luminode-configs.js'
 import { getCanvasFilterConfig, getCanvasFilterIds } from '../canvas-filter-configs.js'
+import {
+  getShaderOverlayConfig,
+  getShaderOverlayIds
+} from '../shader-overlay-configs.js'
 
 const CANVAS_FILTER_LABELS = {
   clearAlpha: 'Clear Alpha',
   lumiaEffect: 'Lumia Effect',
   invertFilter: 'Invert Filter',
   dither: 'Dither'
+}
+
+const SHADER_OVERLAY_LABELS = {
+  rain: 'Rain screen'
 }
 
 export class ModulationUIManager {
@@ -110,6 +118,7 @@ export class ModulationUIManager {
         targetDestination,
         targetTrack: modulator.targetTrack,
         targetCanvasFilter: modulator.targetCanvasFilter || '',
+        targetShaderOverlay: modulator.targetShaderOverlay || '',
         targetConfigKey: modulator.targetConfigKey || '',
         rate: modulator.rate || 0.5,
         depth: modulator.depth || 0.5,
@@ -146,7 +155,11 @@ export class ModulationUIManager {
         this.renderModulationControls()
       })
 
-      const destOptions = { Track: 'track', 'Canvas Filter': 'canvasFilter' }
+      const destOptions = {
+        Track: 'track',
+        'Canvas Filter': 'canvasFilter',
+        'Shader Overlay': 'shaderOverlay'
+      }
       modulatorFolder.addBinding(modulatorData, 'targetDestination', {
         options: destOptions,
         label: 'Destination'
@@ -155,7 +168,8 @@ export class ModulationUIManager {
         this.trackManager.updateModulator(modulator.id, {
           targetDestination: ev.value,
           targetConfigKey: null,
-          targetCanvasFilter: ev.value === 'canvasFilter' ? null : modulatorData.targetCanvasFilter
+          targetCanvasFilter: null,
+          targetShaderOverlay: null
         })
         this.renderModulationControls()
       })
@@ -222,7 +236,47 @@ export class ModulationUIManager {
             this.updateThresholdVisibility(modulatorFolder, modulator.targetConfigKey, configParams)
           }
         }
-      } else {
+      } else if (targetDestination === 'shaderOverlay') {
+        const overlayOptions = { 'Select Overlay': '' }
+        getShaderOverlayIds().forEach((id) => {
+          overlayOptions[SHADER_OVERLAY_LABELS[id] || id] = id
+        })
+        modulatorFolder
+          .addBinding(modulatorData, 'targetShaderOverlay', {
+            options: overlayOptions,
+            label: 'Shader Overlay'
+          })
+          .on('change', (ev) => {
+            modulatorData.targetShaderOverlay = ev.value || ''
+            this.trackManager.updateModulator(modulator.id, {
+              targetShaderOverlay: ev.value || null,
+              targetConfigKey: null
+            })
+            this.renderModulationControls()
+          })
+
+        const shaderOverlayId =
+          modulator.targetShaderOverlay || modulatorData.targetShaderOverlay
+        if (shaderOverlayId) {
+          const configParams = getShaderOverlayConfig(shaderOverlayId)
+          const configOptions = { 'Select Parameter': '' }
+          configParams.forEach((p) => {
+            configOptions[p.label] = p.key
+          })
+          modulatorFolder
+            .addBinding(modulatorData, 'targetConfigKey', {
+              options: configOptions,
+              label: 'Parameter'
+            })
+            .on('change', (ev) => {
+              modulatorData.targetConfigKey = ev.value || ''
+              this.trackManager.updateModulator(modulator.id, {
+                targetConfigKey: ev.value || null,
+                targetShaderOverlay: shaderOverlayId
+              })
+            })
+        }
+      } else if (targetDestination === 'canvasFilter') {
         const filterOptions = { 'Select Filter': '' }
         getCanvasFilterIds().forEach(id => {
           filterOptions[CANVAS_FILTER_LABELS[id] || id] = id

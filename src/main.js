@@ -17,6 +17,10 @@ import {
   getCanvasFilterEnableKey,
   valueToTableValues
 } from './canvas-filter-configs.js'
+import {
+  getShaderOverlayParamByKey,
+  activateShaderOverlay
+} from './shader-overlay-configs.js'
 import { MIDICCMapper } from './midi-cc-mapper.js'
 import {
   LUMINODE_REGISTRY,
@@ -961,6 +965,7 @@ export class GLOWVisualizer {
     }
 
     const restoreCanvasModulation = this.applyModulationToCanvas()
+    const restoreShaderOverlayModulation = this.applyModulationToShaderOverlays()
     this.canvasDrawer.clear()
 
     // Draw grid background (if enabled)
@@ -1000,6 +1005,7 @@ export class GLOWVisualizer {
     this.tabletManager.updateGeometricShapes()
 
     if (restoreCanvasModulation) restoreCanvasModulation()
+    if (restoreShaderOverlayModulation) restoreShaderOverlayModulation()
     this.animationId = requestAnimationFrame(() => this.animate())
   }
 
@@ -1066,6 +1072,61 @@ export class GLOWVisualizer {
     if (modulatorsByKey.has('DITHER_TABLE_VALUES_R')) { this.updateDitherTableValues('R', SETTINGS.CANVAS.DITHER_TABLE_VALUES_R) }
     if (modulatorsByKey.has('DITHER_TABLE_VALUES_G')) { this.updateDitherTableValues('G', SETTINGS.CANVAS.DITHER_TABLE_VALUES_G) }
     if (modulatorsByKey.has('DITHER_TABLE_VALUES_B')) { this.updateDitherTableValues('B', SETTINGS.CANVAS.DITHER_TABLE_VALUES_B) }
+
+    return () => {
+      originalValues.forEach((v, key) => {
+        SETTINGS.CANVAS[key] = v
+      })
+    }
+  }
+
+  applyModulationToShaderOverlays () {
+    const modulationSystem = this.trackManager.getModulationSystem()
+    const allOverlayMods = modulationSystem
+      .getModulators()
+      .filter((m) => m.enabled && m.targetDestination === 'shaderOverlay')
+    if (allOverlayMods.length === 0) return null
+
+    const overlaysWithModulation = new Set(
+      allOverlayMods.map((m) => m.targetShaderOverlay).filter(Boolean)
+    )
+    overlaysWithModulation.forEach((overlayId) => {
+      activateShaderOverlay(SETTINGS.CANVAS, overlayId)
+    })
+
+    const modulators = allOverlayMods.filter((m) => m.targetConfigKey)
+    if (modulators.length === 0) return null
+
+    const originalValues = new Map()
+    const modulatorsByKey = new Map()
+    modulators.forEach((m) => {
+      if (!modulatorsByKey.has(m.targetConfigKey)) {
+        modulatorsByKey.set(m.targetConfigKey, [])
+      }
+      modulatorsByKey.get(m.targetConfigKey).push(m)
+    })
+
+    modulatorsByKey.forEach((mods, configKey) => {
+      const param = getShaderOverlayParamByKey(configKey)
+      if (!param || !SETTINGS.CANVAS.hasOwnProperty(configKey)) return
+
+      if (!originalValues.has(configKey)) {
+        originalValues.set(configKey, SETTINGS.CANVAS[configKey])
+      }
+
+      let value = SETTINGS.CANVAS[configKey]
+      const noteData = { notes: [], velocity: 0 }
+      mods.forEach((modulator) => {
+        value = modulationSystem.getModulatedValue(
+          value,
+          modulator,
+          param,
+          noteData
+        )
+      })
+      if (param.type === 'number') value = Math.round(value)
+      SETTINGS.CANVAS[configKey] = value
+    })
 
     return () => {
       originalValues.forEach((v, key) => {

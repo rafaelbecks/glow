@@ -267,6 +267,7 @@ export class ProjectManager {
         targetConfigKey: modulator.targetConfigKey,
         targetLuminode: modulator.targetLuminode,
         targetCanvasFilter: modulator.targetCanvasFilter,
+        targetShaderOverlay: modulator.targetShaderOverlay,
       })),
     };
   }
@@ -1342,6 +1343,7 @@ export class ProjectManager {
           targetConfigKey: modulatorData.targetConfigKey || null,
           targetLuminode: modulatorData.targetLuminode || null,
           targetCanvasFilter: modulatorData.targetCanvasFilter || null,
+          targetShaderOverlay: modulatorData.targetShaderOverlay || null,
         };
 
         if (modulatorType === "lfo") {
