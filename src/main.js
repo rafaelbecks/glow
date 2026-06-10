@@ -9,6 +9,8 @@ import { UIManager } from './ui.js'
 import { ProjectManager } from './project-manager.js'
 import { SaveDialog } from './components/save-dialog.js'
 import { FilePickerDialog } from './components/file-picker-dialog.js'
+import { CreateSetDialog } from './components/create-set-dialog.js'
+import { FILE_TYPE } from './glow-file-types.js'
 import { getLuminodeConfig } from './luminode-configs.js'
 import {
   getCanvasFilterParamByKey,
@@ -72,6 +74,7 @@ export class GLOWVisualizer {
     this.projectManager = new ProjectManager(this)
     this.saveDialog = new SaveDialog()
     this.filePickerDialog = new FilePickerDialog(this.projectManager)
+    this.createSetDialog = new CreateSetDialog(this.projectManager.setManager)
     this.visualizerStarted = false
 
     // CRT overlay element
@@ -120,6 +123,7 @@ export class GLOWVisualizer {
     this.setupEventHandlers()
     this.setupSaveDialog()
     this.setupFilePickerDialog()
+    this.setupCreateSetDialog()
     this.setupLogoButtons()
     this.initialize().catch((error) =>
       console.error('Failed to initialize:', error)
@@ -194,6 +198,7 @@ export class GLOWVisualizer {
     )
     this.uiManager.on('enableHardwareMode', () => this.enableHardwareMode())
     this.uiManager.on('toggleDebugOverlay', () => this.toggleDebugOverlay())
+    this.uiManager.on('switchSetScene', (index) => this.switchToSetScene(index))
 
     // Side panel events (now includes both tracks and tablet functionality)
     this.sidePanel.on('luminodeConfigChange', (data) =>
@@ -263,7 +268,55 @@ export class GLOWVisualizer {
     this.filePickerDialog.on('fileSelected', (data) =>
       this.handleProjectLoad(data)
     )
+    this.filePickerDialog.on('createSet', (data) =>
+      this.handleCreateSet(data)
+    )
     this.filePickerDialog.setupEventListeners()
+  }
+
+  setupCreateSetDialog () {
+    this.createSetDialog.on('save', (data) => this.handleSetSave(data))
+    this.createSetDialog.setupEventListeners()
+  }
+
+  handleCreateSet (data) {
+    this.createSetDialog.show(data.scenes)
+  }
+
+  async handleSetSave (data) {
+    const { setName, scenes } = data
+
+    try {
+      const result = await this.projectManager.saveNewSet(setName, scenes)
+      if (result.success) {
+        this.updateProjectName(this.projectManager.setManager.getDisplayName())
+        this.updateUnsavedChangesIndicator()
+        this.uiManager.hideLogoContainer()
+        this.uiManager.showPanelToggleButton()
+        this.uiManager.showOpenButton()
+        this.uiManager.showSaveButton()
+        this.uiManager.showInfoButton()
+        this.showProjectNameDisplay()
+        this.uiManager.showCanvasMessage()
+        this.visualizerStarted = true
+        if (!this.isRunning) {
+          this.isRunning = true
+          this.animate()
+        }
+        this.sidePanel.renderTracks()
+        this.uiManager.setSetModeActive(true, scenes.length)
+        this.uiManager.showStatus(
+          `Set "${result.setName}" saved and loaded! Press 1–${scenes.length} to sequence.`,
+          'success'
+        )
+      }
+    } catch (error) {
+      console.error('Error saving set:', error)
+      this.uiManager.showStatus(
+        'Error saving set. Check console for details.',
+        'error'
+      )
+    }
   }
 
   setupLogoButtons () {
@@ -445,14 +498,16 @@ export class GLOWVisualizer {
         return
       }
 
-      const result = await this.projectManager.openProjectWithData(
+      const result = await this.projectManager.openGlowFileWithData(
         data.fileHandle,
         data.projectData,
         data.file
       )
 
       if (result.success) {
-        const projectName = this.projectManager.getCurrentProjectName()
+        const projectName = this.projectManager.isSetMode()
+          ? this.projectManager.setManager.getDisplayName()
+          : this.projectManager.getCurrentProjectName()
         this.updateProjectName(projectName)
         this.updateUnsavedChangesIndicator()
 
@@ -465,10 +520,15 @@ export class GLOWVisualizer {
         this.uiManager.showCanvasMessage()
         this.visualizerStarted = true
         this.isRunning = true
-        this.uiManager.showStatus(
-          `Project "${projectName}" loaded successfully!`,
-          'success'
+        const sceneCount = this.projectManager.setManager.getSceneCount()
+        this.uiManager.setSetModeActive(
+          result.fileType === FILE_TYPE.SET,
+          sceneCount
         )
+        const loadMessage = result.fileType === FILE_TYPE.SET
+          ? `Set loaded! Press 1–${sceneCount} to sequence.`
+          : `Project "${projectName}" loaded successfully!`
+        this.uiManager.showStatus(loadMessage, 'success')
       } else {
         this.uiManager.showStatus(
           'Error loading project. Check console for details.',
@@ -519,12 +579,33 @@ export class GLOWVisualizer {
     }, 300)
   }
 
+  async switchToSetScene (index) {
+    if (!this.projectManager.isSetMode()) return
+
+    try {
+      const result = await this.projectManager.switchToSetScene(index)
+      if (result.success) {
+        this.updateProjectName(result.displayName)
+        this.updateUnsavedChangesIndicator()
+        this.uiManager.showStatus(
+          `Scene ${index + 1}: ${this.projectManager.setManager.getActiveScene().name}`,
+          'info'
+        )
+      }
+    } catch (error) {
+      console.error('Error switching scene:', error)
+      this.uiManager.showStatus('Error switching scene.', 'error')
+    }
+  }
+
   updateUnsavedChangesIndicator () {
     const projectNameText = document.getElementById('projectNameText')
     if (!projectNameText) return
 
     const hasUnsaved = this.projectManager.updateUnsavedChangesFlag()
-    const currentName = this.projectManager.getCurrentProjectName()
+    const currentName = this.projectManager.isSetMode()
+      ? this.projectManager.setManager.getDisplayName()
+      : this.projectManager.getCurrentProjectName()
 
     if (hasUnsaved) {
       if (!projectNameText.textContent.endsWith(' *')) {
@@ -759,6 +840,7 @@ export class GLOWVisualizer {
 
   updateLuminodeConfig (data) {
     const { luminode, param, value } = data
+    if (!luminode) return
 
     const settingsKey = getLuminodeSettingsKey(luminode)
     if (settingsKey && SETTINGS.MODULES[settingsKey]) {
@@ -1729,6 +1811,7 @@ export class GLOWVisualizer {
 
     this.midiManager.setOutputDevice(null)
     this.projectManager.clearProject()
+    this.uiManager.setSetModeActive(false)
 
     console.log('Current state cleared before loading new project')
   }

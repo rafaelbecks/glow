@@ -1,3 +1,5 @@
+import { GLOW_FILE_ACCEPT } from '../glow-file-types.js'
+
 export class FilePickerDialog {
   constructor (projectManager) {
     this.dialog = document.getElementById('filePickerDialog')
@@ -41,6 +43,7 @@ export class FilePickerDialog {
     const closeBtn = this.dialog.querySelector('#filePickerDialogClose')
     const cancelBtn = this.dialog.querySelector('#filePickerDialogCancel')
     const browseBtn = this.dialog.querySelector('#filePickerDialogBrowse')
+    const createSetBtn = this.dialog.querySelector('#filePickerDialogCreateSet')
     const dialog = this.dialog
 
     if (closeBtn) {
@@ -58,6 +61,12 @@ export class FilePickerDialog {
     if (browseBtn) {
       browseBtn.addEventListener('click', () => {
         this.triggerFileSelection()
+      })
+    }
+
+    if (createSetBtn) {
+      createSetBtn.addEventListener('click', () => {
+        this.triggerCreateSet()
       })
     }
 
@@ -88,9 +97,7 @@ export class FilePickerDialog {
         const [selectedHandle] = await window.showOpenFilePicker({
           types: [{
             description: 'Glow Project Files',
-            accept: {
-              'application/json': ['.glow']
-            }
+            accept: GLOW_FILE_ACCEPT
           }],
           multiple: false
         })
@@ -116,6 +123,27 @@ export class FilePickerDialog {
       }
       console.error('Error opening file:', error)
       this.showError('Error opening file. Check console for details.')
+    }
+  }
+
+  async triggerCreateSet () {
+    try {
+      const scenes = await this.projectManager.pickGlowScenesForSet()
+
+      if (!scenes || scenes.length === 0) {
+        this.showError('Select at least one .glow scene file')
+        return
+      }
+
+      this.triggerCallback('createSet', { scenes })
+      this.hide()
+    } catch (error) {
+      document.body.classList.remove('loading')
+      if (error.name === 'AbortError') {
+        return
+      }
+      console.error('Error selecting scenes for set:', error)
+      this.showError('Error selecting scenes. Check console for details.')
     }
   }
 

@@ -445,3 +445,201 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+.file-selection-area {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.file-selection-area .btn-secondary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    font-size: 14px;
+}
+
+.file-selection-area .btn-secondary ion-icon {
+    font-size: 16px;
+}
+
+.file-picker-dialog-content {
+    width: 340px;
+}
+
+/* Create Set Dialog */
+.create-set-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.create-set-dialog.show {
+    display: flex;
+}
+
+.create-set-dialog-content {
+    background: #000;
+    border: 1px solid #fff;
+    border-radius: 0;
+    width: 90%;
+    max-width: 520px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.create-set-dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.create-set-dialog-header h3 {
+    color: #fff;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 300;
+    font-family: "Inconsolata", monospace;
+}
+
+.create-set-dialog-close {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 3px;
+    transition: background 0.2s ease;
+}
+
+.create-set-dialog-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.create-set-dialog-close ion-icon {
+    font-size: 20px;
+}
+
+.create-set-dialog-body {
+    padding: 20px;
+    color: #fff;
+    font-family: "Inconsolata", monospace;
+    flex: 1;
+    overflow-y: auto;
+    text-align: left;
+}
+
+.create-set-hint {
+    font-size: 12px;
+    color: #aaa;
+    margin: 0 0 16px 0;
+    line-height: 1.4;
+}
+
+.set-scene-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.set-scene-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    cursor: grab;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.set-scene-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.set-scene-item.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+}
+
+.set-scene-item.drag-over {
+    border-color: #51cf66;
+}
+
+.set-scene-drag-handle {
+    color: #666;
+    font-size: 14px;
+    line-height: 1;
+    padding-top: 2px;
+    user-select: none;
+}
+
+.set-scene-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.set-scene-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.set-scene-position {
+    color: #51cf66;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.set-scene-title {
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.set-scene-filename {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.set-scene-summary {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.5;
+}
+
+.set-scene-summary li {
+    padding-left: 0;
+}
+
+.set-scene-summary-empty {
+    color: rgba(255, 255, 255, 0.4);
+    font-style: italic;
+}
+
+.create-set-dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}

@@ -293,6 +293,50 @@
             </div>
         </div>
 
+        <!-- Create Set Dialog -->
+        <div id="createSetDialog" class="create-set-dialog">
+            <div class="create-set-dialog-content">
+                <div class="create-set-dialog-header">
+                    <h3>Create Set</h3>
+                    <button
+                        id="createSetDialogClose"
+                        class="create-set-dialog-close"
+                    >
+                        <ion-icon name="close-outline"></ion-icon>
+                    </button>
+                </div>
+                <div class="create-set-dialog-body">
+                    <div class="scene-name-input">
+                        <input
+                            type="text"
+                            id="setName"
+                            placeholder="Enter set name"
+                            maxlength="50"
+                            autocomplete="off"
+                        />
+                        <span class="file-extension">.set.glow</span>
+                    </div>
+                    <p class="create-set-hint">
+                        Drag scenes to reorder. Use Shift+1, Shift+2… to
+                        sequence when the set is loaded.
+                    </p>
+                    <ol id="setSceneList" class="set-scene-list"></ol>
+                </div>
+                <div class="create-set-dialog-footer">
+                    <button id="createSetDialogCancel" class="btn-secondary">
+                        Cancel
+                    </button>
+                    <button
+                        id="createSetDialogSave"
+                        class="btn-primary"
+                        disabled
+                    >
+                        Save Set
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- File Picker Dialog -->
         <div id="filePickerDialog" class="file-picker-dialog">
             <div class="file-picker-dialog-content">
@@ -308,12 +352,16 @@
                 <div class="file-picker-dialog-body">
                     <div class="recent-projects-list"></div>
                     <p style="margin-top: 20px">
-                        Select a .glow project file to load
+                        Select a .glow scene or .set.glow file to load
                     </p>
                     <div class="file-selection-area">
                         <button id="filePickerDialogBrowse" class="btn-primary">
                             <ion-icon name="folder-outline"></ion-icon>
                             Browse Files
+                        </button>
+                        <button id="filePickerDialogCreateSet" class="btn-secondary">
+                            <ion-icon name="albums-outline"></ion-icon>
+                            Create Set
                         </button>
                     </div>
                 </div>

@@ -1,5 +1,14 @@
 import { SETTINGS, UTILS } from "./settings.js";
 import { getLuminodeSettingsKey } from "./luminodes/index.js";
+import {
+  FILE_TYPE,
+  GLOW_FILE_ACCEPT,
+  GLOW_MIME,
+  GLOW_SET_FILE_ACCEPT,
+  detectGlowFileType,
+  stripGlowExtension,
+} from "./glow-file-types.js";
+import { SetManager } from "./set-manager.js";
 
 export class ProjectManager {
   constructor(glowVisualizer) {
@@ -8,6 +17,8 @@ export class ProjectManager {
     this.currentProjectName = "Untitled Project";
     this.savedState = null;
     this.hasUnsavedChanges = false;
+    this.currentFileType = null;
+    this.setManager = new SetManager(this);
   }
 
   collectProjectState() {
@@ -298,6 +309,10 @@ export class ProjectManager {
   }
 
   checkForUnsavedChanges() {
+    if (this.currentFileType === FILE_TYPE.SET && this.setManager.isActive()) {
+      return this.setManager.checkForUnsavedChanges();
+    }
+
     if (!this.savedState) {
       return this.currentFileHandle !== null;
     }
@@ -313,6 +328,12 @@ export class ProjectManager {
     const savedStateStr = JSON.stringify(savedStateCopy);
 
     return currentStateStr !== savedStateStr;
+  }
+
+  isSetMode() {
+    return (
+      this.currentFileType === FILE_TYPE.SET && this.setManager.isActive()
+    );
   }
 
   updateUnsavedChangesFlag() {
@@ -371,6 +392,10 @@ export class ProjectManager {
   }
 
   async saveExistingProject() {
+    if (this.isSetMode()) {
+      return this.saveExistingSet();
+    }
+
     if (!this.currentFileHandle) {
       return this.saveNewProject(this.currentProjectName);
     }
@@ -398,12 +423,56 @@ export class ProjectManager {
   }
 
   async saveProject(projectName = null) {
+    if (this.isSetMode()) {
+      return this.saveExistingSet();
+    }
+
     if (projectName && !this.currentFileHandle) {
       return this.saveNewProject(projectName);
     } else if (this.currentFileHandle) {
       return this.saveExistingProject();
     } else {
       throw new Error("No file handle and no project name provided");
+    }
+  }
+
+  async pickGlowScenesForSet() {
+    if (!("showOpenFilePicker" in window)) {
+      throw new Error(
+        "File System Access API is not supported in this browser",
+      );
+    }
+
+    document.body.classList.add("loading");
+    try {
+      const handles = await window.showOpenFilePicker({
+        types: [
+          {
+            description: "Glow Scene Files",
+            accept: {
+              "application/json": [".glow"],
+            },
+          },
+        ],
+        multiple: true,
+      });
+
+      const scenes = [];
+      for (const handle of handles) {
+        const file = await handle.getFile();
+        if (file.name.endsWith(".set.glow")) continue;
+
+        const content = await file.text();
+        const projectData = JSON.parse(content);
+        this.validateProjectFile(projectData);
+        scenes.push(
+          this.setManager.buildSceneEntry(file.name, projectData),
+        );
+      }
+
+      return scenes;
+    } finally {
+      document.body.classList.remove("loading");
     }
   }
 
@@ -424,9 +493,7 @@ export class ProjectManager {
             types: [
               {
                 description: "Glow Project Files",
-                accept: {
-                  "application/json": [".glow"],
-                },
+                accept: GLOW_FILE_ACCEPT,
               },
             ],
             multiple: false,
@@ -441,7 +508,7 @@ export class ProjectManager {
       const content = await file.text();
       const projectData = JSON.parse(content);
 
-      return await this.openProjectWithData(handle, projectData, file);
+      return await this.openGlowFileWithData(handle, projectData, file);
     } catch (error) {
       document.body.classList.remove("loading");
       if (error.name === "AbortError") {
@@ -451,31 +518,210 @@ export class ProjectManager {
     }
   }
 
+  async openGlowFileWithData(fileHandle, fileData, file) {
+    const fileType = detectGlowFileType(file.name, fileData);
+
+    if (fileType === FILE_TYPE.SET) {
+      return this.openSetWithData(fileHandle, fileData, file);
+    }
+
+    return this.openProjectWithData(fileHandle, fileData, file);
+  }
+
   async openProjectWithData(fileHandle, projectData, file) {
     try {
+      this.setManager.clear();
+      this.currentFileType = FILE_TYPE.SCENE;
       this.validateProjectFile(projectData);
 
       this.currentFileHandle = fileHandle;
       this.currentProjectName =
-        projectData.name || file.name.replace(".glow", "");
+        projectData.name || stripGlowExtension(file.name);
 
       const loadSuccess = await this.loadProjectState(projectData);
 
       if (!loadSuccess) {
         this.currentFileHandle = null;
         this.currentProjectName = "Untitled Project";
+        this.currentFileType = null;
         throw new Error("Failed to load project state");
       }
 
       this.savedState = this.getCurrentState();
       this.hasUnsavedChanges = false;
 
-      this.addToRecentProjects(fileHandle, this.currentProjectName);
+      this.addToRecentProjects(fileHandle, this.currentProjectName, FILE_TYPE.SCENE);
 
-      return { success: true, file, projectData, fileHandle };
+      return {
+        success: true,
+        file,
+        projectData,
+        fileHandle,
+        fileType: FILE_TYPE.SCENE,
+      };
     } catch (error) {
       this.currentFileHandle = null;
       this.currentProjectName = "Untitled Project";
+      this.currentFileType = null;
+      throw error;
+    }
+  }
+
+  async openSetWithData(fileHandle, setData, file) {
+    try {
+      this.setManager.validateSetFile(setData);
+      this.setManager.loadSet(fileHandle, setData);
+
+      this.currentFileHandle = fileHandle;
+      this.currentFileType = FILE_TYPE.SET;
+      this.currentProjectName = setData.name || stripGlowExtension(file.name);
+
+      const loadSuccess = await this.setManager.switchToScene(0);
+
+      if (!loadSuccess) {
+        this.setManager.clear();
+        this.currentFileHandle = null;
+        this.currentProjectName = "Untitled Project";
+        this.currentFileType = null;
+        throw new Error("Failed to load set");
+      }
+
+      this.savedState = this.getCurrentState();
+      this.hasUnsavedChanges = false;
+
+      this.addToRecentProjects(fileHandle, this.currentProjectName, FILE_TYPE.SET);
+
+      return {
+        success: true,
+        file,
+        setData,
+        fileHandle,
+        fileType: FILE_TYPE.SET,
+      };
+    } catch (error) {
+      this.setManager.clear();
+      this.currentFileHandle = null;
+      this.currentProjectName = "Untitled Project";
+      this.currentFileType = null;
+      throw error;
+    }
+  }
+
+  async switchToSetScene(index) {
+    if (!this.isSetMode()) return { success: false };
+
+    const success = await this.setManager.switchToScene(index);
+    if (!success) return { success: false };
+
+    return {
+      success: true,
+      displayName: this.setManager.getDisplayName(),
+      sceneIndex: index,
+    };
+  }
+
+  generateSetFile(setName, scenes) {
+    const state = this.setManager.buildSetState(setName, scenes);
+    return JSON.stringify(state, null, 2);
+  }
+
+  async saveNewSet(setName, scenes) {
+    try {
+      if (!("showSaveFilePicker" in window)) {
+        throw new Error(
+          "File System Access API is not supported in this browser",
+        );
+      }
+
+      const content = this.generateSetFile(setName, scenes);
+      const blob = new Blob([content], { type: GLOW_MIME.SET });
+
+      document.body.classList.add("loading");
+      let fileHandle;
+      try {
+        fileHandle = await window.showSaveFilePicker({
+          suggestedName: `${setName}.set.glow`,
+          excludeAcceptAllOption: true,
+          types: [
+            {
+              description: "Glow Set Files",
+              accept: GLOW_SET_FILE_ACCEPT,
+            },
+          ],
+        });
+      } finally {
+        document.body.classList.remove("loading");
+      }
+
+      const writable = await fileHandle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+
+      this.setManager.loadSet(fileHandle, JSON.parse(content));
+      this.currentFileHandle = fileHandle;
+      this.currentFileType = FILE_TYPE.SET;
+      this.currentProjectName = setName;
+
+      const loadSuccess = await this.setManager.switchToScene(0);
+      if (!loadSuccess) {
+        this.setManager.clear();
+        this.currentFileHandle = null;
+        this.currentProjectName = "Untitled Project";
+        this.currentFileType = null;
+        throw new Error("Failed to load set");
+      }
+
+      this.setManager.savedSetState = this.setManager.getSetSnapshot();
+      this.savedState = this.getCurrentState();
+      this.hasUnsavedChanges = false;
+
+      this.addToRecentProjects(fileHandle, setName, FILE_TYPE.SET);
+
+      return { success: true, fileHandle, setName };
+    } catch (error) {
+      document.body.classList.remove("loading");
+      if (error.name === "AbortError") {
+        return { success: false, cancelled: true };
+      }
+      throw error;
+    }
+  }
+
+  async saveExistingSet() {
+    if (!this.currentFileHandle || !this.isSetMode()) {
+      return this.saveNewSet(
+        this.setManager.setName || this.currentProjectName,
+        this.setManager.scenes,
+      );
+    }
+
+    try {
+      this.setManager.updateActiveSceneData();
+      const content = JSON.stringify(this.setManager.getSetSnapshot(), null, 2);
+      const blob = new Blob([content], { type: GLOW_MIME.SET });
+
+      const writable = await this.currentFileHandle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+
+      this.setManager.savedSetState = this.setManager.getSetSnapshot();
+      this.savedState = this.getCurrentState();
+      this.hasUnsavedChanges = false;
+
+      this.addToRecentProjects(
+        this.currentFileHandle,
+        this.currentProjectName,
+        FILE_TYPE.SET,
+      );
+
+      return { success: true };
+    } catch (error) {
+      if (error.name === "PermissionDeniedError") {
+        return this.saveNewSet(
+          this.setManager.setName || this.currentProjectName,
+          this.setManager.scenes,
+        );
+      }
       throw error;
     }
   }
@@ -491,7 +737,7 @@ export class ProjectManager {
     }
   }
 
-  async addToRecentProjects(fileHandle, projectName) {
+  async addToRecentProjects(fileHandle, projectName, fileType = FILE_TYPE.SCENE) {
     try {
       const file = await fileHandle.getFile();
       const fileName = file.name;
@@ -508,6 +754,7 @@ export class ProjectManager {
       const projectInfo = {
         fileName,
         projectName,
+        fileType,
         lastOpened: Date.now(),
       };
 
@@ -532,6 +779,8 @@ export class ProjectManager {
     this.currentProjectName = "Untitled Project";
     this.savedState = null;
     this.hasUnsavedChanges = false;
+    this.currentFileType = null;
+    this.setManager.clear();
   }
 
   getCurrentProjectName() {
@@ -985,7 +1234,10 @@ export class ProjectManager {
 
     Object.keys(moduleData).forEach((moduleKey) => {
       if (SETTINGS.MODULES[moduleKey]) {
-        Object.assign(SETTINGS.MODULES[moduleKey], moduleData[moduleKey]);
+        Object.assign(
+          SETTINGS.MODULES[moduleKey],
+          JSON.parse(JSON.stringify(moduleData[moduleKey])),
+        );
       }
     });
   }
@@ -999,44 +1251,55 @@ export class ProjectManager {
 
     this.glowVisualizer.trackLuminodes.clear();
 
-    trackData.tracks.forEach((trackConfig, index) => {
-      if (index < tracks.length) {
-        const track = tracks[index];
-
-        track.name = trackConfig.name || track.name;
-        track.muted = trackConfig.muted || false;
-        track.solo = trackConfig.solo || false;
-        track.layout = { ...track.layout, ...(trackConfig.layout || {}) };
-
-        if (trackConfig.luminode) {
-          track.luminode = trackConfig.luminode;
-          this.glowVisualizer.createLuminodeForTrack(
-            track.id,
-            trackConfig.luminode,
-          );
-        }
-
-        if (trackConfig.midiDevice && trackConfig.midiDeviceInfo) {
-          const deviceExists = availableDevices.find(
-            (d) => d.id === trackConfig.midiDevice,
-          );
-          if (deviceExists) {
-            track.midiDevice = trackConfig.midiDevice;
-          } else {
-            track.midiDevice = null;
-            console.warn(
-              `MIDI device "${trackConfig.midiDeviceInfo.name}" not available`,
-            );
-          }
-        } else {
-          track.midiDevice = null;
-        }
-
+    tracks.forEach((track, index) => {
+      const trackConfig = trackData.tracks[index];
+      if (!trackConfig) {
+        track.name = `Track ${track.id}`;
+        track.muted = false;
+        track.solo = false;
+        track.midiDevice = null;
+        track.luminode = null;
+        track.layout = { x: 0, y: 0, rotation: 0 };
         this.glowVisualizer.trackManager.triggerCallback("trackUpdated", {
           trackId: track.id,
           track,
         });
+        return;
       }
+
+      track.name = trackConfig.name || track.name;
+      track.muted = trackConfig.muted || false;
+      track.solo = trackConfig.solo || false;
+      track.layout = { ...track.layout, ...(trackConfig.layout || {}) };
+
+      track.luminode = trackConfig.luminode || null;
+      if (trackConfig.luminode) {
+        this.glowVisualizer.createLuminodeForTrack(
+          track.id,
+          trackConfig.luminode,
+        );
+      }
+
+      if (trackConfig.midiDevice && trackConfig.midiDeviceInfo) {
+        const deviceExists = availableDevices.find(
+          (d) => d.id === trackConfig.midiDevice,
+        );
+        if (deviceExists) {
+          track.midiDevice = trackConfig.midiDevice;
+        } else {
+          track.midiDevice = null;
+          console.warn(
+            `MIDI device "${trackConfig.midiDeviceInfo.name}" not available`,
+          );
+        }
+      } else {
+        track.midiDevice = null;
+      }
+
+      this.glowVisualizer.trackManager.triggerCallback("trackUpdated", {
+        trackId: track.id,
+        track,
+      });
     });
   }
 
