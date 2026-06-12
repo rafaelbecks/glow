@@ -1864,10 +1864,6 @@ export class GLOWVisualizer {
       track.muted = false
       track.solo = false
       track.layout = { x: 0, y: 0, rotation: 0 }
-      this.trackManager.triggerCallback('trackUpdated', {
-        trackId: track.id,
-        track
-      })
     })
 
     this.midiManager.setOutputDevice(null)

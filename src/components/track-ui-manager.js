@@ -512,12 +512,13 @@ export class TrackUIManager {
       paneData.layoutData.rotation = track.layout.rotation
     }
 
-    // Repaint MIDI device and luminode dropdowns with latest values
+    // Dispose stale luminode bindings before refresh so tweakpane does not
+    // emit change events against a luminode that was already cleared.
+    this.updateLuminodeConfigPane(trackId, track.luminode)
+
     try {
       paneData.pane.refresh()
     } catch (_) {}
-
-    this.updateLuminodeConfigPane(trackId, track.luminode)
   }
 
   updateLuminodeConfigPane (trackId, luminode) {

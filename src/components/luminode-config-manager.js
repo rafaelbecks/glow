@@ -22,7 +22,7 @@ export class LuminodeConfigManager {
     if (luminode && hasLuminodeConfig(luminode)) {
       configElement.innerHTML = this.createLuminodeConfigHTML(luminode, trackId, this.settings || null)
       configElement.style.display = 'block'
-      this.attachConfigEventListeners(trackId)
+      this.attachConfigEventListeners(trackId, luminode)
       this.attachConfigToggleListener(trackId)
     } else {
       configElement.style.display = 'none'
@@ -165,7 +165,7 @@ export class LuminodeConfigManager {
   }
 
   // Attach event listeners to configuration controls
-  attachConfigEventListeners (trackId) {
+  attachConfigEventListeners (trackId, luminode) {
     const configElement = this.panel.querySelector(`#config-${trackId}`)
     if (!configElement) return
 
@@ -186,7 +186,7 @@ export class LuminodeConfigManager {
           }
         }
 
-        this.triggerConfigChange(trackId, param, value)
+        this.triggerConfigChange(trackId, luminode, param, value)
       })
     })
 
@@ -197,7 +197,7 @@ export class LuminodeConfigManager {
         const value = parseFloat(e.target.value)
         const param = e.target.dataset.param
 
-        this.triggerConfigChange(trackId, param, value)
+        this.triggerConfigChange(trackId, luminode, param, value)
       })
     })
 
@@ -208,7 +208,7 @@ export class LuminodeConfigManager {
         const value = e.target.checked
         const param = e.target.dataset.param
 
-        this.triggerConfigChange(trackId, param, value)
+        this.triggerConfigChange(trackId, luminode, param, value)
       })
     })
 
@@ -219,7 +219,7 @@ export class LuminodeConfigManager {
         const value = e.target.value
         const param = e.target.dataset.param
 
-        this.triggerConfigChange(trackId, param, value)
+        this.triggerConfigChange(trackId, luminode, param, value)
       })
     })
   }
@@ -250,12 +250,11 @@ export class LuminodeConfigManager {
   }
 
   // Trigger config change callback
-  triggerConfigChange (trackId, param, value) {
-    // Dispatch custom event that can be listened to by the main panel
+  triggerConfigChange (trackId, luminode, param, value) {
     const event = new CustomEvent('luminodeConfigChange', {
       detail: {
         trackId,
-        luminode: this.trackManager.getTrack(trackId).luminode,
+        luminode,
         param,
         value
       }
