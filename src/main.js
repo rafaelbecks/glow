@@ -66,6 +66,7 @@ export class GLOWVisualizer {
       this.midiManager.setCCMapper(this.ccMapper)
     }
     this.midiGenerator = new MidiGenerator(this.midiManager, this.trackManager)
+    this.midiGenerator.onChange = () => this.markProjectChanged()
     this.tabletManager = new TabletManager(this.tabletCanvas, {
       midiManager: this.midiManager
     })
@@ -1888,6 +1889,7 @@ export class GLOWVisualizer {
     this.trackLuminodes.clear()
     this.canvasDrawer.clear()
     this.tabletManager.clear()
+    this.midiGenerator.clearAll()
 
     const tracks = this.trackManager.getTracks()
     tracks.forEach((track) => {

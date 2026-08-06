@@ -34,13 +34,105 @@ export class MidiGenerator {
     this.generators = []
     this.nextId = 1
     this.midiOutEnabled = false
+    this.onChange = null
 
     /** @type {Map<string, { intervalId: number|null, activeNotes: number[] }>} */
     this.runtime = new Map()
   }
 
+  notifyChange () {
+    if (typeof this.onChange === 'function') this.onChange()
+  }
+
   getGenerators () {
     return this.generators.map((g) => ({ ...g }))
+  }
+
+  /** Snapshot for .glow project files */
+  getSerializableState () {
+    return {
+      generators: this.getGenerators(),
+      midiOutEnabled: this.midiOutEnabled
+    }
+  }
+
+  clearAll () {
+    const snapshot = [...this.generators]
+    snapshot.forEach((g) => {
+      this.stopGenerator(g.id)
+      this.midiManager.clearTrackNotes(g.trackId)
+    })
+    this.generators = []
+    this.runtime.clear()
+    this.syncOwnership()
+  }
+
+  /**
+   * Restore generators from a project snapshot.
+   * @param {{ generators?: object[], midiOutEnabled?: boolean }|null} state
+   */
+  loadState (state) {
+    const prevOnChange = this.onChange
+    this.onChange = null
+    try {
+      this.clearAll()
+      if (!state) {
+        this.setMidiOutEnabled(false)
+        return
+      }
+
+      this.setMidiOutEnabled(!!state.midiOutEnabled)
+
+      const list = Array.isArray(state.generators) ? state.generators : []
+      const usedTracks = new Set()
+      let maxIdNum = 0
+
+      list.slice(0, MAX_GENERATORS).forEach((data) => {
+        if (!data || typeof data !== 'object') return
+
+        const trackId = Number(data.trackId)
+        if (!Number.isFinite(trackId) || usedTracks.has(trackId)) return
+        usedTracks.add(trackId)
+
+        let id = typeof data.id === 'string' ? data.id : null
+        if (!id) {
+          id = `gen-${this.nextId++}`
+        } else {
+          const match = /^gen-(\d+)$/.exec(id)
+          if (match) maxIdNum = Math.max(maxIdNum, parseInt(match[1], 10))
+        }
+
+        const defaults = defaultGeneratorConfig(trackId)
+        const generator = {
+          id,
+          trackId,
+          enabled: data.enabled !== undefined ? !!data.enabled : defaults.enabled,
+          intervalMs: Number.isFinite(Number(data.intervalMs))
+            ? Math.max(100, Math.min(10000, Math.round(Number(data.intervalMs))))
+            : defaults.intervalMs,
+          intervalMode: INTERVALS[data.intervalMode]
+            ? data.intervalMode
+            : defaults.intervalMode,
+          numberOfNotes: Number.isFinite(Number(data.numberOfNotes))
+            ? Math.max(1, Math.min(8, Math.round(Number(data.numberOfNotes))))
+            : defaults.numberOfNotes,
+          velocity: Number.isFinite(Number(data.velocity))
+            ? Math.max(1, Math.min(127, Math.round(Number(data.velocity))))
+            : defaults.velocity,
+          velocityRandom: Number.isFinite(Number(data.velocityRandom))
+            ? Math.max(0, Math.min(64, Math.round(Number(data.velocityRandom))))
+            : defaults.velocityRandom
+        }
+
+        this.generators.push(generator)
+        this.syncOwnership()
+        if (generator.enabled) this.startGenerator(generator)
+      })
+
+      this.nextId = Math.max(this.nextId, maxIdNum + 1)
+    } finally {
+      this.onChange = prevOnChange
+    }
   }
 
   getGenerator (id) {
@@ -87,6 +179,7 @@ export class MidiGenerator {
     this.generators.push(generator)
     this.syncOwnership()
     this.startGenerator(generator)
+    this.notifyChange()
     return id
   }
 
@@ -101,6 +194,7 @@ export class MidiGenerator {
       this.midiManager.clearTrackNotes(trackId)
     }
     this.syncOwnership()
+    this.notifyChange()
   }
 
   updateGenerator (id, updates = {}) {
@@ -144,14 +238,22 @@ export class MidiGenerator {
     } else if (generator.enabled && generator.intervalMs !== prevInterval) {
       this.restartGenerator(generator)
     }
+
+    this.notifyChange()
   }
 
   setMidiOutEnabled (enabled) {
-    this.midiOutEnabled = !!enabled
+    const next = !!enabled
+    if (next === this.midiOutEnabled) {
+      this.midiManager.setGenerateOutputEnabled(this.midiOutEnabled)
+      return
+    }
+    this.midiOutEnabled = next
     this.midiManager.setGenerateOutputEnabled(this.midiOutEnabled)
     if (!this.midiOutEnabled) {
       this.releaseAllMidiOut()
     }
+    this.notifyChange()
   }
 
   isMidiOutEnabled () {

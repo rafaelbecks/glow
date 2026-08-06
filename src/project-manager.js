@@ -291,11 +291,18 @@ export class ProjectManager {
 
   collectMidiSettings() {
     const midiManager = this.glowVisualizer.midiManager;
+    const midiGenerator = this.glowVisualizer.midiGenerator;
+    const generatorState = midiGenerator?.getSerializableState?.() || {
+      generators: [],
+      midiOutEnabled: false,
+    };
 
     return {
       outputEnabled: midiManager.outputEnabled || false,
       outputDevice: midiManager.outputDevice || null,
       octaveRange: midiManager.octaveRange || 3,
+      generators: generatorState.generators,
+      generateOutputEnabled: generatorState.midiOutEnabled,
     };
   }
 
@@ -851,6 +858,9 @@ export class ProjectManager {
 
       this.glowVisualizer.sidePanel.renderTracks();
       this.glowVisualizer.sidePanel.modulationUIManager.renderModulationControls();
+      if (this.glowVisualizer.sidePanel.basePanel.activeTab === "external") {
+        await this.glowVisualizer.sidePanel.externalSystemsUIManager.renderExternalControls();
+      }
 
       console.log("Project loaded successfully");
       return true;
@@ -1380,6 +1390,7 @@ export class ProjectManager {
     if (!midiData) return;
 
     const midiManager = this.glowVisualizer.midiManager;
+    const midiGenerator = this.glowVisualizer.midiGenerator;
 
     if (midiData.outputDevice) {
       const availableDevices = await midiManager.getAvailableOutputDevices();
@@ -1396,6 +1407,21 @@ export class ProjectManager {
         );
         midiManager.setOutputDevice(null);
       }
+    }
+
+    if (midiData.outputEnabled !== undefined) {
+      midiManager.setOutputEnabled(!!midiData.outputEnabled);
+    }
+
+    if (midiData.octaveRange !== undefined) {
+      midiManager.setOctaveRange(midiData.octaveRange);
+    }
+
+    if (midiGenerator) {
+      midiGenerator.loadState({
+        generators: midiData.generators || [],
+        midiOutEnabled: !!midiData.generateOutputEnabled,
+      });
     }
   }
 }
