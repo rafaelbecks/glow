@@ -44,7 +44,7 @@ canvas {
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: 3; /* Above canvas and tablet canvas */
+    z-index: 7; /* Texture overlay — above shader/glass overlays */
     pointer-events: none; /* Let events pass through */
     display: none; /* Initially hidden */
 }
@@ -55,7 +55,7 @@ canvas {
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: 4; /* Above noise overlay */
+    z-index: 8; /* Texture overlay — above noise */
     pointer-events: none; /* Let events pass through */
     display: none; /* Initially hidden */
     background: transparent;

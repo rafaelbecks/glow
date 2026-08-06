@@ -1939,11 +1939,7 @@ export class GLOWVisualizer {
     }
     if (this.canvas) sources.push(this.canvas)
     if (this.tabletCanvas) sources.push(this.tabletCanvas)
-    if (this.noiseModeEnabled && this.noiseOverlay) {
-      const noiseCanvas = this.noiseOverlay.querySelector('canvas')
-      if (noiseCanvas) sources.push(noiseCanvas)
-    }
-    if (this.ditherModeEnabled && this.ditherCanvas) { sources.push(this.ditherCanvas) }
+    // Noise/dither sit above shader overlays visually — omit from glass sampling
     if (this.chromaticAberrationModeEnabled && this.chromaticAberrationCanvas) { sources.push(this.chromaticAberrationCanvas) }
     return sources
   }

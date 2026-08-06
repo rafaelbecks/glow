@@ -29,6 +29,14 @@ function pngLayers (visualizer) {
   ) {
     list.push(glass)
   }
+  // Texture overlays always composite above shader/glass overlays
+  if (visualizer.noiseModeEnabled && visualizer.noiseOverlay) {
+    const noiseCanvas = visualizer.noiseOverlay.querySelector('canvas')
+    if (noiseCanvas) list.push(noiseCanvas)
+  }
+  if (visualizer.ditherModeEnabled && visualizer.ditherCanvas) {
+    list.push(visualizer.ditherCanvas)
+  }
   return list
 }
 
