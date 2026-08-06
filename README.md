@@ -16,7 +16,7 @@ An algorithmic visual playground for sound-reactive geometry.
 
 ## What is a Luminode?
 
-A **luminode** is a visual pattern module. Think of it as an oscillator in a synthesizer. The core drawing component that generates geometric shapes and patterns. Each luminode is a self-contained visual effect that responds to MIDI input, creating structured geometries inspired by computer and kinetic art pioneers like Jesús Rafael Soto, Gego, John Whitney, and Thomas Wilfred.
+A **luminode** is a visual pattern module. Think of it as an oscillator in a synthesizer. The core drawing component that generates geometric shapes and patterns. Each luminode is a self-contained visual effect that responds to MIDI input, creating structured geometries inspired by early computer artists such as Vera Molnár, John Whitney, and kinetic artists like Gego and Soto.
 
 ## Features
 
@@ -28,12 +28,12 @@ A **luminode** is a visual pattern module. Think of it as an oscillator in a syn
 - **Canvas Filters** - Lumia blur, invert, grid overlay, CRT effect, noise overlay, dither, chromatic aberration
 - **Shader backgrounds** - Fluid simulation (GPU-io) plus modular WebGL2 full-screen shaders under `src/shaders/background/` (many adapted from [Shadertoy](https://www.shadertoy.com/) community sketches; you can add modes dynamically — see `src/shaders/background/README.md`)
 - **MIDI Mappings** - Custom hardware controller mappings (see `midi-mappings/`)
-- **Experimental HID Canvas (Deprecated)** - Drawing tablet support for interactive control
+- **Tablet Support** - Experimental / in development (Web HID drawing tablet input)
 
 ## Quick Start
 
 ```bash
-python3 -m http.server 8000
+npm run start
 ```
 
 Open `http://localhost:8000/` in Chrome.
@@ -43,7 +43,6 @@ Open `http://localhost:8000/` in Chrome.
 - **[User Manual](USER_MANUAL.md)** - Complete guide to using G.L.O.W.
 - **[Architecture Diagrams](diagrams/README.md)** - System architecture and component interactions
 - **[Zen of G.L.O.W.](ZEN_OF_GLOW.md)** - Design principles and philosophy
-- **[Hardware Documentation](hardware/README.md)** - Hardware controller development
 
 ## Browser Requirements
 

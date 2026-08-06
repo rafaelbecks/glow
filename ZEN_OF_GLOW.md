@@ -26,7 +26,7 @@ Draw inspiration from mathematical and artistic principles. Every visual should 
 The architecture should welcome new luminodes and features without breaking existing functionality.
 
 **Artistic integrity**  
-Honor the pioneers of geometric and kinetic art. Every pattern should have artistic or mathematical significance.
+Honor the pioneers of early computer and geometric art. Every pattern should have artistic or mathematical significance.
 
 ---
 
