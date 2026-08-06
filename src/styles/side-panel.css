@@ -56,15 +56,15 @@
     padding: 8px 12px;
     cursor: pointer;
     font-size: 11px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0.04em;
     display: flex;
     align-items: center;
     gap: 6px;
     transition: all 0.15s ease;
     border-radius: 2px;
-    font-family: inherit;
+    font-family: "Analo Grotesk", "Inconsolata", sans-serif;
     flex: 1;
     justify-content: center;
 }
@@ -641,10 +641,11 @@
 .modulator-header h4 {
     color: #fff;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 400;
     margin: 0;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    text-transform: none;
+    letter-spacing: 0.04em;
+    font-family: "Analo Grotesk", "Inconsolata", sans-serif;
 }
 
 .add-modulator-btn {
@@ -652,17 +653,17 @@
     border: 1px solid #555;
     color: #fff;
     padding: 6px 12px;
-    font-size: 10px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    font-size: 11px;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0.04em;
     cursor: pointer;
     transition: all 0.15s ease;
     border-radius: 3px;
     display: flex;
     align-items: center;
     gap: 6px;
-    font-family: inherit;
+    font-family: "Analo Grotesk", "Inconsolata", sans-serif;
 }
 
 .add-modulator-btn:hover:not(:disabled) {
@@ -888,4 +889,14 @@
     width: 100%;
     height: 100%;
     display: block;
+}
+
+/* Analo Grotesk on track / folder titles (Tweakpane) */
+.side-panel .tp-tabv_t,
+.side-panel .tp-tbiv,
+.side-panel .tp-fldv_t {
+    font-family: "Analo Grotesk", "Inconsolata", sans-serif;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    text-transform: none;
 }

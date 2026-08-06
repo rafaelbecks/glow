@@ -186,4 +186,12 @@ export class SidePanel {
     this.luminodeConfigManager.setSettings(settings)
     this.canvasUIManager.setSettings(settings)
   }
+
+  setLuminodePicker (picker) {
+    this.trackUIManager.setLuminodePicker(picker)
+  }
+
+  applyLuminodeSelection (trackId, luminode) {
+    this.trackUIManager.applyLuminodeSelection(trackId, luminode)
+  }
 }

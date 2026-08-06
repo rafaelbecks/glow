@@ -32,19 +32,19 @@ export class SidePanelBase {
         <div class="panel-tabs">
           <button class="tab-btn active" data-tab="tracks">
             <ion-icon name="cube-outline"></ion-icon>
-            <span>TRACKS</span>
+            <span>Tracks</span>
           </button>
           <button class="tab-btn" data-tab="modulation">
             <ion-icon name="pulse-outline"></ion-icon>
-            <span>MODULATION</span>
+            <span>Modulation</span>
           </button>
           <button class="tab-btn" data-tab="canvas">
             <ion-icon name="color-palette-outline"></ion-icon>
-            <span>CANVAS</span>
+            <span>Canvas</span>
           </button>
           <button class="tab-btn" data-tab="tablet">
             <ion-icon name="pencil-outline"></ion-icon>
-            <span>TABLET</span>
+            <span>Tablet</span>
           </button>
         </div>
       </div>
@@ -79,7 +79,10 @@ export class SidePanelBase {
         if (
           this.isVisible &&
           !this.panel.contains(e.target) &&
-          !e.target.closest('.panel-toggle-btn')
+          !e.target.closest('.panel-toggle-btn') &&
+          !e.target.closest(
+            '.luminode-picker-dialog, .save-dialog, .file-picker-dialog, .create-set-dialog, .info-modal'
+          )
         ) {
           this.hide()
         }

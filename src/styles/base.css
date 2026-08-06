@@ -1,4 +1,14 @@
 /* Base styles and global elements */
+@font-face {
+    font-family: "Analo Grotesk";
+    src:
+        url("../../fonts/AnaloGrotesk-Trial-Regular.ttf") format("truetype"),
+        url("../../fonts/AnaloGrotesk-Trial-Regular.otf") format("opentype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
 body, html {
     margin: 0;
     padding: 0;

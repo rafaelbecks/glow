@@ -10,6 +10,7 @@ import { ProjectManager } from './project-manager.js'
 import { SaveDialog } from './components/save-dialog.js'
 import { FilePickerDialog } from './components/file-picker-dialog.js'
 import { CreateSetDialog } from './components/create-set-dialog.js'
+import { LuminodePickerDialog } from './components/luminode-picker-dialog.js'
 import { FILE_TYPE } from './glow-file-types.js'
 import { getLuminodeConfig } from './luminode-configs.js'
 import {
@@ -79,6 +80,8 @@ export class GLOWVisualizer {
     this.saveDialog = new SaveDialog()
     this.filePickerDialog = new FilePickerDialog(this.projectManager)
     this.createSetDialog = new CreateSetDialog(this.projectManager.setManager)
+    this.luminodePickerDialog = new LuminodePickerDialog()
+    this.sidePanel.setLuminodePicker(this.luminodePickerDialog)
     this.visualizerStarted = false
 
     // CRT overlay element
@@ -128,6 +131,7 @@ export class GLOWVisualizer {
     this.setupSaveDialog()
     this.setupFilePickerDialog()
     this.setupCreateSetDialog()
+    this.setupLuminodePickerDialog()
     this.setupLogoButtons()
     this.initialize().catch((error) =>
       console.error('Failed to initialize:', error)
@@ -281,6 +285,13 @@ export class GLOWVisualizer {
   setupCreateSetDialog () {
     this.createSetDialog.on('save', (data) => this.handleSetSave(data))
     this.createSetDialog.setupEventListeners()
+  }
+
+  setupLuminodePickerDialog () {
+    this.luminodePickerDialog.on('luminodeSelected', ({ trackId, luminode }) => {
+      this.sidePanel.applyLuminodeSelection(trackId, luminode)
+    })
+    this.luminodePickerDialog.setupEventListeners()
   }
 
   handleCreateSet (data) {

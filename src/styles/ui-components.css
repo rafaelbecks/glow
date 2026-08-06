@@ -17,10 +17,12 @@
     font-size: 18px;
     font-weight: 200;
     margin: 10px 0;
+    font-style: normal;
+    letter-spacing: 0.04em;
+    text-transform: none;
     font-style: italic;
-    letter-spacing: 1px;
-    font-family: "Inconsolata", monospace;
-}
+
+    font-family: "Inconsolata", monospace;}
 
 .logo-buttons {
     display: flex;
@@ -37,8 +39,11 @@
     transform: translateX(-50%);
     z-index: 1000;
     text-align: center;
-    font-family: "Inconsolata", monospace;
+    font-family: "Analo Grotesk", "Inconsolata", sans-serif;
     font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    text-transform: none;
     color: rgba(255, 255, 255, 0.7);
     background: rgba(0, 0, 0, 0.3);
     padding: 4px 12px;
@@ -120,14 +125,16 @@
 #startButton {
     padding: 8px 20px;
     font-size: 14px;
+    font-family: "Analo Grotesk", "Inconsolata", sans-serif;
+    font-weight: 400;
     background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.5);
     color: white;
     cursor: pointer;
     border-radius: 3px;
     transition: all 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    text-transform: none;
+    letter-spacing: 0.04em;
     display: flex;
     align-items: center;
     gap: 8px;

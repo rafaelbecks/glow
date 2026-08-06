@@ -2,7 +2,6 @@ import { Pane } from '../lib/tweakpane.min.js'
 import * as RotationPlugin from 'https://unpkg.com/@0b5vr/tweakpane-plugin-rotation@0.2.0/dist/tweakpane-plugin-rotation.js'
 import {
   hasLuminodeConfig,
-  getLuminodesByGroup,
   getLuminodeConfig
 } from '../luminode-configs.js'
 import {
@@ -17,6 +16,7 @@ export class TrackUIManager {
     this.trackManager = trackManager
     this.panel = panel
     this.luminodeConfigManager = luminodeConfigManager
+    this.luminodePicker = null
     this.settings = null
     this.trackPanes = new Map()
     this.mainPane = null
@@ -24,6 +24,10 @@ export class TrackUIManager {
 
   setSettings (settings) {
     this.settings = settings
+  }
+
+  setLuminodePicker (picker) {
+    this.luminodePicker = picker
   }
 
   renderTracks () {
@@ -144,8 +148,6 @@ export class TrackUIManager {
         midiDeviceOptions[device.name] = device.id
       })
 
-      const groupedLuminodes = this.getGroupedLuminodeOptions()
-
       const trackData = {
         midiDevice: track.midiDevice || '',
         luminode: track.luminode || ''
@@ -161,15 +163,12 @@ export class TrackUIManager {
         })
 
       const luminodeBinding = pane
-        .addBinding(trackData, 'luminode', {
-          options: groupedLuminodes,
+        .addButton({
+          title: this.getLuminodeButtonTitle(track.luminode),
           label: 'Luminode'
         })
-        .on('change', (ev) => {
-          const newLuminode = ev.value || null
-          this.trackManager.setLuminode(track.id, newLuminode)
-          trackData.luminode = newLuminode || ''
-          this.updateLuminodeConfigPane(track.id, newLuminode)
+        .on('click', () => {
+          this.openLuminodePicker(track.id)
         })
 
       let layoutData = null
@@ -374,18 +373,39 @@ export class TrackUIManager {
     }
   }
 
-  getGroupedLuminodeOptions () {
-    const groupedLuminodes = getLuminodesByGroup()
-    const options = { 'Select Luminode': '' }
+  getLuminodeButtonTitle (luminode) {
+    if (!luminode) return 'Select…'
+    return this.normalizeLuminodeName(luminode)
+  }
 
-    Object.entries(groupedLuminodes).forEach(([groupName, luminodes]) => {
-      luminodes.forEach((luminode) => {
-        const displayName = `${this.normalizeLuminodeName(luminode)} (${groupName})`
-        options[displayName] = luminode
-      })
-    })
+  openLuminodePicker (trackId) {
+    if (!this.luminodePicker) return
+    const track = this.trackManager.getTrack(trackId)
+    this.luminodePicker.show(trackId, track?.luminode || null)
+  }
 
-    return options
+  applyLuminodeSelection (trackId, luminode) {
+    const paneData = this.trackPanes.get(trackId)
+    this.trackManager.setLuminode(trackId, luminode)
+    if (paneData?.trackData) {
+      paneData.trackData.luminode = luminode || ''
+    }
+    this.updateLuminodeButtonTitle(trackId, luminode)
+    this.updateLuminodeConfigPane(trackId, luminode)
+  }
+
+  updateLuminodeButtonTitle (trackId, luminode) {
+    const paneData = this.trackPanes.get(trackId)
+    if (!paneData?.luminodeBinding) return
+
+    const title = this.getLuminodeButtonTitle(luminode)
+    try {
+      paneData.luminodeBinding.title = title
+    } catch (_) {
+      try {
+        paneData.luminodeBinding.controller?.props?.set('title', title)
+      } catch (__) {}
+    }
   }
 
   createLuminodeConfigFolder (pane, track) {
@@ -506,6 +526,7 @@ export class TrackUIManager {
 
     paneData.trackData.midiDevice = track.midiDevice || ''
     paneData.trackData.luminode = track.luminode || ''
+    this.updateLuminodeButtonTitle(trackId, track.luminode)
 
     if (track.luminode !== 'triangle' && paneData.layoutData) {
       paneData.layoutData.position = { x: track.layout.x, y: track.layout.y }
