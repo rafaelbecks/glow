@@ -28,6 +28,7 @@ A **luminode** is a visual pattern module. Think of it as an oscillator in a syn
 - **Canvas Filters** - Lumia blur, invert, grid overlay, CRT effect, noise overlay, dither, chromatic aberration
 - **Shader backgrounds** - Fluid simulation (GPU-io) plus modular WebGL2 full-screen shaders under `src/shaders/background/` (many adapted from [Shadertoy](https://www.shadertoy.com/) community sketches; you can add modes dynamically — see `src/shaders/background/README.md`)
 - **MIDI Mappings** - Custom hardware controller mappings (see `midi-mappings/`)
+- **Generate Mode** - Browser-side note generator for testing without a MIDI device (External tab)
 - **Tablet Support** - Experimental / in development (Web HID drawing tablet input)
 
 ## Quick Start
@@ -36,7 +37,16 @@ A **luminode** is a visual pattern module. Think of it as an oscillator in a syn
 npm run start
 ```
 
-Open `http://localhost:8000/` in Chrome.
+Open `http://localhost:8000/` in Chrome, then:
+
+1. **Click Start** to initialize the app (and request MIDI access).
+2. **Open the side panel** (cube icon, top right) and assign a luminode to one or more tracks.
+3. Feed notes in one of two ways:
+   - **MIDI device** — connect a keyboard / controller (or a virtual port + `node midi-test.js`), assign the device to a track, and play.
+   - **Generate mode** — open the **External** tab → **Add Generator**, pick a track, and enable it. Notes are injected per track (no hardware required). Up to four generators (one per track). Disable/remove a generator when you want real MIDI on that track again.
+4. Optionally enable **MIDI Output** under Generate Mode if you want to record the random stream elsewhere (it is not meant to be musical).
+
+See the **[User Manual](USER_MANUAL.md)** for the full walkthrough.
 
 ## Documentation
 

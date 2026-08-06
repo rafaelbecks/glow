@@ -642,8 +642,9 @@ export class TrackUIManager {
         if (indicator) {
           const hasActivity =
             track.luminode &&
-            activeNotes[track.luminode] &&
-            activeNotes[track.luminode].length > 0
+            ((activeNotes[track.id] && activeNotes[track.id].length > 0) ||
+              (activeNotes[track.luminode] &&
+                activeNotes[track.luminode].length > 0))
           indicator.classList.toggle('active', hasActivity)
         }
       }

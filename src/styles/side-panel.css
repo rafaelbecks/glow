@@ -631,6 +631,11 @@
     padding: 20px;
 }
 
+/* External Systems (MIDI generators + tablet) */
+.external-systems-controls {
+    padding: 20px;
+}
+
 .modulator-header {
     display: flex;
     justify-content: space-between;

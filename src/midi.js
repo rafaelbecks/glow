@@ -23,6 +23,88 @@ export class MIDIManager {
     this.output = null
     this.currentNote = null
     this.octaveRange = 3
+
+    // Generate mode: feed notes without hardware MIDI; blocks real note input
+    this.generateModeActive = false
+    this.generateOutputEnabled = false
+    this.generatorOwnedTracks = new Set()
+    /** @type {Record<number, Array<{ midi: number, velocity: number, timestamp: number }>>} */
+    this.activeNotesByTrack = {}
+  }
+
+  setGenerateModeActive (active) {
+    this.generateModeActive = !!active
+  }
+
+  isGenerateModeActive () {
+    return this.generateModeActive
+  }
+
+  setGeneratorOwnedTracks (trackIds = []) {
+    this.generatorOwnedTracks = new Set(trackIds)
+  }
+
+  isTrackDrivenByGenerator (trackId) {
+    return this.generatorOwnedTracks.has(trackId)
+  }
+
+  setGenerateOutputEnabled (enabled) {
+    this.generateOutputEnabled = !!enabled
+  }
+
+  clearAllNotes () {
+    Object.keys(this.activeNotes).forEach((channel) => {
+      this.activeNotes[channel] = []
+    })
+    Object.keys(this.activeNotesByTrack).forEach((trackId) => {
+      this.activeNotesByTrack[trackId] = []
+    })
+  }
+
+  ensureTrackNoteBucket (trackId) {
+    if (this.activeNotesByTrack[trackId] === undefined) {
+      this.activeNotesByTrack[trackId] = []
+    }
+  }
+
+  clearTrackNotes (trackId) {
+    delete this.activeNotesByTrack[trackId]
+  }
+
+  noteOnTrack (trackId, midi, velocity) {
+    this.ensureTrackNoteBucket(trackId)
+    const list = this.activeNotesByTrack[trackId]
+    const existingNote = list.find(n => n.midi === midi)
+
+    if (existingNote) {
+      existingNote.timestamp = performance.now()
+      existingNote.velocity = velocity / SETTINGS.MIDI.VELOCITY_MAX
+    } else {
+      list.push({
+        midi,
+        velocity: velocity / SETTINGS.MIDI.VELOCITY_MAX,
+        timestamp: performance.now()
+      })
+    }
+  }
+
+  noteOffTrack (trackId, midi) {
+    const list = this.activeNotesByTrack[trackId]
+    if (!list) return
+    const index = list.findIndex(n => n.midi === midi)
+    if (index !== -1) {
+      list.splice(index, 1)
+    }
+  }
+
+  sendGenerateNoteOn (note, velocity) {
+    if (!this.generateOutputEnabled || !this.output) return
+    this.output.send([SETTINGS.MIDI.NOTE_ON, note, velocity])
+  }
+
+  sendGenerateNoteOff (note) {
+    if (!this.output) return
+    this.output.send([SETTINGS.MIDI.NOTE_OFF, note, 0])
   }
 
   noteOn (channel, midi, velocity) {
@@ -125,6 +207,9 @@ export class MIDIManager {
   }
 
   handleMIDIMessage (channel, msg) {
+    // Legacy bus path: ignore notes while any generator is active
+    if (this.generateModeActive) return
+
     const [status, data1, data2] = msg.data
     const cmd = status & 0xf0
 
@@ -155,9 +240,10 @@ export class MIDIManager {
 
     if (assignedTracks.length === 0) return
 
-    // Route the MIDI message to all assigned luminodes
+    // Route the MIDI message to all assigned luminodes (skip tracks owned by generators)
     assignedTracks.forEach(track => {
       if (!track.luminode) return
+      if (this.isTrackDrivenByGenerator(track.id)) return
 
       if (cmd === SETTINGS.MIDI.NOTE_ON && data2 > 0) {
         this.noteOn(track.luminode, data1, data2)
@@ -180,6 +266,12 @@ export class MIDIManager {
         return (now - note.timestamp) < maxAge
       })
     })
+
+    Object.keys(this.activeNotesByTrack).forEach(trackId => {
+      this.activeNotesByTrack[trackId] = this.activeNotesByTrack[trackId].filter(note => {
+        return (now - note.timestamp) < maxAge
+      })
+    })
   }
 
   // Get device info for debugging
@@ -195,7 +287,11 @@ export class MIDIManager {
     return info
   }
 
-  // Get active notes based on track assignments
+  /**
+   * Notes for drawing / activity. Prefer per-track generator notes when present;
+   * otherwise luminode-keyed hardware MIDI. Consumers should resolve with
+   * `notes[track.id] || notes[track.luminode]`.
+   */
   getActiveNotesForTracks () {
     if (!this.trackManager) {
       return this.activeNotes
@@ -204,18 +300,23 @@ export class MIDIManager {
     const activeTracks = this.trackManager.getActiveTracks()
     const trackBasedNotes = {}
 
-    // Initialize all luminode channels
     Object.keys(this.activeNotes).forEach(channel => {
       trackBasedNotes[channel] = []
     })
 
-    // Populate notes for active tracks
     activeTracks.forEach(track => {
-      if (track.luminode && track.midiDevice) {
-        // Get notes for the assigned luminode directly
-        if (this.activeNotes[track.luminode]) {
-          trackBasedNotes[track.luminode] = [...this.activeNotes[track.luminode]]
-        }
+      if (!track.luminode) return
+
+      if (this.isTrackDrivenByGenerator(track.id)) {
+        const notes = this.activeNotesByTrack[track.id] || []
+        trackBasedNotes[track.id] = [...notes]
+        return
+      }
+
+      if (track.midiDevice) {
+        const notes = this.activeNotes[track.luminode] || []
+        trackBasedNotes[track.id] = [...notes]
+        trackBasedNotes[track.luminode] = [...notes]
       }
     })
 

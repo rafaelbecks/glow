@@ -1,6 +1,7 @@
 // Main application bootstrap and orchestration
 import { SETTINGS, UTILS } from './settings.js'
 import { MIDIManager } from './midi.js'
+import { MidiGenerator } from './midi-generator.js'
 import { TrackManager } from './track-manager.js'
 import { SidePanel } from './side-panel.js'
 import { TabletManager } from './tablet-manager.js'
@@ -64,6 +65,7 @@ export class GLOWVisualizer {
     if (this.ccMapper) {
       this.midiManager.setCCMapper(this.ccMapper)
     }
+    this.midiGenerator = new MidiGenerator(this.midiManager, this.trackManager)
     this.tabletManager = new TabletManager(this.tabletCanvas, {
       midiManager: this.midiManager
     })
@@ -72,7 +74,9 @@ export class GLOWVisualizer {
       this.trackManager,
       this.tabletManager,
       this.uiManager,
-      this.midiManager
+      this.midiManager,
+      {},
+      this.midiGenerator
     )
     this.sidePanel.setSettings(SETTINGS)
     this.controlsManager = new ControlsManager(this)
@@ -241,6 +245,12 @@ export class GLOWVisualizer {
     )
     this.sidePanel.on('octaveRangeChange', (range) =>
       this.setOctaveRange(range)
+    )
+    this.sidePanel.on('generateMidiOutChange', (enabled) =>
+      this.setGenerateMidiOutEnabled(enabled)
+    )
+    this.sidePanel.on('generateMidiOutDeviceChange', (deviceId) =>
+      this.setGenerateMidiOutDevice(deviceId)
     )
 
     // Track manager events
@@ -668,6 +678,15 @@ export class GLOWVisualizer {
 
   setOctaveRange (range) {
     this.midiManager.setOctaveRange(range)
+  }
+
+  setGenerateMidiOutEnabled (enabled) {
+    this.midiGenerator.setMidiOutEnabled(enabled)
+  }
+
+  setGenerateMidiOutDevice (deviceId) {
+    this.midiManager.setOutputDevice(deviceId)
+    this.midiManager.initializeOutput()
   }
 
   // Track-based luminode management
@@ -1204,9 +1223,11 @@ export class GLOWVisualizer {
     const activeTracks = this.trackManager.getActiveTracks()
     const trackLayouts = this.getTrackLayouts()
 
-    // Draw luminodes only for active tracks that have luminodes assigned
+    // Draw luminodes for active tracks with a luminode; MIDI device required
+    // unless a generator is driving this track
     activeTracks.forEach((track) => {
-      if (!track.luminode || !track.midiDevice) return
+      const drivenByGenerator = this.midiGenerator.isTrackActive(track.id)
+      if (!track.luminode || (!track.midiDevice && !drivenByGenerator)) return
 
       // Get or create luminode instance for this track
       let luminode = this.getLuminodeForTrack(track.id)
@@ -1216,7 +1237,7 @@ export class GLOWVisualizer {
 
       if (!luminode) return
 
-      const notes = activeNotes[track.luminode] || []
+      const notes = activeNotes[track.id] || activeNotes[track.luminode] || []
       const layout = trackLayouts[track.id] || { x: 0, y: 0, rotation: 0 }
 
       const restoreValues = this.applyModulationToTrack(

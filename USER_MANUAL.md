@@ -13,17 +13,19 @@ G.L.O.W. is a real-time visual instrument that transforms your music into geomet
 ## Getting Started
 
 ### Quick Setup
-1. **Connect your MIDI device** (keyboard, controller, etc.)
-2. **Open the application** in Chrome browser
-3. **Click "Start"** to initialize MIDI
-4. **Click the cube icon** on the top right to open the side panel. Assign a MIDI device and luminode to a track, then play — geometry follows your notes.
+1. **Open the application** in Chrome
+2. **Click "Start"** to initialize (requests MIDI access)
+3. **Click the cube icon** on the top right to open the side panel and assign a luminode to a track
+4. Feed notes with either:
+   - **MIDI device** — connect a keyboard, controller, or software/virtual port, assign it to a track, then play
+   - **Generate mode** — External tab → Add Generator (up to one per track; no device needed). Remove/disable a generator before using real MIDI on that track.
 5. **Read this manual** via the triangle icon on the top right
 
 ### System Requirements
 - Modern web browser (Chrome recommended)
-- MIDI device (keyboard, controller, or software)
+- MIDI device *or* Generate Mode (External tab) for note input
 - File API support (for scene saving/loading)
-- Optional / experimental: drawing tablet (see [Tablet Support](#tablet-support-experimental))
+- Optional / experimental: drawing tablet (see [External Systems](#external-systems))
 
 ---
 
@@ -149,9 +151,31 @@ PNG composites shader background, luminodes, tablet layer, and enabled overlays 
 
 ---
 
-## Tablet Support (Experimental)
+## External Systems
 
-The **Tablet** tab is **experimental / in development**. Behavior and UI may change; treat it as optional and incomplete.
+Open the side panel → **External**. This tab groups MIDI utilities and experimental tablet support.
+
+### MIDI — Generators
+
+Use generators when you do not have a MIDI device connected (same idea as the Node `midi-test.js` script, but in-browser). You can add up to **four** generators — one per track — each with its own timing and chord settings.
+
+1. Assign luminodes to the tracks you want to drive
+2. Open **External** → click **Add Generator**
+3. Pick the **Track**, then tweak:
+   - **Interval (ms)** — how often a new chord fires
+   - **Musical Interval** — third / fourth / fifth / sixth (semitone stack)
+   - **Notes** — notes per chord
+   - **Velocity** — base note-on velocity (1–127)
+   - **Vel. Random ±** — random offset around velocity
+4. Optional **MIDI Output** — send generated notes to a MIDI output device (useful for recording; the stream is random, not musical)
+
+Generators swap chords without a note-off gap, so visuals stay continuous (unlike hardware MIDI note gaps). While a generator is enabled on a track, hardware MIDI notes for that track are ignored. Other tracks can still use real MIDI. Disable or remove the generator to return that track to hardware input.
+
+Tracks driven by a generator do not need a MIDI device assigned — luminode assignment is enough.
+
+### Tablet (Experimental)
+
+The **Tablet** folder under External is **experimental / in development**. Behavior and UI may change; treat it as optional and incomplete.
 
 When available it can include:
 

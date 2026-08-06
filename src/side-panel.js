@@ -4,7 +4,7 @@ import { TrackUIManager } from './components/track-ui-manager.js'
 import { LuminodeConfigManager } from './components/luminode-config-manager.js'
 import { CanvasUIManager } from './components/canvas-ui-manager.js'
 import { ModulationUIManager } from './components/modulation-ui-manager.js'
-import { TabletUIManager } from './components/tablet-ui-manager.js'
+import { ExternalSystemsUIManager } from './components/external-systems-ui-manager.js'
 
 export class SidePanel {
   constructor (
@@ -12,7 +12,8 @@ export class SidePanel {
     tabletManager,
     uiManager = null,
     midiManager = null,
-    options = {}
+    options = {},
+    midiGenerator = null
   ) {
     // Initialize base panel
     this.basePanel = new SidePanelBase(
@@ -38,10 +39,11 @@ export class SidePanel {
       trackManager,
       this.basePanel.getPanel()
     )
-    this.tabletUIManager = new TabletUIManager(
+    this.externalSystemsUIManager = new ExternalSystemsUIManager(
       this.basePanel.getPanel(),
       tabletManager,
-      midiManager
+      midiManager,
+      midiGenerator
     )
 
     // Set up event delegation
@@ -103,8 +105,8 @@ export class SidePanel {
       this.triggerCallback('canvasExport', e.detail)
     })
 
-    // Route tablet control events to callbacks
-    this.basePanel.getPanel().addEventListener('tabletControlChange', (e) => {
+    // Route external systems (MIDI generate + tablet) control events
+    this.basePanel.getPanel().addEventListener('externalControlChange', (e) => {
       const { action, data } = e.detail
       this.triggerCallback(action, data)
     })
@@ -118,8 +120,8 @@ export class SidePanel {
       this.trackUIManager.renderTracks()
     } else if (tabName === 'modulation') {
       this.modulationUIManager.renderModulationControls()
-    } else if (tabName === 'tablet') {
-      await this.tabletUIManager.renderTabletControls()
+    } else if (tabName === 'external') {
+      await this.externalSystemsUIManager.renderExternalControls()
     } else if (tabName === 'canvas') {
       this.canvasUIManager.renderCanvasControls()
     }
@@ -150,7 +152,7 @@ export class SidePanel {
     return this.basePanel.isPanelVisible()
   }
 
-  // Devices are fetched by TabletUIManager when the tab is rendered
+  // Devices are fetched by ExternalSystemsUIManager when the tab is rendered
   updateMidiOutputDevices (devices) {}
 
   // Delegate track UI methods

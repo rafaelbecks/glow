@@ -170,6 +170,12 @@ export class ControlsManager {
       case 'octaveRangeChange':
         glow.setOctaveRange(p.range)
         break
+      case 'generateMidiOutChange':
+        glow.setGenerateMidiOutEnabled(p.enabled)
+        break
+      case 'generateMidiOutDeviceChange':
+        glow.setGenerateMidiOutDevice(p.deviceId)
+        break
     }
   }
 }

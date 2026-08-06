@@ -42,9 +42,9 @@ export class SidePanelBase {
             <ion-icon name="color-palette-outline"></ion-icon>
             <span>Canvas</span>
           </button>
-          <button class="tab-btn" data-tab="tablet">
-            <ion-icon name="pencil-outline"></ion-icon>
-            <span>Tablet</span>
+          <button class="tab-btn" data-tab="external" title="External Systems">
+            <ion-icon name="hardware-chip-outline"></ion-icon>
+            <span>External</span>
           </button>
         </div>
       </div>
@@ -58,8 +58,8 @@ export class SidePanelBase {
         <div id="canvasTab" class="tab-content">
           <div id="canvasControlsContainer"></div>
         </div>
-        <div id="tabletTab" class="tab-content">
-          <div id="tabletControlsContainer"></div>
+        <div id="externalTab" class="tab-content">
+          <div id="externalControlsContainer"></div>
         </div>
       </div>
     `

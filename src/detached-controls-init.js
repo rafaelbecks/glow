@@ -240,7 +240,15 @@ if (!window.opener) {
       'midiOutputDeviceChange',
       (deviceId) => ({ type: 'midiOutputDeviceChange', deviceId })
     ],
-    ['octaveRangeChange', (range) => ({ type: 'octaveRangeChange', range })]
+    ['octaveRangeChange', (range) => ({ type: 'octaveRangeChange', range })],
+    [
+      'generateMidiOutChange',
+      (enabled) => ({ type: 'generateMidiOutChange', enabled })
+    ],
+    [
+      'generateMidiOutDeviceChange',
+      (deviceId) => ({ type: 'generateMidiOutDeviceChange', deviceId })
+    ]
   ]
 
   sidePanelEvents.forEach(([event, mapper]) => {
