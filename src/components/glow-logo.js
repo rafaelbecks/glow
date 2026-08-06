@@ -7,7 +7,6 @@ export class GlowLogo extends HTMLElement {
     this.animationId = 0
     this.svgData = null
     this.svgPaths = []
-    this.isHovered = false
     this.letterColors = ['white', 'white', 'white', 'white'] // G, L, O, W
     this.baseHues = [0, 0, 0, 0] // Base hues for each letter
   }
@@ -18,9 +17,10 @@ export class GlowLogo extends HTMLElement {
     this.ctx = this.canvas.getContext('2d')
     window.addEventListener('resize', this.resize.bind(this))
 
-    // Add hover event listeners
+    // Reshuffle hues on hover; color effect stays on otherwise
     this.canvas.addEventListener('mouseenter', this.handleMouseEnter.bind(this))
-    this.canvas.addEventListener('mouseleave', this.handleMouseLeave.bind(this))
+
+    this.generateRandomHues()
 
     // Load SVG data
     await this.loadSVG()
@@ -36,14 +36,7 @@ export class GlowLogo extends HTMLElement {
   }
 
   handleMouseEnter () {
-    this.isHovered = true
     this.generateRandomHues()
-  }
-
-  handleMouseLeave () {
-    this.isHovered = false
-    this.letterColors = ['white', 'white', 'white', 'white']
-    this.baseHues = [0, 0, 0, 0]
   }
 
   generateRandomHues () {
@@ -98,10 +91,8 @@ export class GlowLogo extends HTMLElement {
     const { width, height } = this.canvas
     this.ctx.clearRect(0, 0, width, height)
 
-    // Update letter colors based on hover state and time
-    if (this.isHovered) {
-      this.letterColors = this.baseHues.map(baseHue => this.getHueColor(baseHue, this.t))
-    }
+    // Animate letter colors continuously (same as former hover effect)
+    this.letterColors = this.baseHues.map(baseHue => this.getHueColor(baseHue, this.t))
 
     // Set up Vectrex-style rendering
     this.ctx.strokeStyle = 'white'
