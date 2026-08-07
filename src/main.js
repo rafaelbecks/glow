@@ -12,6 +12,7 @@ import { SaveDialog } from './components/save-dialog.js'
 import { FilePickerDialog } from './components/file-picker-dialog.js'
 import { CreateSetDialog } from './components/create-set-dialog.js'
 import { LuminodePickerDialog } from './components/luminode-picker-dialog.js'
+import { LuminodeCenter, bootstrapUserLuminodes } from './luminode-center/index.js'
 import { FILE_TYPE } from './glow-file-types.js'
 import { getLuminodeConfig } from './luminode-configs.js'
 import {
@@ -87,6 +88,18 @@ export class GLOWVisualizer {
     this.createSetDialog = new CreateSetDialog(this.projectManager.setManager)
     this.luminodePickerDialog = new LuminodePickerDialog()
     this.sidePanel.setLuminodePicker(this.luminodePickerDialog)
+    this.luminodeCenter = new LuminodeCenter({
+      visualizer: this,
+      trackManager: this.trackManager,
+      midiManager: this.midiManager,
+      midiGenerator: this.midiGenerator,
+      onSaved: () => {}
+    })
+    this.luminodePickerDialog.setDeleteHooks({
+      visualizer: this,
+      trackManager: this.trackManager,
+      midiManager: this.midiManager
+    })
     this.visualizerStarted = false
 
     // CRT overlay element
@@ -137,13 +150,28 @@ export class GLOWVisualizer {
     this.setupFilePickerDialog()
     this.setupCreateSetDialog()
     this.setupLuminodePickerDialog()
+    this.setupLuminodeCenter()
     this.setupLogoButtons()
     this.initialize().catch((error) =>
       console.error('Failed to initialize:', error)
     )
   }
 
+  setupLuminodeCenter () {
+    this.luminodeCenter.setupEventListeners()
+    this.luminodePickerDialog.on('openLuminodeCenter', ({ luminode }) => {
+      this.luminodeCenter.show(luminode || null)
+    })
+  }
+
   async initialize () {
+    // Load user luminodes from localStorage into the live registry
+    await bootstrapUserLuminodes({
+      visualizer: this,
+      trackManager: this.trackManager,
+      midiManager: this.midiManager
+    })
+
     // Initial canvas setup
     this.canvasDrawer.resize()
     this.resizeFluidBackgroundCanvas()
@@ -302,7 +330,22 @@ export class GLOWVisualizer {
     this.luminodePickerDialog.on('luminodeSelected', ({ trackId, luminode }) => {
       this.sidePanel.applyLuminodeSelection(trackId, luminode)
     })
+    this.luminodePickerDialog.on('userLuminodeDeleted', ({ luminode }) => {
+      this.handleUserLuminodeDeleted(luminode)
+    })
     this.luminodePickerDialog.setupEventListeners()
+  }
+
+  handleUserLuminodeDeleted (luminodeId) {
+    this.trackManager.getTracks().forEach((track) => {
+      if (track.luminode === luminodeId) {
+        this.sidePanel.applyLuminodeSelection(track.id, null)
+        this.trackLuminodes.delete(track.id)
+      }
+    })
+    if (this.luminodeCenter?.docId === luminodeId) {
+      this.luminodeCenter.newFromTemplate()
+    }
   }
 
   handleCreateSet (data) {

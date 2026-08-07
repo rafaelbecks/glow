@@ -844,7 +844,6 @@
 
 .luminode-picker-card-label {
     display: block;
-    padding: 0 8px 10px;
     font-size: 11px;
     line-height: 1.3;
     color: rgba(255, 255, 255, 0.85);
@@ -860,4 +859,581 @@
     padding: 16px 20px;
     border-top: 1px solid rgba(255, 255, 255, 0.2);
     flex-shrink: 0;
+}
+
+.luminode-picker-dialog-footer-left {
+    margin-right: auto;
+}
+
+/* Luminode Center */
+.luminode-center-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2100;
+}
+
+.luminode-center-dialog.show {
+    display: flex;
+}
+
+.luminode-center-dialog-content {
+    background: #000;
+    border: 1px solid #fff;
+    border-radius: 0;
+    width: 96%;
+    max-width: 1280px;
+    height: 90vh;
+    max-height: 900px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.luminode-center-dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    flex-shrink: 0;
+}
+
+.luminode-center-dialog-header h3 {
+    color: #fff;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-family: "Analo Grotesk", "Inconsolata", sans-serif;
+    white-space: nowrap;
+}
+
+.luminode-center-header-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+}
+
+.luminode-center-header-meta select,
+.luminode-center-name {
+    background: #0a0a0a;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    color: #fff;
+    font-family: "Inconsolata", monospace;
+    font-size: 13px;
+    padding: 8px 10px;
+    border-radius: 0;
+    outline: none;
+}
+
+.luminode-center-header-meta select {
+    max-width: 220px;
+    min-width: 140px;
+}
+
+.luminode-center-name {
+    flex: 1;
+    min-width: 120px;
+    color: hsla(131, 59%, 59%, 1);
+}
+
+.luminode-center-name:focus,
+.luminode-center-header-meta select:focus {
+    border-color: #fff;
+}
+
+.luminode-center-dialog-close {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 5px;
+    flex-shrink: 0;
+}
+
+.luminode-center-dialog-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.luminode-center-dialog-close ion-icon {
+    font-size: 20px;
+}
+
+.luminode-center-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    flex-shrink: 0;
+}
+
+.luminode-center-toolbar .btn-secondary,
+.luminode-center-toolbar .btn-primary {
+    padding: 7px 14px;
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.luminode-center-body {
+    display: grid;
+    grid-template-columns: minmax(320px, 1fr) 6px minmax(280px, var(--luminode-preview-width, 420px));
+    gap: 0;
+    flex: 1;
+    min-height: 0;
+}
+
+.luminode-center-resize-handle {
+    cursor: col-resize;
+    background: rgba(255, 255, 255, 0.08);
+    position: relative;
+    z-index: 2;
+    transition: background 0.15s ease;
+}
+
+.luminode-center-resize-handle:hover,
+.luminode-center-resize-handle.is-dragging {
+    background: #51cf66;
+}
+
+.luminode-center-resize-handle::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -4px;
+    right: -4px;
+}
+
+.luminode-center-editor-pane {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+}
+
+.luminode-center-editor-tabs {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-shrink: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.luminode-center-editor-tab {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: rgba(255, 255, 255, 0.45);
+    font-family: "Inconsolata", monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 10px 16px 8px;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.luminode-center-editor-tab:hover {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.luminode-center-editor-tab.is-active {
+    color: #51cf66;
+    border-bottom-color: #51cf66;
+}
+
+.luminode-center-editor-panel {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+.luminode-center-editor-panel.is-active {
+    display: flex;
+}
+
+.luminode-center-editor-host {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.luminode-center-editor-host .CodeMirror,
+.luminode-center-settings-json .CodeMirror {
+    height: 100%;
+    font-family: "Inconsolata", "SF Mono", monospace;
+    font-size: 13px;
+    background: #050505;
+    color: #e8e8e8;
+    border: none;
+}
+
+.luminode-center-editor-host .CodeMirror-gutters,
+.luminode-center-settings-json .CodeMirror-gutters {
+    background: #0a0a0a;
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.luminode-center-fallback-editor {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    background: #050505;
+    color: #e8e8e8;
+    border: none;
+    padding: 12px;
+    font-family: "Inconsolata", monospace;
+    font-size: 13px;
+    resize: none;
+    outline: none;
+}
+
+.luminode-center-settings-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(200px, 280px);
+    flex: 1;
+    min-height: 0;
+}
+
+.luminode-center-settings-json-wrap,
+.luminode-center-settings-live-wrap {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+}
+
+.luminode-center-settings-live-wrap {
+    border-left: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.luminode-center-settings-hint {
+    padding: 8px 12px;
+    font-family: "Inconsolata", monospace;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.45);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    flex-shrink: 0;
+}
+
+.luminode-center-settings-hint code {
+    color: #51cf66;
+}
+
+.luminode-center-settings-json {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.luminode-center-settings-tweak {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: 8px 10px 16px;
+}
+
+.luminode-center-settings-empty {
+    margin: 8px;
+    font-family: "Inconsolata", monospace;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.luminode-center-utils {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: 16px 20px 28px;
+    font-family: "Inconsolata", monospace;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.45;
+}
+
+.luminode-center-utils-section {
+    margin-bottom: 22px;
+}
+
+.luminode-center-utils-section h4 {
+    margin: 0 0 8px;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #51cf66;
+    font-weight: 400;
+}
+
+.luminode-center-utils-section p,
+.luminode-center-utils-section ul {
+    margin: 0 0 8px;
+}
+
+.luminode-center-utils-section ul {
+    padding-left: 18px;
+}
+
+.luminode-center-utils-section code {
+    color: hsla(131, 59%, 70%, 1);
+}
+
+.luminode-center-utils-section pre {
+    margin: 8px 0;
+    padding: 10px 12px;
+    background: #0a0a0a;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    overflow: auto;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.luminode-center-utils-section dl {
+    margin: 0;
+}
+
+.luminode-center-utils-section dt {
+    margin-top: 8px;
+    color: #fff;
+}
+
+.luminode-center-utils-section dd {
+    margin: 2px 0 0;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.luminode-center-preview-pane {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    background: #000;
+    border-left: none;
+}
+
+.luminode-center-preview-tabs {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-shrink: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.luminode-center-tab {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: rgba(255, 255, 255, 0.45);
+    font-family: "Inconsolata", monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 12px 16px 10px;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.luminode-center-tab:hover {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.luminode-center-tab.is-active {
+    color: #51cf66;
+    border-bottom-color: #51cf66;
+}
+
+.luminode-center-note-source {
+    margin-left: auto;
+    margin-right: 14px;
+    font-family: "Inconsolata", monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.luminode-center-note-source.is-midi {
+    color: #51cf66;
+}
+
+.luminode-center-tab-panel {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+.luminode-center-tab-panel.is-active {
+    display: flex;
+}
+
+.luminode-center-preview-stage {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    min-height: 0;
+    background:
+        radial-gradient(ellipse at center, rgba(255, 255, 255, 0.04) 0%, transparent 65%),
+        #000;
+}
+
+.luminode-center-preview-stage canvas {
+    width: min(100%, 420px);
+    height: auto;
+    aspect-ratio: 1;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: #000;
+    max-height: 100%;
+}
+
+.luminode-center-generator-host {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    padding: 12px 14px 20px;
+}
+
+.luminode-center-generator-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-family: "Inconsolata", monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.luminode-center-generator-add {
+    padding: 5px 12px !important;
+    font-size: 11px !important;
+}
+
+.luminode-center-generator-empty {
+    margin: 0 0 12px;
+    font-family: "Inconsolata", monospace;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.45);
+    line-height: 1.4;
+}
+
+.luminode-center-error {
+    margin: 0;
+    padding: 10px 16px;
+    font-family: "Inconsolata", monospace;
+    font-size: 12px;
+    color: #ff6b6b;
+    border-top: 1px solid rgba(255, 107, 107, 0.35);
+    background: rgba(255, 107, 107, 0.08);
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 96px;
+    overflow: auto;
+}
+
+.luminode-center-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    flex-shrink: 0;
+}
+
+.luminode-center-status {
+    font-family: "Inconsolata", monospace;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    min-height: 1em;
+}
+
+.luminode-picker-card-name {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 6px 10px 8px;
+    min-width: 0;
+}
+
+.luminode-picker-card-name .luminode-picker-card-label {
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+}
+
+.luminode-picker-card-delete {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.35);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.luminode-picker-card:hover .luminode-picker-card-delete,
+.luminode-picker-card-delete:focus {
+    opacity: 1;
+}
+
+.luminode-picker-card-delete:hover {
+    color: #ff6b6b;
+}
+
+.luminode-picker-card-delete ion-icon {
+    font-size: 14px;
+    pointer-events: none;
+}
+
+@media (max-width: 860px) {
+    .luminode-center-body {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 6px minmax(220px, 40%);
+    }
+
+    .luminode-center-resize-handle {
+        cursor: row-resize;
+    }
+
+    .luminode-center-settings-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 200px;
+    }
+
+    .luminode-center-settings-live-wrap {
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .luminode-center-dialog-content {
+        height: 96vh;
+    }
+
+    .luminode-center-header-meta {
+        display: none;
+    }
 }

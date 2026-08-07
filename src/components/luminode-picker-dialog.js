@@ -7,6 +7,9 @@ import {
   getLuminodeSettingsKey
 } from '../luminodes/index.js'
 import { SETTINGS } from '../settings.js'
+import { isUserLuminodeId } from '../luminode-center/model.js'
+import { deleteUserLuminode } from '../luminode-center/storage.js'
+import { unregisterUserLuminode } from '../luminode-center/registry.js'
 
 const PREVIEW_SIZE = 140
 const DEFAULT_PREVIEW = {
@@ -70,12 +73,22 @@ export class LuminodePickerDialog {
 
     const closeBtn = this.dialog.querySelector('#luminodePickerClose')
     const cancelBtn = this.dialog.querySelector('#luminodePickerCancel')
+    const centerBtn = this.dialog.querySelector('#luminodePickerOpenCenter')
 
     if (closeBtn) {
       closeBtn.addEventListener('click', () => this.hide())
     }
     if (cancelBtn) {
       cancelBtn.addEventListener('click', () => this.hide())
+    }
+    if (centerBtn) {
+      centerBtn.addEventListener('click', () => {
+        this.triggerCallback('openLuminodeCenter', {
+          trackId: this.trackId,
+          luminode: null
+        })
+        this.hide()
+      })
     }
 
     this.dialog.addEventListener('click', (e) => {
@@ -191,10 +204,11 @@ export class LuminodePickerDialog {
 
   createCard (key) {
     const displayName = getLuminodeDisplayName(key)
-    const card = document.createElement('button')
-    card.type = 'button'
+    const card = document.createElement('div')
     card.className = 'luminode-picker-card'
     card.dataset.luminode = key
+    card.setAttribute('role', 'button')
+    card.tabIndex = 0
     if (key === this.selectedLuminode) {
       card.classList.add('selected')
     }
@@ -208,12 +222,31 @@ export class LuminodePickerDialog {
     canvas.className = 'luminode-picker-canvas'
     thumb.appendChild(canvas)
 
+    const nameRow = document.createElement('div')
+    nameRow.className = 'luminode-picker-card-name'
+
     const label = document.createElement('span')
     label.className = 'luminode-picker-card-label'
     label.textContent = displayName
+    nameRow.appendChild(label)
+
+    if (isUserLuminodeId(key)) {
+      const delBtn = document.createElement('button')
+      delBtn.type = 'button'
+      delBtn.className = 'luminode-picker-card-delete'
+      delBtn.title = 'Delete luminode'
+      delBtn.setAttribute('aria-label', `Delete ${displayName}`)
+      delBtn.innerHTML = '<ion-icon name="trash-outline"></ion-icon>'
+      delBtn.addEventListener('click', (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        this.requestDeleteUserLuminode(key, displayName)
+      })
+      nameRow.appendChild(delBtn)
+    }
 
     card.appendChild(thumb)
-    card.appendChild(label)
+    card.appendChild(nameRow)
 
     card.addEventListener('mouseenter', () => {
       this.ensurePreview(key, canvas)
@@ -226,9 +259,48 @@ export class LuminodePickerDialog {
     card.addEventListener('click', () => {
       this.selectLuminode(key)
     })
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        this.selectLuminode(key)
+      }
+    })
 
     this.previews.set(key, { canvas, drawer: null, instance: null })
     return card
+  }
+
+  requestDeleteUserLuminode (key, displayName) {
+    const ok = window.confirm(
+      `Delete user luminode “${displayName}”? This cannot be undone.`
+    )
+    if (!ok) return
+
+    deleteUserLuminode(key)
+    unregisterUserLuminode(key, this.deleteHooks || {})
+    this.triggerCallback('userLuminodeDeleted', { luminode: key })
+
+    if (this.selectedLuminode === key) {
+      this.selectedLuminode = null
+    }
+    if (this.hoverKey === key) this.hoverKey = null
+    this.renderGrid()
+
+    const keys = [...this.previews.keys()]
+    let i = 0
+    const paintChunk = () => {
+      if (!this.isVisible) return
+      const end = Math.min(i + 4, keys.length)
+      for (; i < end; i++) {
+        this.drawPreview(keys[i], 0.8, false)
+      }
+      if (i < keys.length) requestAnimationFrame(paintChunk)
+    }
+    requestAnimationFrame(paintChunk)
+  }
+
+  setDeleteHooks (hooks) {
+    this.deleteHooks = hooks || {}
   }
 
   ensurePreview (key, canvas) {
