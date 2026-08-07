@@ -894,6 +894,22 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    transition: width 0.15s ease, height 0.15s ease, max-width 0.15s ease, max-height 0.15s ease;
+}
+
+.luminode-center-dialog-content.is-maximized {
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    border: none;
+}
+
+.luminode-center-dialog-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
 }
 
 .luminode-center-dialog-header {

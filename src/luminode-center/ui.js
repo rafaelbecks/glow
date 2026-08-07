@@ -76,6 +76,7 @@ export class LuminodeCenter {
     this.activeEditorTab = 'code'
     this.previewWidth = PREVIEW_DEFAULT
     this.resizing = false
+    this.maximized = false
 
     // Editor session state
     this.docId = null
@@ -94,8 +95,14 @@ export class LuminodeCenter {
 
     const closeBtn = document.getElementById('luminodeCenterClose')
     const cancelBtn = document.getElementById('luminodeCenterCancel')
+    const maximizeBtn = document.getElementById('luminodeCenterMaximize')
     if (closeBtn) closeBtn.addEventListener('click', () => this.hide())
     if (cancelBtn) cancelBtn.addEventListener('click', () => this.hide())
+    if (maximizeBtn) {
+      maximizeBtn.addEventListener('click', () => {
+        this.setMaximized(!this.maximized)
+      })
+    }
 
     this.dialog.addEventListener('click', (e) => {
       if (e.target === this.dialog) this.hide()
@@ -104,6 +111,10 @@ export class LuminodeCenter {
     document.addEventListener('keydown', (e) => {
       if (!this.isVisible) return
       if (e.key === 'Escape') {
+        if (this.maximized) {
+          this.setMaximized(false)
+          return
+        }
         this.hide()
         return
       }
@@ -202,6 +213,26 @@ export class LuminodeCenter {
 
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
+  }
+
+  setMaximized (enabled) {
+    this.maximized = !!enabled
+    if (this.contentEl) {
+      this.contentEl.classList.toggle('is-maximized', this.maximized)
+    }
+    const btn = document.getElementById('luminodeCenterMaximize')
+    if (btn) {
+      const icon = btn.querySelector('ion-icon')
+      if (icon) {
+        icon.setAttribute(
+          'name',
+          this.maximized ? 'contract-outline' : 'expand-outline'
+        )
+      }
+      btn.title = this.maximized ? 'Restore' : 'Maximize'
+      btn.setAttribute('aria-label', btn.title)
+    }
+    this.refreshEditors()
   }
 
   applyPreviewWidth () {
@@ -398,6 +429,7 @@ export class LuminodeCenter {
     this.ensureEditor()
     this.ensurePreview()
     this.applyPreviewWidth()
+    this.setMaximized(false)
     this.populateSourceSelect(luminodeKey)
     this.setSideTab('preview')
     this.setEditorTab('code')
@@ -418,6 +450,7 @@ export class LuminodeCenter {
     if (!this.isVisible) return
     this.isVisible = false
     this.dialog.classList.remove('show')
+    this.setMaximized(false)
     if (this.preview) this.preview.stop()
     if (this.generatorPane) this.generatorPane.dispose()
     if (this.settingsPane) this.settingsPane.dispose()
