@@ -29,7 +29,7 @@ export class WhitneyLinesLuminode {
       this.ctx.moveTo(0, 0)
       this.ctx.lineTo(x, y)
 
-      if (useColor) {
+      if (SETTINGS.MODULES.WHITNEY_LINES.USE_COLOR) {
         const note = notesToUse[i % notesToUse.length]
         this.ctx.strokeStyle = UTILS.pitchToColor(note)
         this.ctx.shadowColor = this.ctx.strokeStyle
