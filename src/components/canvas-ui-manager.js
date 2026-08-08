@@ -132,6 +132,11 @@ export class CanvasUIManager {
       chromaticAberrationContrast:
         canvasSettings.CHROMATIC_ABERRATION_CONTRAST || 1,
       invertFilter: canvasSettings.INVERT_FILTER || 0,
+      grayscaleFilter: canvasSettings.GRAYSCALE_FILTER || 0,
+      hueRotateFilter: canvasSettings.HUE_ROTATE_FILTER || 0,
+      brightnessFilter: canvasSettings.BRIGHTNESS_FILTER ?? 100,
+      contrastFilter: canvasSettings.CONTRAST_FILTER ?? 100,
+      saturationFilter: canvasSettings.SATURATION_FILTER ?? 100,
       shaderBackgroundEnabled:
         canvasSettings.SHADER_BACKGROUND_ENABLED || false,
       shaderBackgroundMode: canvasSettings.SHADER_BACKGROUND_MODE || 'Fluid',
@@ -293,6 +298,71 @@ export class CanvasUIManager {
     const pitchColorData = {
       hueFactor: UTILS.pitchColorFactor || 30
     }
+
+    const colorFiltersFolder = this.mainPane.addFolder({
+      title: 'Color Filters',
+      expanded: true
+    })
+    colorFiltersFolder
+      .addBinding(canvasData, 'invertFilter', {
+        label: 'Invert',
+        min: 0,
+        max: 100,
+        step: 1
+      })
+      .on('change', (ev) => {
+        this.triggerCanvasSettingChange('INVERT_FILTER', ev.value)
+      })
+    colorFiltersFolder
+      .addBinding(canvasData, 'grayscaleFilter', {
+        label: 'Grayscale',
+        min: 0,
+        max: 100,
+        step: 1
+      })
+      .on('change', (ev) => {
+        this.triggerCanvasSettingChange('GRAYSCALE_FILTER', ev.value)
+      })
+    colorFiltersFolder
+      .addBinding(canvasData, 'hueRotateFilter', {
+        label: 'Hue Rotate',
+        min: 0,
+        max: 360,
+        step: 1
+      })
+      .on('change', (ev) => {
+        this.triggerCanvasSettingChange('HUE_ROTATE_FILTER', ev.value)
+      })
+    colorFiltersFolder
+      .addBinding(canvasData, 'brightnessFilter', {
+        label: 'Brightness',
+        min: 0,
+        max: 200,
+        step: 1
+      })
+      .on('change', (ev) => {
+        this.triggerCanvasSettingChange('BRIGHTNESS_FILTER', ev.value)
+      })
+    colorFiltersFolder
+      .addBinding(canvasData, 'contrastFilter', {
+        label: 'Contrast',
+        min: 0,
+        max: 200,
+        step: 1
+      })
+      .on('change', (ev) => {
+        this.triggerCanvasSettingChange('CONTRAST_FILTER', ev.value)
+      })
+    colorFiltersFolder
+      .addBinding(canvasData, 'saturationFilter', {
+        label: 'Saturation',
+        min: 0,
+        max: 200,
+        step: 1
+      })
+      .on('change', (ev) => {
+        this.triggerCanvasSettingChange('SATURATION_FILTER', ev.value)
+      })
 
     const canvasFolder = this.mainPane.addFolder({
       title: 'Canvas Settings',
@@ -582,17 +652,6 @@ export class CanvasUIManager {
       chromaticAberrationFolder,
       canvasData.chromaticAberrationEnabled
     )
-
-    canvasFolder
-      .addBinding(canvasData, 'invertFilter', {
-        label: 'Invert Filter',
-        min: 0,
-        max: 100,
-        step: 1
-      })
-      .on('change', (ev) => {
-        this.triggerCanvasSettingChange('INVERT_FILTER', ev.value)
-      })
 
     const shaderBgParamFolders = {}
     let shaderBackgroundFolder = null

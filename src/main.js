@@ -938,6 +938,16 @@ export class GLOWVisualizer {
         this.updateChromaticAberrationContrast(value)
       } else if (setting === 'INVERT_FILTER') {
         this.updateInvertFilter(value)
+      } else if (setting === 'GRAYSCALE_FILTER') {
+        this.updateGrayscaleFilter(value)
+      } else if (setting === 'HUE_ROTATE_FILTER') {
+        this.updateHueRotateFilter(value)
+      } else if (setting === 'BRIGHTNESS_FILTER') {
+        this.updateBrightnessFilter(value)
+      } else if (setting === 'CONTRAST_FILTER') {
+        this.updateContrastFilter(value)
+      } else if (setting === 'SATURATION_FILTER') {
+        this.updateSaturationFilter(value)
       } else if (setting === 'SHADER_BACKGROUND_ENABLED') {
         this.updateFluidBackgroundEnabled(value)
       } else if (setting === 'SHADER_BACKGROUND_MODE') {
@@ -1001,27 +1011,44 @@ export class GLOWVisualizer {
     }
   }
 
-  // Apply all canvas filters (blur and invert) together
+  // Apply all canvas filters (blur + color filters) together
   applyCanvasFilters () {
     if (!this.canvas) return
 
     const filters = []
     const lumiaBlur = SETTINGS.CANVAS.LUMIA_EFFECT || 0
     const invertValue = SETTINGS.CANVAS.INVERT_FILTER || 0
+    const grayscaleValue = SETTINGS.CANVAS.GRAYSCALE_FILTER || 0
+    const hueRotateValue = SETTINGS.CANVAS.HUE_ROTATE_FILTER || 0
+    const brightnessValue = SETTINGS.CANVAS.BRIGHTNESS_FILTER ?? 100
+    const contrastValue = SETTINGS.CANVAS.CONTRAST_FILTER ?? 100
+    const saturationValue = SETTINGS.CANVAS.SATURATION_FILTER ?? 100
 
     if (lumiaBlur > 0) {
       filters.push(`blur(${lumiaBlur}px)`)
     }
 
+    // Color filters applied after blur so they sit on top of other canvas effects
     if (invertValue > 0) {
       filters.push(`invert(${invertValue / 100})`)
     }
-
-    if (filters.length > 0) {
-      this.canvas.style.filter = filters.join(' ')
-    } else {
-      this.canvas.style.filter = 'none'
+    if (grayscaleValue > 0) {
+      filters.push(`grayscale(${grayscaleValue / 100})`)
     }
+    if (hueRotateValue !== 0) {
+      filters.push(`hue-rotate(${hueRotateValue}deg)`)
+    }
+    if (brightnessValue !== 100) {
+      filters.push(`brightness(${brightnessValue / 100})`)
+    }
+    if (contrastValue !== 100) {
+      filters.push(`contrast(${contrastValue / 100})`)
+    }
+    if (saturationValue !== 100) {
+      filters.push(`saturate(${saturationValue / 100})`)
+    }
+
+    this.canvas.style.filter = filters.length > 0 ? filters.join(' ') : 'none'
   }
 
   updateLuminodeConfig (data) {
@@ -1935,7 +1962,31 @@ export class GLOWVisualizer {
     const invertPercent = Math.max(0, Math.min(100, value))
     SETTINGS.CANVAS.INVERT_FILTER = invertPercent
     this.applyCanvasFilters()
-    console.log(`Invert filter updated to ${invertPercent}%`)
+  }
+
+  updateGrayscaleFilter (value) {
+    SETTINGS.CANVAS.GRAYSCALE_FILTER = Math.max(0, Math.min(100, value))
+    this.applyCanvasFilters()
+  }
+
+  updateHueRotateFilter (value) {
+    SETTINGS.CANVAS.HUE_ROTATE_FILTER = Math.max(0, Math.min(360, value))
+    this.applyCanvasFilters()
+  }
+
+  updateBrightnessFilter (value) {
+    SETTINGS.CANVAS.BRIGHTNESS_FILTER = Math.max(0, Math.min(200, value))
+    this.applyCanvasFilters()
+  }
+
+  updateContrastFilter (value) {
+    SETTINGS.CANVAS.CONTRAST_FILTER = Math.max(0, Math.min(200, value))
+    this.applyCanvasFilters()
+  }
+
+  updateSaturationFilter (value) {
+    SETTINGS.CANVAS.SATURATION_FILTER = Math.max(0, Math.min(200, value))
+    this.applyCanvasFilters()
   }
 
   syncShaderBackgroundEngines () {

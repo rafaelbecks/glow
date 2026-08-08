@@ -53,6 +53,11 @@ export class ProjectManager {
         chromaticAberrationContrast:
           SETTINGS.CANVAS.CHROMATIC_ABERRATION_CONTRAST,
         invertFilter: SETTINGS.CANVAS.INVERT_FILTER,
+        grayscaleFilter: SETTINGS.CANVAS.GRAYSCALE_FILTER,
+        hueRotateFilter: SETTINGS.CANVAS.HUE_ROTATE_FILTER,
+        brightnessFilter: SETTINGS.CANVAS.BRIGHTNESS_FILTER,
+        contrastFilter: SETTINGS.CANVAS.CONTRAST_FILTER,
+        saturationFilter: SETTINGS.CANVAS.SATURATION_FILTER,
         shaderBackgroundEnabled: SETTINGS.CANVAS.SHADER_BACKGROUND_ENABLED,
         shaderBackgroundMode: SETTINGS.CANVAS.SHADER_BACKGROUND_MODE,
         shaderBackgroundTrailLength:
@@ -1025,6 +1030,31 @@ export class ProjectManager {
     if (canvasData.invertFilter !== undefined) {
       SETTINGS.CANVAS.INVERT_FILTER = canvasData.invertFilter;
       this.glowVisualizer.updateInvertFilter(canvasData.invertFilter);
+    }
+
+    if (canvasData.grayscaleFilter !== undefined) {
+      SETTINGS.CANVAS.GRAYSCALE_FILTER = canvasData.grayscaleFilter;
+      this.glowVisualizer.updateGrayscaleFilter(canvasData.grayscaleFilter);
+    }
+
+    if (canvasData.hueRotateFilter !== undefined) {
+      SETTINGS.CANVAS.HUE_ROTATE_FILTER = canvasData.hueRotateFilter;
+      this.glowVisualizer.updateHueRotateFilter(canvasData.hueRotateFilter);
+    }
+
+    if (canvasData.brightnessFilter !== undefined) {
+      SETTINGS.CANVAS.BRIGHTNESS_FILTER = canvasData.brightnessFilter;
+      this.glowVisualizer.updateBrightnessFilter(canvasData.brightnessFilter);
+    }
+
+    if (canvasData.contrastFilter !== undefined) {
+      SETTINGS.CANVAS.CONTRAST_FILTER = canvasData.contrastFilter;
+      this.glowVisualizer.updateContrastFilter(canvasData.contrastFilter);
+    }
+
+    if (canvasData.saturationFilter !== undefined) {
+      SETTINGS.CANVAS.SATURATION_FILTER = canvasData.saturationFilter;
+      this.glowVisualizer.updateSaturationFilter(canvasData.saturationFilter);
     }
 
     if (canvasData.shaderBackgroundEnabled !== undefined) {

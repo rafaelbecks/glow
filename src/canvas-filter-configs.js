@@ -20,6 +20,41 @@ export const CANVAS_FILTER_CONFIGS = {
       { key: 'INVERT_FILTER', label: 'Level', type: 'slider', min: 0, max: 100, step: 1, default: 0 }
     ]
   },
+  grayscaleFilter: {
+    levelOnly: true,
+    enableKey: null,
+    config: [
+      { key: 'GRAYSCALE_FILTER', label: 'Level', type: 'slider', min: 0, max: 100, step: 1, default: 0 }
+    ]
+  },
+  hueRotateFilter: {
+    levelOnly: true,
+    enableKey: null,
+    config: [
+      { key: 'HUE_ROTATE_FILTER', label: 'Level', type: 'slider', min: 0, max: 360, step: 1, default: 0 }
+    ]
+  },
+  brightnessFilter: {
+    levelOnly: true,
+    enableKey: null,
+    config: [
+      { key: 'BRIGHTNESS_FILTER', label: 'Level', type: 'slider', min: 0, max: 200, step: 1, default: 100 }
+    ]
+  },
+  contrastFilter: {
+    levelOnly: true,
+    enableKey: null,
+    config: [
+      { key: 'CONTRAST_FILTER', label: 'Level', type: 'slider', min: 0, max: 200, step: 1, default: 100 }
+    ]
+  },
+  saturationFilter: {
+    levelOnly: true,
+    enableKey: null,
+    config: [
+      { key: 'SATURATION_FILTER', label: 'Level', type: 'slider', min: 0, max: 200, step: 1, default: 100 }
+    ]
+  },
   dither: {
     levelOnly: false,
     enableKey: 'DITHER_OVERLAY',

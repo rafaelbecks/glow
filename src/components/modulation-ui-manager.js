@@ -12,7 +12,12 @@ import {
 const CANVAS_FILTER_LABELS = {
   clearAlpha: 'Clear Alpha',
   lumiaEffect: 'Lumia Effect',
-  invertFilter: 'Invert Filter',
+  invertFilter: 'Invert',
+  grayscaleFilter: 'Grayscale',
+  hueRotateFilter: 'Hue Rotate',
+  brightnessFilter: 'Brightness',
+  contrastFilter: 'Contrast',
+  saturationFilter: 'Saturation',
   dither: 'Dither'
 }
 
