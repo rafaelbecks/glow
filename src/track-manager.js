@@ -146,7 +146,7 @@ export class TrackManager {
     return newConfig
   }
 
-  getTrajectoryPosition (trackId, time, basePosition = { x: 0, y: 0, z: 0 }) {
+  getTrajectoryPosition (trackId, time, basePosition = { x: 0, y: 0, z: 0, rotation: 0 }) {
     return this.trajectorySystem.getPosition(trackId, time, basePosition)
   }
 

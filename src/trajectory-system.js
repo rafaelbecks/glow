@@ -19,7 +19,7 @@ export class TrajectorySystem {
     this.trackConfigs = new Map()
 
     // Available trajectory types
-    this.trajectoryTypes = ['whitney', 'lissajous', 'xAxis', 'yAxis', 'triangle', 'circle']
+    this.trajectoryTypes = ['whitney', 'lissajous', 'xAxis', 'yAxis', 'triangle', 'circle', 'rotation']
 
     // Initialize default configurations for existing tracks
     this.initializeDefaultConfigs()
@@ -76,29 +76,53 @@ export class TrajectorySystem {
     return newConfig
   }
 
-  // Get trajectory position for a track at a given time
-  getPosition (trackId, time, basePosition = { x: 0, y: 0, z: 0 }) {
+  // Get trajectory layout for a track at a given time (position + rotation)
+  getPosition (trackId, time, basePosition = { x: 0, y: 0, z: 0, rotation: 0 }) {
     const config = this.getTrackConfig(trackId)
+    const baseRotation = basePosition.rotation ?? 0
 
     if (!config.enabled) {
-      return { x: basePosition.x, y: basePosition.y, z: basePosition.z }
+      return {
+        x: basePosition.x,
+        y: basePosition.y,
+        z: basePosition.z ?? 0,
+        rotation: baseRotation
+      }
+    }
+
+    const t = time * config.motionRate
+    const multiplier = config.inversion ? -1 : 1
+
+    // Spin on own axis — modifies layout rotation, leaves position alone
+    if (config.trajectoryType === 'rotation') {
+      const { ratioA, amplitude, phase } = config
+      const rotOffset = t * ratioA * amplitude + (phase?.[0] || 0) * (180 / Math.PI)
+      return {
+        x: basePosition.x,
+        y: basePosition.y,
+        z: basePosition.z ?? 0,
+        rotation: baseRotation + rotOffset * multiplier
+      }
     }
 
     const trajectoryFn = this.trajectories[config.trajectoryType]
     if (!trajectoryFn) {
-      return { x: basePosition.x, y: basePosition.y, z: basePosition.z }
+      return {
+        x: basePosition.x,
+        y: basePosition.y,
+        z: basePosition.z ?? 0,
+        rotation: baseRotation
+      }
     }
 
     // Calculate trajectory offset
-    const trajectoryOffset = trajectoryFn(time * config.motionRate, config)
-
-    // Apply inversion if enabled
-    const multiplier = config.inversion ? -1 : 1
+    const trajectoryOffset = trajectoryFn(t, config)
 
     return {
       x: basePosition.x + (trajectoryOffset[0] * multiplier),
       y: basePosition.y + (trajectoryOffset[1] * multiplier),
-      z: basePosition.z + (trajectoryOffset[2] * multiplier)
+      z: (basePosition.z ?? 0) + (trajectoryOffset[2] * multiplier),
+      rotation: baseRotation
     }
   }
 
@@ -220,7 +244,8 @@ export class TrajectorySystem {
       xAxis: 'X-Axis Movement',
       yAxis: 'Y-Axis Movement',
       triangle: 'Triangle Wave',
-      circle: 'Circular Motion'
+      circle: 'Circular Motion',
+      rotation: 'Axis Rotation'
     }
   }
 
