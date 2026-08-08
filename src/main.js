@@ -154,9 +154,97 @@ export class GLOWVisualizer {
     this.setupLuminodePickerDialog()
     this.setupLuminodeLab()
     this.setupLogoButtons()
+    this.setupFileDrop()
     this.initialize().catch((error) =>
       console.error('Failed to initialize:', error)
     )
+  }
+
+  setupFileDrop () {
+    this._fileDragDepth = 0
+
+    const isFileDrag = (e) =>
+      e.dataTransfer &&
+      Array.from(e.dataTransfer.types || []).includes('Files')
+
+    window.addEventListener('dragenter', (e) => {
+      if (!isFileDrag(e)) return
+      e.preventDefault()
+      this._fileDragDepth++
+      document.body.classList.add('glow-file-dragover')
+    })
+
+    window.addEventListener('dragover', (e) => {
+      if (!isFileDrag(e)) return
+      e.preventDefault()
+      e.dataTransfer.dropEffect = 'copy'
+    })
+
+    window.addEventListener('dragleave', (e) => {
+      if (!isFileDrag(e)) return
+      e.preventDefault()
+      this._fileDragDepth = Math.max(0, this._fileDragDepth - 1)
+      if (this._fileDragDepth === 0) {
+        document.body.classList.remove('glow-file-dragover')
+      }
+    })
+
+    window.addEventListener('drop', (e) => {
+      const wasFileDrag = isFileDrag(e)
+      this._fileDragDepth = 0
+      document.body.classList.remove('glow-file-dragover')
+      if (!wasFileDrag) return
+      e.preventDefault()
+      this.handleGlowFileDrop(e)
+    })
+  }
+
+  async handleGlowFileDrop (e) {
+    let file = null
+    let fileHandle = null
+
+    const items = e.dataTransfer?.items
+    if (items?.length) {
+      for (const item of items) {
+        if (item.kind !== 'file') continue
+
+        if (typeof item.getAsFileSystemHandle === 'function') {
+          try {
+            const handle = await item.getAsFileSystemHandle()
+            if (handle?.kind === 'file') {
+              fileHandle = handle
+              file = await handle.getFile()
+            }
+          } catch (_) {
+            file = item.getAsFile()
+          }
+        } else {
+          file = item.getAsFile()
+        }
+        break
+      }
+    }
+
+    if (!file && e.dataTransfer?.files?.length) {
+      file = e.dataTransfer.files[0]
+    }
+
+    if (!file || !file.name.endsWith('.glow')) {
+      this.uiManager.showStatus('Drop a .glow project file to load it.', 'error')
+      return
+    }
+
+    try {
+      const content = await file.text()
+      const projectData = JSON.parse(content)
+      await this.handleProjectLoad({ file, projectData, fileHandle })
+    } catch (error) {
+      console.error('Error loading dropped project:', error)
+      this.uiManager.showStatus(
+        'Error loading dropped project. Check console for details.',
+        'error'
+      )
+    }
   }
 
   setupLuminodeLab () {
@@ -592,6 +680,7 @@ export class GLOWVisualizer {
 
         this.uiManager.hideLogoContainer()
         this.uiManager.showPanelToggleButton()
+        this.uiManager.showDetachButton()
         this.uiManager.showOpenButton()
         this.uiManager.showSaveButton()
         this.uiManager.showLabButton()
@@ -599,7 +688,11 @@ export class GLOWVisualizer {
         this.showProjectNameDisplay()
         this.uiManager.showCanvasMessage()
         this.visualizerStarted = true
-        this.isRunning = true
+        if (!this.isRunning) {
+          this.isRunning = true
+          this.animate()
+        }
+        this.sidePanel.renderTracks()
         const sceneCount = this.projectManager.setManager.getSceneCount()
         this.uiManager.setSetModeActive(
           result.fileType === FILE_TYPE.SET,

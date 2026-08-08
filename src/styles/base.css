@@ -131,6 +131,11 @@ body.loading * {
     cursor: wait !important;
 }
 
+/* File drop affordance — green viewport margin only */
+body.glow-file-dragover {
+    box-shadow: inset 0 0 0 4px hsla(131, 59%, 59%, 1);
+}
+
 /* Icon styles */
 ion-icon {
     font-size: 20px;

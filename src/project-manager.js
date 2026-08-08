@@ -746,6 +746,8 @@ export class ProjectManager {
   }
 
   async addToRecentProjects(fileHandle, projectName, fileType = FILE_TYPE.SCENE) {
+    if (!fileHandle) return;
+
     try {
       const file = await fileHandle.getFile();
       const fileName = file.name;
