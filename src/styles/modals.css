@@ -865,7 +865,118 @@
     margin-right: auto;
 }
 
-/* Luminode Center */
+/* Confirm / Alert Dialog */
+.glow-confirm-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+}
+
+.glow-confirm-dialog.show {
+    display: flex;
+}
+
+.glow-confirm-dialog-content {
+    background: #000;
+    border: 1px solid #fff;
+    border-radius: 0;
+    width: 90%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.glow-confirm-dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.glow-confirm-dialog-header h3 {
+    color: #fff;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-family: "Analo Grotesk", "Inconsolata", sans-serif;
+}
+
+.glow-confirm-dialog-close {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.glow-confirm-dialog-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.glow-confirm-dialog-close ion-icon {
+    font-size: 20px;
+}
+
+.glow-confirm-dialog-body {
+    padding: 20px;
+    color: rgba(255, 255, 255, 0.85);
+    font-family: "Inconsolata", monospace;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.glow-confirm-dialog-body p {
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+.glow-confirm-dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-danger {
+    padding: 10px 20px;
+    border: 1px solid #ff6b6b;
+    background: #ff6b6b;
+    color: #000;
+    font-family: "Inconsolata", monospace;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 0;
+    transition: all 0.2s ease;
+}
+
+.btn-danger:hover {
+    background: #ff5252;
+    border-color: #ff5252;
+}
+
+.luminode-picker-dialog-footer-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.luminode-picker-dialog-footer-left ion-icon {
+    font-size: 16px;
+}
+
+/* Luminode Lab */
 .luminode-center-dialog {
     position: fixed;
     top: 0;
@@ -931,6 +1042,36 @@
     text-transform: uppercase;
     font-family: "Analo Grotesk", "Inconsolata", sans-serif;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.luminode-center-dialog-header h3 ion-icon {
+    font-size: 20px;
+    color: #51cf66;
+}
+
+/* CodeMirror hints (Lab) */
+.CodeMirror-hints {
+    background: #0a0a0a !important;
+    border: 1px solid rgba(255, 255, 255, 0.35) !important;
+    border-radius: 0 !important;
+    font-family: "Inconsolata", monospace !important;
+    font-size: 12px !important;
+    z-index: 3200 !important;
+    box-shadow: none !important;
+    max-height: 220px !important;
+}
+
+.CodeMirror-hint {
+    color: rgba(255, 255, 255, 0.85) !important;
+    padding: 4px 10px !important;
+}
+
+li.CodeMirror-hint-active {
+    background: rgba(81, 207, 102, 0.2) !important;
+    color: #51cf66 !important;
 }
 
 .luminode-center-header-meta {
@@ -1082,6 +1223,53 @@
     display: flex;
 }
 
+.luminode-center-editor-panel[data-editor-panel="code"] {
+    position: relative;
+}
+
+.luminode-center-code-toolbar {
+    position: absolute;
+    top: 6px;
+    right: 10px;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: rgba(0, 0, 0, 0.85);
+    border: 1px solid rgba(81, 207, 102, 0.35);
+    padding: 2px;
+}
+
+.luminode-center-font-btn {
+    width: 26px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #51cf66;
+    font-family: "Inconsolata", monospace;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.luminode-center-font-btn:hover {
+    background: rgba(81, 207, 102, 0.15);
+    color: #7dff9a;
+}
+
+.luminode-center-font-size {
+    min-width: 22px;
+    text-align: center;
+    font-family: "Inconsolata", monospace;
+    font-size: 11px;
+    color: rgba(81, 207, 102, 0.7);
+    user-select: none;
+}
+
 .luminode-center-editor-host {
     flex: 1;
     min-height: 0;
@@ -1091,17 +1279,7 @@
 .luminode-center-editor-host .CodeMirror,
 .luminode-center-settings-json .CodeMirror {
     height: 100%;
-    font-family: "Inconsolata", "SF Mono", monospace;
-    font-size: 13px;
-    background: #050505;
-    color: #e8e8e8;
     border: none;
-}
-
-.luminode-center-editor-host .CodeMirror-gutters,
-.luminode-center-settings-json .CodeMirror-gutters {
-    background: #0a0a0a;
-    border-right: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .luminode-center-fallback-editor {

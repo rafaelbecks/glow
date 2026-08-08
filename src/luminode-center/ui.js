@@ -1,5 +1,5 @@
 /**
- * Luminode Center — editor + live preview for creating, editing, and forking luminodes.
+ * Luminode Lab — editor + live preview for creating, editing, and forking luminodes.
  */
 import {
   createUserLuminode,
@@ -23,6 +23,7 @@ import { LuminodePreview, createPreviewNoteProvider } from './preview.js'
 import { MidiGeneratorPane } from './midi-generator-pane.js'
 import { LuminodeSettingsPane } from './settings-pane.js'
 import { UTILS_REFERENCE_HTML } from './utils-reference.js'
+import { attachEditorHints } from './editor-hints.js'
 import {
   deepClone,
   loadBuiltinModuleBundle,
@@ -36,13 +37,17 @@ import {
   getAvailableLuminodes,
   getLuminodeSettingsKey
 } from '../luminodes/index.js'
+import { getConfirmDialog } from '../components/confirm-dialog.js'
 
 const PREVIEW_DEBOUNCE_MS = 350
 const PREVIEW_MIN = 280
 const EDITOR_MIN = 320
 const PREVIEW_DEFAULT = 420
+const FONT_MIN = 10
+const FONT_MAX = 22
+const FONT_DEFAULT = 13
 
-export class LuminodeCenter {
+export class LuminodeLab {
   /**
    * @param {object} hooks - { visualizer, trackManager, midiManager, midiGenerator, onSaved }
    */
@@ -65,6 +70,9 @@ export class LuminodeCenter {
     this.generatorHost = document.getElementById('luminodeCenterGeneratorHost')
     this.resizeHandle = document.getElementById('luminodeCenterResizeHandle')
     this.utilsHost = document.getElementById('luminodeCenterUtils')
+    this.forkBtn = document.getElementById('luminodeCenterFork')
+    this.fontSizeLabel = document.getElementById('luminodeCenterFontSize')
+    this.confirm = getConfirmDialog()
 
     this.cm = null
     this.preview = null
@@ -77,6 +85,7 @@ export class LuminodeCenter {
     this.previewWidth = PREVIEW_DEFAULT
     this.resizing = false
     this.maximized = false
+    this.editorFontSize = FONT_DEFAULT
 
     // Editor session state
     this.docId = null
@@ -96,8 +105,8 @@ export class LuminodeCenter {
     const closeBtn = document.getElementById('luminodeCenterClose')
     const cancelBtn = document.getElementById('luminodeCenterCancel')
     const maximizeBtn = document.getElementById('luminodeCenterMaximize')
-    if (closeBtn) closeBtn.addEventListener('click', () => this.hide())
-    if (cancelBtn) cancelBtn.addEventListener('click', () => this.hide())
+    if (closeBtn) closeBtn.addEventListener('click', () => this.requestClose())
+    if (cancelBtn) cancelBtn.addEventListener('click', () => this.requestClose())
     if (maximizeBtn) {
       maximizeBtn.addEventListener('click', () => {
         this.setMaximized(!this.maximized)
@@ -105,17 +114,18 @@ export class LuminodeCenter {
     }
 
     this.dialog.addEventListener('click', (e) => {
-      if (e.target === this.dialog) this.hide()
+      if (e.target === this.dialog) this.requestClose()
     })
 
     document.addEventListener('keydown', (e) => {
       if (!this.isVisible) return
+      if (this.confirm.isVisible()) return
       if (e.key === 'Escape') {
         if (this.maximized) {
           this.setMaximized(false)
           return
         }
-        this.hide()
+        this.requestClose()
         return
       }
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
@@ -135,6 +145,8 @@ export class LuminodeCenter {
     bind('luminodeCenterReset', () => this.reset())
     bind('luminodeCenterExport', () => this.exportFile())
     bind('luminodeCenterImport', () => this.importFile())
+    bind('luminodeCenterFontInc', () => this.adjustEditorFont(1))
+    bind('luminodeCenterFontDec', () => this.adjustEditorFont(-1))
 
     this.dialog.querySelectorAll('.luminode-center-preview-tabs .luminode-center-tab').forEach((tab) => {
       tab.addEventListener('click', () => this.setSideTab(tab.dataset.tab))
@@ -180,6 +192,59 @@ export class LuminodeCenter {
     }
   }
 
+  async requestClose () {
+    if (!this.isVisible) return
+    if (this.dirty) {
+      const ok = await this.confirm.confirm({
+        title: 'Unsaved changes',
+        message:
+          'You have unsaved work in Luminode Lab. Close anyway? Unsaved changes will be lost.',
+        confirmLabel: 'Close',
+        cancelLabel: 'Keep editing',
+        danger: true
+      })
+      if (!ok) return
+    }
+    this.hide()
+  }
+
+  canFork () {
+    return !!(this.docId && !this.builtinOnly && isUserLuminodeId(this.docId))
+  }
+
+  updateForkVisibility () {
+    if (!this.forkBtn) return
+    this.forkBtn.hidden = !this.canFork()
+  }
+
+  setMaximized (enabled) {
+    this.maximized = !!enabled
+    if (this.contentEl) {
+      this.contentEl.classList.toggle('is-maximized', this.maximized)
+    }
+    const btn = document.getElementById('luminodeCenterMaximize')
+    if (btn) {
+      const icon = btn.querySelector('ion-icon')
+      if (icon) {
+        icon.setAttribute(
+          'name',
+          this.maximized ? 'contract-outline' : 'expand-outline'
+        )
+      }
+      btn.title = this.maximized ? 'Restore' : 'Maximize'
+      btn.setAttribute('aria-label', btn.title)
+    }
+    this.refreshEditors()
+  }
+
+  applyPreviewWidth () {
+    if (!this.bodyEl) return
+    this.bodyEl.style.setProperty(
+      '--luminode-preview-width',
+      `${this.previewWidth}px`
+    )
+  }
+
   setupResize () {
     if (!this.resizeHandle || !this.bodyEl) return
 
@@ -215,34 +280,6 @@ export class LuminodeCenter {
     window.addEventListener('mouseup', onUp)
   }
 
-  setMaximized (enabled) {
-    this.maximized = !!enabled
-    if (this.contentEl) {
-      this.contentEl.classList.toggle('is-maximized', this.maximized)
-    }
-    const btn = document.getElementById('luminodeCenterMaximize')
-    if (btn) {
-      const icon = btn.querySelector('ion-icon')
-      if (icon) {
-        icon.setAttribute(
-          'name',
-          this.maximized ? 'contract-outline' : 'expand-outline'
-        )
-      }
-      btn.title = this.maximized ? 'Restore' : 'Maximize'
-      btn.setAttribute('aria-label', btn.title)
-    }
-    this.refreshEditors()
-  }
-
-  applyPreviewWidth () {
-    if (!this.bodyEl) return
-    this.bodyEl.style.setProperty(
-      '--luminode-preview-width',
-      `${this.previewWidth}px`
-    )
-  }
-
   ensureEditor () {
     if (this.cm || !this.editorHost) return
     if (typeof window.CodeMirror === 'undefined') {
@@ -268,9 +305,35 @@ export class LuminodeCenter {
       lineWrapping: true,
       indentUnit: 2,
       tabSize: 2,
-      autofocus: false
+      autofocus: false,
+      hintOptions: { completeSingle: false }
     })
     this.cm.on('change', () => this.onSourceChanged())
+    attachEditorHints(this.cm, () => Object.keys(this.moduleSettings || {}))
+    this.applyEditorFontSize()
+  }
+
+  adjustEditorFont (delta) {
+    this.editorFontSize = Math.min(
+      FONT_MAX,
+      Math.max(FONT_MIN, this.editorFontSize + delta)
+    )
+    this.applyEditorFontSize()
+  }
+
+  applyEditorFontSize () {
+    if (this.fontSizeLabel) {
+      this.fontSizeLabel.textContent = String(this.editorFontSize)
+    }
+    const size = `${this.editorFontSize}px`
+    if (this.cm?.getWrapperElement) {
+      this.cm.getWrapperElement().style.fontSize = size
+      this.cm.refresh()
+    }
+    if (this.settingsPane?.cm?.getWrapperElement) {
+      this.settingsPane.cm.getWrapperElement().style.fontSize = size
+      this.settingsPane.cm.refresh()
+    }
   }
 
   ensurePreview () {
@@ -296,7 +359,6 @@ export class LuminodeCenter {
         this.configSchema = schema
         this.dirty = true
         this.updateStatus()
-        // MODULE is mutated in place — preview reads it every frame
       }
     })
   }
@@ -332,6 +394,7 @@ export class LuminodeCenter {
     if (this.activeEditorTab === 'settings') {
       this.ensureSettingsPane()
       this.settingsPane.load(this.moduleSettings, this.configSchema)
+      this.applyEditorFontSize()
     }
     if (this.activeEditorTab === 'utils') {
       this.ensureUtils()
@@ -491,6 +554,7 @@ export class LuminodeCenter {
       this.setName(name)
       this.setSource(source)
       this.dirty = false
+      this.updateForkVisibility()
       this.updateStatus()
       this.schedulePreview(true)
       this.setStatus(
@@ -514,6 +578,7 @@ export class LuminodeCenter {
     this.setSource(doc.source)
     this.dirty = false
     this.populateSourceSelect(doc.id)
+    this.updateForkVisibility()
     this.updateStatus()
     this.schedulePreview(true)
   }
@@ -529,12 +594,14 @@ export class LuminodeCenter {
     this.setSource(source)
     this.dirty = true
     if (this.sourceSelect) this.sourceSelect.value = ''
+    this.updateForkVisibility()
     this.updateStatus()
     this.schedulePreview(true)
     this.setStatus('New luminode from template')
   }
 
   fork () {
+    if (!this.canFork()) return
     const source = this.getSource()
     const baseName = this.getName() || 'Luminode'
     const name = /fork$/i.test(baseName) ? baseName : `${baseName} Fork`
@@ -553,6 +620,7 @@ export class LuminodeCenter {
     this.setName(name)
     this.dirty = true
     if (this.sourceSelect) this.sourceSelect.value = ''
+    this.updateForkVisibility()
     this.updateStatus()
     this.setStatus('Forked — Save to create a new user luminode')
     this.schedulePreview(true)
@@ -630,6 +698,7 @@ export class LuminodeCenter {
     this.baselineConfigSchema = deepClone(configSchema)
     this.dirty = false
     this.populateSourceSelect(doc.id)
+    this.updateForkVisibility()
     this.setError(null)
     this.updateStatus()
     this.setStatus(`Saved “${doc.name}”`)
@@ -733,3 +802,6 @@ export class LuminodeCenter {
     this.setStatus(parts.join(' · '))
   }
 }
+
+/** @deprecated use LuminodeLab */
+export const LuminodeCenter = LuminodeLab

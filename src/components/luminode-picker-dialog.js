@@ -10,6 +10,7 @@ import { SETTINGS } from '../settings.js'
 import { isUserLuminodeId } from '../luminode-center/model.js'
 import { deleteUserLuminode } from '../luminode-center/storage.js'
 import { unregisterUserLuminode } from '../luminode-center/registry.js'
+import { getConfirmDialog } from './confirm-dialog.js'
 
 const PREVIEW_SIZE = 140
 const DEFAULT_PREVIEW = {
@@ -83,7 +84,7 @@ export class LuminodePickerDialog {
     }
     if (centerBtn) {
       centerBtn.addEventListener('click', () => {
-        this.triggerCallback('openLuminodeCenter', {
+        this.triggerCallback('openLuminodeLab', {
           trackId: this.trackId,
           luminode: null
         })
@@ -270,10 +271,14 @@ export class LuminodePickerDialog {
     return card
   }
 
-  requestDeleteUserLuminode (key, displayName) {
-    const ok = window.confirm(
-      `Delete user luminode “${displayName}”? This cannot be undone.`
-    )
+  async requestDeleteUserLuminode (key, displayName) {
+    const ok = await getConfirmDialog().confirm({
+      title: 'Delete luminode',
+      message: `Delete user luminode “${displayName}”? This cannot be undone.`,
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+      danger: true
+    })
     if (!ok) return
 
     deleteUserLuminode(key)

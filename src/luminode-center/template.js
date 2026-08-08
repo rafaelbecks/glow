@@ -1,5 +1,5 @@
 /**
- * Minimal Luminode template for the Luminode Center.
+ * Minimal Luminode template for the Luminode Lab.
  * MODULE / SETTINGS / UTILS are injected at compile time — no imports needed.
  */
 export const LUMINODE_TEMPLATE = `// Minimal Luminode — a pulsing circle driven by time and MIDI notes.

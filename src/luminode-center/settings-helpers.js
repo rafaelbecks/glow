@@ -1,5 +1,5 @@
 /**
- * Settings helpers for Luminode Center drafts.
+ * Settings helpers for Luminode Lab drafts.
  */
 import { SETTINGS } from '../settings.js'
 import { getLuminodeConfig } from '../luminode-configs.js'

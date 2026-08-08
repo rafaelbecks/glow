@@ -1,5 +1,5 @@
 /**
- * Live luminode preview for the Luminode Center.
+ * Live luminode preview for the Luminode Lab.
  * Reuses CanvasDrawer; isolates draw errors so the main app stays up.
  *
  * Rules:

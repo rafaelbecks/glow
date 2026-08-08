@@ -12,7 +12,8 @@ import { SaveDialog } from './components/save-dialog.js'
 import { FilePickerDialog } from './components/file-picker-dialog.js'
 import { CreateSetDialog } from './components/create-set-dialog.js'
 import { LuminodePickerDialog } from './components/luminode-picker-dialog.js'
-import { LuminodeCenter, bootstrapUserLuminodes } from './luminode-center/index.js'
+import { LuminodeLab, bootstrapUserLuminodes } from './luminode-center/index.js'
+import { getConfirmDialog } from './components/confirm-dialog.js'
 import { FILE_TYPE } from './glow-file-types.js'
 import { getLuminodeConfig } from './luminode-configs.js'
 import {
@@ -88,13 +89,14 @@ export class GLOWVisualizer {
     this.createSetDialog = new CreateSetDialog(this.projectManager.setManager)
     this.luminodePickerDialog = new LuminodePickerDialog()
     this.sidePanel.setLuminodePicker(this.luminodePickerDialog)
-    this.luminodeCenter = new LuminodeCenter({
+    this.luminodeLab = new LuminodeLab({
       visualizer: this,
       trackManager: this.trackManager,
       midiManager: this.midiManager,
       midiGenerator: this.midiGenerator,
       onSaved: () => {}
     })
+    this.luminodeCenter = this.luminodeLab
     this.luminodePickerDialog.setDeleteHooks({
       visualizer: this,
       trackManager: this.trackManager,
@@ -150,17 +152,17 @@ export class GLOWVisualizer {
     this.setupFilePickerDialog()
     this.setupCreateSetDialog()
     this.setupLuminodePickerDialog()
-    this.setupLuminodeCenter()
+    this.setupLuminodeLab()
     this.setupLogoButtons()
     this.initialize().catch((error) =>
       console.error('Failed to initialize:', error)
     )
   }
 
-  setupLuminodeCenter () {
-    this.luminodeCenter.setupEventListeners()
-    this.luminodePickerDialog.on('openLuminodeCenter', ({ luminode }) => {
-      this.luminodeCenter.show(luminode || null)
+  setupLuminodeLab () {
+    this.luminodeLab.setupEventListeners()
+    this.luminodePickerDialog.on('openLuminodeLab', ({ luminode }) => {
+      this.luminodeLab.show(luminode || null)
     })
   }
 
@@ -343,8 +345,8 @@ export class GLOWVisualizer {
         this.trackLuminodes.delete(track.id)
       }
     })
-    if (this.luminodeCenter?.docId === luminodeId) {
-      this.luminodeCenter.newFromTemplate()
+    if (this.luminodeLab?.docId === luminodeId) {
+      this.luminodeLab.newFromTemplate()
     }
   }
 
@@ -614,28 +616,32 @@ export class GLOWVisualizer {
   }
 
   async promptUnsavedChanges () {
-    return new Promise((resolve) => {
-      const message =
-        'You have unsaved changes. Do you want to save them before continuing?'
-      const shouldSave = confirm(
-        message + '\n\nClick OK to save, Cancel to discard changes.'
-      )
-
-      if (shouldSave) {
-        this.saveFile()
-          .then(() => {
-            resolve(true)
-          })
-          .catch(() => {
-            const proceed = confirm(
-              'Save was cancelled. Do you want to discard changes and continue?'
-            )
-            resolve(proceed)
-          })
-      } else {
-        resolve(true)
-      }
+    const confirm = getConfirmDialog()
+    const shouldSave = await confirm.confirm({
+      title: 'Unsaved changes',
+      message:
+        'You have unsaved changes. Save them before continuing?',
+      confirmLabel: 'Save',
+      cancelLabel: 'Discard'
     })
+
+    if (shouldSave) {
+      try {
+        await this.saveFile()
+        return true
+      } catch (_) {
+        return confirm.confirm({
+          title: 'Save cancelled',
+          message:
+            'Save was cancelled. Discard changes and continue?',
+          confirmLabel: 'Discard',
+          cancelLabel: 'Cancel',
+          danger: true
+        })
+      }
+    }
+
+    return true
   }
 
   markProjectChanged () {

@@ -23,7 +23,7 @@
         <link rel="stylesheet" href="src/styles/tablet-controls.css" />
         <link rel="stylesheet" href="src/styles/crt-effects.css" />
         <link rel="stylesheet" href="src/styles/modals.css" />
-        <!-- CodeMirror (Luminode Center) -->
+        <!-- CodeMirror (Luminode Lab) -->
         <link
             rel="stylesheet"
             href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css"
@@ -32,6 +32,11 @@
             rel="stylesheet"
             href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css"
         />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css"
+        />
+        <link rel="stylesheet" href="src/styles/codemirror-glow.css" />
         <!-- Tweakpane Theme -->
         <style>
             :root {
@@ -402,7 +407,8 @@
                         id="luminodePickerOpenCenter"
                         class="btn-secondary luminode-picker-dialog-footer-left"
                     >
-                        Luminode Center
+                        <ion-icon name="flask-outline"></ion-icon>
+                        Luminode Lab
                     </button>
                     <button id="luminodePickerCancel" class="btn-secondary">
                         Cancel
@@ -411,11 +417,14 @@
             </div>
         </div>
 
-        <!-- Luminode Center -->
+        <!-- Luminode Lab -->
         <div id="luminodeCenterDialog" class="luminode-center-dialog">
             <div class="luminode-center-dialog-content">
                 <div class="luminode-center-dialog-header">
-                    <h3>Luminode Center</h3>
+                    <h3>
+                        <ion-icon name="flask-outline"></ion-icon>
+                        Luminode Lab
+                    </h3>
                     <div class="luminode-center-header-meta">
                         <select
                             id="luminodeCenterSource"
@@ -460,7 +469,7 @@
                     <button id="luminodeCenterSave" class="btn-primary" type="button">
                         Save
                     </button>
-                    <button id="luminodeCenterFork" class="btn-secondary" type="button">
+                    <button id="luminodeCenterFork" class="btn-secondary" type="button" hidden>
                         Fork
                     </button>
                     <button id="luminodeCenterReset" class="btn-secondary" type="button">
@@ -514,6 +523,30 @@
                             class="luminode-center-editor-panel is-active"
                             data-editor-panel="code"
                         >
+                            <div class="luminode-center-code-toolbar">
+                                <button
+                                    type="button"
+                                    id="luminodeCenterFontDec"
+                                    class="luminode-center-font-btn"
+                                    title="Decrease font size"
+                                    aria-label="Decrease font size"
+                                >
+                                    −
+                                </button>
+                                <span
+                                    id="luminodeCenterFontSize"
+                                    class="luminode-center-font-size"
+                                >13</span>
+                                <button
+                                    type="button"
+                                    id="luminodeCenterFontInc"
+                                    class="luminode-center-font-btn"
+                                    title="Increase font size"
+                                    aria-label="Increase font size"
+                                >
+                                    +
+                                </button>
+                            </div>
                             <div
                                 id="luminodeCenterEditor"
                                 class="luminode-center-editor-host"
@@ -637,8 +670,39 @@
             </div>
         </div>
 
+        <!-- Confirm / Alert Dialog -->
+        <div id="glowConfirmDialog" class="glow-confirm-dialog">
+            <div class="glow-confirm-dialog-content">
+                <div class="glow-confirm-dialog-header">
+                    <h3 id="glowConfirmTitle">Confirm</h3>
+                    <button
+                        id="glowConfirmClose"
+                        class="glow-confirm-dialog-close"
+                        type="button"
+                        aria-label="Close"
+                    >
+                        <ion-icon name="close-outline"></ion-icon>
+                    </button>
+                </div>
+                <div class="glow-confirm-dialog-body">
+                    <p id="glowConfirmMessage"></p>
+                </div>
+                <div class="glow-confirm-dialog-footer">
+                    <button id="glowConfirmCancel" class="btn-secondary" type="button">
+                        Cancel
+                    </button>
+                    <button id="glowConfirmOk" class="btn-primary" type="button">
+                        Confirm
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/javascript-hint.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/anyword-hint.min.js"></script>
         <script type="module" src="src/lib/tweakpane.min.js"></script>
         <script
             type="module"
