@@ -164,6 +164,9 @@ export class GLOWVisualizer {
     this.luminodePickerDialog.on('openLuminodeLab', ({ luminode }) => {
       this.luminodeLab.show(luminode || null)
     })
+    this.uiManager.on('openLuminodeLab', () => {
+      this.luminodeLab.show(null)
+    })
   }
 
   async initialize () {
@@ -366,6 +369,7 @@ export class GLOWVisualizer {
         this.uiManager.showPanelToggleButton()
         this.uiManager.showOpenButton()
         this.uiManager.showSaveButton()
+        this.uiManager.showLabButton()
         this.uiManager.showInfoButton()
         this.showProjectNameDisplay()
         this.uiManager.showCanvasMessage()
@@ -406,6 +410,7 @@ export class GLOWVisualizer {
       this.uiManager.showDetachButton()
       this.uiManager.showOpenButton()
       this.uiManager.showSaveButton()
+      this.uiManager.showLabButton()
       this.uiManager.showInfoButton()
       this.showProjectNameDisplay()
       this.uiManager.showCanvasMessage()
@@ -586,6 +591,7 @@ export class GLOWVisualizer {
         this.uiManager.showPanelToggleButton()
         this.uiManager.showOpenButton()
         this.uiManager.showSaveButton()
+        this.uiManager.showLabButton()
         this.uiManager.showInfoButton()
         this.showProjectNameDisplay()
         this.uiManager.showCanvasMessage()

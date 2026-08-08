@@ -8,6 +8,8 @@
 
 G.L.O.W. is a real-time visual instrument that transforms your music into geometric light patterns. Inspired by early computer artists such as Vera Molnár, John Whitney, and kinetic artists like Gego and Soto, it creates structured, evolving geometries that render with your sound (MIDI input) in real time.
 
+**GLOW is hackable.** Luminodes are modular drawing modules — open their source in the **Luminode Lab**, fork them, or write your own and play them on tracks like any built-in pattern.
+
 **Demos & Luminodes Showcase**: [YouTube Playlist](https://www.youtube.com/playlist?list=PLPLNsAMGizPvOxgBN0TJDBIRIPvcY6njN)
 
 ## Getting Started
@@ -19,7 +21,8 @@ G.L.O.W. is a real-time visual instrument that transforms your music into geomet
 4. Feed notes with either:
    - **MIDI device** — connect a keyboard, controller, or software/virtual port, assign it to a track, then play
    - **Generate mode** — External tab → Add Generator (up to one per track; no device needed). Remove/disable a generator before using real MIDI on that track.
-5. **Read this manual** via the triangle icon on the top right
+5. **Read this manual** via the help icon (bottom right)
+6. **Open Luminode Lab** via the flask icon (bottom right, before Help) to hack luminodes
 
 ### System Requirements
 - Modern web browser (Chrome recommended)
@@ -41,7 +44,25 @@ G.L.O.W. works like a digital audio workstation (DAW) with **4 independent track
 - **Mix and match** different visual patterns
 - **Each luminode instance is independent** — positioning, motion, and configuration
 
-**Selecting a luminode:** In the Tracks tab, click the **Luminode** control to open a picker organized by category (Classic Patterns, 3D Geometry, Art-Inspired, Natural Patterns). Hover a card for a live preview, then click to assign it.
+**Selecting a luminode:** In the Tracks tab, click the **Luminode** control to open a picker organized by category (Classic Patterns, 3D Geometry, Art-Inspired, Natural Patterns). Hover a card for a live preview, then click to assign it. You can also open **Luminode Lab** from the picker footer.
+
+### Luminode Lab
+
+GLOW is modular by design — **Luminode Lab** is the in-app workshop for inspecting and inventing luminodes without leaving the browser.
+
+**Open it from:**
+- The **flask** icon in the bottom-right corner (before Help)
+- The luminode picker footer (**Luminode Lab**)
+
+**What you can do:**
+- Start from a blank template or open a built-in luminode’s source
+- Edit with live preview (and drive the preview with sample notes or the Lab’s MIDI generator)
+- Tweak `MODULE` settings in the Settings tab; browse helpers in Utils
+- **Save** your luminode locally (browser storage) so it appears in the picker and can be assigned to tracks
+- **Fork** a saved user luminode when you want a new copy to experiment with
+- Import / export source for sharing or backup
+
+Built-ins stay read-only in the Lab — save or fork to keep your own version. User luminodes live in this browser until you clear site data or delete them from the Lab.
 
 ### Modulation System
 G.L.O.W. includes a modulation system that works like LFOs (Low-Frequency Oscillators) on synthesizers. It automatically animates luminode parameters over time, creating evolving visual effects.

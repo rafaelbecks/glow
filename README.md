@@ -21,6 +21,7 @@ A **luminode** is a visual pattern module. Think of it as an oscillator in a syn
 ## Features
 
 - **Luminodes** - Modular visual pattern system with 20+ geometric patterns (Lissajous curves, spheres, grids, and more)
+- **Luminode Lab** - In-app editor to open built-in sources, live-preview changes, fork/create your own luminodes, and keep them in the browser (localStorage). Open via the flask icon (bottom right, before Help) or from the luminode picker
 - **Rendering Pipeline** - Multi-stage visual processing with post-processing effects ([see diagram](diagrams/04-rendering-pipeline.md))
 - **Track-Based System** - Multi-track luminode management with independent instances
 - **Trajectory Motion System** - Whitney-style motion patterns for spatial animation ([see docs](diagrams/03-track-system.md))
@@ -45,6 +46,7 @@ Open `http://localhost:8000/` in Chrome, then:
    - **MIDI device** — connect a keyboard / controller (or a virtual port + `node midi-test.js`), assign the device to a track, and play.
    - **Generate mode** — open the **External** tab → **Add Generator**, pick a track, and enable it. Notes are injected per track (no hardware required). Up to four generators (one per track). Disable/remove a generator when you want real MIDI on that track again.
 4. Optionally enable **MIDI Output** under Generate Mode if you want to record the random stream elsewhere (it is not meant to be musical).
+5. **Hack it** — open **Luminode Lab** (flask icon, bottom right) to edit or invent luminodes with live preview; save them locally and assign them from the picker like any built-in.
 
 See the **[User Manual](USER_MANUAL.md)** for the full walkthrough.
 

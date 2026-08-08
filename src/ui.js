@@ -39,6 +39,7 @@ export class UIManager {
       panelToggleButton: document.getElementById('panelToggleButton'),
       openButton: document.getElementById('openButton'),
       saveButton: document.getElementById('saveButton'),
+      labButton: document.getElementById('labButton'),
       infoButton: document.getElementById('infoButton'),
       detachButton: document.getElementById('detachButton'),
       infoModal: document.getElementById('infoModal'),
@@ -91,6 +92,13 @@ export class UIManager {
     if (this.elements.saveButton) {
       this.elements.saveButton.addEventListener('click', () => {
         this.triggerCallback('saveFile')
+      })
+    }
+
+    // Luminode Lab button
+    if (this.elements.labButton) {
+      this.elements.labButton.addEventListener('click', () => {
+        this.triggerCallback('openLuminodeLab')
       })
     }
 
@@ -345,6 +353,18 @@ export class UIManager {
     }
   }
 
+  showLabButton () {
+    if (this.elements.labButton) {
+      this.elements.labButton.style.display = 'flex'
+    }
+  }
+
+  hideLabButton () {
+    if (this.elements.labButton) {
+      this.elements.labButton.style.display = 'none'
+    }
+  }
+
   showInfoButton () {
     if (this.elements.infoButton) {
       this.elements.infoButton.style.display = 'flex'
@@ -432,6 +452,7 @@ export class UIManager {
     this.showDetachButton()
     this.showOpenButton()
     this.showSaveButton()
+    this.showLabButton()
     this.showInfoButton()
     this.showProjectNameDisplay()
   }
@@ -441,6 +462,7 @@ export class UIManager {
     this.hideDetachButton()
     this.hideOpenButton()
     this.hideSaveButton()
+    this.hideLabButton()
     this.hideInfoButton()
     this.hideProjectNameDisplay()
   }
