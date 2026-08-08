@@ -293,10 +293,6 @@
     opacity: 0.7;
 }
 
-.detach-toggle-btn.active {
-    color: #51cf66;
-}
-
 .open-toggle-btn {
     position: fixed;
     top: 10px;
@@ -399,4 +395,19 @@
 
 .info-toggle-btn ion-icon {
     font-size: 20px;
+}
+
+/* Floating canvas icons — stay readable on light or dark backgrounds */
+.panel-toggle-btn,
+.detach-toggle-btn,
+.open-toggle-btn,
+.save-toggle-btn,
+.lab-toggle-btn,
+.info-toggle-btn {
+    color: #fff;
+    mix-blend-mode: difference;
+}
+
+.detach-toggle-btn.active {
+    color: #aef0b8;
 }
