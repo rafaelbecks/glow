@@ -17,6 +17,7 @@ export class TrackUIManager {
     this.panel = panel
     this.luminodeConfigManager = luminodeConfigManager
     this.luminodePicker = null
+    this.onEditLuminode = null
     this.settings = null
     this.trackPanes = new Map()
     this.mainPane = null
@@ -28,6 +29,10 @@ export class TrackUIManager {
 
   setLuminodePicker (picker) {
     this.luminodePicker = picker
+  }
+
+  setOnEditLuminode (callback) {
+    this.onEditLuminode = callback
   }
 
   renderTracks () {
@@ -169,6 +174,15 @@ export class TrackUIManager {
         })
         .on('click', () => {
           this.openLuminodePicker(track.id)
+        })
+
+      const editLuminodeBinding = pane
+        .addButton({
+          title: this.getEditLuminodeButtonTitle(track.luminode),
+          label: 'Edit'
+        })
+        .on('click', () => {
+          this.openLuminodeInLab(track.id)
         })
 
       let layoutData = null
@@ -363,6 +377,7 @@ export class TrackUIManager {
         luminodeFolder,
         midiBinding,
         luminodeBinding,
+        editLuminodeBinding,
         trackHeaderContainer
       })
     } catch (error) {
@@ -378,10 +393,21 @@ export class TrackUIManager {
     return this.normalizeLuminodeName(luminode)
   }
 
+  getEditLuminodeButtonTitle (luminode) {
+    if (!luminode) return 'Select a luminode first'
+    return 'Edit in Lab…'
+  }
+
   openLuminodePicker (trackId) {
     if (!this.luminodePicker) return
     const track = this.trackManager.getTrack(trackId)
     this.luminodePicker.show(trackId, track?.luminode || null)
+  }
+
+  openLuminodeInLab (trackId) {
+    const track = this.trackManager.getTrack(trackId)
+    if (!track?.luminode || !this.onEditLuminode) return
+    this.onEditLuminode(track.luminode)
   }
 
   applyLuminodeSelection (trackId, luminode) {
@@ -391,6 +417,7 @@ export class TrackUIManager {
       paneData.trackData.luminode = luminode || ''
     }
     this.updateLuminodeButtonTitle(trackId, luminode)
+    this.updateEditLuminodeButtonTitle(trackId, luminode)
     this.updateLuminodeConfigPane(trackId, luminode)
   }
 
@@ -404,6 +431,20 @@ export class TrackUIManager {
     } catch (_) {
       try {
         paneData.luminodeBinding.controller?.props?.set('title', title)
+      } catch (__) {}
+    }
+  }
+
+  updateEditLuminodeButtonTitle (trackId, luminode) {
+    const paneData = this.trackPanes.get(trackId)
+    if (!paneData?.editLuminodeBinding) return
+
+    const title = this.getEditLuminodeButtonTitle(luminode)
+    try {
+      paneData.editLuminodeBinding.title = title
+    } catch (_) {
+      try {
+        paneData.editLuminodeBinding.controller?.props?.set('title', title)
       } catch (__) {}
     }
   }

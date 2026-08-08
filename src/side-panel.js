@@ -193,6 +193,10 @@ export class SidePanel {
     this.trackUIManager.setLuminodePicker(picker)
   }
 
+  setOnEditLuminode (callback) {
+    this.trackUIManager.setOnEditLuminode(callback)
+  }
+
   applyLuminodeSelection (trackId, luminode) {
     this.trackUIManager.applyLuminodeSelection(trackId, luminode)
   }

@@ -192,8 +192,8 @@ export const SETTINGS = {
       USE_COLOR: false
     },
     SINEWAVE: {
-      AMPLITUDE: 100,
-      FREQUENCY: 1,
+      AMPLITUDE: 2,
+      FREQUENCY: 1600,
       PHASE_SPEED: 0.5,
       LINE_WIDTH: 1.5
     },

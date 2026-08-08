@@ -1573,6 +1573,14 @@ li.CodeMirror-hint-active {
     padding: 0;
 }
 
+.luminode-picker-card-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.luminode-picker-card-edit,
 .luminode-picker-card-delete {
     flex-shrink: 0;
     width: 22px;
@@ -1589,15 +1597,22 @@ li.CodeMirror-hint-active {
     transition: opacity 0.15s ease, color 0.15s ease;
 }
 
+.luminode-picker-card:hover .luminode-picker-card-edit,
 .luminode-picker-card:hover .luminode-picker-card-delete,
+.luminode-picker-card-edit:focus,
 .luminode-picker-card-delete:focus {
     opacity: 1;
+}
+
+.luminode-picker-card-edit:hover {
+    color: #51cf66;
 }
 
 .luminode-picker-card-delete:hover {
     color: #ff6b6b;
 }
 
+.luminode-picker-card-edit ion-icon,
 .luminode-picker-card-delete ion-icon {
     font-size: 14px;
     pointer-events: none;

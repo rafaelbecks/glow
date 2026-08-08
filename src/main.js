@@ -167,6 +167,9 @@ export class GLOWVisualizer {
     this.uiManager.on('openLuminodeLab', () => {
       this.luminodeLab.show(null)
     })
+    this.sidePanel.setOnEditLuminode((luminode) => {
+      this.luminodeLab.show(luminode || null)
+    })
   }
 
   async initialize () {

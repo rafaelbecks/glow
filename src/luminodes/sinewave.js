@@ -14,8 +14,9 @@ export class SinewaveLuminode {
     // Update dimensions in case canvas was resized
     this.dimensions = this.canvasDrawer.getDimensions()
 
+    const cfg = SETTINGS.MODULES.SINEWAVE
     const rootMidi = Math.min(...notes.map(n => n.midi))
-    const rootFreq = 440 * Math.pow(2, (rootMidi - 69) / 12)
+    const rootFreq = cfg.FREQUENCY * Math.pow(2, (rootMidi - 69) / 12)
     const baseFreq = 0.0035
 
     this.canvasDrawer.applyLayoutTransform(layout)
@@ -28,13 +29,14 @@ export class SinewaveLuminode {
       const ratio = freq / rootFreq
 
       const harmonicFreq = baseFreq * ratio * 6
-      const amplitude = (10 + velocity * 80 / ratio) * 3
+      const amplitude = (10 + velocity * 80 / ratio) * cfg.AMPLITUDE
 
-      const phase = t * 2 + ratio * 4
+      // PHASE_SPEED default 0.5 → same motion as the previous hard-coded t * 2
+      const phase = t * ((cfg.PHASE_SPEED ?? 0.5) * 4) + ratio * 5
 
       this.ctx.beginPath()
       this.ctx.strokeStyle = UTILS.pitchToColor(midi)
-      this.ctx.lineWidth = SETTINGS.MODULES.SINEWAVE.LINE_WIDTH
+      this.ctx.lineWidth = cfg.LINE_WIDTH
 
       for (let i = -this.dimensions.width / 2; i <= this.dimensions.width / 2; i += 1) {
         const yOffset = Math.sin(i * harmonicFreq + phase) * amplitude

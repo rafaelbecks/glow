@@ -109,11 +109,38 @@ export const LUMINODE_CONFIGS = {
     group: 'Classic Patterns',
     config: [
       {
+        key: 'AMPLITUDE',
+        label: 'Amplitude',
+        type: 'slider',
+        min: 0,
+        max: 2,
+        step: 0.1,
+        default: 2
+      },
+      {
+        key: 'FREQUENCY',
+        label: 'Frequency',
+        type: 'slider',
+        min: 0,
+        max: 1600,
+        step: 1,
+        default: 1600
+      },
+      {
+        key: 'PHASE_SPEED',
+        label: 'Phase Speed',
+        type: 'slider',
+        min: 0,
+        max: 0.5,
+        step: 0.01,
+        default: 0.5
+      },
+      {
         key: 'LINE_WIDTH',
         label: 'Line Width',
         type: 'slider',
-        min: 0.5,
-        max: 6,
+        min: 0,
+        max: 1.5,
         step: 0.1,
         default: 1.5
       }

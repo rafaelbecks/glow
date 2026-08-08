@@ -231,6 +231,26 @@ export class LuminodePickerDialog {
     label.textContent = displayName
     nameRow.appendChild(label)
 
+    const actions = document.createElement('div')
+    actions.className = 'luminode-picker-card-actions'
+
+    const editBtn = document.createElement('button')
+    editBtn.type = 'button'
+    editBtn.className = 'luminode-picker-card-edit'
+    editBtn.title = 'Edit in Lab'
+    editBtn.setAttribute('aria-label', `Edit ${displayName}`)
+    editBtn.innerHTML = '<ion-icon name="create-outline"></ion-icon>'
+    editBtn.addEventListener('click', (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      this.triggerCallback('openLuminodeLab', {
+        trackId: this.trackId,
+        luminode: key
+      })
+      this.hide()
+    })
+    actions.appendChild(editBtn)
+
     if (isUserLuminodeId(key)) {
       const delBtn = document.createElement('button')
       delBtn.type = 'button'
@@ -243,8 +263,10 @@ export class LuminodePickerDialog {
         e.stopPropagation()
         this.requestDeleteUserLuminode(key, displayName)
       })
-      nameRow.appendChild(delBtn)
+      actions.appendChild(delBtn)
     }
+
+    nameRow.appendChild(actions)
 
     card.appendChild(thumb)
     card.appendChild(nameRow)
