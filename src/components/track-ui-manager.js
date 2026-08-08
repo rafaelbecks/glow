@@ -176,14 +176,11 @@ export class TrackUIManager {
           this.openLuminodePicker(track.id)
         })
 
-      const editLuminodeBinding = pane
-        .addButton({
-          title: this.getEditLuminodeButtonTitle(track.luminode),
-          label: 'Edit'
-        })
-        .on('click', () => {
-          this.openLuminodeInLab(track.id)
-        })
+      const editLuminodeIcon = this.attachLuminodeEditIcon(
+        luminodeBinding,
+        track.id,
+        Boolean(track.luminode)
+      )
 
       let layoutData = null
       let trajectoryData = null
@@ -377,7 +374,7 @@ export class TrackUIManager {
         luminodeFolder,
         midiBinding,
         luminodeBinding,
-        editLuminodeBinding,
+        editLuminodeIcon,
         trackHeaderContainer
       })
     } catch (error) {
@@ -393,9 +390,45 @@ export class TrackUIManager {
     return this.normalizeLuminodeName(luminode)
   }
 
-  getEditLuminodeButtonTitle (luminode) {
-    if (!luminode) return 'Select a luminode first'
-    return 'Edit in Lab…'
+  attachLuminodeEditIcon (luminodeBinding, trackId, enabled) {
+    const iconBtn = document.createElement('button')
+    iconBtn.type = 'button'
+    iconBtn.className = 'luminode-edit-icon'
+    iconBtn.title = 'Edit in Lab'
+    iconBtn.setAttribute('aria-label', 'Edit luminode in Lab')
+    iconBtn.innerHTML = '<ion-icon name="code-slash-outline"></ion-icon>'
+    iconBtn.disabled = !enabled
+    iconBtn.hidden = !enabled
+    iconBtn.addEventListener('click', (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      this.openLuminodeInLab(trackId)
+    })
+
+    const mount = () => {
+      const row = luminodeBinding?.element
+      if (!row || row.querySelector('.luminode-edit-icon')) return true
+
+      const btnView = row.querySelector('.tp-btnv')
+      const host = btnView?.parentElement || row
+      if (!host) return false
+
+      host.classList.add('luminode-blade-with-edit')
+      if (btnView && btnView.nextSibling) {
+        host.insertBefore(iconBtn, btnView.nextSibling)
+      } else {
+        host.appendChild(iconBtn)
+      }
+      return true
+    }
+
+    if (!mount()) {
+      requestAnimationFrame(() => {
+        if (!mount()) setTimeout(mount, 50)
+      })
+    }
+
+    return iconBtn
   }
 
   openLuminodePicker (trackId) {
@@ -417,7 +450,7 @@ export class TrackUIManager {
       paneData.trackData.luminode = luminode || ''
     }
     this.updateLuminodeButtonTitle(trackId, luminode)
-    this.updateEditLuminodeButtonTitle(trackId, luminode)
+    this.updateLuminodeEditIcon(trackId, luminode)
     this.updateLuminodeConfigPane(trackId, luminode)
   }
 
@@ -435,18 +468,13 @@ export class TrackUIManager {
     }
   }
 
-  updateEditLuminodeButtonTitle (trackId, luminode) {
+  updateLuminodeEditIcon (trackId, luminode) {
     const paneData = this.trackPanes.get(trackId)
-    if (!paneData?.editLuminodeBinding) return
-
-    const title = this.getEditLuminodeButtonTitle(luminode)
-    try {
-      paneData.editLuminodeBinding.title = title
-    } catch (_) {
-      try {
-        paneData.editLuminodeBinding.controller?.props?.set('title', title)
-      } catch (__) {}
-    }
+    const icon = paneData?.editLuminodeIcon
+    if (!icon) return
+    const enabled = Boolean(luminode)
+    icon.disabled = !enabled
+    icon.hidden = !enabled
   }
 
   createLuminodeConfigFolder (pane, track) {

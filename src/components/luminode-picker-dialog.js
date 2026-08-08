@@ -239,7 +239,7 @@ export class LuminodePickerDialog {
     editBtn.className = 'luminode-picker-card-edit'
     editBtn.title = 'Edit in Lab'
     editBtn.setAttribute('aria-label', `Edit ${displayName}`)
-    editBtn.innerHTML = '<ion-icon name="create-outline"></ion-icon>'
+    editBtn.innerHTML = '<ion-icon name="code-slash-outline"></ion-icon>'
     editBtn.addEventListener('click', (e) => {
       e.preventDefault()
       e.stopPropagation()
