@@ -32,7 +32,8 @@ export class SidePanel {
     this.trackUIManager = new TrackUIManager(
       trackManager,
       this.basePanel.getPanel(),
-      this.luminodeConfigManager
+      this.luminodeConfigManager,
+      midiGenerator
     )
     this.canvasUIManager = new CanvasUIManager(this.basePanel.getPanel())
     this.modulationUIManager = new ModulationUIManager(
@@ -195,6 +196,18 @@ export class SidePanel {
 
   setOnEditLuminode (callback) {
     this.trackUIManager.setOnEditLuminode(callback)
+  }
+
+  setOnGeneratorChanged (callback) {
+    this.trackUIManager.setOnGeneratorChanged(callback)
+  }
+
+  refreshGeneratorDiceIcons () {
+    this.trackUIManager.refreshGeneratorDiceIcons()
+  }
+
+  async refreshExternalSystems () {
+    await this.externalSystemsUIManager.renderExternalControls()
   }
 
   applyLuminodeSelection (trackId, luminode) {

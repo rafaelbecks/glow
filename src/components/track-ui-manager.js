@@ -12,12 +12,14 @@ import {
 export { getLuminodeDisplayName as normalizeLuminodeName }
 
 export class TrackUIManager {
-  constructor (trackManager, panel, luminodeConfigManager = null) {
+  constructor (trackManager, panel, luminodeConfigManager = null, midiGenerator = null) {
     this.trackManager = trackManager
     this.panel = panel
     this.luminodeConfigManager = luminodeConfigManager
+    this.midiGenerator = midiGenerator
     this.luminodePicker = null
     this.onEditLuminode = null
+    this.onGeneratorChanged = null
     this.settings = null
     this.trackPanes = new Map()
     this.mainPane = null
@@ -33,6 +35,14 @@ export class TrackUIManager {
 
   setOnEditLuminode (callback) {
     this.onEditLuminode = callback
+  }
+
+  setOnGeneratorChanged (callback) {
+    this.onGeneratorChanged = callback
+  }
+
+  setMidiGenerator (midiGenerator) {
+    this.midiGenerator = midiGenerator
   }
 
   renderTracks () {
@@ -180,6 +190,10 @@ export class TrackUIManager {
         luminodeBinding,
         track.id,
         Boolean(track.luminode)
+      )
+      const generatorDiceIcon = this.attachGeneratorDiceIcon(
+        luminodeBinding,
+        track.id
       )
 
       let layoutData = null
@@ -375,6 +389,7 @@ export class TrackUIManager {
         midiBinding,
         luminodeBinding,
         editLuminodeIcon,
+        generatorDiceIcon,
         trackHeaderContainer
       })
     } catch (error) {
@@ -405,20 +420,39 @@ export class TrackUIManager {
       this.openLuminodeInLab(trackId)
     })
 
+    this.mountTrackActionIcon(luminodeBinding, iconBtn, '.luminode-edit-icon')
+    return iconBtn
+  }
+
+  attachGeneratorDiceIcon (luminodeBinding, trackId) {
+    const iconBtn = document.createElement('button')
+    iconBtn.type = 'button'
+    iconBtn.className = 'luminode-generator-icon'
+    iconBtn.title = 'Add / randomize MIDI generator'
+    iconBtn.setAttribute('aria-label', 'Add or randomize MIDI generator for this track')
+    iconBtn.innerHTML = '<ion-icon name="dice-outline"></ion-icon>'
+    iconBtn.addEventListener('click', (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      this.handleGeneratorDiceClick(trackId)
+    })
+
+    this.mountTrackActionIcon(luminodeBinding, iconBtn, '.luminode-generator-icon')
+    this.updateGeneratorDiceIcon(trackId, iconBtn)
+    return iconBtn
+  }
+
+  mountTrackActionIcon (luminodeBinding, iconBtn, existingSelector) {
     const mount = () => {
       const row = luminodeBinding?.element
-      if (!row || row.querySelector('.luminode-edit-icon')) return true
+      if (!row || row.querySelector(existingSelector)) return true
 
       const btnView = row.querySelector('.tp-btnv')
       const host = btnView?.parentElement || row
       if (!host) return false
 
       host.classList.add('luminode-blade-with-edit')
-      if (btnView && btnView.nextSibling) {
-        host.insertBefore(iconBtn, btnView.nextSibling)
-      } else {
-        host.appendChild(iconBtn)
-      }
+      host.appendChild(iconBtn)
       return true
     }
 
@@ -427,8 +461,33 @@ export class TrackUIManager {
         if (!mount()) setTimeout(mount, 50)
       })
     }
+  }
 
-    return iconBtn
+  handleGeneratorDiceClick (trackId) {
+    if (!this.midiGenerator) return
+    const result = this.midiGenerator.ensureOrRandomizeForTrack(trackId)
+    if (!result) return
+    this.updateGeneratorDiceIcon(trackId)
+    if (typeof this.onGeneratorChanged === 'function') {
+      this.onGeneratorChanged({ trackId, result })
+    }
+  }
+
+  updateGeneratorDiceIcon (trackId, iconEl = null) {
+    const paneData = this.trackPanes.get(trackId)
+    const icon = iconEl || paneData?.generatorDiceIcon
+    if (!icon || !this.midiGenerator) return
+    const hasGenerator = Boolean(this.midiGenerator.getGeneratorForTrack(trackId))
+    icon.classList.toggle('is-active', hasGenerator)
+    icon.title = hasGenerator
+      ? 'Randomize MIDI generator'
+      : 'Add MIDI generator'
+  }
+
+  refreshGeneratorDiceIcons () {
+    for (const trackId of this.trackPanes.keys()) {
+      this.updateGeneratorDiceIcon(trackId)
+    }
   }
 
   openLuminodePicker (trackId) {

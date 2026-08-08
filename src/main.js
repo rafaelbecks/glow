@@ -68,7 +68,13 @@ export class GLOWVisualizer {
       this.midiManager.setCCMapper(this.ccMapper)
     }
     this.midiGenerator = new MidiGenerator(this.midiManager, this.trackManager)
-    this.midiGenerator.onChange = () => this.markProjectChanged()
+    this.midiGenerator.onChange = () => {
+      this.markProjectChanged()
+      this.sidePanel.refreshGeneratorDiceIcons()
+      if (this.luminodeLab?.generatorPane) {
+        this.luminodeLab.generatorPane.remount()
+      }
+    }
     this.tabletManager = new TabletManager(this.tabletCanvas, {
       midiManager: this.midiManager
     })
@@ -229,8 +235,26 @@ export class GLOWVisualizer {
       file = e.dataTransfer.files[0]
     }
 
-    if (!file || !file.name.endsWith('.glow')) {
-      this.uiManager.showStatus('Drop a .glow project file to load it.', 'error')
+    if (!file) return
+
+    if (file.name.endsWith('.luminode')) {
+      try {
+        await this.luminodeLab.openImportedFile(file, { maximized: true })
+      } catch (error) {
+        console.error('Error importing dropped luminode:', error)
+        this.uiManager.showStatus(
+          'Error importing .luminode file. Check console for details.',
+          'error'
+        )
+      }
+      return
+    }
+
+    if (!file.name.endsWith('.glow')) {
+      this.uiManager.showStatus(
+        'Drop a .glow project or .luminode file.',
+        'error'
+      )
       return
     }
 
@@ -257,6 +281,9 @@ export class GLOWVisualizer {
     })
     this.sidePanel.setOnEditLuminode((luminode) => {
       this.luminodeLab.show(luminode || null)
+    })
+    this.sidePanel.setOnGeneratorChanged(async () => {
+      await this.sidePanel.refreshExternalSystems()
     })
   }
 

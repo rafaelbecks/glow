@@ -153,6 +153,43 @@ export class MidiGenerator {
       .map((g) => g.trackId)
   }
 
+  getGeneratorForTrack (trackId) {
+    return this.generators.find((g) => g.trackId === trackId) || null
+  }
+
+  /**
+   * Add a generator for the track, or randomize an existing one.
+   * @returns {'added'|'randomized'|null}
+   */
+  ensureOrRandomizeForTrack (trackId) {
+    const existing = this.getGeneratorForTrack(trackId)
+    if (existing) {
+      this.randomizeGenerator(existing.id)
+      return 'randomized'
+    }
+    if (this.generators.length >= MAX_GENERATORS) return null
+    if (this.getUsedTrackIds().includes(trackId)) return null
+
+    const id = this.addGenerator(trackId)
+    return id ? 'added' : null
+  }
+
+  randomizeGenerator (id) {
+    const generator = this.getGenerator(id)
+    if (!generator) return
+
+    const modes = Object.keys(INTERVALS)
+    const intervalSteps = [250, 500, 750, 1000, 1500, 2000, 3000, 4000, 5000]
+    this.updateGenerator(id, {
+      enabled: true,
+      intervalMs: intervalSteps[Math.floor(Math.random() * intervalSteps.length)],
+      intervalMode: modes[Math.floor(Math.random() * modes.length)],
+      numberOfNotes: 1 + Math.floor(Math.random() * 8),
+      velocity: 40 + Math.floor(Math.random() * 88),
+      velocityRandom: Math.floor(Math.random() * 33)
+    })
+  }
+
   getAvailableTrackId () {
     const used = new Set(this.getUsedTrackIds())
     const tracks = this.trackManager.getTracks()

@@ -569,6 +569,34 @@
     pointer-events: none;
 }
 
+.luminode-generator-icon {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.45);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s ease, opacity 0.15s ease;
+}
+
+.luminode-generator-icon:hover {
+    color: #51cf66;
+}
+
+.luminode-generator-icon.is-active {
+    color: #51cf66;
+}
+
+.luminode-generator-icon ion-icon {
+    font-size: 16px;
+    pointer-events: none;
+}
+
 .midi-device-select,
 .luminode-select {
     background: #222;

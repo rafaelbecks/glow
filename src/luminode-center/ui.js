@@ -509,6 +509,56 @@ export class LuminodeLab {
     }
   }
 
+  /**
+   * Open Lab maximized and load a .luminode file (drop / external import).
+   * @param {string|File} source - file text or File
+   */
+  async openImportedFile (source, { maximized = true } = {}) {
+    if (!this.dialog) return
+
+    if (this.isVisible && this.dirty) {
+      const ok = await this.confirm.confirm({
+        title: 'Unsaved changes',
+        message:
+          'You have unsaved work in Luminode Lab. Import anyway? Unsaved changes will be lost.',
+        confirmLabel: 'Import',
+        cancelLabel: 'Cancel',
+        danger: true
+      })
+      if (!ok) return
+    }
+
+    let text = source
+    if (source && typeof source.text === 'function') {
+      text = await source.text()
+    }
+    if (typeof text !== 'string') {
+      throw new Error('Invalid luminode import source')
+    }
+
+    const doc = parseLuminodeFile(text)
+    doc.id = generateUserId(doc.name)
+
+    this.ensureEditor()
+    this.ensurePreview()
+    this.applyPreviewWidth()
+    this.populateSourceSelect(null)
+    this.setSideTab('preview')
+    this.setEditorTab('code')
+
+    this.dialog.classList.add('show')
+    this.isVisible = true
+    this.refreshEditors()
+    this.preview.start()
+    this.setMaximized(maximized)
+
+    this.loadDocument(doc, { builtinOnly: false })
+    this.dirty = true
+    this.updateStatus()
+    this.setError(null)
+    this.setStatus(`Imported “${doc.name}” — save to keep it`)
+  }
+
   hide () {
     if (!this.isVisible) return
     this.isVisible = false
