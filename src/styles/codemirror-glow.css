@@ -1,0 +1,34 @@
+/**
+ * GLOW tweaks on top of CodeMirror material-darker:
+ * darker field + brand green selection only.
+ */
+
+.cm-s-material-darker.CodeMirror {
+  background: #000 !important;
+}
+
+.cm-s-material-darker .CodeMirror-gutters {
+  background: #050505 !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.cm-s-material-darker .CodeMirror-scroll,
+.cm-s-material-darker .CodeMirror-sizer,
+.cm-s-material-darker .CodeMirror-gutter-filler,
+.cm-s-material-darker .CodeMirror-scrollbar-filler {
+  background: #000;
+}
+
+.cm-s-material-darker div.CodeMirror-selected {
+  background: rgba(81, 207, 102, 0.28) !important;
+}
+
+.cm-s-material-darker .CodeMirror-line::selection,
+.cm-s-material-darker .CodeMirror-line > span::selection,
+.cm-s-material-darker .CodeMirror-line > span > span::selection {
+  background: rgba(81, 207, 102, 0.32) !important;
+}
+
+.cm-s-material-darker .CodeMirror-focused .CodeMirror-selected {
+  background: rgba(81, 207, 102, 0.28) !important;
+}
