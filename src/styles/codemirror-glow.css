@@ -1,22 +1,23 @@
 /**
  * GLOW tweaks on top of CodeMirror material-darker:
- * darker field + brand green selection only.
+ * slightly darker grey field + brand green selection only.
+ * Default material-darker is #212121.
  */
 
 .cm-s-material-darker.CodeMirror {
-  background: #000 !important;
+  background: #1a1a1a !important;
 }
 
 .cm-s-material-darker .CodeMirror-gutters {
-  background: #050505 !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: #161616 !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 .cm-s-material-darker .CodeMirror-scroll,
 .cm-s-material-darker .CodeMirror-sizer,
 .cm-s-material-darker .CodeMirror-gutter-filler,
 .cm-s-material-darker .CodeMirror-scrollbar-filler {
-  background: #000;
+  background: #1a1a1a;
 }
 
 .cm-s-material-darker div.CodeMirror-selected {
