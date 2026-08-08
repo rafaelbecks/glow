@@ -14,7 +14,7 @@ import { CreateSetDialog } from './components/create-set-dialog.js'
 import { LuminodePickerDialog } from './components/luminode-picker-dialog.js'
 import { LuminodeLab, bootstrapUserLuminodes } from './luminode-center/index.js'
 import { getConfirmDialog } from './components/confirm-dialog.js'
-import { FILE_TYPE } from './glow-file-types.js'
+import { FILE_TYPE, isGlowProjectFileName, isLuminodeFileName } from './glow-file-types.js'
 import { getLuminodeConfig } from './luminode-configs.js'
 import {
   getCanvasFilterParamByKey,
@@ -35,6 +35,7 @@ import { isFragmentBackgroundMode } from './shaders/background/registry.js'
 import { GlassOverlayManager } from './glass-overlay-manager.js'
 import { ControlsManager } from './controls-manager.js'
 import { downloadPngSnapshot, downloadSvgSnapshot } from './canvas-export.js'
+import { registerServiceWorker, setupLaunchQueue } from './pwa.js'
 
 export class GLOWVisualizer {
   constructor () {
@@ -161,9 +162,76 @@ export class GLOWVisualizer {
     this.setupLuminodeLab()
     this.setupLogoButtons()
     this.setupFileDrop()
-    this.initialize().catch((error) =>
-      console.error('Failed to initialize:', error)
-    )
+    this.initialize()
+      .then(() => {
+        this.setupOsFileHandling()
+      })
+      .catch((error) => console.error('Failed to initialize:', error))
+  }
+
+  setupOsFileHandling () {
+    setupLaunchQueue((fileHandle) => this.handleLaunchedFile(fileHandle))
+  }
+
+  /**
+   * OS / PWA File Handling API — open associated .glow or .luminode files.
+   * @param {FileSystemFileHandle} fileHandle
+   */
+  async handleLaunchedFile (fileHandle) {
+    if (!fileHandle || fileHandle.kind !== 'file') return
+
+    try {
+      const file = await fileHandle.getFile()
+      await this.openExternalFile(file, fileHandle)
+    } catch (error) {
+      console.error('Error opening launched file:', error)
+      this.uiManager.showStatus(
+        'Error opening file from the system. Check console for details.',
+        'error'
+      )
+    }
+  }
+
+  /**
+   * Shared entry for drag-drop and OS file launches.
+   * @param {File} file
+   * @param {FileSystemFileHandle|null} fileHandle
+   */
+  async openExternalFile (file, fileHandle = null) {
+    if (!file) return
+
+    if (isLuminodeFileName(file.name)) {
+      try {
+        await this.luminodeLab.openImportedFile(file, { maximized: true })
+      } catch (error) {
+        console.error('Error importing luminode:', error)
+        this.uiManager.showStatus(
+          'Error importing .luminode file. Check console for details.',
+          'error'
+        )
+      }
+      return
+    }
+
+    if (!isGlowProjectFileName(file.name)) {
+      this.uiManager.showStatus(
+        'Open a .glow project or .luminode file.',
+        'error'
+      )
+      return
+    }
+
+    try {
+      const content = await file.text()
+      const projectData = JSON.parse(content)
+      await this.handleProjectLoad({ file, projectData, fileHandle })
+    } catch (error) {
+      console.error('Error loading project:', error)
+      this.uiManager.showStatus(
+        'Error loading project. Check console for details.',
+        'error'
+      )
+    }
   }
 
   setupFileDrop () {
@@ -236,39 +304,7 @@ export class GLOWVisualizer {
     }
 
     if (!file) return
-
-    if (file.name.endsWith('.luminode')) {
-      try {
-        await this.luminodeLab.openImportedFile(file, { maximized: true })
-      } catch (error) {
-        console.error('Error importing dropped luminode:', error)
-        this.uiManager.showStatus(
-          'Error importing .luminode file. Check console for details.',
-          'error'
-        )
-      }
-      return
-    }
-
-    if (!file.name.endsWith('.glow')) {
-      this.uiManager.showStatus(
-        'Drop a .glow project or .luminode file.',
-        'error'
-      )
-      return
-    }
-
-    try {
-      const content = await file.text()
-      const projectData = JSON.parse(content)
-      await this.handleProjectLoad({ file, projectData, fileHandle })
-    } catch (error) {
-      console.error('Error loading dropped project:', error)
-      this.uiManager.showStatus(
-        'Error loading dropped project. Check console for details.',
-        'error'
-      )
-    }
+    await this.openExternalFile(file, fileHandle)
   }
 
   setupLuminodeLab () {
@@ -2177,6 +2213,7 @@ export class GLOWVisualizer {
 
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+  registerServiceWorker()
   window.glowVisualizer = new GLOWVisualizer()
 
   // Expose debug method globally

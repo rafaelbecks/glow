@@ -31,6 +31,7 @@ A **luminode** is a visual pattern module. Think of it as an oscillator in a syn
 - **MIDI Mappings** - Custom hardware controller mappings (see `midi-mappings/`)
 - **Generate Mode** - Browser-side note generator for testing without a MIDI device (External tab)
 - **Tablet Support** - Experimental / in development (Web HID drawing tablet input)
+- **PWA / file associations** - Installable app (Chromium). After install, `.glow` / `.set.glow` open as scenes and `.luminode` opens Luminode Lab via the OS File Handling API (complements drag-drop and the in-app picker)
 
 ## Quick Start
 
@@ -63,6 +64,7 @@ See the **[User Manual](USER_MANUAL.md)** for the full walkthrough.
 - Web HID API support (for tablet functionality on macOS/Linux)
 - Canvas 2D context support
 - File API support (for scene saving/loading)
+- For install + “Open with GLOW”: Chromium-based browser over HTTPS (or `localhost`), with service worker and File Handling API support
 
 ## Acknowledgements
 

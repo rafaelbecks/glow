@@ -177,6 +177,11 @@ export class TrackUIManager {
           this.trackManager.setMidiDevice(track.id, ev.value || null)
         })
 
+      const generatorDiceIcon = this.attachGeneratorDiceIcon(
+        midiBinding,
+        track.id
+      )
+
       const luminodeBinding = pane
         .addButton({
           title: this.getLuminodeButtonTitle(track.luminode),
@@ -190,10 +195,6 @@ export class TrackUIManager {
         luminodeBinding,
         track.id,
         Boolean(track.luminode)
-      )
-      const generatorDiceIcon = this.attachGeneratorDiceIcon(
-        luminodeBinding,
-        track.id
       )
 
       let layoutData = null
@@ -420,11 +421,15 @@ export class TrackUIManager {
       this.openLuminodeInLab(trackId)
     })
 
-    this.mountTrackActionIcon(luminodeBinding, iconBtn, '.luminode-edit-icon')
+    this.mountTrackActionIcon(luminodeBinding, iconBtn, {
+      existingSelector: '.luminode-edit-icon',
+      hostClass: 'luminode-blade-with-edit',
+      valueSelector: '.tp-btnv'
+    })
     return iconBtn
   }
 
-  attachGeneratorDiceIcon (luminodeBinding, trackId) {
+  attachGeneratorDiceIcon (midiBinding, trackId) {
     const iconBtn = document.createElement('button')
     iconBtn.type = 'button'
     iconBtn.className = 'luminode-generator-icon'
@@ -437,21 +442,31 @@ export class TrackUIManager {
       this.handleGeneratorDiceClick(trackId)
     })
 
-    this.mountTrackActionIcon(luminodeBinding, iconBtn, '.luminode-generator-icon')
+    this.mountTrackActionIcon(midiBinding, iconBtn, {
+      existingSelector: '.luminode-generator-icon',
+      hostClass: 'midi-blade-with-dice',
+      valueSelector: '.tp-lstv, .tp-sldv, .tp-btnv'
+    })
     this.updateGeneratorDiceIcon(trackId, iconBtn)
     return iconBtn
   }
 
-  mountTrackActionIcon (luminodeBinding, iconBtn, existingSelector) {
+  mountTrackActionIcon (binding, iconBtn, options = {}) {
+    const {
+      existingSelector,
+      hostClass = 'luminode-blade-with-edit',
+      valueSelector = '.tp-btnv'
+    } = options
+
     const mount = () => {
-      const row = luminodeBinding?.element
+      const row = binding?.element
       if (!row || row.querySelector(existingSelector)) return true
 
-      const btnView = row.querySelector('.tp-btnv')
-      const host = btnView?.parentElement || row
+      const valueView = row.querySelector(valueSelector)
+      const host = valueView?.parentElement || row
       if (!host) return false
 
-      host.classList.add('luminode-blade-with-edit')
+      host.classList.add(hostClass)
       host.appendChild(iconBtn)
       return true
     }
