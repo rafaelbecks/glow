@@ -32,13 +32,32 @@ export function inferConfigSchema (values, existingSchema = []) {
 
   Object.entries(values || {}).forEach(([key, value]) => {
     if (byKey.has(key)) {
-      schema.push({ ...byKey.get(key), default: value })
+      const prev = byKey.get(key)
+      const next = { ...prev, default: value }
+      // Number you put in JSON is the slider maximum
+      if (
+        typeof value === 'number' &&
+        (prev.type === 'slider' || prev.type === 'number')
+      ) {
+        Object.assign(next, numberSliderBounds(value))
+      }
+      schema.push(next)
       return
     }
     schema.push(inferParam(key, value))
   })
 
   return schema
+}
+
+/** Slider range: value is max (or min when negative). */
+function numberSliderBounds (value) {
+  const abs = Math.abs(value) || 1
+  const step = abs >= 10 ? 1 : abs >= 1 ? 0.1 : 0.01
+  if (value < 0) {
+    return { min: value, max: 0, step }
+  }
+  return { min: 0, max: value === 0 ? 1 : value, step }
 }
 
 function inferParam (key, value) {
@@ -70,11 +89,13 @@ function inferParam (key, value) {
   }
 
   if (typeof value === 'number') {
-    const abs = Math.abs(value) || 1
-    const max = Math.max(abs * 4, 10)
-    const min = value < 0 ? -max : 0
-    const step = abs >= 10 ? 1 : abs >= 1 ? 0.1 : 0.01
-    return { key, label, type: 'slider', min, max, step, default: value }
+    return {
+      key,
+      label,
+      type: 'slider',
+      ...numberSliderBounds(value),
+      default: value
+    }
   }
 
   if (typeof value === 'string') {
@@ -93,8 +114,8 @@ export const DEFAULT_CONFIG_SCHEMA = [
     key: 'LINE_WIDTH',
     label: 'Line Width',
     type: 'slider',
-    min: 0.5,
-    max: 8,
+    min: 0,
+    max: 1.5,
     step: 0.1,
     default: 1.5
   }
