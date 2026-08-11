@@ -1,7 +1,3 @@
-<div align="center">
-  <img src="assets/glow-logo-with-o.svg" alt="G.L.O.W." width="400">
-</div>
-
 # G.L.O.W.
 
 ### A generative visual instrument for composing light with geometry.
@@ -18,7 +14,7 @@
 
 G.L.O.W. is an open-source visual instrument for creating evolving geometric compositions in real time.
 
-Build scenes from **Luminodes** — small generative drawing systems — and make them move, oscillate, rotate and respond to sound, MIDI or internal generators.
+Build scenes from **Luminodes**, small generative drawing systems, and make them move, oscillate, rotate and respond to sound, MIDI or internal generators.
 
 ---
 
@@ -28,22 +24,19 @@ G.L.O.W. explores the relationship between **geometry, motion, modulation and so
 
 Instead of fixed images or animations, it generates visual structures from mathematical systems. Each system can be transformed, animated and modulated into an evolving composition.
 
-The basic building block is the **Luminode**: a small generative drawing system (oscillating lines, harmonic curves, grids, particles, knots, and more). Luminodes combine into tracks, move through trajectories, and respond continuously to modulators.
-
-The result is a visual instrument — not a collection of pre-made effects.
+The basic building block is the **Luminode**: a small generative drawing module (oscillating lines, harmonic curves, grids, particles, knots, and more). Luminodes combine into tracks, move through trajectories, and respond continuously to modulators.
 
 ---
 
 ## Start playing
 
-G.L.O.W. runs in the browser. You don't need MIDI or other hardware — built-in generators and modulators produce motion on their own.
+G.L.O.W. runs in the browser. You don't need MIDI or other hardware, built-in generators and modulators produce motion on their own.
 
 Interact with:
 
 - Mouse and keyboard
 - Internal generators and modulators
 - MIDI controllers / MIDI from other software
-- HID devices (experimental tablet support)
 - Live audio or audio files as modulation sources
 
 **[▶ Open G.L.O.W.](https://glow.luminode.studio/)** — pick a Luminode, add it to a track, change parameters, and start modulating.
@@ -108,15 +101,6 @@ Almost any numerical parameter can become a source of movement: position, scale,
 Audio files play through a built-in player (with loop). Multiple modulators can share the same file track. Audio settings and embedded files are saved in the project `.glow` file.
 
 Full controls and destinations: [User Manual → Modulation](USER_MANUAL.md#modulation-system).
-
----
-
-## Also included
-
-- Multi-stage rendering and canvas filters — [Rendering Pipeline](diagrams/04-rendering-pipeline.md)
-- Shader backgrounds (GPU-io + WebGL2) — [`src/shaders/background/README.md`](src/shaders/background/README.md)
-- Custom MIDI mappings — `midi-mappings/`
-- Installable PWA with `.glow` / `.luminode` file associations (Chromium)
 
 ---
 
