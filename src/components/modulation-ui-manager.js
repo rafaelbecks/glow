@@ -36,6 +36,7 @@ export class ModulationUIManager {
     this.monitorAnimationFrame = null
     this.monitorSampleCount = 64
     this._audioDeviceRefreshAttempted = false
+    this.onAudioTracksChanged = null
   }
 
   disposePanes () {
@@ -141,6 +142,8 @@ export class ModulationUIManager {
         })
       }
     }
+
+    this.onAudioTracksChanged?.()
   }
 
   createModulatorPane (modulator, tracks) {

@@ -61,6 +61,18 @@ export class ModulationSystem {
     return this.audioEngine.getTracks()
   }
 
+  hasPlayableAudio () {
+    return this.audioEngine.hasPlayableAudio()
+  }
+
+  isAnyAudioPlaying () {
+    return this.audioEngine.isAnyTrackPlaying()
+  }
+
+  async toggleAudioPlayback () {
+    return this.audioEngine.togglePlayback()
+  }
+
   createAudioTrack (options = {}) {
     return this.audioEngine.createTrack(options)
   }

@@ -38,6 +38,9 @@
     left: 50%;
     transform: translateX(-50%);
     z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     text-align: center;
     font-family: "Analo Grotesk", "Inconsolata", sans-serif;
     font-size: 12px;
@@ -64,6 +67,40 @@
     font-family: inherit;
     font-size: inherit;
     text-align: center;
+}
+
+.project-audio-transport-btn {
+    flex: 0 0 auto;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.project-audio-transport-btn[style*="display: flex"],
+.project-audio-transport-btn.is-visible {
+    display: flex;
+}
+
+.project-audio-transport-btn:hover {
+    color: #51cf66;
+}
+
+.project-audio-transport-btn.is-playing {
+    color: #51cf66;
+}
+
+.project-audio-transport-btn ion-icon {
+    font-size: 14px;
+    pointer-events: none;
 }
 
 .canvas-message {

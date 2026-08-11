@@ -894,6 +894,7 @@ export class ProjectManager {
       this.glowVisualizer.sidePanel.renderTracks();
       this.glowVisualizer.mixerPanel?.refresh();
       this.glowVisualizer.sidePanel.modulationUIManager.renderModulationControls();
+      this.glowVisualizer.syncAudioTransportUI();
       if (this.glowVisualizer.sidePanel.basePanel.activeTab === "external") {
         await this.glowVisualizer.sidePanel.externalSystemsUIManager.renderExternalControls();
       }

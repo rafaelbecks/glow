@@ -38,6 +38,7 @@ export class AudioModulationEngine {
     this.smoothedLevels = new Map()
     this.monitorHistories = new Map()
     this.permissionGranted = false
+    this.onPlaybackChange = null
     this._deviceChangeHandler = null
   }
 
@@ -214,6 +215,64 @@ export class AudioModulationEngine {
     return this.tracks.has(trackId)
   }
 
+  hasPlayableAudio () {
+    return [...this.tracks.values()].some((track) => Boolean(track.dataUrl))
+  }
+
+  isAnyTrackPlaying () {
+    return [...this.tracks.values()].some(
+      (track) => track.dataUrl && track.audioEl && !track.audioEl.paused
+    )
+  }
+
+  /**
+   * Toggle all file-backed tracks: pause if any playing, otherwise play enabled ones.
+   * @returns {Promise<boolean>} true if playing after toggle
+   */
+  async togglePlayback () {
+    const playable = [...this.tracks.values()].filter((track) =>
+      Boolean(track.dataUrl)
+    )
+    if (playable.length === 0) return false
+
+    const anyPlaying = playable.some(
+      (track) => track.audioEl && !track.audioEl.paused
+    )
+    if (anyPlaying) {
+      playable.forEach((track) => {
+        try {
+          track.audioEl.pause()
+        } catch (error) {}
+      })
+      this._emitPlaybackChange()
+      return false
+    }
+
+    await this.ensureAudioContext()
+    for (const track of playable) {
+      if (track.enabled === false) continue
+      try {
+        await this.ensureTrackGraph(track.id)
+        await track.audioEl.play()
+      } catch (error) {
+        console.warn('Audio playback failed:', error)
+      }
+    }
+    this._emitPlaybackChange()
+    return this.isAnyTrackPlaying()
+  }
+
+  _emitPlaybackChange () {
+    try {
+      this.onPlaybackChange?.({
+        hasAudio: this.hasPlayableAudio(),
+        playing: this.isAnyTrackPlaying()
+      })
+    } catch (error) {
+      console.warn('Audio playback change handler failed:', error)
+    }
+  }
+
   _serializeTrack (track) {
     return {
       id: track.id,
@@ -270,7 +329,10 @@ export class AudioModulationEngine {
     audioEl.setAttribute('playsinline', '')
     audioEl.addEventListener('play', () => {
       this.ensureAudioContext().catch(() => {})
+      this._emitPlaybackChange()
     })
+    audioEl.addEventListener('pause', () => this._emitPlaybackChange())
+    audioEl.addEventListener('ended', () => this._emitPlaybackChange())
 
     const track = {
       id,
@@ -356,6 +418,7 @@ export class AudioModulationEngine {
       }
     }
 
+    this._emitPlaybackChange()
     return this._serializeTrack(track)
   }
 
@@ -399,6 +462,7 @@ export class AudioModulationEngine {
       console.warn('Error releasing audio track:', error)
     }
     this.tracks.delete(trackId)
+    this._emitPlaybackChange()
   }
 
   releaseUnusedTracks (activeTrackIds = []) {

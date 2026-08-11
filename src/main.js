@@ -94,6 +94,9 @@ export class GLOWVisualizer {
       this.midiGenerator
     )
     this.sidePanel.setSettings(SETTINGS)
+    this.sidePanel.modulationUIManager.onAudioTracksChanged = () => {
+      this.syncAudioTransportUI()
+    }
     this.controlsManager = new ControlsManager(this)
     this.projectManager = new ProjectManager(this)
     this.saveDialog = new SaveDialog()
@@ -404,6 +407,7 @@ export class GLOWVisualizer {
     this.uiManager.on('resize', () => this.handleResize())
     this.uiManager.on('togglePanel', () => this.toggleSidePanel())
     this.uiManager.on('toggleMixer', () => this.toggleMixerPanel())
+    this.uiManager.on('toggleAudioTransport', () => this.toggleProjectAudio())
     this.uiManager.on('iconsVisibilityChange', ({ visible }) => {
       if (!visible) {
         this.mixerPanel?.hide()
@@ -474,6 +478,13 @@ export class GLOWVisualizer {
     this.trackManager.on('trackUpdated', () => this.markProjectChanged())
     this.trackManager.on('tracksReordered', () => this.markProjectChanged())
     this.effectLayerManager.on('orderChanged', () => this.markProjectChanged())
+
+    const audioEngine = this.trackManager
+      .getModulationSystem()
+      .getAudioEngine()
+    audioEngine.onPlaybackChange = (state) => {
+      this.syncAudioTransportUI(state)
+    }
 
     // Canvas and color settings
     this.sidePanel.on('canvasSettingChange', (data) =>
@@ -692,6 +703,27 @@ export class GLOWVisualizer {
   toggleMixerPanel () {
     if (this.mixerVisible) this.hideMixerPanel()
     else this.showMixerPanel()
+  }
+
+  syncAudioTransportUI (state = null) {
+    const modulationSystem = this.trackManager.getModulationSystem()
+    const hasAudio =
+      state?.hasAudio ?? modulationSystem.hasPlayableAudio()
+    const playing =
+      state?.playing ?? modulationSystem.isAnyAudioPlaying()
+    this.uiManager.setAudioTransportAvailable(hasAudio)
+    this.uiManager.setAudioTransportPlaying(playing)
+  }
+
+  async toggleProjectAudio () {
+    const modulationSystem = this.trackManager.getModulationSystem()
+    if (!modulationSystem.hasPlayableAudio()) return
+    try {
+      const playing = await modulationSystem.toggleAudioPlayback()
+      this.uiManager.setAudioTransportPlaying(playing)
+    } catch (error) {
+      console.warn('Project audio toggle failed:', error)
+    }
   }
 
   async openFile () {
@@ -2237,8 +2269,9 @@ export class GLOWVisualizer {
   showProjectNameDisplay () {
     const projectNameDisplay = document.getElementById('projectNameDisplay')
     if (projectNameDisplay) {
-      projectNameDisplay.style.display = 'block'
+      projectNameDisplay.style.display = 'flex'
     }
+    this.syncAudioTransportUI()
   }
 
   hideProjectNameDisplay () {

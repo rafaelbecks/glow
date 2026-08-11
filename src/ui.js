@@ -53,12 +53,17 @@ export class UIManager {
       tabletWidth: document.getElementById('tabletWidth'),
       colorToggle: document.getElementById('colorToggle'),
       logoContainer: document.getElementById('logoContainer'),
-      projectNameDisplay: document.getElementById('projectNameDisplay')
+      projectNameDisplay: document.getElementById('projectNameDisplay'),
+      projectAudioTransportBtn: document.getElementById(
+        'projectAudioTransportBtn'
+      )
     }
 
     this.statusVisible = false
     this.sidePanelVisible = false
     this.iconsVisible = true
+    this.audioTransportAvailable = false
+    this.audioTransportPlaying = false
   }
 
   setupEventListeners () {
@@ -92,6 +97,14 @@ export class UIManager {
     if (this.elements.openButton) {
       this.elements.openButton.addEventListener('click', () => {
         this.triggerCallback('openFile')
+      })
+    }
+
+    if (this.elements.projectAudioTransportBtn) {
+      this.elements.projectAudioTransportBtn.addEventListener('click', (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        this.triggerCallback('toggleAudioTransport')
       })
     }
 
@@ -177,6 +190,17 @@ export class UIManager {
         } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'p') {
           e.preventDefault()
           this.triggerCallback('exportSnapshotHotkey')
+        } else if (
+          this.audioTransportAvailable &&
+          e.code === 'Space' &&
+          !e.metaKey &&
+          !e.ctrlKey &&
+          !e.altKey &&
+          !this.isTextInputTarget(e.target) &&
+          !this.isDialogOpen()
+        ) {
+          e.preventDefault()
+          this.triggerCallback('toggleAudioTransport')
         } else if (
           this.isSetModeActive &&
           !e.metaKey &&
@@ -497,13 +521,48 @@ export class UIManager {
 
   showProjectNameDisplay () {
     if (this.elements.projectNameDisplay) {
-      this.elements.projectNameDisplay.style.display = 'block'
+      this.elements.projectNameDisplay.style.display = 'flex'
     }
   }
 
   hideProjectNameDisplay () {
     if (this.elements.projectNameDisplay) {
       this.elements.projectNameDisplay.style.display = 'none'
+    }
+  }
+
+  setAudioTransportAvailable (available) {
+    this.audioTransportAvailable = Boolean(available)
+    const btn = this.elements.projectAudioTransportBtn
+    if (!btn) return
+    if (this.audioTransportAvailable) {
+      btn.classList.add('is-visible')
+      btn.style.display = 'flex'
+    } else {
+      btn.classList.remove('is-visible')
+      btn.style.display = 'none'
+      this.setAudioTransportPlaying(false)
+    }
+  }
+
+  setAudioTransportPlaying (playing) {
+    this.audioTransportPlaying = Boolean(playing)
+    const btn = this.elements.projectAudioTransportBtn
+    if (!btn) return
+    const icon = btn.querySelector('ion-icon')
+    btn.classList.toggle('is-playing', this.audioTransportPlaying)
+    btn.setAttribute(
+      'aria-label',
+      this.audioTransportPlaying ? 'Stop audio' : 'Play audio'
+    )
+    btn.title = this.audioTransportPlaying
+      ? 'Stop audio (Space)'
+      : 'Play audio (Space)'
+    if (icon) {
+      icon.setAttribute(
+        'name',
+        this.audioTransportPlaying ? 'stop' : 'play'
+      )
     }
   }
 }
