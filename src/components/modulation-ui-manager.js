@@ -31,74 +31,27 @@ export class ModulationUIManager {
     this.trackManager = trackManager
     this.panel = panel
     this.modulatorPanes = new Map()
-    this.mainPane = null
+    this.modulatorsPane = null
+    this.audioTracksPane = null
     this.monitorAnimationFrame = null
     this.monitorSampleCount = 64
     this._audioDeviceRefreshAttempted = false
   }
 
-  renderModulationControls () {
-    const modulationContainer = this.panel.querySelector('#modulationControlsContainer')
-    if (!modulationContainer) return
-
-    if (this.mainPane) {
-      this.mainPane.dispose()
-      this.mainPane = null
+  disposePanes () {
+    if (this.modulatorsPane) {
+      this.modulatorsPane.dispose()
+      this.modulatorsPane = null
+    }
+    if (this.audioTracksPane) {
+      this.audioTracksPane.dispose()
+      this.audioTracksPane = null
     }
     this.stopMonitorLoop()
     this.modulatorPanes.clear()
+  }
 
-    const modulators = this.trackManager.getModulators()
-    const tracks = this.trackManager.getTracks()
-    const modulationSystem = this.trackManager.getModulationSystem()
-    const audioTracks = modulationSystem.getAudioTracks()
-
-    modulationContainer.innerHTML = `
-      <div class="modulation-controls">
-        <div class="control-section">
-          <div class="modulator-header">
-            <h4>Modulators</h4>
-            <button class="add-modulator-btn" id="addModulatorBtn">
-              <ion-icon name="add-outline"></ion-icon>
-              Add Modulator
-            </button>
-          </div>
-          ${modulators.length === 0
-            ? '<div class="no-modulators">No modulators. Click "Add Modulator" to create one.</div>'
-            : ''
-          }
-        </div>
-
-        <div class="control-section">
-        <div class="modulator-header">
-          <h4>Audio Tracks</h4>
-          <button class="add-modulator-btn" id="addAudioTrackBtn">
-            <ion-icon name="add-outline"></ion-icon>
-            Add Track
-          </button>
-        </div>
-        ${audioTracks.length === 0
-          ? '<div class="no-modulators">No shared audio tracks. Add one, then point any audio modulator at it.</div>'
-          : ''
-        }
-      </div>
-
-        <div id="modulation-pane-container"></div>
-      </div>
-    `
-
-    this.setupAddModulatorListener()
-    this.setupAddAudioTrackListener()
-
-    if (audioTracks.length === 0 && modulators.length === 0) return
-
-    const paneContainer = modulationContainer.querySelector('#modulation-pane-container')
-    if (!paneContainer) return
-
-    this.mainPane = new Pane({ container: paneContainer })
-    this.mainPane.registerPlugin(EssentialsPlugin)
-    this.mainPane.registerPlugin(WaveformPlugin)
-
+  stylePaneContainer (paneContainer) {
     const stylePane = () => {
       const paneElement = paneContainer.querySelector('.tp-rotv')
       if (paneElement) {
@@ -112,17 +65,81 @@ export class ModulationUIManager {
       }
     }
     requestAnimationFrame(stylePane)
+  }
 
-    audioTracks.forEach((track, index) => {
-      this.createAudioTrackPane(this.mainPane, track, index)
-    })
+  renderModulationControls () {
+    const modulationContainer = this.panel.querySelector('#modulationControlsContainer')
+    if (!modulationContainer) return
 
-    modulators.forEach(modulator => {
-      this.createModulatorPane(modulator, tracks)
-    })
+    this.disposePanes()
+
+    const modulators = this.trackManager.getModulators()
+    const tracks = this.trackManager.getTracks()
+    const modulationSystem = this.trackManager.getModulationSystem()
+    const audioTracks = modulationSystem.getAudioTracks()
+
+    modulationContainer.innerHTML = `
+      <div class="modulation-controls">
+        <div class="control-section control-section--modulators">
+          <div class="modulator-header">
+            <h4>Modulators</h4>
+            <button class="add-modulator-btn" id="addModulatorBtn">
+              <ion-icon name="add-outline"></ion-icon>
+              Add Modulator
+            </button>
+          </div>
+          ${modulators.length === 0
+            ? '<div class="no-modulators">No modulators. Click "Add Modulator" to create one.</div>'
+            : '<div id="modulators-pane-container"></div>'
+          }
+        </div>
+
+        <div class="control-section control-section--audio-tracks">
+          <div class="modulator-header">
+            <h4>Audio Tracks</h4>
+            <button class="add-modulator-btn" id="addAudioTrackBtn">
+              <ion-icon name="add-outline"></ion-icon>
+              Add Track
+            </button>
+          </div>
+          ${audioTracks.length === 0
+            ? '<div class="no-modulators">No shared audio tracks. Add one, then point any audio modulator at it.</div>'
+            : '<div id="audio-tracks-pane-container"></div>'
+          }
+        </div>
+      </div>
+    `
+
+    this.setupAddModulatorListener()
+    this.setupAddAudioTrackListener()
 
     if (modulators.length > 0) {
-      this.startMonitorLoop()
+      const modulatorsContainer = modulationContainer.querySelector(
+        '#modulators-pane-container'
+      )
+      if (modulatorsContainer) {
+        this.modulatorsPane = new Pane({ container: modulatorsContainer })
+        this.modulatorsPane.registerPlugin(EssentialsPlugin)
+        this.modulatorsPane.registerPlugin(WaveformPlugin)
+        this.stylePaneContainer(modulatorsContainer)
+        modulators.forEach((modulator) => {
+          this.createModulatorPane(modulator, tracks)
+        })
+        this.startMonitorLoop()
+      }
+    }
+
+    if (audioTracks.length > 0) {
+      const audioContainer = modulationContainer.querySelector(
+        '#audio-tracks-pane-container'
+      )
+      if (audioContainer) {
+        this.audioTracksPane = new Pane({ container: audioContainer })
+        this.stylePaneContainer(audioContainer)
+        audioTracks.forEach((track, index) => {
+          this.createAudioTrackPane(this.audioTracksPane, track, index)
+        })
+      }
     }
   }
 
@@ -167,7 +184,7 @@ export class ModulationUIManager {
         audioTrackId: modulator.audioTrackId || ''
       }
 
-      const modulatorFolder = this.mainPane.addFolder({
+      const modulatorFolder = this.modulatorsPane.addFolder({
         title: `Modulator ${this.modulatorPanes.size + 1}`,
         expanded: true
       })

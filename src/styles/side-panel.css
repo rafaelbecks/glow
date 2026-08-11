@@ -715,10 +715,13 @@
 }
 
 .modulation-controls .control-section + .control-section {
-    margin-top: 8px;
+    margin-top: 20px;
+    padding-top: 12px;
+    border-top: 1px solid #222;
 }
 
-.modulation-controls #modulation-pane-container {
+.modulation-controls #modulators-pane-container,
+.modulation-controls #audio-tracks-pane-container {
     margin-top: 12px;
 }
 
