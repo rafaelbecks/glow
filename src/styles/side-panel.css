@@ -714,6 +714,61 @@
     padding: 20px;
 }
 
+.audio-mod-file-panel {
+    margin: 8px 0 12px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.audio-mod-file-name {
+    color: #ccc;
+    font-size: 11px;
+    margin-bottom: 8px;
+    word-break: break-all;
+    font-family: "Analo Grotesk", "Inconsolata", sans-serif;
+    letter-spacing: 0.03em;
+}
+
+.audio-mod-file-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.audio-mod-load-btn {
+    background: #333;
+    border: 1px solid #555;
+    color: #fff;
+    padding: 6px 10px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: "Analo Grotesk", "Inconsolata", sans-serif;
+    letter-spacing: 0.03em;
+}
+
+.audio-mod-load-btn:hover {
+    background: #444;
+    border-color: #777;
+}
+
+.audio-mod-player-wrap {
+    width: 100%;
+}
+
+.audio-mod-html5-player {
+    width: 100%;
+    height: 32px;
+    display: block;
+}
+
+.audio-mod-player-placeholder {
+    color: #777;
+    font-size: 11px;
+    padding: 6px 0;
+    font-family: "Analo Grotesk", "Inconsolata", sans-serif;
+}
+
 /* External Systems (MIDI generators + tablet) */
 .external-systems-controls {
     padding: 20px;

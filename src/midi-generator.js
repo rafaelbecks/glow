@@ -19,7 +19,7 @@ function defaultGeneratorConfig (trackId) {
     trackId,
     enabled: true,
     intervalMs: 2000,
-    intervalMode: 'fifth',
+    intervalMode: 'sixth',
     numberOfNotes: 2,
     velocity: 100,
     velocityRandom: 0
@@ -391,7 +391,7 @@ export class MidiGenerator {
   }
 
   generateNotes (generator, root) {
-    const step = INTERVALS[generator.intervalMode] ?? INTERVALS.fifth
+    const step = INTERVALS[generator.intervalMode] ?? INTERVALS.sixth
     const notes = []
     for (let i = 0; i < generator.numberOfNotes; i++) {
       notes.push(Math.min(127, root + step * i))

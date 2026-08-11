@@ -37,13 +37,17 @@ export class ModulationSystem {
       easing: 'linear',
       threshold: 0.5,
       // Audio modulator defaults
+      audioSourceType: 'input',
       audioDeviceId: null,
       audioDeviceLabel: null,
       audioChannel: 0,
       audioFeature: 'rms',
       audioFreqMin: 20,
       audioFreqMax: 20000,
-      audioSmoothing: 0.7
+      audioSmoothing: 0.7,
+      audioLoop: true,
+      audioFileName: null,
+      audioFileDataUrl: null
     }
 
     this.modulators.push(modulator)
@@ -76,7 +80,10 @@ export class ModulationSystem {
         updates.type !== undefined ||
         updates.enabled !== undefined ||
         updates.audioDeviceId !== undefined ||
-        updates.audioChannel !== undefined
+        updates.audioChannel !== undefined ||
+        updates.audioSourceType !== undefined ||
+        updates.audioFileDataUrl !== undefined ||
+        updates.audioLoop !== undefined
       ) {
         this.syncAudioInputs()
       }
@@ -366,6 +373,7 @@ export class ModulationSystem {
     this.modulators = []
     this.originalConfigValues.clear()
     this.audioEngine.releaseUnusedInputs([])
+    this.audioEngine.releaseUnusedFileSources([])
   }
 
   getWaveformShapes () {

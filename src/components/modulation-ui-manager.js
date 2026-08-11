@@ -138,7 +138,9 @@ export class ModulationUIManager {
         audioFeature: modulator.audioFeature || 'rms',
         audioFreqMin: modulator.audioFreqMin !== undefined ? modulator.audioFreqMin : 20,
         audioFreqMax: modulator.audioFreqMax !== undefined ? modulator.audioFreqMax : 20000,
-        audioSmoothing: modulator.audioSmoothing !== undefined ? modulator.audioSmoothing : 0.7
+        audioSmoothing: modulator.audioSmoothing !== undefined ? modulator.audioSmoothing : 0.7,
+        audioSourceType: modulator.audioSourceType || 'input',
+        audioLoop: modulator.audioLoop !== false
       }
 
       const modulatorFolder = this.mainPane.addFolder({
@@ -567,71 +569,47 @@ export class ModulationUIManager {
 
   addAudioModulatorControls (modulatorFolder, modulator, modulatorData, modulationSystem) {
     const audioEngine = modulationSystem.getAudioEngine()
-    const devices = audioEngine.getDevices()
-    const deviceOptions = { 'Select Input': '' }
-    devices.forEach((device) => {
-      deviceOptions[device.label] = device.deviceId
-    })
-    if (
-      modulator.audioDeviceId &&
-      !deviceOptions[modulator.audioDeviceLabel] &&
-      !Object.values(deviceOptions).includes(modulator.audioDeviceId)
-    ) {
-      const fallbackLabel =
-        modulator.audioDeviceLabel || `Saved Input (${modulator.audioDeviceId.slice(0, 6)}…)`
-      deviceOptions[fallbackLabel] = modulator.audioDeviceId
+    const sourceType = modulator.audioSourceType || 'input'
+
+    modulatorFolder
+      .addBinding(modulatorData, 'audioSourceType', {
+        options: {
+          'Live Input': 'input',
+          'Audio File': 'file'
+        },
+        label: 'Source'
+      })
+      .on('change', (ev) => {
+        modulatorData.audioSourceType = ev.value
+        this.trackManager.updateModulator(modulator.id, {
+          audioSourceType: ev.value
+        })
+        this.renderModulationControls()
+      })
+
+    if (sourceType === 'file') {
+      this.addAudioFileControls(
+        modulatorFolder,
+        modulator,
+        modulatorData,
+        audioEngine
+      )
+    } else {
+      this.addAudioInputControls(
+        modulatorFolder,
+        modulator,
+        modulatorData,
+        modulationSystem,
+        audioEngine
+      )
     }
 
-    modulatorFolder
-      .addBinding(modulatorData, 'audioDeviceId', {
-        options: deviceOptions,
-        label: 'Audio Input'
-      })
-      .on('change', async (ev) => {
-        const deviceId = ev.value || null
-        modulatorData.audioDeviceId = deviceId || ''
-        const device = audioEngine.findDevice(deviceId)
-        const updates = {
-          audioDeviceId: deviceId,
-          audioDeviceLabel: device ? device.label : modulator.audioDeviceLabel
-        }
-        this.trackManager.updateModulator(modulator.id, updates)
-
-        if (deviceId) {
-          try {
-            const input = await audioEngine.ensureInput(deviceId)
-            const channelCount = input?.channelCount || 1
-            if ((modulator.audioChannel || 0) >= channelCount) {
-              this.trackManager.updateModulator(modulator.id, { audioChannel: 0 })
-            }
-            this.renderModulationControls()
-          } catch (error) {
-            console.error('Failed to open audio input:', error)
-          }
-        } else {
-          modulationSystem.syncAudioInputs()
-        }
-      })
-
-    modulatorFolder
-      .addBlade({
-        view: 'button',
-        label: 'Devices',
-        title: 'Refresh Inputs'
-      })
-      .on('click', async () => {
-        try {
-          this._audioDeviceRefreshAttempted = true
-          await audioEngine.refreshDevices()
-          this.renderModulationControls()
-        } catch (error) {
-          console.error('Failed to refresh audio devices:', error)
-        }
-      })
-
-    const channelCount = modulator.audioDeviceId
-      ? audioEngine.getChannelCount(modulator.audioDeviceId)
-      : 1
+    const channelCount =
+      sourceType === 'file'
+        ? audioEngine.getFileChannelCount(modulator.id)
+        : modulator.audioDeviceId
+          ? audioEngine.getChannelCount(modulator.audioDeviceId)
+          : 1
     if (channelCount > 1) {
       const channelOptions = {}
       for (let i = 0; i < channelCount; i++) {
@@ -735,8 +713,80 @@ export class ModulationUIManager {
         modulatorData.offset = ev.value
         this.trackManager.updateModulator(modulator.id, { offset: ev.value })
       })
+  }
 
-    // Auto-refresh device list once when first opening an audio modulator
+  addAudioInputControls (
+    modulatorFolder,
+    modulator,
+    modulatorData,
+    modulationSystem,
+    audioEngine
+  ) {
+    const devices = audioEngine.getDevices()
+    const deviceOptions = { 'Select Input': '' }
+    devices.forEach((device) => {
+      deviceOptions[device.label] = device.deviceId
+    })
+    if (
+      modulator.audioDeviceId &&
+      !deviceOptions[modulator.audioDeviceLabel] &&
+      !Object.values(deviceOptions).includes(modulator.audioDeviceId)
+    ) {
+      const fallbackLabel =
+        modulator.audioDeviceLabel ||
+        `Saved Input (${modulator.audioDeviceId.slice(0, 6)}…)`
+      deviceOptions[fallbackLabel] = modulator.audioDeviceId
+    }
+
+    modulatorFolder
+      .addBinding(modulatorData, 'audioDeviceId', {
+        options: deviceOptions,
+        label: 'Audio Input'
+      })
+      .on('change', async (ev) => {
+        const deviceId = ev.value || null
+        modulatorData.audioDeviceId = deviceId || ''
+        const device = audioEngine.findDevice(deviceId)
+        const updates = {
+          audioDeviceId: deviceId,
+          audioDeviceLabel: device ? device.label : modulator.audioDeviceLabel
+        }
+        this.trackManager.updateModulator(modulator.id, updates)
+
+        if (deviceId) {
+          try {
+            const input = await audioEngine.ensureInput(deviceId)
+            const channelCount = input?.channelCount || 1
+            if ((modulator.audioChannel || 0) >= channelCount) {
+              this.trackManager.updateModulator(modulator.id, {
+                audioChannel: 0
+              })
+            }
+            this.renderModulationControls()
+          } catch (error) {
+            console.error('Failed to open audio input:', error)
+          }
+        } else {
+          modulationSystem.syncAudioInputs()
+        }
+      })
+
+    modulatorFolder
+      .addBlade({
+        view: 'button',
+        label: 'Devices',
+        title: 'Refresh Inputs'
+      })
+      .on('click', async () => {
+        try {
+          this._audioDeviceRefreshAttempted = true
+          await audioEngine.refreshDevices()
+          this.renderModulationControls()
+        } catch (error) {
+          console.error('Failed to refresh audio devices:', error)
+        }
+      })
+
     if (devices.length === 0 && !this._audioDeviceRefreshAttempted) {
       this._audioDeviceRefreshAttempted = true
       audioEngine
@@ -750,6 +800,115 @@ export class ModulationUIManager {
           console.warn('Audio device enumeration failed:', error)
         })
     }
+  }
+
+  addAudioFileControls (modulatorFolder, modulator, modulatorData, audioEngine) {
+    const fileName =
+      audioEngine.getFileName(modulator.id) ||
+      modulator.audioFileName ||
+      'No file loaded'
+
+    const playerHost = document.createElement('div')
+    playerHost.className = 'audio-mod-file-panel'
+
+    const meta = document.createElement('div')
+    meta.className = 'audio-mod-file-name'
+    meta.textContent = fileName
+    playerHost.appendChild(meta)
+
+    const actions = document.createElement('div')
+    actions.className = 'audio-mod-file-actions'
+
+    const fileInput = document.createElement('input')
+    fileInput.type = 'file'
+    fileInput.accept = 'audio/*,.mp3,.wav,.ogg,.m4a,.flac,.aac'
+    fileInput.hidden = true
+
+    const loadBtn = document.createElement('button')
+    loadBtn.type = 'button'
+    loadBtn.className = 'audio-mod-load-btn'
+    loadBtn.textContent = 'Load Audio File'
+    loadBtn.addEventListener('click', () => fileInput.click())
+
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files && fileInput.files[0]
+      if (!file) return
+      try {
+        await audioEngine.ensureAudioContext()
+        const fileSource = await audioEngine.loadFileForModulator(
+          modulator.id,
+          file,
+          {
+            name: file.name,
+            loop: modulatorData.audioLoop !== false
+          }
+        )
+        this.trackManager.updateModulator(modulator.id, {
+          audioSourceType: 'file',
+          audioFileName: fileSource.name,
+          audioFileDataUrl: fileSource.dataUrl,
+          audioLoop: modulatorData.audioLoop !== false,
+          audioChannel: 0
+        })
+        this.renderModulationControls()
+      } catch (error) {
+        console.error('Failed to load audio file:', error)
+      } finally {
+        fileInput.value = ''
+      }
+    })
+
+    actions.appendChild(loadBtn)
+    actions.appendChild(fileInput)
+    playerHost.appendChild(actions)
+
+    const playerWrap = document.createElement('div')
+    playerWrap.className = 'audio-mod-player-wrap'
+    const audioEl = audioEngine.getFileAudioElement(modulator.id)
+    if (audioEl) {
+      playerWrap.appendChild(audioEl)
+    } else if (modulator.audioFileDataUrl) {
+      audioEngine
+        .loadFileForModulator(modulator.id, modulator.audioFileDataUrl, {
+          name: modulator.audioFileName || 'Audio file',
+          loop: modulator.audioLoop !== false
+        })
+        .then((fileSource) => {
+          if (fileSource?.audioEl && playerWrap.isConnected) {
+            playerWrap.appendChild(fileSource.audioEl)
+            meta.textContent = fileSource.name
+          }
+        })
+        .catch((error) => {
+          console.warn('Failed to restore audio file player:', error)
+        })
+    } else {
+      const placeholder = document.createElement('div')
+      placeholder.className = 'audio-mod-player-placeholder'
+      placeholder.textContent = 'Load a file to play and analyze'
+      playerWrap.appendChild(placeholder)
+    }
+    playerHost.appendChild(playerWrap)
+
+    // Insert custom panel into the Tweakpane folder body
+    const folderEl = modulatorFolder.element
+    const folderBody =
+      folderEl?.querySelector('.tp-fldv_c') || folderEl || null
+    if (folderBody) {
+      folderBody.appendChild(playerHost)
+    }
+
+    modulatorFolder
+      .addBinding(modulatorData, 'audioLoop', {
+        label: 'Loop'
+      })
+      .on('change', (ev) => {
+        modulatorData.audioLoop = ev.value
+        audioEngine.setFileLoop(modulator.id, ev.value)
+        this.trackManager.updateModulator(modulator.id, {
+          audioLoop: ev.value
+        })
+      })
   }
 
   updateThresholdVisibility (folder, configKey, configParams) {

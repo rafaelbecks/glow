@@ -280,6 +280,16 @@ export class ProjectManager {
         audioFreqMin: modulator.audioFreqMin,
         audioFreqMax: modulator.audioFreqMax,
         audioSmoothing: modulator.audioSmoothing,
+        audioSourceType: modulator.audioSourceType || 'input',
+        audioLoop: modulator.audioLoop !== false,
+        audioFileName:
+          modulationSystem.getAudioEngine().getFileName(modulator.id) ||
+          modulator.audioFileName ||
+          null,
+        audioFileDataUrl:
+          modulationSystem.getAudioEngine().getFileDataUrl(modulator.id) ||
+          modulator.audioFileDataUrl ||
+          null,
       })),
     };
   }
@@ -1421,6 +1431,7 @@ export class ProjectManager {
         }
 
         if (modulatorType === "audio") {
+          updates.audioSourceType = modulatorData.audioSourceType || "input";
           updates.audioDeviceId = modulatorData.audioDeviceId || null;
           updates.audioDeviceLabel = modulatorData.audioDeviceLabel || null;
           updates.audioChannel =
@@ -1440,6 +1451,9 @@ export class ProjectManager {
             modulatorData.audioSmoothing !== undefined
               ? modulatorData.audioSmoothing
               : 0.7;
+          updates.audioLoop = modulatorData.audioLoop !== false;
+          updates.audioFileName = modulatorData.audioFileName || null;
+          updates.audioFileDataUrl = modulatorData.audioFileDataUrl || null;
           updates.depth =
             modulatorData.depth !== undefined ? modulatorData.depth : 0.5;
           updates.offset =
@@ -1472,27 +1486,33 @@ export class ProjectManager {
     if (audioMods.length === 0) return;
 
     const audioEngine = modulationSystem.getAudioEngine();
-    try {
-      await audioEngine.refreshDevices();
-    } catch (error) {
-      console.warn("Could not restore audio modulation inputs:", error);
-      return;
-    }
+    const hasLiveInput = audioMods.some(
+      (m) => (m.audioSourceType || "input") === "input",
+    );
 
-    for (const modulator of audioMods) {
-      const match = audioEngine.findDevice(
-        modulator.audioDeviceId,
-        modulator.audioDeviceLabel,
-      );
-      if (match && match.deviceId !== modulator.audioDeviceId) {
-        modulationSystem.updateModulator(modulator.id, {
-          audioDeviceId: match.deviceId,
-          audioDeviceLabel: match.label,
-        });
-      } else if (!match && modulator.audioDeviceLabel) {
-        console.warn(
-          `Audio input not found for modulator: ${modulator.audioDeviceLabel}`,
-        );
+    if (hasLiveInput) {
+      try {
+        await audioEngine.refreshDevices();
+        for (const modulator of audioMods) {
+          if ((modulator.audioSourceType || "input") !== "input") continue;
+          const match = audioEngine.findDevice(
+            modulator.audioDeviceId,
+            modulator.audioDeviceLabel,
+          );
+          if (match && match.deviceId !== modulator.audioDeviceId) {
+            const mod = modulationSystem.getModulator(modulator.id);
+            if (mod) {
+              mod.audioDeviceId = match.deviceId;
+              mod.audioDeviceLabel = match.label;
+            }
+          } else if (!match && modulator.audioDeviceLabel) {
+            console.warn(
+              `Audio input not found for modulator: ${modulator.audioDeviceLabel}`,
+            );
+          }
+        }
+      } catch (error) {
+        console.warn("Could not restore live audio modulation inputs:", error);
       }
     }
 

@@ -89,13 +89,15 @@ G.L.O.W. includes a modulation system that works like LFOs (Low-Frequency Oscill
 - **Offset** — base value shift within the parameter range
 
 **Audio controls:**
-- **Audio Input** — choose a `getUserMedia` input device (use **Refresh Inputs** after plugging hardware in)
-- **Channel** — when the device exposes multiple channels, pick which one to analyze
+- **Source** — Live Input (`getUserMedia`) or Audio File
+- **Audio Input** — choose an input device (use **Refresh Inputs** after plugging hardware in)
+- **Audio File** — load a file, play it with the built-in HTML5 player, and optionally **Loop**
+- **Channel** — when the device/file exposes multiple channels, pick which one to analyze
 - **Analysis** — RMS, Peak, Bass, Mid, Treble, Presence, or a custom frequency band
 - **Smoothing** / **Multiplier** / **Easing** — shape how reactive the mapping feels
 - **Depth** / **Offset** — unipolar mapping: louder signal adds `depth × range` on top of the base value (`offset` shifts within the range)
 
-Audio modulator settings (device label, channel, analysis mode, etc.) are saved in the project `.glow` file. On load, Glow re-requests permission and reconnects matching inputs when available.
+Audio modulator settings (source type, device label, file data, loop, channel, analysis mode, etc.) are saved in the project `.glow` file. On load, Glow reconnects matching live inputs and restores embedded audio files when available.
 ### MIDI Mappings
 
 G.L.O.W. supports custom MIDI CC mappings for hardware controllers. This allows you to control tracks, luminodes, layout, and motion parameters directly from your MIDI controller.
