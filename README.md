@@ -2,77 +2,137 @@
   <img src="assets/glow-logo-with-o.svg" alt="G.L.O.W." width="400">
 </div>
 
-# G.L.O.W. (Geometric Light Oscillation Workstation)
+# G.L.O.W.
+
+### A generative visual instrument for composing light with geometry.
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ![Web MIDI API](https://img.shields.io/badge/Web%20MIDI%20API-supported-green)
 ![Web HID API](https://img.shields.io/badge/Web%20HID%20API-supported-green)
-[![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 
-An algorithmic visual playground for sound-reactive geometry. 
+[▶ Open G.L.O.W.](https://glow.luminode.studio/) · [YouTube demos](https://www.youtube.com/playlist?list=PLPLNsAMGizPvOxgBN0TJDBIRIPvcY6njN)
 
-**Live Demo**: [glow.luminode.studio](https://glow.luminode.studio/)  
-**Demos & Showcase**: [YouTube Playlist](https://www.youtube.com/playlist?list=PLPLNsAMGizPvOxgBN0TJDBIRIPvcY6njN)
+<p align="center">
+  <img src="assets/glow-demo.gif" alt="G.L.O.W. in action" width="100%">
+</p>
 
-## What is a Luminode?
+G.L.O.W. is an open-source visual instrument for creating evolving geometric compositions in real time.
 
-A **luminode** is a visual pattern module. Think of it as an oscillator in a synthesizer. The core drawing component that generates geometric shapes and patterns. Each luminode is a self-contained visual effect that responds to MIDI input, creating structured geometries inspired by early computer artists such as Vera Molnár, John Whitney, and kinetic artists like Gego and Soto.
+Build scenes from **Luminodes** — small generative drawing systems — and make them move, oscillate, rotate and respond to sound, MIDI or internal generators.
 
-## Features
+---
 
-- **Luminodes** - Modular visual pattern system with 20+ geometric patterns (Lissajous curves, spheres, grids, and more)
-- **Luminode Lab** - In-app editor to open built-in sources, live-preview changes, fork/create your own luminodes, and keep them in the browser (localStorage). Open via the flask icon (bottom right, before Help) or from the luminode picker
-- **Rendering Pipeline** - Multi-stage visual processing with post-processing effects ([see diagram](diagrams/04-rendering-pipeline.md))
-- **Track-Based System** - Multi-track luminode management with independent instances
-- **Trajectory Motion System** - Whitney-style motion patterns for spatial animation ([see docs](diagrams/03-track-system.md))
-- **Modulation System** - LFO-style parameter modulation for dynamic visual evolution
-- **Canvas Filters** - Lumia blur, invert, grid overlay, CRT effect, noise overlay, dither, chromatic aberration
-- **Shader backgrounds** - Fluid simulation (GPU-io) plus modular WebGL2 full-screen shaders under `src/shaders/background/` (many adapted from [Shadertoy](https://www.shadertoy.com/) community sketches; you can add modes dynamically — see `src/shaders/background/README.md`)
-- **MIDI Mappings** - Custom hardware controller mappings (see `midi-mappings/`)
-- **Generate Mode** - Browser-side note generator for testing without a MIDI device (External tab)
-- **Tablet Support** - Experimental / in development (Web HID drawing tablet input)
-- **PWA / file associations** - Installable app (Chromium). After install, `.glow` / `.set.glow` open as scenes and `.luminode` opens Luminode Lab via the OS File Handling API (complements drag-drop and the in-app picker)
+## What is G.L.O.W.?
 
-## Quick Start
+G.L.O.W. explores the relationship between **geometry, motion, modulation and sound**.
+
+Instead of fixed images or animations, it generates visual structures from mathematical systems. Each system can be transformed, animated and modulated into an evolving composition.
+
+The basic building block is the **Luminode**: a small generative drawing system (oscillating lines, harmonic curves, grids, particles, knots, and more). Luminodes combine into tracks, move through trajectories, and respond continuously to modulators.
+
+The result is a visual instrument — not a collection of pre-made effects.
+
+---
+
+## Start playing
+
+G.L.O.W. runs in the browser. You don't need MIDI or other hardware — built-in generators and modulators produce motion on their own.
+
+Interact with:
+
+- Mouse and keyboard
+- Internal generators and modulators
+- MIDI controllers / MIDI from other software
+- HID devices (experimental tablet support)
+- Live audio or audio files as modulation sources
+
+**[▶ Open G.L.O.W.](https://glow.luminode.studio/)** — pick a Luminode, add it to a track, change parameters, and start modulating.
+
+For the full walkthrough see the **[User Manual](USER_MANUAL.md)**.
+
+### Local development
 
 ```bash
 npm run start
 ```
 
-Open `http://localhost:8000/` in Chrome, then:
+1. Open `http://localhost:8000/` in Chrome
+2. Click **Start**
+3. Open the side panel and assign a luminode to a track
+4. Feed notes via MIDI or **Generate mode** (External tab)
 
-1. **Click Start** to initialize the app (and request MIDI access).
-2. **Open the side panel** (cube icon, top right) and assign a luminode to one or more tracks.
-3. Feed notes in one of two ways:
-   - **MIDI device** — connect a keyboard / controller (or a virtual port + `node midi-test.js`), assign the device to a track, and play.
-   - **Generate mode** — open the **External** tab → **Add Generator**, pick a track, and enable it. Notes are injected per track (no hardware required). Up to four generators (one per track). Disable/remove a generator when you want real MIDI on that track again.
-4. Optionally enable **MIDI Output** under Generate Mode if you want to record the random stream elsewhere (it is not meant to be musical).
-5. **Hack it** — open **Luminode Lab** (flask icon, bottom right) to edit or invent luminodes with live preview; save them locally and assign them from the picker like any built-in.
+---
 
-See the **[User Manual](USER_MANUAL.md)** for the full walkthrough.
+## Luminodes
+
+Luminodes are the fundamental visual systems of G.L.O.W. Each one describes a mathematical process that produces geometry over time.
+
+<p align="center">
+  <img src="assets/luminodes.png" alt="Luminode picker" width="480">
+</p>
+
+Examples include Lissajous figures, harmonographs, moiré patterns, grids, phyllotaxis, curves and oscillators, knots and surfaces, particle systems, plus experimental and user-created systems.
+
+A simple system can become something else entirely when its parameters, trajectories or modulation change.
+
+**Luminode Lab** (flask icon) lets you open built-in sources, live-preview edits, and fork/create luminodes stored in the browser. Details: [User Manual → Luminode Lab](USER_MANUAL.md#luminode-lab).
+
+---
+
+## Compose
+
+G.L.O.W. uses multiple tracks to build compositions. Each track holds a Luminode that can be transformed and modulated independently.
+
+<p align="center">
+  <img src="assets/tracks.png" alt="Track system" width="360">
+</p>
+
+Layer systems, change scale and position, and let their interactions produce new structures. Spatial motion uses Whitney-style trajectories — see [Track System](diagrams/03-track-system.md).
+
+---
+
+## Modulate
+
+Almost any numerical parameter can become a source of movement: position, scale, rotation, line width, canvas filters, shader overlays, and other luminode properties.
+
+<p align="center">
+  <img src="assets/modulation.png" alt="Modulation panel" width="360">
+</p>
+
+**Sources:**
+
+- **LFO** — classic oscillators (sine, square, triangle, sawtooth, cubic bezier)
+- **MIDI** — number of notes / velocity
+- **Audio** — live input (mic / interface) or an audio file, analyzed via FFT (RMS, peak, bass/mid/treble, custom bands)
+
+Audio files play through a built-in player (with loop). Multiple modulators can share the same file track. Audio settings and embedded files are saved in the project `.glow` file.
+
+Full controls and destinations: [User Manual → Modulation](USER_MANUAL.md#modulation-system).
+
+---
+
+## Also included
+
+- Multi-stage rendering and canvas filters — [Rendering Pipeline](diagrams/04-rendering-pipeline.md)
+- Shader backgrounds (GPU-io + WebGL2) — [`src/shaders/background/README.md`](src/shaders/background/README.md)
+- Custom MIDI mappings — `midi-mappings/`
+- Installable PWA with `.glow` / `.luminode` file associations (Chromium)
+
+---
 
 ## Documentation
 
-- **[User Manual](USER_MANUAL.md)** - Complete guide to using G.L.O.W.
-- **[Architecture Diagrams](diagrams/README.md)** - System architecture and component interactions
-- **[Zen of G.L.O.W.](ZEN_OF_GLOW.md)** - Design principles and philosophy
+- **[User Manual](USER_MANUAL.md)** — how to use G.L.O.W.
+- **[Architecture Diagrams](diagrams/README.md)** — system overview
+- **[Zen of G.L.O.W.](ZEN_OF_GLOW.md)** — design principles
 
-## Browser Requirements
-
-- Modern browser with ES6 module support
-- Web MIDI API support (for MIDI input/output)
-- Web HID API support (for tablet functionality on macOS/Linux)
-- Canvas 2D context support
-- File API support (for scene saving/loading)
-- For install + “Open with GLOW”: Chromium-based browser over HTTPS (or `localhost`), with service worker and File Handling API support
+---
 
 ## Acknowledgements
 
-- **[gpu-io](https://github.com/amandaghassaei/gpu-io)** - Shader examples used for background composition
-- **[Shadertoy](https://www.shadertoy.com/)** - Community GLSL ports used as full-screen canvas backgrounds (see `src/shaders/background/README.md` for how to register new ones and for per-shader attribution where applicable)
-- **[grained.js](https://github.com/sarathsaleem/grained)** - Noise texture library
-
-Thanks for the code and inspiration.
+- **[gpu-io](https://github.com/amandaghassaei/gpu-io)** — shader examples for background composition
+- **[Shadertoy](https://www.shadertoy.com/)** — community GLSL ports (see `src/shaders/background/README.md` for attribution)
+- **[grained.js](https://github.com/sarathsaleem/grained)** — noise texture library
 
 ## License
 

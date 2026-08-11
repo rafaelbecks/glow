@@ -722,6 +722,25 @@
     margin-top: 12px;
 }
 
+.glow-audio-player-row {
+    display: flex;
+    align-items: center;
+    padding-left: 4px;
+    padding-right: 4px;
+}
+
+.glow-audio-player-row .tp-lblv_l {
+    flex: 0 0 auto;
+    width: var(--tp-label-width, 84px);
+    color: var(--lbl-fg, #aaa);
+    font-size: 11px;
+}
+
+.glow-audio-player-row .tp-lblv_v {
+    flex: 1;
+    min-width: 0;
+}
+
 /* External Systems (MIDI generators + tablet) */
 .external-systems-controls {
     padding: 20px;

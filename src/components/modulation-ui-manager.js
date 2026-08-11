@@ -2,13 +2,13 @@
 import { Pane } from '../lib/tweakpane.min.js'
 import * as EssentialsPlugin from '../lib/tweakpane-plugin-essentials.min.js'
 import * as WaveformPlugin from '../lib/tweakpane-plugin-waveform.min.js'
-import * as AudioPlayerPlugin from '../lib/tweakpane-plugin-audio-player.js'
 import { getLuminodeConfig } from '../luminode-configs.js'
 import { getCanvasFilterConfig, getCanvasFilterIds } from '../canvas-filter-configs.js'
 import {
   getShaderOverlayConfig,
   getShaderOverlayIds
 } from '../shader-overlay-configs.js'
+import { createAudioPlayerControl } from './audio-player-control.js'
 
 const CANVAS_FILTER_LABELS = {
   clearAlpha: 'Clear Alpha',
@@ -98,7 +98,6 @@ export class ModulationUIManager {
     this.mainPane = new Pane({ container: paneContainer })
     this.mainPane.registerPlugin(EssentialsPlugin)
     this.mainPane.registerPlugin(WaveformPlugin)
-    this.mainPane.registerPlugin(AudioPlayerPlugin)
 
     const stylePane = () => {
       const paneElement = paneContainer.querySelector('.tp-rotv')
@@ -873,6 +872,8 @@ export class ModulationUIManager {
       expanded: true
     })
 
+    let playerControl = null
+
     folder
       .addBinding(trackData, 'enabled', {
         label: 'Enabled'
@@ -880,6 +881,7 @@ export class ModulationUIManager {
       .on('change', (ev) => {
         trackData.enabled = ev.value
         modulationSystem.updateAudioTrack(track.id, { enabled: ev.value })
+        if (playerControl) playerControl.setDisabled(!ev.value)
       })
 
     folder
@@ -938,18 +940,21 @@ export class ModulationUIManager {
         console.warn('Failed to prepare audio track graph:', error)
       })
       try {
-        const playerBlade = folder.addBlade({
-          view: 'audio-player',
-          label: 'Player',
-          source: track.dataUrl || audioEl.src || '',
-          loop: trackData.loop,
-          audio: audioEl
+        playerControl = createAudioPlayerControl(audioEl, {
+          disabled: !trackData.enabled
         })
-        if (playerBlade && 'loop' in playerBlade) {
-          playerBlade.loop = trackData.loop
-        }
+        const playerRow = document.createElement('div')
+        playerRow.className = 'tp-lblv glow-audio-player-row'
+        playerRow.innerHTML = `
+          <div class="tp-lblv_l">Player</div>
+          <div class="tp-lblv_v"></div>
+        `
+        playerRow.querySelector('.tp-lblv_v').appendChild(playerControl.element)
+        const folderBody =
+          folder.element?.querySelector('.tp-fldv_c') || folder.element
+        if (folderBody) folderBody.appendChild(playerRow)
       } catch (error) {
-        console.warn('Failed to mount audio player blade:', error)
+        console.warn('Failed to mount audio player:', error)
       }
     }
 
