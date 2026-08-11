@@ -33,6 +33,7 @@ export class ModulationUIManager {
     this.mainPane = null
     this.monitorAnimationFrame = null
     this.monitorSampleCount = 64
+    this._audioDeviceRefreshAttempted = false
   }
 
   renderModulationControls () {
@@ -131,7 +132,13 @@ export class ModulationUIManager {
         cubicBezier: modulator.cubicBezier || [0.5, 0, 0.5, 1],
         multiplier: modulator.multiplier !== undefined ? modulator.multiplier : 1.0,
         easing: modulator.easing || 'linear',
-        threshold: modulator.threshold !== undefined ? modulator.threshold : 0.5
+        threshold: modulator.threshold !== undefined ? modulator.threshold : 0.5,
+        audioDeviceId: modulator.audioDeviceId || '',
+        audioChannel: modulator.audioChannel !== undefined ? modulator.audioChannel : 0,
+        audioFeature: modulator.audioFeature || 'rms',
+        audioFreqMin: modulator.audioFreqMin !== undefined ? modulator.audioFreqMin : 20,
+        audioFreqMax: modulator.audioFreqMax !== undefined ? modulator.audioFreqMax : 20000,
+        audioSmoothing: modulator.audioSmoothing !== undefined ? modulator.audioSmoothing : 0.7
       }
 
       const modulatorFolder = this.mainPane.addFolder({
@@ -348,6 +355,15 @@ export class ModulationUIManager {
         })
       }
 
+      if (modulatorType === 'audio') {
+        this.addAudioModulatorControls(
+          modulatorFolder,
+          modulator,
+          modulatorData,
+          modulationSystem
+        )
+      }
+
       const waveformMonitorData = {
         values: this.createMonitorSamples(modulator, this.monitorSampleCount)
       }
@@ -360,7 +376,11 @@ export class ModulationUIManager {
         style: 'bezier'
       })
 
-      if (modulatorType === 'numberOfNotes' || modulatorType === 'velocity') {
+      if (
+        modulatorType === 'numberOfNotes' ||
+        modulatorType === 'velocity' ||
+        modulatorType === 'audio'
+      ) {
         modulatorFolder.addBinding(modulatorData, 'multiplier', {
           label: 'Multiplier',
           min: 0.1,
@@ -536,7 +556,200 @@ export class ModulationUIManager {
       return values
     }
 
+    if (modulator.type === 'audio') {
+      return modulationSystem
+        .getAudioEngine()
+        .getMonitorSamples(modulator, sampleCount)
+    }
+
     return values
+  }
+
+  addAudioModulatorControls (modulatorFolder, modulator, modulatorData, modulationSystem) {
+    const audioEngine = modulationSystem.getAudioEngine()
+    const devices = audioEngine.getDevices()
+    const deviceOptions = { 'Select Input': '' }
+    devices.forEach((device) => {
+      deviceOptions[device.label] = device.deviceId
+    })
+    if (
+      modulator.audioDeviceId &&
+      !deviceOptions[modulator.audioDeviceLabel] &&
+      !Object.values(deviceOptions).includes(modulator.audioDeviceId)
+    ) {
+      const fallbackLabel =
+        modulator.audioDeviceLabel || `Saved Input (${modulator.audioDeviceId.slice(0, 6)}…)`
+      deviceOptions[fallbackLabel] = modulator.audioDeviceId
+    }
+
+    modulatorFolder
+      .addBinding(modulatorData, 'audioDeviceId', {
+        options: deviceOptions,
+        label: 'Audio Input'
+      })
+      .on('change', async (ev) => {
+        const deviceId = ev.value || null
+        modulatorData.audioDeviceId = deviceId || ''
+        const device = audioEngine.findDevice(deviceId)
+        const updates = {
+          audioDeviceId: deviceId,
+          audioDeviceLabel: device ? device.label : modulator.audioDeviceLabel
+        }
+        this.trackManager.updateModulator(modulator.id, updates)
+
+        if (deviceId) {
+          try {
+            const input = await audioEngine.ensureInput(deviceId)
+            const channelCount = input?.channelCount || 1
+            if ((modulator.audioChannel || 0) >= channelCount) {
+              this.trackManager.updateModulator(modulator.id, { audioChannel: 0 })
+            }
+            this.renderModulationControls()
+          } catch (error) {
+            console.error('Failed to open audio input:', error)
+          }
+        } else {
+          modulationSystem.syncAudioInputs()
+        }
+      })
+
+    modulatorFolder
+      .addBlade({
+        view: 'button',
+        label: 'Devices',
+        title: 'Refresh Inputs'
+      })
+      .on('click', async () => {
+        try {
+          this._audioDeviceRefreshAttempted = true
+          await audioEngine.refreshDevices()
+          this.renderModulationControls()
+        } catch (error) {
+          console.error('Failed to refresh audio devices:', error)
+        }
+      })
+
+    const channelCount = modulator.audioDeviceId
+      ? audioEngine.getChannelCount(modulator.audioDeviceId)
+      : 1
+    if (channelCount > 1) {
+      const channelOptions = {}
+      for (let i = 0; i < channelCount; i++) {
+        channelOptions[`Channel ${i + 1}`] = i
+      }
+      modulatorFolder
+        .addBinding(modulatorData, 'audioChannel', {
+          options: channelOptions,
+          label: 'Channel'
+        })
+        .on('change', (ev) => {
+          modulatorData.audioChannel = ev.value
+          this.trackManager.updateModulator(modulator.id, {
+            audioChannel: ev.value
+          })
+        })
+    }
+
+    const featureNames = audioEngine.getAudioFeatureNames()
+    const featureOptions = {}
+    audioEngine.getAudioFeatures().forEach((feature) => {
+      featureOptions[featureNames[feature]] = feature
+    })
+    modulatorFolder
+      .addBinding(modulatorData, 'audioFeature', {
+        options: featureOptions,
+        label: 'Analysis'
+      })
+      .on('change', (ev) => {
+        modulatorData.audioFeature = ev.value
+        this.trackManager.updateModulator(modulator.id, {
+          audioFeature: ev.value
+        })
+        this.renderModulationControls()
+      })
+
+    if (modulatorData.audioFeature === 'band') {
+      modulatorFolder
+        .addBinding(modulatorData, 'audioFreqMin', {
+          label: 'Freq Min (Hz)',
+          min: 20,
+          max: 20000,
+          step: 1
+        })
+        .on('change', (ev) => {
+          modulatorData.audioFreqMin = ev.value
+          this.trackManager.updateModulator(modulator.id, {
+            audioFreqMin: ev.value
+          })
+        })
+
+      modulatorFolder
+        .addBinding(modulatorData, 'audioFreqMax', {
+          label: 'Freq Max (Hz)',
+          min: 20,
+          max: 20000,
+          step: 1
+        })
+        .on('change', (ev) => {
+          modulatorData.audioFreqMax = ev.value
+          this.trackManager.updateModulator(modulator.id, {
+            audioFreqMax: ev.value
+          })
+        })
+    }
+
+    modulatorFolder
+      .addBinding(modulatorData, 'audioSmoothing', {
+        label: 'Smoothing',
+        min: 0,
+        max: 0.99,
+        step: 0.01
+      })
+      .on('change', (ev) => {
+        modulatorData.audioSmoothing = ev.value
+        this.trackManager.updateModulator(modulator.id, {
+          audioSmoothing: ev.value
+        })
+      })
+
+    modulatorFolder
+      .addBinding(modulatorData, 'depth', {
+        label: 'Depth',
+        min: 0,
+        max: 1,
+        step: 0.01
+      })
+      .on('change', (ev) => {
+        modulatorData.depth = ev.value
+        this.trackManager.updateModulator(modulator.id, { depth: ev.value })
+      })
+
+    modulatorFolder
+      .addBinding(modulatorData, 'offset', {
+        label: 'Offset',
+        min: -1,
+        max: 1,
+        step: 0.01
+      })
+      .on('change', (ev) => {
+        modulatorData.offset = ev.value
+        this.trackManager.updateModulator(modulator.id, { offset: ev.value })
+      })
+
+    // Auto-refresh device list once when first opening an audio modulator
+    if (devices.length === 0 && !this._audioDeviceRefreshAttempted) {
+      this._audioDeviceRefreshAttempted = true
+      audioEngine
+        .refreshDevices()
+        .then(() => {
+          if (audioEngine.getDevices().length > 0) {
+            this.renderModulationControls()
+          }
+        })
+        .catch((error) => {
+          console.warn('Audio device enumeration failed:', error)
+        })
+    }
   }
 
   updateThresholdVisibility (folder, configKey, configParams) {

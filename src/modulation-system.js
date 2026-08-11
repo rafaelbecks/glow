@@ -5,11 +5,14 @@
  * according to configurable LFO-style modulators.
  */
 
+import { getAudioModulationEngine } from './audio-modulation-engine.js'
+
 export class ModulationSystem {
   constructor () {
     this.modulators = []
     this.originalConfigValues = new Map()
     this.startTime = performance.now() / 1000
+    this.audioEngine = getAudioModulationEngine()
   }
 
   addModulator (type = 'lfo', id = null) {
@@ -32,17 +35,34 @@ export class ModulationSystem {
       cubicBezier: [0.5, 0, 0.5, 1],
       multiplier: 1.0,
       easing: 'linear',
-      threshold: 0.5
+      threshold: 0.5,
+      // Audio modulator defaults
+      audioDeviceId: null,
+      audioDeviceLabel: null,
+      audioChannel: 0,
+      audioFeature: 'rms',
+      audioFreqMin: 20,
+      audioFreqMax: 20000,
+      audioSmoothing: 0.7
     }
 
     this.modulators.push(modulator)
     return modulator.id
   }
 
+  getAudioEngine () {
+    return this.audioEngine
+  }
+
+  syncAudioInputs () {
+    return this.audioEngine.syncActiveInputs(this.modulators)
+  }
+
   removeModulator (modulatorId) {
     const index = this.modulators.findIndex((m) => m.id === modulatorId)
     if (index !== -1) {
       this.modulators.splice(index, 1)
+      this.syncAudioInputs()
       return true
     }
     return false
@@ -52,6 +72,14 @@ export class ModulationSystem {
     const modulator = this.modulators.find((m) => m.id === modulatorId)
     if (modulator) {
       Object.assign(modulator, updates)
+      if (
+        updates.type !== undefined ||
+        updates.enabled !== undefined ||
+        updates.audioDeviceId !== undefined ||
+        updates.audioChannel !== undefined
+      ) {
+        this.syncAudioInputs()
+      }
       return true
     }
     return false
@@ -136,6 +164,11 @@ export class ModulationSystem {
     return performance.now() / 1000 - this.startTime
   }
 
+  getAudioSignal (modulator) {
+    const level = this.audioEngine.getNormalizedLevel(modulator)
+    return this.applyEasing(level, modulator.easing || 'linear')
+  }
+
   getModulatedValue (baseValue, modulator, configParam, noteData = null) {
     if (!modulator.enabled || !modulator.targetConfigKey) {
       return baseValue
@@ -190,6 +223,8 @@ export class ModulationSystem {
             modulator.easing || 'linear'
           )
         }
+      } else if (modulatorType === 'audio') {
+        normalizedValue = this.getAudioSignal(modulator)
       }
 
       const threshold =
@@ -217,6 +252,16 @@ export class ModulationSystem {
       const modulatedValue =
         baseValue + modulationAmount * range + offset * range
 
+      return Math.max(min, Math.min(max, modulatedValue))
+    } else if (modulatorType === 'audio') {
+      // Unipolar: silence stays near base; louder signal pushes by depth*range
+      const level = this.getAudioSignal(modulator)
+      const depth = modulator.depth !== undefined ? modulator.depth : 0.5
+      const offset = modulator.offset || 0
+      const min = configParam.min
+      const max = configParam.max
+      const range = max - min
+      const modulatedValue = baseValue + level * depth * range + offset * range
       return Math.max(min, Math.min(max, modulatedValue))
     } else if (modulatorType === 'numberOfNotes') {
       if (!noteData || !noteData.notes || noteData.notes.length === 0) {
@@ -320,6 +365,7 @@ export class ModulationSystem {
   reset () {
     this.modulators = []
     this.originalConfigValues.clear()
+    this.audioEngine.releaseUnusedInputs([])
   }
 
   getWaveformShapes () {
@@ -337,14 +383,15 @@ export class ModulationSystem {
   }
 
   getModulatorTypes () {
-    return ['lfo', 'numberOfNotes', 'velocity']
+    return ['lfo', 'numberOfNotes', 'velocity', 'audio']
   }
 
   getModulatorTypeNames () {
     return {
       lfo: 'LFO',
       numberOfNotes: 'Number of Notes',
-      velocity: 'Velocity'
+      velocity: 'Velocity',
+      audio: 'Audio'
     }
   }
 

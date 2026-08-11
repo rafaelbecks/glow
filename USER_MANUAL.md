@@ -8,7 +8,7 @@
 
 G.L.O.W. is a real-time visual instrument that transforms your music into geometric light patterns. Inspired by early computer artists such as Vera Molnár, John Whitney, and kinetic artists like Gego and Soto, it creates structured, evolving geometries that render with your sound (MIDI input) in real time.
 
-**GLOW is hackable.** Luminodes are modular drawing modules — open their source in the **Luminode Lab**, fork them, or write your own and play them on tracks like any built-in pattern.
+**GLOW is hackable.** Luminodes are modular drawing modules, open their source in the **Luminode Lab**, fork them, or write your own and play them on tracks like any built-in pattern.
 
 **Demos & Luminodes Showcase**: [YouTube Playlist](https://www.youtube.com/playlist?list=PLPLNsAMGizPvOxgBN0TJDBIRIPvcY6njN)
 
@@ -65,21 +65,37 @@ GLOW is modular by design — **Luminode Lab** is the in-app workshop for inspec
 Built-ins stay read-only in the Lab — save or fork to keep your own version. User luminodes live in this browser until you clear site data or delete them from the Lab.
 
 ### Modulation System
-G.L.O.W. includes a modulation system that works like LFOs (Low-Frequency Oscillators) on synthesizers. It automatically animates luminode parameters over time, creating evolving visual effects.
+G.L.O.W. includes a modulation system that works like LFOs (Low-Frequency Oscillators) on synthesizers. It automatically animates luminode parameters over time, creating evolving visual effects. Sources include LFOs, MIDI note count / velocity, and live audio analysis.
 
 **Access the Modulation tab:**
 - Open the side panel and click **Modulation**
 - Add as many modulators as you need
 
-**Modulator Controls:**
-- **Waveform** — sine, square, triangle, or sawtooth (with visual preview)
-- **Track** — which track to modulate (uses that track’s luminode)
-- **Parameter** — numeric luminode params, or canvas filters such as Clear Alpha, Lumia Effect, Invert, and Dither
-- **Rate** — oscillation speed (0.001–2 Hz)
+**Modulator types:**
+- **LFO** — classic low-frequency oscillator (sine, square, triangle, sawtooth, cubic bezier)
+- **Number of Notes** / **Velocity** — map active MIDI notes into a parameter
+- **Audio** — map a live audio input (microphone / interface) through FFT analysis into a parameter
+
+**Common controls:**
+- **Destination** — Track luminode params, canvas filters, or shader overlays
+- **Parameter** — which value to drive (e.g. sphere Base Radius)
+- **Enable/Disable** — toggle without removing the modulator
+- **Monitor** — live waveform of the modulation signal being applied
+
+**LFO controls:**
+- **Waveform** — sine, square, triangle, sawtooth, or cubic bezier
+- **Rate** — oscillation speed (0.001–1 Hz)
 - **Depth** — modulation intensity (0–100%)
 - **Offset** — base value shift within the parameter range
-- **Enable/Disable** — toggle without removing the modulator
 
+**Audio controls:**
+- **Audio Input** — choose a `getUserMedia` input device (use **Refresh Inputs** after plugging hardware in)
+- **Channel** — when the device exposes multiple channels, pick which one to analyze
+- **Analysis** — RMS, Peak, Bass, Mid, Treble, Presence, or a custom frequency band
+- **Smoothing** / **Multiplier** / **Easing** — shape how reactive the mapping feels
+- **Depth** / **Offset** — unipolar mapping: louder signal adds `depth × range` on top of the base value (`offset` shifts within the range)
+
+Audio modulator settings (device label, channel, analysis mode, etc.) are saved in the project `.glow` file. On load, Glow re-requests permission and reconnects matching inputs when available.
 ### MIDI Mappings
 
 G.L.O.W. supports custom MIDI CC mappings for hardware controllers. This allows you to control tracks, luminodes, layout, and motion parameters directly from your MIDI controller.

@@ -273,6 +273,13 @@ export class ProjectManager {
         targetLuminode: modulator.targetLuminode,
         targetCanvasFilter: modulator.targetCanvasFilter,
         targetShaderOverlay: modulator.targetShaderOverlay,
+        audioDeviceId: modulator.audioDeviceId,
+        audioDeviceLabel: modulator.audioDeviceLabel,
+        audioChannel: modulator.audioChannel,
+        audioFeature: modulator.audioFeature,
+        audioFreqMin: modulator.audioFreqMin,
+        audioFreqMax: modulator.audioFreqMax,
+        audioSmoothing: modulator.audioSmoothing,
       })),
     };
   }
@@ -858,7 +865,7 @@ export class ProjectManager {
       this.loadTrajectorySettings(projectData.trajectories || {});
 
       // Load modulation settings
-      this.loadModulationSettings(projectData.modulation || {});
+      await this.loadModulationSettings(projectData.modulation || {});
 
       // Load MIDI settings
       await this.loadMidiSettings(projectData.midi);
@@ -1360,7 +1367,7 @@ export class ProjectManager {
     });
   }
 
-  loadModulationSettings(modulationData) {
+  async loadModulationSettings(modulationData) {
     if (!modulationData || !modulationData.modulators) return;
 
     const modulationSystem =
@@ -1413,9 +1420,83 @@ export class ProjectManager {
               : 0.5;
         }
 
-        modulationSystem.updateModulator(modulatorId, updates);
+        if (modulatorType === "audio") {
+          updates.audioDeviceId = modulatorData.audioDeviceId || null;
+          updates.audioDeviceLabel = modulatorData.audioDeviceLabel || null;
+          updates.audioChannel =
+            modulatorData.audioChannel !== undefined
+              ? modulatorData.audioChannel
+              : 0;
+          updates.audioFeature = modulatorData.audioFeature || "rms";
+          updates.audioFreqMin =
+            modulatorData.audioFreqMin !== undefined
+              ? modulatorData.audioFreqMin
+              : 20;
+          updates.audioFreqMax =
+            modulatorData.audioFreqMax !== undefined
+              ? modulatorData.audioFreqMax
+              : 20000;
+          updates.audioSmoothing =
+            modulatorData.audioSmoothing !== undefined
+              ? modulatorData.audioSmoothing
+              : 0.7;
+          updates.depth =
+            modulatorData.depth !== undefined ? modulatorData.depth : 0.5;
+          updates.offset =
+            modulatorData.offset !== undefined ? modulatorData.offset : 0;
+          updates.multiplier =
+            modulatorData.multiplier !== undefined
+              ? modulatorData.multiplier
+              : 1.0;
+          updates.easing = modulatorData.easing || "linear";
+          updates.threshold =
+            modulatorData.threshold !== undefined
+              ? modulatorData.threshold
+              : 0.5;
+        }
+
+        const modulator = modulationSystem.getModulator(modulatorId);
+        if (modulator) {
+          Object.assign(modulator, updates);
+        }
       }
     });
+
+    return this.restoreAudioModulationInputs(modulationSystem);
+  }
+
+  async restoreAudioModulationInputs(modulationSystem) {
+    const audioMods = modulationSystem
+      .getModulators()
+      .filter((m) => m.type === "audio" && m.enabled);
+    if (audioMods.length === 0) return;
+
+    const audioEngine = modulationSystem.getAudioEngine();
+    try {
+      await audioEngine.refreshDevices();
+    } catch (error) {
+      console.warn("Could not restore audio modulation inputs:", error);
+      return;
+    }
+
+    for (const modulator of audioMods) {
+      const match = audioEngine.findDevice(
+        modulator.audioDeviceId,
+        modulator.audioDeviceLabel,
+      );
+      if (match && match.deviceId !== modulator.audioDeviceId) {
+        modulationSystem.updateModulator(modulator.id, {
+          audioDeviceId: match.deviceId,
+          audioDeviceLabel: match.label,
+        });
+      } else if (!match && modulator.audioDeviceLabel) {
+        console.warn(
+          `Audio input not found for modulator: ${modulator.audioDeviceLabel}`,
+        );
+      }
+    }
+
+    await modulationSystem.syncAudioInputs();
   }
 
   async loadMidiSettings(midiData) {
