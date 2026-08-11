@@ -57,20 +57,6 @@ export class ModulationUIManager {
       <div class="modulation-controls">
         <div class="control-section">
           <div class="modulator-header">
-            <h4>Audio Tracks</h4>
-            <button class="add-modulator-btn" id="addAudioTrackBtn">
-              <ion-icon name="add-outline"></ion-icon>
-              Add Track
-            </button>
-          </div>
-          ${audioTracks.length === 0
-            ? '<div class="no-modulators">No shared audio tracks. Add one, then point any audio modulator at it.</div>'
-            : ''
-          }
-        </div>
-
-        <div class="control-section">
-          <div class="modulator-header">
             <h4>Modulators</h4>
             <button class="add-modulator-btn" id="addModulatorBtn">
               <ion-icon name="add-outline"></ion-icon>
@@ -82,6 +68,20 @@ export class ModulationUIManager {
             : ''
           }
         </div>
+
+        <div class="control-section">
+        <div class="modulator-header">
+          <h4>Audio Tracks</h4>
+          <button class="add-modulator-btn" id="addAudioTrackBtn">
+            <ion-icon name="add-outline"></ion-icon>
+            Add Track
+          </button>
+        </div>
+        ${audioTracks.length === 0
+          ? '<div class="no-modulators">No shared audio tracks. Add one, then point any audio modulator at it.</div>'
+          : ''
+        }
+      </div>
 
         <div id="modulation-pane-container"></div>
       </div>
