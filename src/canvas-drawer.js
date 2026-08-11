@@ -230,6 +230,17 @@ export class CanvasDrawer {
     return this.ctx
   }
 
+  /** Temporarily draw with an alternate 2D context (e.g. offscreen layer). */
+  withAlternateContext (altCtx, fn) {
+    const prev = this.ctx
+    this.ctx = altCtx
+    try {
+      return fn()
+    } finally {
+      this.ctx = prev
+    }
+  }
+
   // Get canvas dimensions
   getDimensions () {
     return { width: this.width, height: this.height }

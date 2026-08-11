@@ -40,6 +40,7 @@ export class UIManager {
       openButton: document.getElementById('openButton'),
       saveButton: document.getElementById('saveButton'),
       labButton: document.getElementById('labButton'),
+      mixerButton: document.getElementById('mixerButton'),
       infoButton: document.getElementById('infoButton'),
       detachButton: document.getElementById('detachButton'),
       infoModal: document.getElementById('infoModal'),
@@ -71,6 +72,12 @@ export class UIManager {
     if (this.elements.panelToggleButton) {
       this.elements.panelToggleButton.addEventListener('click', () => {
         this.triggerCallback('togglePanel')
+      })
+    }
+
+    if (this.elements.mixerButton) {
+      this.elements.mixerButton.addEventListener('click', () => {
+        this.triggerCallback('toggleMixer')
       })
     }
 
@@ -365,6 +372,24 @@ export class UIManager {
     }
   }
 
+  showMixerButton () {
+    if (this.elements.mixerButton) {
+      this.elements.mixerButton.style.display = 'flex'
+    }
+  }
+
+  hideMixerButton () {
+    if (this.elements.mixerButton) {
+      this.elements.mixerButton.style.display = 'none'
+    }
+  }
+
+  setMixerToggleActive (active) {
+    if (this.elements.mixerButton) {
+      this.elements.mixerButton.classList.toggle('active', active)
+    }
+  }
+
   showInfoButton () {
     if (this.elements.infoButton) {
       this.elements.infoButton.style.display = 'flex'
@@ -444,6 +469,7 @@ export class UIManager {
     } else {
       this.hideAllIcons()
     }
+    this.triggerCallback('iconsVisibilityChange', { visible: this.iconsVisible })
     this.triggerCallback('toggleDebugOverlay')
   }
 
@@ -452,6 +478,7 @@ export class UIManager {
     this.showDetachButton()
     this.showOpenButton()
     this.showSaveButton()
+    this.showMixerButton()
     this.showLabButton()
     this.showInfoButton()
     this.showProjectNameDisplay()
@@ -462,6 +489,7 @@ export class UIManager {
     this.hideDetachButton()
     this.hideOpenButton()
     this.hideSaveButton()
+    this.hideMixerButton()
     this.hideLabButton()
     this.hideInfoButton()
     this.hideProjectNameDisplay()

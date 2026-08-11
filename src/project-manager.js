@@ -1,5 +1,6 @@
 import { SETTINGS, UTILS } from "./settings.js";
 import { getLuminodeSettingsKey } from "./luminodes/index.js";
+import { DEFAULT_EFFECT_LAYER_ORDER } from "./effect-layer-manager.js";
 import {
   FILE_TYPE,
   GLOW_FILE_ACCEPT,
@@ -165,6 +166,10 @@ export class ProjectManager {
           SETTINGS.CANVAS.SHADER_OVERLAY_RAIN_PATTERN_DRIFT,
         shaderOverlayRainSharpness:
           SETTINGS.CANVAS.SHADER_OVERLAY_RAIN_SHARPNESS,
+        // Mixer effect-chain z-order (DOM layer stack)
+        effectLayerOrder: this.glowVisualizer.effectLayerManager
+          ? this.glowVisualizer.effectLayerManager.getOrder()
+          : [...DEFAULT_EFFECT_LAYER_ORDER],
       },
       colors: {
         sotoPalette: [...SETTINGS.COLORS.SOTO_PALETTE],
@@ -213,6 +218,12 @@ export class ProjectManager {
           midiDevice: track.midiDevice,
           luminode: track.luminode,
           layout: { ...track.layout },
+          opacity: typeof track.opacity === 'number' ? track.opacity : 1,
+          blendMode: track.blendMode || 'source-over',
+          layerOrder:
+            typeof track.layerOrder === 'number'
+              ? track.layerOrder
+              : track.id - 1,
         };
 
         if (track.midiDevice) {
@@ -881,6 +892,7 @@ export class ProjectManager {
       await this.loadMidiSettings(projectData.midi);
 
       this.glowVisualizer.sidePanel.renderTracks();
+      this.glowVisualizer.mixerPanel?.refresh();
       this.glowVisualizer.sidePanel.modulationUIManager.renderModulationControls();
       if (this.glowVisualizer.sidePanel.basePanel.activeTab === "external") {
         await this.glowVisualizer.sidePanel.externalSystemsUIManager.renderExternalControls();
@@ -1271,6 +1283,13 @@ export class ProjectManager {
     if (procKeys.some(([k]) => canvasData[k] !== undefined)) {
       this.glowVisualizer.syncShaderBackgroundEngines();
     }
+
+    if (this.glowVisualizer.effectLayerManager) {
+      this.glowVisualizer.effectLayerManager.setOrder(
+        canvasData.effectLayerOrder || [...DEFAULT_EFFECT_LAYER_ORDER],
+        { silent: true },
+      );
+    }
   }
 
   loadColorSettings(colorData) {
@@ -1311,8 +1330,14 @@ export class ProjectManager {
 
     this.glowVisualizer.trackLuminodes.clear();
 
+    const configsById = new Map();
+    trackData.tracks.forEach((cfg) => {
+      if (cfg && cfg.id != null) configsById.set(Number(cfg.id), cfg);
+    });
+
     tracks.forEach((track, index) => {
-      const trackConfig = trackData.tracks[index];
+      const trackConfig =
+        configsById.get(track.id) || trackData.tracks[index] || null;
       if (!trackConfig) {
         track.name = `Track ${track.id}`;
         track.muted = false;
@@ -1320,6 +1345,9 @@ export class ProjectManager {
         track.midiDevice = null;
         track.luminode = null;
         track.layout = { x: 0, y: 0, rotation: 0 };
+        track.opacity = 1;
+        track.blendMode = "source-over";
+        track.layerOrder = track.id - 1;
         this.glowVisualizer.trackManager.triggerCallback("trackUpdated", {
           trackId: track.id,
           track,
@@ -1331,6 +1359,13 @@ export class ProjectManager {
       track.muted = trackConfig.muted || false;
       track.solo = trackConfig.solo || false;
       track.layout = { ...track.layout, ...(trackConfig.layout || {}) };
+      track.opacity =
+        typeof trackConfig.opacity === "number" ? trackConfig.opacity : 1;
+      track.blendMode = trackConfig.blendMode || "source-over";
+      track.layerOrder =
+        typeof trackConfig.layerOrder === "number"
+          ? trackConfig.layerOrder
+          : track.id - 1;
 
       track.luminode = trackConfig.luminode || null;
       if (trackConfig.luminode) {

@@ -36,6 +36,8 @@ import { GlassOverlayManager } from './glass-overlay-manager.js'
 import { ControlsManager } from './controls-manager.js'
 import { downloadPngSnapshot, downloadSvgSnapshot } from './canvas-export.js'
 import { registerServiceWorker, setupLaunchQueue } from './pwa.js'
+import { EffectLayerManager } from './effect-layer-manager.js'
+import { MixerPanel } from './components/mixer-panel.js'
 
 export class GLOWVisualizer {
   constructor () {
@@ -58,6 +60,9 @@ export class GLOWVisualizer {
     this.tabletCanvas = document.getElementById('tabletCanvas')
     this.canvasDrawer = new CanvasDrawer(this.canvas)
     this.trackManager = new TrackManager()
+    this.effectLayerManager = new EffectLayerManager()
+    this.mixerPanel = null
+    this.mixerVisible = false
 
     this.ccMapper = null
     if (SETTINGS.HARDWARE_MODE.ENABLED) {
@@ -354,6 +359,17 @@ export class GLOWVisualizer {
     }
     this.glassOverlayManager.init()
 
+    this.effectLayerManager.applyOrder()
+    this.mixerPanel = new MixerPanel({
+      trackManager: this.trackManager,
+      effectLayerManager: this.effectLayerManager
+    })
+    this.mixerPanel.onChange = () => this.markProjectChanged()
+    this.mixerPanel.onRequestClose = () => this.hideMixerPanel()
+    this.mixerPanel.onToggleEffect = ({ setting, value }) => {
+      this.updateCanvasSetting({ setting, value })
+    }
+
     this.uiManager.showStatus('Connecting to MIDI devices...', 'info')
 
     await this.midiManager.setupMIDI()
@@ -387,6 +403,16 @@ export class GLOWVisualizer {
     )
     this.uiManager.on('resize', () => this.handleResize())
     this.uiManager.on('togglePanel', () => this.toggleSidePanel())
+    this.uiManager.on('toggleMixer', () => this.toggleMixerPanel())
+    this.uiManager.on('iconsVisibilityChange', ({ visible }) => {
+      if (!visible) {
+        this.mixerPanel?.hide()
+        document.body.classList.remove('mixer-visible')
+      } else if (this.mixerVisible) {
+        this.mixerPanel?.show()
+        document.body.classList.add('mixer-visible')
+      }
+    })
     this.uiManager.on('detachControls', () => this.controlsManager.toggle())
     this.uiManager.on('openFile', () => this.openFile())
     this.uiManager.on('saveFile', () => this.saveFile())
@@ -446,6 +472,8 @@ export class GLOWVisualizer {
       this.handleLuminodeChange(data)
     )
     this.trackManager.on('trackUpdated', () => this.markProjectChanged())
+    this.trackManager.on('tracksReordered', () => this.markProjectChanged())
+    this.effectLayerManager.on('orderChanged', () => this.markProjectChanged())
 
     // Canvas and color settings
     this.sidePanel.on('canvasSettingChange', (data) =>
@@ -525,6 +553,7 @@ export class GLOWVisualizer {
         this.uiManager.showSaveButton()
         this.uiManager.showLabButton()
         this.uiManager.showInfoButton()
+        this.uiManager.showMixerButton()
         this.showProjectNameDisplay()
         this.uiManager.showCanvasMessage()
         this.visualizerStarted = true
@@ -534,6 +563,7 @@ export class GLOWVisualizer {
         }
         this.sidePanel.renderTracks()
         this.uiManager.setSetModeActive(true, scenes.length)
+        this.mixerPanel?.refresh()
         this.uiManager.showStatus(
           `Set "${result.setName}" saved and loaded! Press 1–${scenes.length} to sequence.`,
           'success'
@@ -566,6 +596,7 @@ export class GLOWVisualizer {
       this.uiManager.showSaveButton()
       this.uiManager.showLabButton()
       this.uiManager.showInfoButton()
+      this.uiManager.showMixerButton()
       this.showProjectNameDisplay()
       this.uiManager.showCanvasMessage()
 
@@ -575,6 +606,7 @@ export class GLOWVisualizer {
 
       // Initialize side panel after MIDI setup
       this.sidePanel.renderTracks()
+      this.mixerPanel?.refresh()
 
       // Populate MIDI output device list
       await this.populateMidiOutputDevices()
@@ -641,6 +673,25 @@ export class GLOWVisualizer {
   toggleSidePanel () {
     this.sidePanel.toggle()
     this.uiManager.setPanelToggleActive(this.sidePanel.isPanelVisible())
+  }
+
+  showMixerPanel () {
+    this.mixerVisible = true
+    document.body.classList.add('mixer-visible')
+    this.mixerPanel?.show()
+    this.uiManager.setMixerToggleActive?.(true)
+  }
+
+  hideMixerPanel () {
+    this.mixerVisible = false
+    document.body.classList.remove('mixer-visible')
+    this.mixerPanel?.hide()
+    this.uiManager.setMixerToggleActive?.(false)
+  }
+
+  toggleMixerPanel () {
+    if (this.mixerVisible) this.hideMixerPanel()
+    else this.showMixerPanel()
   }
 
   async openFile () {
@@ -748,6 +799,7 @@ export class GLOWVisualizer {
         this.uiManager.showSaveButton()
         this.uiManager.showLabButton()
         this.uiManager.showInfoButton()
+        this.uiManager.showMixerButton()
         this.showProjectNameDisplay()
         this.uiManager.showCanvasMessage()
         this.visualizerStarted = true
@@ -756,6 +808,7 @@ export class GLOWVisualizer {
           this.animate()
         }
         this.sidePanel.renderTracks()
+        this.mixerPanel?.refresh()
         const sceneCount = this.projectManager.setManager.getSceneCount()
         this.uiManager.setSetModeActive(
           result.fileType === FILE_TYPE.SET,
@@ -1031,6 +1084,18 @@ export class GLOWVisualizer {
 
       if (setting.startsWith('SHADER_BACKGROUND_')) {
         this.syncShaderBackgroundEngines()
+      }
+
+      const effectEnableKeys = new Set([
+        'CRT_MODE',
+        'NOISE_OVERLAY',
+        'DITHER_OVERLAY',
+        'CHROMATIC_ABERRATION_ENABLED',
+        'SHADER_BACKGROUND_ENABLED',
+        'GLASS_OVERLAY_ENABLED'
+      ])
+      if (effectEnableKeys.has(setting)) {
+        this.mixerPanel?.effectChainUI?.render()
       }
     }
   }
@@ -1465,12 +1530,19 @@ export class GLOWVisualizer {
     // Get active tracks and their layouts
     const activeTracks = this.trackManager.getActiveTracks()
     const trackLayouts = this.getTrackLayouts()
+    const mainCtx = this.canvasDrawer.getContext()
+    const layerCanvas = this.ensureTrackLayerCanvas()
+    const layerCtx = layerCanvas.getContext('2d')
 
     // Draw luminodes for active tracks with a luminode; MIDI device required
     // unless a generator is driving this track
     activeTracks.forEach((track) => {
       const drivenByGenerator = this.midiGenerator.isTrackActive(track.id)
       if (!track.luminode || (!track.midiDevice && !drivenByGenerator)) return
+
+      const opacity =
+        typeof track.opacity === 'number' ? track.opacity : 1
+      if (opacity <= 0) return
 
       // Get or create luminode instance for this track
       let luminode = this.getLuminodeForTrack(track.id)
@@ -1489,7 +1561,23 @@ export class GLOWVisualizer {
         notes
       )
 
-      this.drawTrackLuminode(luminode, track.luminode, t, notes, layout)
+      layerCtx.setTransform(1, 0, 0, 1, 0, 0)
+      layerCtx.clearRect(0, 0, layerCanvas.width, layerCanvas.height)
+      layerCtx.globalAlpha = 1
+      layerCtx.globalCompositeOperation = 'source-over'
+
+      const prevLumCtx = luminode.ctx
+      luminode.ctx = layerCtx
+      this.canvasDrawer.withAlternateContext(layerCtx, () => {
+        this.drawTrackLuminode(luminode, track.luminode, t, notes, layout)
+      })
+      luminode.ctx = prevLumCtx
+
+      mainCtx.save()
+      mainCtx.globalAlpha = opacity
+      mainCtx.globalCompositeOperation = track.blendMode || 'source-over'
+      mainCtx.drawImage(layerCanvas, 0, 0)
+      mainCtx.restore()
 
       // Track last luminode position for fluid background (not used for full-screen procedural shaders)
       const bgMode = SETTINGS.CANVAS.SHADER_BACKGROUND_MODE || 'Fluid'
@@ -1511,6 +1599,22 @@ export class GLOWVisualizer {
         restoreValues()
       }
     })
+  }
+
+  ensureTrackLayerCanvas () {
+    const w = this.canvas.width
+    const h = this.canvas.height
+    if (!this.trackLayerCanvas) {
+      this.trackLayerCanvas = document.createElement('canvas')
+    }
+    if (
+      this.trackLayerCanvas.width !== w ||
+      this.trackLayerCanvas.height !== h
+    ) {
+      this.trackLayerCanvas.width = w
+      this.trackLayerCanvas.height = h
+    }
+    return this.trackLayerCanvas
   }
 
   applyModulationToTrack (trackId, luminodeType, notes = []) {

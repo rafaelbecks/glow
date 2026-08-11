@@ -84,6 +84,18 @@ Layer systems, change scale and position, and let their interactions produce new
 
 ---
 
+## Effects & render stack
+
+Open the **Mixer** (layers icon) to compose what you see.
+
+**Luminode mixer** — per-track draw order, opacity, blend mode (`difference`, `screen`, …), mute/solo. Tracks are composited onto the main canvas in layer order.
+
+**Effect chain** — drag nodes to reorder the post stack around the locked Luminodes anchor (shader background, chromatic aberration, glass/rain, noise, dither, CRT). Order maps to z-index of those layers.
+
+Mixer track fields (`opacity`, `blendMode`, `layerOrder`) and `canvas.effectLayerOrder` are saved in the `.glow` scene. CSS color filters on the Canvas tab stay separate and are not part of the reorderable chain.
+
+---
+
 ## Modulate
 
 Almost any numerical parameter can become a source of movement: position, scale, rotation, line width, canvas filters, shader overlays, and other luminode properties.

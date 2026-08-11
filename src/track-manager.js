@@ -2,6 +2,9 @@
 import { TrajectorySystem } from './trajectory-system.js'
 import { ModulationSystem } from './modulation-system.js'
 import { getAvailableLuminodes } from './luminodes/index.js'
+import { TRACK_BLEND_MODES } from './track-blend-modes.js'
+
+export { TRACK_BLEND_MODES } from './track-blend-modes.js'
 
 export class TrackManager {
   constructor () {
@@ -13,7 +16,10 @@ export class TrackManager {
         solo: false,
         midiDevice: null,
         luminode: 'lissajous',
-        layout: { x: 0, y: 0, rotation: 0 }
+        layout: { x: 0, y: 0, rotation: 0 },
+        opacity: 1,
+        blendMode: 'source-over',
+        layerOrder: 0
       },
       {
         id: 2,
@@ -22,7 +28,10 @@ export class TrackManager {
         solo: false,
         midiDevice: null,
         luminode: 'harmonograph',
-        layout: { x: 0, y: 0, rotation: 0 }
+        layout: { x: 0, y: 0, rotation: 0 },
+        opacity: 1,
+        blendMode: 'source-over',
+        layerOrder: 1
       },
       {
         id: 3,
@@ -31,7 +40,10 @@ export class TrackManager {
         solo: false,
         midiDevice: null,
         luminode: 'sphere',
-        layout: { x: 0, y: 0, rotation: 0 }
+        layout: { x: 0, y: 0, rotation: 0 },
+        opacity: 1,
+        blendMode: 'source-over',
+        layerOrder: 2
       },
       {
         id: 4,
@@ -40,7 +52,10 @@ export class TrackManager {
         solo: false,
         midiDevice: null,
         luminode: 'gegoNet',
-        layout: { x: 0, y: 0, rotation: 0 }
+        layout: { x: 0, y: 0, rotation: 0 },
+        opacity: 1,
+        blendMode: 'source-over',
+        layerOrder: 3
       }
     ]
 
@@ -110,6 +125,50 @@ export class TrackManager {
     }
   }
 
+  setTrackOpacity (trackId, opacity) {
+    const track = this.getTrack(trackId)
+    if (!track) return
+    const next = Math.min(1, Math.max(0, Number(opacity)))
+    if (Number.isNaN(next)) return
+    track.opacity = next
+    this.triggerCallback('trackUpdated', { trackId, track })
+  }
+
+  setTrackBlendMode (trackId, blendMode) {
+    const track = this.getTrack(trackId)
+    if (!track) return
+    const mode = TRACK_BLEND_MODES.includes(blendMode)
+      ? blendMode
+      : 'source-over'
+    track.blendMode = mode
+    this.triggerCallback('trackUpdated', { trackId, track })
+  }
+
+  reorderTracks (orderedIds) {
+    if (!Array.isArray(orderedIds) || orderedIds.length === 0) return
+    const idSet = new Set(this.tracks.map((t) => t.id))
+    const normalized = orderedIds
+      .map((id) => Number(id))
+      .filter((id) => idSet.has(id))
+    this.tracks.forEach((track) => {
+      if (!normalized.includes(track.id)) normalized.push(track.id)
+    })
+    normalized.forEach((id, index) => {
+      const track = this.getTrack(id)
+      if (track) track.layerOrder = index
+    })
+    this.triggerCallback('tracksReordered', {
+      order: normalized,
+      tracks: this.getTracksByLayerOrder()
+    })
+  }
+
+  getTracksByLayerOrder () {
+    return [...this.tracks].sort(
+      (a, b) => (a.layerOrder ?? a.id) - (b.layerOrder ?? b.id)
+    )
+  }
+
   setMidiDevice (trackId, deviceId) {
     const track = this.getTrack(trackId)
     if (track) {
@@ -172,15 +231,28 @@ export class TrackManager {
   }
 
   addModulator (type = 'lfo', id = null) {
-    return this.modulationSystem.addModulator(type, id)
+    const modulator = this.modulationSystem.addModulator(type, id)
+    this.triggerCallback('modulationUpdated', { action: 'add', modulator })
+    return modulator
   }
 
   removeModulator (modulatorId) {
-    return this.modulationSystem.removeModulator(modulatorId)
+    const result = this.modulationSystem.removeModulator(modulatorId)
+    this.triggerCallback('modulationUpdated', {
+      action: 'remove',
+      modulatorId
+    })
+    return result
   }
 
   updateModulator (modulatorId, updates) {
-    return this.modulationSystem.updateModulator(modulatorId, updates)
+    const result = this.modulationSystem.updateModulator(modulatorId, updates)
+    this.triggerCallback('modulationUpdated', {
+      action: 'update',
+      modulatorId,
+      updates
+    })
+    return result
   }
 
   getModulators () {
@@ -219,15 +291,16 @@ export class TrackManager {
     return this.availableLuminodes
   }
 
-  // Get active tracks (not muted, or soloed)
+  // Get active tracks (not muted, or soloed), sorted by layer order
   getActiveTracks () {
     const hasSolo = this.tracks.some((track) => track.solo)
+    const filtered = hasSolo
+      ? this.tracks.filter((track) => track.solo)
+      : this.tracks.filter((track) => !track.muted)
 
-    if (hasSolo) {
-      return this.tracks.filter((track) => track.solo)
-    } else {
-      return this.tracks.filter((track) => !track.muted)
-    }
+    return filtered.sort(
+      (a, b) => (a.layerOrder ?? a.id) - (b.layerOrder ?? b.id)
+    )
   }
 
   // Get MIDI data for a specific track
@@ -265,11 +338,14 @@ export class TrackManager {
 
   // Reset all tracks
   resetTracks () {
-    this.tracks.forEach((track) => {
+    this.tracks.forEach((track, index) => {
       track.muted = false
       track.solo = false
       track.midiDevice = null
       track.luminode = null
+      track.opacity = 1
+      track.blendMode = 'source-over'
+      track.layerOrder = index
     })
     this.triggerCallback('tracksReset')
   }

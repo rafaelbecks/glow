@@ -1,0 +1,476 @@
+/* Bottom mixer panel — luminode strips + effect chain */
+
+:root {
+    --mixer-height: 260px;
+    --mixer-bg: #000;
+    --mixer-panel: #000;
+    --mixer-border: #333;
+    --mixer-text: #ccc;
+    --mixer-muted: #666;
+    --mixer-accent: #51cf66;
+    --mixer-strip: #0a0a0a;
+}
+
+#mixer-panel {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: var(--mixer-height);
+    z-index: 900;
+    display: none;
+    flex-direction: column;
+    background: var(--mixer-panel);
+    border-top: 1px solid var(--mixer-border);
+    color: var(--mixer-text);
+    font-family: "Inconsolata", "SF Mono", Monaco, Consolas, monospace;
+    box-sizing: border-box;
+}
+
+.mixer-resize-handle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    transform: translateY(-50%);
+    cursor: ns-resize;
+    z-index: 2;
+    background: transparent;
+}
+
+.mixer-resize-handle:hover,
+.mixer-resize-handle.is-dragging {
+    background: rgba(81, 207, 102, 0.45);
+}
+
+.mixer-content {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0;
+}
+
+.mixer-section {
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 12px;
+    box-sizing: border-box;
+}
+
+.mixer-section--luminodes {
+    width: max-content;
+    max-width: 100%;
+    border-right: 1px solid var(--mixer-border);
+    padding-right: 12px;
+}
+
+.mixer-section--effects {
+    min-width: 0;
+}
+
+/* ---- Luminode mixer strips (vertical channel faders) ---- */
+
+.luminode-mixer-strips {
+    flex: 1;
+    min-height: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 6px;
+    width: max-content;
+    max-width: 100%;
+}
+
+.mixer-strip {
+    flex: 0 0 auto;
+    width: 76px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 5px;
+    background: var(--mixer-strip);
+    border: 1px solid var(--mixer-border);
+    border-radius: 0;
+    box-sizing: border-box;
+}
+
+.mixer-strip.is-dragging {
+    opacity: 0.7;
+    border-color: var(--mixer-accent);
+}
+
+.mixer-strip.is-muted {
+    opacity: 0.55;
+}
+
+.mixer-strip-handle {
+    cursor: grab;
+    color: var(--mixer-muted);
+    font-size: 11px;
+    letter-spacing: -2px;
+    user-select: none;
+    text-align: center;
+    line-height: 1;
+}
+
+.mixer-strip.is-dragging .mixer-strip-handle {
+    cursor: grabbing;
+}
+
+.mixer-strip-meta {
+    width: 100%;
+    text-align: center;
+    min-width: 0;
+}
+
+.mixer-strip-name {
+    font-family: "Analo Grotesk", "Inconsolata", sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    color: #e8e6e3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mixer-strip-luminode {
+    font-family: "Analo Grotesk", "Inconsolata", sans-serif;
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 0.03em;
+    color: var(--mixer-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mixer-strip-ms {
+    display: flex;
+    gap: 4px;
+}
+
+.mixer-mute-btn,
+.mixer-solo-btn {
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: 1px solid var(--mixer-border);
+    background: #000;
+    color: var(--mixer-muted);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 0;
+    cursor: pointer;
+}
+
+.mixer-mute-btn.active {
+    background: #ff6b6b;
+    border-color: #ff6b6b;
+    color: #000;
+}
+
+.mixer-solo-btn.active {
+    background: var(--mixer-accent);
+    border-color: var(--mixer-accent);
+    color: #000;
+}
+
+.mixer-strip-opacity {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--mixer-muted);
+    min-height: 0;
+    width: 100%;
+}
+
+.mixer-strip-opacity output {
+    font-family: "Inconsolata", monospace;
+    color: var(--mixer-accent);
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Tweakpane-like vertical fader */
+.mixer-fader {
+    -webkit-appearance: none;
+    appearance: none;
+    writing-mode: vertical-lr;
+    direction: rtl;
+    width: 16px;
+    height: 120px;
+    padding: 0;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+.mixer-fader::-webkit-slider-runnable-track {
+    -webkit-appearance: none;
+    width: 4px;
+    border-radius: 2px;
+    border: none;
+    background: linear-gradient(
+        to top,
+        var(--mixer-accent) 0%,
+        var(--mixer-accent) var(--fader-fill, 100%),
+        rgba(255, 255, 255, 0.1) var(--fader-fill, 100%),
+        rgba(255, 255, 255, 0.1) 100%
+    );
+}
+
+.mixer-fader::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    margin-left: -4px;
+    background: var(--mixer-accent);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.mixer-fader::-webkit-slider-thumb:hover {
+    background: #69db7c;
+    transform: scale(1.1);
+}
+
+.mixer-fader::-moz-range-track {
+    width: 4px;
+    border-radius: 2px;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.mixer-fader::-moz-range-progress {
+    width: 4px;
+    border-radius: 2px;
+    background: var(--mixer-accent);
+}
+
+.mixer-fader::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    background: var(--mixer-accent);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.mixer-fader::-moz-range-thumb:hover {
+    background: #69db7c;
+    transform: scale(1.1);
+}
+
+.mixer-strip-blend {
+    width: 100%;
+    display: flex;
+    font-size: 10px;
+    color: var(--mixer-muted);
+    min-width: 0;
+}
+
+.mixer-strip-blend select {
+    width: 100%;
+    min-width: 0;
+    background: #000;
+    color: var(--mixer-accent);
+    border: 1px solid var(--mixer-border);
+    border-radius: 0;
+    font-family: inherit;
+    font-size: 11px;
+    padding: 3px 2px;
+}
+
+/* ---- Effect chain nodes ---- */
+
+.effect-chain-stage {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+}
+
+.effect-chain-wires {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: visible;
+}
+
+.effect-chain-wire {
+    fill: none;
+    stroke: #2a2a2a;
+    stroke-width: 1.5;
+}
+
+.effect-chain-nodes {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 18px 24px;
+    padding: 4px 2px 8px;
+}
+
+.effect-node {
+    position: relative;
+    min-width: 100px;
+    max-width: 132px;
+    background: var(--mixer-strip);
+    border: 1px solid var(--mixer-border);
+    border-left: 3px solid var(--mixer-accent);
+    border-radius: 0;
+    padding: 8px 12px 8px 10px;
+    cursor: grab;
+    user-select: none;
+}
+
+.effect-node.is-locked {
+    cursor: default;
+    border-left-color: #555;
+    background: #050505;
+}
+
+.effect-node.is-disabled {
+    opacity: 0.45;
+}
+
+.effect-node.is-dragging {
+    opacity: 0.75;
+    border-color: var(--mixer-accent);
+    cursor: grabbing;
+}
+
+.effect-node-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.effect-node-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.effect-node-title {
+    font-family: "Analo Grotesk", "Inconsolata", sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: #e8e6e3;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.effect-node-mod-icon {
+    flex: 0 0 auto;
+    font-size: 12px;
+    color: var(--mixer-accent);
+    width: 12px;
+    height: 12px;
+}
+
+.effect-node-status {
+    font-size: 10px;
+    color: var(--mixer-muted);
+}
+
+.effect-node-toggle {
+    align-self: flex-start;
+    margin-top: 2px;
+    min-width: 36px;
+    height: 20px;
+    padding: 0 8px;
+    border: 1px solid var(--mixer-border);
+    background: #000;
+    color: var(--mixer-muted);
+    font-family: inherit;
+    font-size: 10px;
+    line-height: 1;
+    border-radius: 0;
+    cursor: pointer;
+}
+
+.effect-node-toggle.is-on {
+    border-color: var(--mixer-accent);
+    color: var(--mixer-accent);
+}
+
+.effect-node-toggle:hover {
+    border-color: #888;
+    color: #ccc;
+}
+
+.effect-node-port {
+    position: absolute;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border-radius: 0;
+    background: #111;
+    border: 1px solid #444;
+    transform: translateY(-50%);
+}
+
+.effect-node-port--in {
+    left: -5px;
+}
+
+.effect-node-port--out {
+    right: -5px;
+}
+
+.effect-node.is-locked .effect-node-port {
+    border-color: #555;
+}
+
+@media (max-width: 900px) {
+    .mixer-content {
+        grid-template-columns: 1fr;
+        grid-template-rows: max-content minmax(0, 1fr);
+    }
+
+    .mixer-section--luminodes {
+        width: auto;
+        max-width: none;
+        border-right: none;
+        border-bottom: 1px solid var(--mixer-border);
+        padding-right: 12px;
+    }
+
+    .luminode-mixer-strips {
+        width: 100%;
+        max-width: none;
+    }
+
+    .mixer-fader {
+        height: 88px;
+    }
+}

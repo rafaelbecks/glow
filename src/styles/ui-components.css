@@ -270,10 +270,40 @@
     opacity: 0.7;
 }
 
-.detach-toggle-btn {
+.mixer-toggle-btn {
     position: fixed;
     top: 10px;
     right: 60px;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    color: white;
+    border-radius: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s ease;
+    z-index: 10;
+}
+
+.mixer-toggle-btn:hover {
+    opacity: 0.7;
+}
+
+.mixer-toggle-btn ion-icon {
+    font-size: 20px;
+}
+
+.mixer-toggle-btn.active {
+    color: #aef0b8;
+}
+
+.detach-toggle-btn {
+    position: fixed;
+    top: 10px;
+    right: 100px;
     width: 40px;
     height: 40px;
     background: none;
@@ -402,10 +432,16 @@
 .detach-toggle-btn,
 .open-toggle-btn,
 .save-toggle-btn,
+.mixer-toggle-btn,
 .lab-toggle-btn,
 .info-toggle-btn {
     color: #fff;
     mix-blend-mode: difference;
+}
+
+body.mixer-visible .lab-toggle-btn,
+body.mixer-visible .info-toggle-btn {
+    bottom: calc(10px + var(--mixer-height, 0px));
 }
 
 .detach-toggle-btn.active {
