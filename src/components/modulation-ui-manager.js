@@ -2,6 +2,7 @@
 import { Pane } from '../lib/tweakpane.min.js'
 import * as EssentialsPlugin from '../lib/tweakpane-plugin-essentials.min.js'
 import * as WaveformPlugin from '../lib/tweakpane-plugin-waveform.min.js'
+import * as AudioPlayerPlugin from '../lib/tweakpane-plugin-audio-player.js'
 import { getLuminodeConfig } from '../luminode-configs.js'
 import { getCanvasFilterConfig, getCanvasFilterIds } from '../canvas-filter-configs.js'
 import {
@@ -49,9 +50,25 @@ export class ModulationUIManager {
 
     const modulators = this.trackManager.getModulators()
     const tracks = this.trackManager.getTracks()
+    const modulationSystem = this.trackManager.getModulationSystem()
+    const audioTracks = modulationSystem.getAudioTracks()
 
     modulationContainer.innerHTML = `
       <div class="modulation-controls">
+        <div class="control-section">
+          <div class="modulator-header">
+            <h4>Audio Tracks</h4>
+            <button class="add-modulator-btn" id="addAudioTrackBtn">
+              <ion-icon name="add-outline"></ion-icon>
+              Add Track
+            </button>
+          </div>
+          ${audioTracks.length === 0
+            ? '<div class="no-modulators">No shared audio tracks. Add one, then point any audio modulator at it.</div>'
+            : ''
+          }
+        </div>
+
         <div class="control-section">
           <div class="modulator-header">
             <h4>Modulators</h4>
@@ -60,45 +77,53 @@ export class ModulationUIManager {
               Add Modulator
             </button>
           </div>
-          
           ${modulators.length === 0
             ? '<div class="no-modulators">No modulators. Click "Add Modulator" to create one.</div>'
             : ''
           }
-          
-          <div id="modulator-pane-container"></div>
         </div>
+
+        <div id="modulation-pane-container"></div>
       </div>
     `
 
     this.setupAddModulatorListener()
+    this.setupAddAudioTrackListener()
+
+    if (audioTracks.length === 0 && modulators.length === 0) return
+
+    const paneContainer = modulationContainer.querySelector('#modulation-pane-container')
+    if (!paneContainer) return
+
+    this.mainPane = new Pane({ container: paneContainer })
+    this.mainPane.registerPlugin(EssentialsPlugin)
+    this.mainPane.registerPlugin(WaveformPlugin)
+    this.mainPane.registerPlugin(AudioPlayerPlugin)
+
+    const stylePane = () => {
+      const paneElement = paneContainer.querySelector('.tp-rotv')
+      if (paneElement) {
+        paneElement.style.width = '100%'
+        paneElement.style.margin = '0'
+        paneElement.style.padding = '0'
+        paneElement.style.background = 'transparent'
+        paneElement.style.border = 'none'
+      } else {
+        requestAnimationFrame(stylePane)
+      }
+    }
+    requestAnimationFrame(stylePane)
+
+    audioTracks.forEach((track, index) => {
+      this.createAudioTrackPane(this.mainPane, track, index)
+    })
+
+    modulators.forEach(modulator => {
+      this.createModulatorPane(modulator, tracks)
+    })
 
     if (modulators.length > 0) {
-      const paneContainer = modulationContainer.querySelector('#modulator-pane-container')
-      if (paneContainer) {
-        this.mainPane = new Pane({ container: paneContainer })
-        this.mainPane.registerPlugin(EssentialsPlugin)
-        this.mainPane.registerPlugin(WaveformPlugin)
-
-        const stylePane = () => {
-          const paneElement = paneContainer.querySelector('.tp-rotv')
-          if (paneElement) {
-            paneElement.style.width = '100%'
-            paneElement.style.margin = '0'
-            paneElement.style.padding = '0'
-            paneElement.style.background = 'transparent'
-            paneElement.style.border = 'none'
-          } else {
-            requestAnimationFrame(stylePane)
-          }
-        }
-        requestAnimationFrame(stylePane)
-
-        modulators.forEach(modulator => {
-          this.createModulatorPane(modulator, tracks)
-        })
-        this.startMonitorLoop()
-      }
+      this.startMonitorLoop()
     }
   }
 
@@ -140,7 +165,7 @@ export class ModulationUIManager {
         audioFreqMax: modulator.audioFreqMax !== undefined ? modulator.audioFreqMax : 20000,
         audioSmoothing: modulator.audioSmoothing !== undefined ? modulator.audioSmoothing : 0.7,
         audioSourceType: modulator.audioSourceType || 'input',
-        audioLoop: modulator.audioLoop !== false
+        audioTrackId: modulator.audioTrackId || ''
       }
 
       const modulatorFolder = this.mainPane.addFolder({
@@ -575,7 +600,7 @@ export class ModulationUIManager {
       .addBinding(modulatorData, 'audioSourceType', {
         options: {
           'Live Input': 'input',
-          'Audio File': 'file'
+          'Audio Track': 'file'
         },
         label: 'Source'
       })
@@ -588,11 +613,11 @@ export class ModulationUIManager {
       })
 
     if (sourceType === 'file') {
-      this.addAudioFileControls(
+      this.addAudioTrackPicker(
         modulatorFolder,
         modulator,
         modulatorData,
-        audioEngine
+        modulationSystem
       )
     } else {
       this.addAudioInputControls(
@@ -606,7 +631,7 @@ export class ModulationUIManager {
 
     const channelCount =
       sourceType === 'file'
-        ? audioEngine.getFileChannelCount(modulator.id)
+        ? audioEngine.getTrackChannelCount(modulator.audioTrackId)
         : modulator.audioDeviceId
           ? audioEngine.getChannelCount(modulator.audioDeviceId)
           : 1
@@ -715,6 +740,38 @@ export class ModulationUIManager {
       })
   }
 
+  addAudioTrackPicker (modulatorFolder, modulator, modulatorData, modulationSystem) {
+    const audioTracks = modulationSystem.getAudioTracks()
+    const trackOptions = { 'Select Track': '' }
+    audioTracks.forEach((track, index) => {
+      const label = track.name || `Audio Track ${index + 1}`
+      trackOptions[label] = track.id
+    })
+
+    if (
+      modulator.audioTrackId &&
+      !Object.values(trackOptions).includes(modulator.audioTrackId)
+    ) {
+      trackOptions[`Missing (${modulator.audioTrackId.slice(0, 8)}…)`] =
+        modulator.audioTrackId
+    }
+
+    modulatorFolder
+      .addBinding(modulatorData, 'audioTrackId', {
+        options: trackOptions,
+        label: 'Track'
+      })
+      .on('change', (ev) => {
+        const trackId = ev.value || null
+        modulatorData.audioTrackId = trackId || ''
+        this.trackManager.updateModulator(modulator.id, {
+          audioTrackId: trackId,
+          audioChannel: 0
+        })
+        this.renderModulationControls()
+      })
+  }
+
   addAudioInputControls (
     modulatorFolder,
     modulator,
@@ -802,112 +859,109 @@ export class ModulationUIManager {
     }
   }
 
-  addAudioFileControls (modulatorFolder, modulator, modulatorData, audioEngine) {
-    const fileName =
-      audioEngine.getFileName(modulator.id) ||
-      modulator.audioFileName ||
-      'No file loaded'
+  createAudioTrackPane (parent, track, index) {
+    const modulationSystem = this.trackManager.getModulationSystem()
+    const audioEngine = modulationSystem.getAudioEngine()
+    const trackData = {
+      enabled: track.enabled !== false,
+      loop: track.loop !== false,
+      name: track.name || `Audio Track ${index + 1}`
+    }
 
-    const playerHost = document.createElement('div')
-    playerHost.className = 'audio-mod-file-panel'
+    const folder = parent.addFolder({
+      title: `Audio Track ${index + 1}`,
+      expanded: true
+    })
 
-    const meta = document.createElement('div')
-    meta.className = 'audio-mod-file-name'
-    meta.textContent = fileName
-    playerHost.appendChild(meta)
+    folder
+      .addBinding(trackData, 'enabled', {
+        label: 'Enabled'
+      })
+      .on('change', (ev) => {
+        trackData.enabled = ev.value
+        modulationSystem.updateAudioTrack(track.id, { enabled: ev.value })
+      })
 
-    const actions = document.createElement('div')
-    actions.className = 'audio-mod-file-actions'
+    folder
+      .addBinding(trackData, 'loop', {
+        label: 'Loop'
+      })
+      .on('change', (ev) => {
+        trackData.loop = ev.value
+        modulationSystem.updateAudioTrack(track.id, { loop: ev.value })
+      })
+
+    folder
+      .addBinding(trackData, 'name', {
+        label: 'Name'
+      })
+      .on('change', (ev) => {
+        trackData.name = ev.value
+        modulationSystem.updateAudioTrack(track.id, { name: ev.value })
+      })
 
     const fileInput = document.createElement('input')
     fileInput.type = 'file'
     fileInput.accept = 'audio/*,.mp3,.wav,.ogg,.m4a,.flac,.aac'
     fileInput.hidden = true
+    folder.element.appendChild(fileInput)
 
-    const loadBtn = document.createElement('button')
-    loadBtn.type = 'button'
-    loadBtn.className = 'audio-mod-load-btn'
-    loadBtn.textContent = 'Load Audio File'
-    loadBtn.addEventListener('click', () => fileInput.click())
+    folder
+      .addBlade({
+        view: 'button',
+        label: 'File',
+        title: track.dataUrl ? 'Replace Audio File' : 'Load Audio File'
+      })
+      .on('click', () => fileInput.click())
 
     fileInput.addEventListener('change', async () => {
       const file = fileInput.files && fileInput.files[0]
       if (!file) return
       try {
         await audioEngine.ensureAudioContext()
-        const fileSource = await audioEngine.loadFileForModulator(
-          modulator.id,
-          file,
-          {
-            name: file.name,
-            loop: modulatorData.audioLoop !== false
-          }
-        )
-        this.trackManager.updateModulator(modulator.id, {
-          audioSourceType: 'file',
-          audioFileName: fileSource.name,
-          audioFileDataUrl: fileSource.dataUrl,
-          audioLoop: modulatorData.audioLoop !== false,
-          audioChannel: 0
+        await modulationSystem.loadAudioTrackFile(track.id, file, {
+          name: file.name,
+          loop: trackData.loop,
+          enabled: trackData.enabled
         })
         this.renderModulationControls()
       } catch (error) {
-        console.error('Failed to load audio file:', error)
+        console.error('Failed to load audio track:', error)
       } finally {
         fileInput.value = ''
       }
     })
 
-    actions.appendChild(loadBtn)
-    actions.appendChild(fileInput)
-    playerHost.appendChild(actions)
-
-    const playerWrap = document.createElement('div')
-    playerWrap.className = 'audio-mod-player-wrap'
-    const audioEl = audioEngine.getFileAudioElement(modulator.id)
-    if (audioEl) {
-      playerWrap.appendChild(audioEl)
-    } else if (modulator.audioFileDataUrl) {
-      audioEngine
-        .loadFileForModulator(modulator.id, modulator.audioFileDataUrl, {
-          name: modulator.audioFileName || 'Audio file',
-          loop: modulator.audioLoop !== false
-        })
-        .then((fileSource) => {
-          if (fileSource?.audioEl && playerWrap.isConnected) {
-            playerWrap.appendChild(fileSource.audioEl)
-            meta.textContent = fileSource.name
-          }
-        })
-        .catch((error) => {
-          console.warn('Failed to restore audio file player:', error)
-        })
-    } else {
-      const placeholder = document.createElement('div')
-      placeholder.className = 'audio-mod-player-placeholder'
-      placeholder.textContent = 'Load a file to play and analyze'
-      playerWrap.appendChild(placeholder)
-    }
-    playerHost.appendChild(playerWrap)
-
-    // Insert custom panel into the Tweakpane folder body
-    const folderEl = modulatorFolder.element
-    const folderBody =
-      folderEl?.querySelector('.tp-fldv_c') || folderEl || null
-    if (folderBody) {
-      folderBody.appendChild(playerHost)
-    }
-
-    modulatorFolder
-      .addBinding(modulatorData, 'audioLoop', {
-        label: 'Loop'
+    const audioEl = audioEngine.getTrackAudioElement(track.id)
+    if (audioEl && (track.dataUrl || audioEl.src)) {
+      audioEngine.ensureTrackGraph(track.id).catch((error) => {
+        console.warn('Failed to prepare audio track graph:', error)
       })
-      .on('change', (ev) => {
-        modulatorData.audioLoop = ev.value
-        audioEngine.setFileLoop(modulator.id, ev.value)
-        this.trackManager.updateModulator(modulator.id, {
-          audioLoop: ev.value
+      try {
+        const playerBlade = folder.addBlade({
+          view: 'audio-player',
+          label: 'Player',
+          source: track.dataUrl || audioEl.src || '',
+          loop: trackData.loop,
+          audio: audioEl
         })
+        if (playerBlade && 'loop' in playerBlade) {
+          playerBlade.loop = trackData.loop
+        }
+      } catch (error) {
+        console.warn('Failed to mount audio player blade:', error)
+      }
+    }
+
+    folder
+      .addBlade({
+        view: 'button',
+        label: 'Delete',
+        title: 'Remove Track'
+      })
+      .on('click', () => {
+        modulationSystem.removeAudioTrack(track.id)
+        this.renderModulationControls()
       })
   }
 
@@ -944,6 +998,21 @@ export class ModulationUIManager {
       }
       paneData.thresholdBinding = null
     }
+  }
+
+  setupAddAudioTrackListener () {
+    const addBtn = this.panel.querySelector('#addAudioTrackBtn')
+    if (!addBtn) return
+    addBtn.addEventListener('click', () => {
+      const modulationSystem = this.trackManager.getModulationSystem()
+      const count = modulationSystem.getAudioTracks().length
+      modulationSystem.createAudioTrack({
+        name: `Audio Track ${count + 1}`,
+        enabled: true,
+        loop: true
+      })
+      this.renderModulationControls()
+    })
   }
 
   setupAddModulatorListener () {

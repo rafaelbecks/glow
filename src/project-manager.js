@@ -253,8 +253,16 @@ export class ProjectManager {
     const modulationSystem =
       this.glowVisualizer.trackManager.getModulationSystem();
     const modulators = modulationSystem.getModulators();
+    const audioTracks = modulationSystem.getAudioTracks();
 
     return {
+      audioTracks: audioTracks.map((track) => ({
+        id: track.id,
+        name: track.name,
+        dataUrl: track.dataUrl,
+        enabled: track.enabled !== false,
+        loop: track.loop !== false,
+      })),
       modulators: modulators.map((modulator) => ({
         id: modulator.id,
         type: modulator.type,
@@ -281,15 +289,7 @@ export class ProjectManager {
         audioFreqMax: modulator.audioFreqMax,
         audioSmoothing: modulator.audioSmoothing,
         audioSourceType: modulator.audioSourceType || 'input',
-        audioLoop: modulator.audioLoop !== false,
-        audioFileName:
-          modulationSystem.getAudioEngine().getFileName(modulator.id) ||
-          modulator.audioFileName ||
-          null,
-        audioFileDataUrl:
-          modulationSystem.getAudioEngine().getFileDataUrl(modulator.id) ||
-          modulator.audioFileDataUrl ||
-          null,
+        audioTrackId: modulator.audioTrackId || null,
       })),
     };
   }
@@ -1378,14 +1378,43 @@ export class ProjectManager {
   }
 
   async loadModulationSettings(modulationData) {
-    if (!modulationData || !modulationData.modulators) return;
+    if (!modulationData) return;
+    if (!modulationData.modulators && !modulationData.audioTracks) return;
 
     const modulationSystem =
       this.glowVisualizer.trackManager.getModulationSystem();
+    const audioEngine = modulationSystem.getAudioEngine();
 
     modulationSystem.reset();
 
-    modulationData.modulators.forEach((modulatorData) => {
+    // Shared audio tracks (new) + migrate per-modulator files from older projects
+    const trackDefs = Array.isArray(modulationData.audioTracks)
+      ? [...modulationData.audioTracks]
+      : [];
+    const legacyTrackIdByModulator = new Map();
+    const modulators = Array.isArray(modulationData.modulators)
+      ? modulationData.modulators
+      : [];
+
+    for (const modulatorData of modulators) {
+      if ((modulatorData.audioSourceType || "input") !== "file") continue;
+      if (modulatorData.audioTrackId) continue;
+      if (!modulatorData.audioFileDataUrl) continue;
+
+      const legacyId = `legacy-${modulatorData.id || trackDefs.length}`;
+      legacyTrackIdByModulator.set(modulatorData.id, legacyId);
+      trackDefs.push({
+        id: legacyId,
+        name: modulatorData.audioFileName || "Audio track",
+        dataUrl: modulatorData.audioFileDataUrl,
+        enabled: true,
+        loop: modulatorData.audioLoop !== false,
+      });
+    }
+
+    await audioEngine.restoreTracks(trackDefs);
+
+    modulators.forEach((modulatorData) => {
       const modulatorType = modulatorData.type || "lfo";
       const modulatorId = modulationSystem.addModulator(modulatorType);
       if (modulatorId) {
@@ -1451,9 +1480,10 @@ export class ProjectManager {
             modulatorData.audioSmoothing !== undefined
               ? modulatorData.audioSmoothing
               : 0.7;
-          updates.audioLoop = modulatorData.audioLoop !== false;
-          updates.audioFileName = modulatorData.audioFileName || null;
-          updates.audioFileDataUrl = modulatorData.audioFileDataUrl || null;
+          updates.audioTrackId =
+            modulatorData.audioTrackId ||
+            legacyTrackIdByModulator.get(modulatorData.id) ||
+            null;
           updates.depth =
             modulatorData.depth !== undefined ? modulatorData.depth : 0.5;
           updates.offset =

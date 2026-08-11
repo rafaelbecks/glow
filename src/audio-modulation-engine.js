@@ -2,7 +2,8 @@
  * GLOW — Audio Modulation Engine
  * ------------------------------------------------------------
  * Shared Web Audio input + FFT analysis for audio modulators.
- * Supports live getUserMedia inputs and audio-file playback.
+ * Supports live getUserMedia inputs and shared audio-file tracks
+ * that any number of audio modulators can reference.
  */
 
 const DEFAULT_FFT_SIZE = 2048
@@ -20,15 +21,19 @@ function historyKey (sourceKey, channel, feature, freqMin, freqMax) {
   return `${sourceKey || 'none'}|${channel}|${feature}|${freqMin}|${freqMax}`
 }
 
-function fileSourceKey (modulatorId) {
-  return `file:${modulatorId}`
+function trackSourceKey (trackId) {
+  return `track:${trackId}`
+}
+
+function createTrackId () {
+  return `audio-track-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 }
 
 export class AudioModulationEngine {
   constructor () {
     this.audioContext = null
     this.inputs = new Map()
-    this.fileSources = new Map()
+    this.tracks = new Map()
     this.devices = []
     this.smoothedLevels = new Map()
     this.monitorHistories = new Map()
@@ -187,25 +192,37 @@ export class AudioModulationEngine {
     return input ? input.channelCount : 1
   }
 
-  getFileChannelCount (modulatorId) {
-    const fileSource = this.fileSources.get(modulatorId)
-    return fileSource ? fileSource.channelCount : 1
+  getTracks () {
+    return [...this.tracks.values()].map((track) => this._serializeTrack(track))
   }
 
-  getFileAudioElement (modulatorId) {
-    return this.fileSources.get(modulatorId)?.audioEl || null
+  getTrack (trackId) {
+    const track = this.tracks.get(trackId)
+    return track ? this._serializeTrack(track) : null
   }
 
-  getFileDataUrl (modulatorId) {
-    return this.fileSources.get(modulatorId)?.dataUrl || null
+  getTrackAudioElement (trackId) {
+    return this.tracks.get(trackId)?.audioEl || null
   }
 
-  getFileName (modulatorId) {
-    return this.fileSources.get(modulatorId)?.name || null
+  getTrackChannelCount (trackId) {
+    const track = this.tracks.get(trackId)
+    return track ? track.channelCount : 1
   }
 
-  hasFileSource (modulatorId) {
-    return this.fileSources.has(modulatorId)
+  hasTrack (trackId) {
+    return this.tracks.has(trackId)
+  }
+
+  _serializeTrack (track) {
+    return {
+      id: track.id,
+      name: track.name,
+      dataUrl: track.dataUrl,
+      enabled: track.enabled !== false,
+      loop: track.audioEl ? !!track.audioEl.loop : track.loop !== false,
+      channelCount: track.channelCount
+    }
   }
 
   _readFileAsDataUrl (file) {
@@ -218,48 +235,8 @@ export class AudioModulationEngine {
     })
   }
 
-  async loadFileForModulator (modulatorId, fileOrDataUrl, options = {}) {
-    if (!modulatorId) return null
-    await this.ensureAudioContext()
-
-    let dataUrl = null
-    let name = options.name || 'Audio file'
-
-    if (typeof fileOrDataUrl === 'string') {
-      dataUrl = fileOrDataUrl
-    } else if (fileOrDataUrl instanceof Blob) {
-      name = fileOrDataUrl.name || name
-      dataUrl = await this._readFileAsDataUrl(fileOrDataUrl)
-    } else {
-      throw new Error('Invalid audio file')
-    }
-
-    const existing = this.fileSources.get(modulatorId)
-    if (existing) {
-      // Reuse the same <audio> + MediaElementSource (can only be created once)
-      existing.audioEl.pause()
-      existing.audioEl.src = dataUrl
-      existing.audioEl.loop =
-        options.loop !== undefined ? !!options.loop : existing.audioEl.loop
-      existing.dataUrl = dataUrl
-      existing.name = name
-      existing.audioEl.load()
-      return existing
-    }
-
-    const audioEl = document.createElement('audio')
-    audioEl.preload = 'auto'
-    audioEl.controls = true
-    audioEl.loop = options.loop !== undefined ? !!options.loop : true
-    audioEl.src = dataUrl
-    audioEl.className = 'audio-mod-html5-player'
-    audioEl.setAttribute('playsinline', '')
-    audioEl.addEventListener('play', () => {
-      this.ensureAudioContext().catch(() => {})
-    })
-
+  _createAnalysisGraph (audioEl) {
     const source = this.audioContext.createMediaElementSource(audioEl)
-    // Stereo analysis with audible playback
     const channelCount = 2
     const splitter = this.audioContext.createChannelSplitter(channelCount)
     source.connect(splitter)
@@ -278,54 +255,157 @@ export class AudioModulationEngine {
       })
     }
 
-    const fileSource = {
-      modulatorId,
-      audioEl,
-      source,
-      splitter,
-      channelCount,
-      channels,
-      dataUrl,
-      name
+    return { source, splitter, channelCount, channels }
+  }
+
+  createTrack (options = {}) {
+    const id = options.id || createTrackId()
+    if (this.tracks.has(id)) {
+      return this._serializeTrack(this.tracks.get(id))
     }
-    this.fileSources.set(modulatorId, fileSource)
-    return fileSource
+
+    const audioEl = document.createElement('audio')
+    audioEl.preload = 'auto'
+    audioEl.loop = options.loop !== undefined ? !!options.loop : true
+    audioEl.setAttribute('playsinline', '')
+    audioEl.addEventListener('play', () => {
+      this.ensureAudioContext().catch(() => {})
+    })
+
+    const track = {
+      id,
+      name: options.name || 'Audio track',
+      dataUrl: options.dataUrl || null,
+      enabled: options.enabled !== false,
+      loop: audioEl.loop,
+      audioEl,
+      source: null,
+      splitter: null,
+      channelCount: 2,
+      channels: []
+    }
+
+    if (options.dataUrl) {
+      audioEl.src = options.dataUrl
+    }
+
+    this.tracks.set(id, track)
+    return this._serializeTrack(track)
   }
 
-  setFileLoop (modulatorId, loop) {
-    const fileSource = this.fileSources.get(modulatorId)
-    if (!fileSource) return
-    fileSource.audioEl.loop = !!loop
+  async ensureTrackGraph (trackId) {
+    const track = this.tracks.get(trackId)
+    if (!track) return null
+    if (track.source) return track
+
+    await this.ensureAudioContext()
+    const graph = this._createAnalysisGraph(track.audioEl)
+    Object.assign(track, graph)
+    return track
   }
 
-  releaseFileSource (modulatorId) {
-    const fileSource = this.fileSources.get(modulatorId)
-    if (!fileSource) return
+  async loadTrackFile (trackId, fileOrDataUrl, options = {}) {
+    let track = this.tracks.get(trackId)
+    if (!track) {
+      this.createTrack({
+        id: trackId,
+        name: options.name,
+        loop: options.loop,
+        enabled: options.enabled
+      })
+      track = this.tracks.get(trackId)
+    }
+    if (!track) {
+      throw new Error('Failed to create audio track')
+    }
+
+    let dataUrl = null
+    let name = options.name || track.name || 'Audio track'
+
+    if (typeof fileOrDataUrl === 'string') {
+      dataUrl = fileOrDataUrl
+    } else if (fileOrDataUrl instanceof Blob) {
+      name = fileOrDataUrl.name || name
+      dataUrl = await this._readFileAsDataUrl(fileOrDataUrl)
+    } else {
+      throw new Error('Invalid audio file')
+    }
+
+    await this.ensureAudioContext()
+
+    const wasPlaying = !track.audioEl.paused
+    track.audioEl.pause()
+    track.audioEl.src = dataUrl
+    track.audioEl.loop =
+      options.loop !== undefined ? !!options.loop : track.audioEl.loop
+    track.dataUrl = dataUrl
+    track.name = name
+    track.loop = track.audioEl.loop
+    if (options.enabled !== undefined) {
+      track.enabled = !!options.enabled
+    }
+    track.audioEl.load()
+
+    await this.ensureTrackGraph(track.id)
+
+    if (wasPlaying && track.enabled) {
+      try {
+        await track.audioEl.play()
+      } catch (error) {
+        // Autoplay may be blocked until a user gesture.
+      }
+    }
+
+    return this._serializeTrack(track)
+  }
+
+  setTrackLoop (trackId, loop) {
+    const track = this.tracks.get(trackId)
+    if (!track) return
+    track.loop = !!loop
+    track.audioEl.loop = !!loop
+  }
+
+  setTrackEnabled (trackId, enabled) {
+    const track = this.tracks.get(trackId)
+    if (!track) return
+    track.enabled = !!enabled
+    if (!track.enabled) {
+      track.audioEl.pause()
+    }
+  }
+
+  setTrackName (trackId, name) {
+    const track = this.tracks.get(trackId)
+    if (!track) return
+    track.name = name || 'Audio track'
+  }
+
+  releaseTrack (trackId) {
+    const track = this.tracks.get(trackId)
+    if (!track) return
     try {
-      fileSource.audioEl.pause()
-      fileSource.audioEl.removeAttribute('src')
-      fileSource.audioEl.load()
-      fileSource.source.disconnect()
-      fileSource.splitter.disconnect()
-      fileSource.channels.forEach((ch) => {
+      track.audioEl.pause()
+      track.audioEl.removeAttribute('src')
+      track.audioEl.load()
+      if (track.source) track.source.disconnect()
+      if (track.splitter) track.splitter.disconnect()
+      track.channels.forEach((ch) => {
         try {
           ch.analyser.disconnect()
         } catch (e) {}
       })
-      if (fileSource.audioEl.parentNode) {
-        fileSource.audioEl.parentNode.removeChild(fileSource.audioEl)
-      }
     } catch (error) {
-      console.warn('Error releasing audio file source:', error)
+      console.warn('Error releasing audio track:', error)
     }
-    this.fileSources.delete(modulatorId)
+    this.tracks.delete(trackId)
   }
 
-  releaseUnusedFileSources (activeModulatorIds = []) {
-    const active = new Set(activeModulatorIds.filter(Boolean))
-    for (const modulatorId of [...this.fileSources.keys()]) {
-      if (!active.has(modulatorId)) {
-        this.releaseFileSource(modulatorId)
+  releaseUnusedTracks (activeTrackIds = []) {
+    const active = new Set(activeTrackIds.filter(Boolean))
+    for (const trackId of [...this.tracks.keys()]) {
+      if (!active.has(trackId)) {
+        this.releaseTrack(trackId)
       }
     }
   }
@@ -386,6 +466,10 @@ export class AudioModulationEngine {
     }
   }
 
+  /**
+   * Keep live inputs in sync. Shared file tracks are owned independently and
+   * are not released just because no modulator currently references them.
+   */
   syncActiveInputs (modulators = []) {
     const audioMods = modulators.filter(
       (m) => m && m.type === 'audio' && m.enabled
@@ -394,10 +478,8 @@ export class AudioModulationEngine {
     const liveMods = audioMods.filter(
       (m) => (m.audioSourceType || 'input') === 'input' && m.audioDeviceId
     )
-    const fileMods = audioMods.filter((m) => m.audioSourceType === 'file')
 
     this.releaseUnusedInputs(liveMods.map((m) => m.audioDeviceId))
-    this.releaseUnusedFileSources(fileMods.map((m) => m.id))
 
     const tasks = liveMods.map((m) =>
       this.ensureInput(m.audioDeviceId).catch((error) => {
@@ -406,23 +488,68 @@ export class AudioModulationEngine {
       })
     )
 
-    for (const m of fileMods) {
-      if (m.audioFileDataUrl && !this.fileSources.has(m.id)) {
-        tasks.push(
-          this.loadFileForModulator(m.id, m.audioFileDataUrl, {
-            name: m.audioFileName || 'Audio file',
-            loop: m.audioLoop !== false
-          }).catch((error) => {
-            console.warn('Failed to restore audio file:', error)
-            return null
-          })
-        )
-      } else if (this.fileSources.has(m.id)) {
-        this.setFileLoop(m.id, m.audioLoop !== false)
-      }
+    for (const m of audioMods) {
+      if ((m.audioSourceType || 'input') !== 'file') continue
+      const trackId = m.audioTrackId
+      if (!trackId || !this.tracks.has(trackId)) continue
+      tasks.push(
+        this.ensureTrackGraph(trackId).catch((error) => {
+          console.warn('Failed to prepare audio track graph:', error)
+          return null
+        })
+      )
     }
 
     return Promise.all(tasks)
+  }
+
+  async restoreTracks (trackDefs = []) {
+    const keepIds = []
+    const tasks = []
+
+    for (const def of trackDefs) {
+      if (!def?.id) continue
+      keepIds.push(def.id)
+      if (!this.tracks.has(def.id)) {
+        this.createTrack({
+          id: def.id,
+          name: def.name || 'Audio track',
+          dataUrl: def.dataUrl || null,
+          enabled: def.enabled !== false,
+          loop: def.loop !== false
+        })
+      } else {
+        const track = this.tracks.get(def.id)
+        track.name = def.name || track.name
+        track.enabled = def.enabled !== false
+        this.setTrackLoop(def.id, def.loop !== false)
+      }
+
+      const track = this.tracks.get(def.id)
+      if (def.dataUrl && track && track.dataUrl !== def.dataUrl) {
+        tasks.push(
+          this.loadTrackFile(def.id, def.dataUrl, {
+            name: def.name || track.name,
+            loop: def.loop !== false,
+            enabled: def.enabled !== false
+          }).catch((error) => {
+            console.warn('Failed to restore audio track file:', error)
+            return null
+          })
+        )
+      } else if (track?.dataUrl) {
+        tasks.push(
+          this.ensureTrackGraph(def.id).catch((error) => {
+            console.warn('Failed to restore audio track graph:', error)
+            return null
+          })
+        )
+      }
+    }
+
+    this.releaseUnusedTracks(keepIds)
+    await Promise.all(tasks)
+    return this.getTracks()
   }
 
   _getChannelFromSource (sourceEntry, channelIndex = 0) {
@@ -437,10 +564,9 @@ export class AudioModulationEngine {
   _getAnalysisChannel (modulator) {
     const sourceType = modulator.audioSourceType || 'input'
     if (sourceType === 'file') {
-      return this._getChannelFromSource(
-        this.fileSources.get(modulator.id),
-        modulator.audioChannel || 0
-      )
+      const track = this.tracks.get(modulator.audioTrackId)
+      if (!track || track.enabled === false) return null
+      return this._getChannelFromSource(track, modulator.audioChannel || 0)
     }
     return this._getChannelFromSource(
       this.inputs.get(modulator.audioDeviceId),
@@ -450,7 +576,7 @@ export class AudioModulationEngine {
 
   _getSourceKey (modulator) {
     if ((modulator.audioSourceType || 'input') === 'file') {
-      return fileSourceKey(modulator.id)
+      return trackSourceKey(modulator.audioTrackId)
     }
     return modulator.audioDeviceId || 'none'
   }
@@ -526,7 +652,10 @@ export class AudioModulationEngine {
 
     const sourceType = modulator.audioSourceType || 'input'
     if (sourceType === 'input' && !modulator.audioDeviceId) return 0
-    if (sourceType === 'file' && !this.fileSources.has(modulator.id)) return 0
+    if (sourceType === 'file') {
+      const track = this.tracks.get(modulator.audioTrackId)
+      if (!track || track.enabled === false || !track.source) return 0
+    }
 
     const ch = this._getAnalysisChannel(modulator)
     if (!ch) return 0
@@ -578,8 +707,9 @@ export class AudioModulationEngine {
 
     const sourceType = modulator.audioSourceType || 'input'
     if (sourceType === 'input' && !modulator.audioDeviceId) return values
-    if (sourceType === 'file' && !this.fileSources.has(modulator.id)) {
-      return values
+    if (sourceType === 'file') {
+      const track = this.tracks.get(modulator.audioTrackId)
+      if (!track || track.enabled === false || !track.source) return values
     }
 
     this.getNormalizedLevel(modulator)
@@ -631,8 +761,8 @@ export class AudioModulationEngine {
     for (const deviceId of [...this.inputs.keys()]) {
       this.releaseInput(deviceId)
     }
-    for (const modulatorId of [...this.fileSources.keys()]) {
-      this.releaseFileSource(modulatorId)
+    for (const trackId of [...this.tracks.keys()]) {
+      this.releaseTrack(trackId)
     }
     this.smoothedLevels.clear()
     this.monitorHistories.clear()

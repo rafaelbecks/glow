@@ -45,9 +45,8 @@ export class ModulationSystem {
       audioFreqMin: 20,
       audioFreqMax: 20000,
       audioSmoothing: 0.7,
-      audioLoop: true,
-      audioFileName: null,
-      audioFileDataUrl: null
+      // Shared audio-file track reference (cross-modulator)
+      audioTrackId: null
     }
 
     this.modulators.push(modulator)
@@ -56,6 +55,44 @@ export class ModulationSystem {
 
   getAudioEngine () {
     return this.audioEngine
+  }
+
+  getAudioTracks () {
+    return this.audioEngine.getTracks()
+  }
+
+  createAudioTrack (options = {}) {
+    return this.audioEngine.createTrack(options)
+  }
+
+  async loadAudioTrackFile (trackId, fileOrDataUrl, options = {}) {
+    return this.audioEngine.loadTrackFile(trackId, fileOrDataUrl, options)
+  }
+
+  updateAudioTrack (trackId, updates = {}) {
+    if (!trackId || !this.audioEngine.hasTrack(trackId)) return false
+    if (updates.name !== undefined) {
+      this.audioEngine.setTrackName(trackId, updates.name)
+    }
+    if (updates.loop !== undefined) {
+      this.audioEngine.setTrackLoop(trackId, updates.loop)
+    }
+    if (updates.enabled !== undefined) {
+      this.audioEngine.setTrackEnabled(trackId, updates.enabled)
+    }
+    return true
+  }
+
+  removeAudioTrack (trackId) {
+    if (!trackId) return false
+    this.audioEngine.releaseTrack(trackId)
+    for (const modulator of this.modulators) {
+      if (modulator.audioTrackId === trackId) {
+        modulator.audioTrackId = null
+      }
+    }
+    this.syncAudioInputs()
+    return true
   }
 
   syncAudioInputs () {
@@ -82,8 +119,7 @@ export class ModulationSystem {
         updates.audioDeviceId !== undefined ||
         updates.audioChannel !== undefined ||
         updates.audioSourceType !== undefined ||
-        updates.audioFileDataUrl !== undefined ||
-        updates.audioLoop !== undefined
+        updates.audioTrackId !== undefined
       ) {
         this.syncAudioInputs()
       }
@@ -373,7 +409,7 @@ export class ModulationSystem {
     this.modulators = []
     this.originalConfigValues.clear()
     this.audioEngine.releaseUnusedInputs([])
-    this.audioEngine.releaseUnusedFileSources([])
+    this.audioEngine.releaseUnusedTracks([])
   }
 
   getWaveformShapes () {
