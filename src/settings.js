@@ -120,15 +120,8 @@ export const SETTINGS = {
       '#4A148C', // Purple
       '#8B0000' // Dark red
     ],
-    POLYGON_COLORS: [
-      '#f93822',
-      '#fcdc4d',
-      '#00a6a6',
-      '#90be6d',
-      '#f94144',
-      '#ff006e',
-      '#8338ec'
-    ]
+    // Filled below from UTILS.generatePitchPalette after UTILS is defined
+    PITCH_PALETTE: []
   },
 
   // Drawing modules configuration
@@ -176,17 +169,6 @@ export const SETTINGS = {
       VELOCITY_MULTIPLIER: 5,
       STRIPE_WIDTH: 3,
       SOLID_HEIGHT_RATIO: 0.2
-    },
-    POLYGONS: {
-      BASE_LAYERS: 2,
-      MAX_LAYERS: 3,
-      MAX_SIZE: 220,
-      SPACING: 40,
-      LAYER_OFFSET: 12,
-      JITTER_BASE: 4,
-      JITTER_INCREMENT: 1.5,
-      BASE_SIDES: 6,
-      SIDES_VARIATION: 3
     },
     WHITNEY_LINES: {
       RADIUS: 250,
@@ -526,7 +508,6 @@ export const MIDI_CHANNELS = {
   'bus 9': 'sotoGrid',
   'bus 10': 'sotoGridRotated',
   'bus 11': 'scanlineGradients',
-  'bus 14': 'polygons',
   'bus 15': 'whitneyLines',
   'bus 16': 'noiseValley',
   'bus 17': 'catenoid',
@@ -549,8 +530,37 @@ export const MIDI_CHANNELS = {
 // Utility functions
 export const UTILS = {
   pitchColorFactor: 30, // Default factor, can be adjusted via UI
+  pitchPaletteSize: 14,
+
+  hslToHex: (h, s = 100, l = 70) => {
+    const hue = ((h % 360) + 360) % 360
+    const sat = Math.max(0, Math.min(100, s)) / 100
+    const light = Math.max(0, Math.min(100, l)) / 100
+    const a = sat * Math.min(light, 1 - light)
+    const f = (n) => {
+      const k = (n + hue / 30) % 12
+      const color = light - a * Math.max(Math.min(k - 3, 9 - k, 1), -1)
+      return Math.round(255 * color)
+        .toString(16)
+        .padStart(2, '0')
+    }
+    return `#${f(0)}${f(8)}${f(4)}`
+  },
+
+  generatePitchPalette: (factor = UTILS.pitchColorFactor, size = UTILS.pitchPaletteSize) => {
+    const safeFactor = factor || 30
+    const count = Math.max(1, size || 14)
+    return Array.from({ length: count }, (_, i) =>
+      UTILS.hslToHex((i % 14) * safeFactor, 100, 70)
+    )
+  },
 
   pitchToColor: (midi) => {
+    const palette = SETTINGS.COLORS?.PITCH_PALETTE
+    if (palette && palette.length > 0) {
+      const hex = palette[((midi % palette.length) + palette.length) % palette.length]
+      return UTILS.hexToHsla(hex, 0.6)
+    }
     const factor = UTILS.pitchColorFactor || 30
     const hue = (midi % 14) * factor
     return `hsla(${hue}, 100%, 70%, 0.6)`
@@ -563,8 +573,35 @@ export const UTILS = {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`
   },
 
+  hexToHsla: (hex, alpha = 1) => {
+    const r = parseInt(hex.slice(1, 3), 16) / 255
+    const g = parseInt(hex.slice(3, 5), 16) / 255
+    const b = parseInt(hex.slice(5, 7), 16) / 255
+    const max = Math.max(r, g, b)
+    const min = Math.min(r, g, b)
+    const l = (max + min) / 2
+    let h = 0
+    let s = 0
+    if (max !== min) {
+      const d = max - min
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+      switch (max) {
+        case r:
+          h = ((g - b) / d + (g < b ? 6 : 0)) * 60
+          break
+        case g:
+          h = ((b - r) / d + 2) * 60
+          break
+        default:
+          h = ((r - g) / d + 4) * 60
+          break
+      }
+    }
+    return `hsla(${Math.round(h)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%, ${alpha})`
+  },
+
   hslaToRgb: (hslaString) => {
-    const match = /hsla?\\(([^)]+)\\)/.exec(hslaString)
+    const match = /hsla?\(([^)]+)\)/.exec(hslaString)
     if (!match) return [1, 1, 1]
 
     const parts = match[1].split(',').map((s) => s.trim())
@@ -613,3 +650,6 @@ export const UTILS = {
     return [x2, y2, z2]
   }
 }
+
+// Initialize default pitch palette from hue factor
+SETTINGS.COLORS.PITCH_PALETTE = UTILS.generatePitchPalette(UTILS.pitchColorFactor)

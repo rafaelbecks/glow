@@ -6,10 +6,14 @@ import {
 } from '../shaders/background/registry.js'
 
 export class CanvasUIManager {
-  constructor (panel) {
+  constructor (panel, trackManager = null) {
     this.panel = panel
+    this.trackManager = trackManager
     this.settings = null
     this.mainPane = null
+    this.sotoPaletteFolder = null
+    this.colorPaletteFolder = null
+    this.pitchSwatchContainer = null
   }
 
   rgbToHex (rgb) {
@@ -50,6 +54,9 @@ export class CanvasUIManager {
       this.mainPane.dispose()
       this.mainPane = null
     }
+    this.sotoPaletteFolder = null
+    this.colorPaletteFolder = null
+    this.pitchSwatchContainer = null
 
     canvasControlsContainer.innerHTML =
       '<div id="canvas-pane-container"></div>'
@@ -87,15 +94,7 @@ export class CanvasUIManager {
         '#4A148C',
         '#8B0000'
       ],
-      POLYGON_COLORS: [
-        '#f93822',
-        '#fcdc4d',
-        '#00a6a6',
-        '#90be6d',
-        '#f94144',
-        '#ff006e',
-        '#8338ec'
-      ]
+      PITCH_PALETTE: UTILS.generatePitchPalette(UTILS.pitchColorFactor || 30)
     }
 
     const canvasData = {
@@ -1530,6 +1529,7 @@ export class CanvasUIManager {
       title: 'Color Palettes',
       expanded: true
     })
+    this.colorPaletteFolder = colorPaletteFolder
 
     const sotoPaletteData = {}
     colorSettings.SOTO_PALETTE.forEach((color, index) => {
@@ -1540,6 +1540,7 @@ export class CanvasUIManager {
       title: 'Soto Palette',
       expanded: true
     })
+    this.sotoPaletteFolder = sotoPaletteFolder
     colorSettings.SOTO_PALETTE.forEach((color, index) => {
       sotoPaletteFolder
         .addBinding(sotoPaletteData, `color${index}`, {
@@ -1550,31 +1551,43 @@ export class CanvasUIManager {
           this.triggerColorPaletteChange('soto', index, ev.value)
         })
     })
+    this.refreshSotoPaletteVisibility()
 
-    const polygonPaletteData = {}
-    colorSettings.POLYGON_COLORS.forEach((color, index) => {
-      polygonPaletteData[`color${index}`] = color
-    })
-
-    const polygonPaletteFolder = colorPaletteFolder.addFolder({
-      title: 'Polygon Colors',
-      expanded: true
-    })
-    colorSettings.POLYGON_COLORS.forEach((color, index) => {
-      polygonPaletteFolder
-        .addBinding(polygonPaletteData, `color${index}`, {
-          label: `Color ${index + 1}`,
-          picker: 'inline'
-        })
-        .on('change', (ev) => {
-          this.triggerColorPaletteChange('polygon', index, ev.value)
-        })
-    })
+    if (
+      !colorSettings.PITCH_PALETTE ||
+      colorSettings.PITCH_PALETTE.length !== UTILS.pitchPaletteSize
+    ) {
+      colorSettings.PITCH_PALETTE = UTILS.generatePitchPalette(
+        pitchColorData.hueFactor
+      )
+      if (settings.COLORS) {
+        settings.COLORS.PITCH_PALETTE = [...colorSettings.PITCH_PALETTE]
+      }
+    }
 
     const pitchColorFolder = this.mainPane.addFolder({
-      title: 'Pitch to Color Generator',
+      title: 'Pitch to Color Palette',
       expanded: true
     })
+
+    const pitchSwatchContainer = document.createElement('div')
+    pitchSwatchContainer.id = 'pitchColorExample'
+    pitchSwatchContainer.className = 'pitch-color-example'
+    this.pitchSwatchContainer = pitchSwatchContainer
+
+    const applyGeneratedPalette = (factor) => {
+      const nextPalette = UTILS.generatePitchPalette(factor)
+      if (settings.COLORS) {
+        settings.COLORS.PITCH_PALETTE = nextPalette
+      }
+      colorSettings.PITCH_PALETTE = nextPalette
+      this.renderPitchPaletteSwatches(
+        pitchSwatchContainer,
+        nextPalette,
+        settings
+      )
+      this.triggerPitchColorFactorChange(factor)
+    }
 
     pitchColorFolder
       .addBinding(pitchColorData, 'hueFactor', {
@@ -1584,13 +1597,14 @@ export class CanvasUIManager {
         step: 1
       })
       .on('change', (ev) => {
-        this.updatePitchColorExample(ev.value)
-        this.triggerPitchColorFactorChange(ev.value)
+        applyGeneratedPalette(ev.value)
       })
 
-    const exampleContainer = document.createElement('div')
-    exampleContainer.id = 'pitchColorExample'
-    exampleContainer.className = 'pitch-color-example'
+    this.renderPitchPaletteSwatches(
+      pitchSwatchContainer,
+      colorSettings.PITCH_PALETTE,
+      settings
+    )
 
     setTimeout(() => {
       const pitchColorElement =
@@ -1599,19 +1613,74 @@ export class CanvasUIManager {
         (pitchColorFolder.controller &&
           pitchColorFolder.controller.view &&
           pitchColorFolder.controller.view.element)
-      if (pitchColorElement) {
-        const hueFactorBinding = pitchColorElement.querySelector('.tp-lblv')
-        if (hueFactorBinding) {
-          const parent =
-            hueFactorBinding.closest('.tp-fldv') ||
-            hueFactorBinding.parentElement
-          if (parent) {
-            parent.appendChild(exampleContainer)
-            this.updatePitchColorExample(pitchColorData.hueFactor)
-          }
+      if (!pitchColorElement) return
+      const folderBody =
+        pitchColorElement.querySelector('.tp-fldv_c') ||
+        pitchColorElement.querySelector('.tp-fldv') ||
+        pitchColorElement
+      folderBody.appendChild(pitchSwatchContainer)
+    }, 0)
+  }
+
+  renderPitchPaletteSwatches (container, palette, settings) {
+    if (!container) return
+    container.innerHTML = ''
+    palette.forEach((color, index) => {
+      const hex = this.normalizeHexColor(color)
+      const item = document.createElement('label')
+      item.className = 'pitch-color-item'
+      item.style.backgroundColor = hex
+      item.title = `Color ${index + 1}`
+
+      const label = document.createElement('span')
+      label.textContent = String(index + 1)
+
+      const input = document.createElement('input')
+      input.type = 'color'
+      input.value = hex
+      input.setAttribute('aria-label', `Pitch color ${index + 1}`)
+      input.addEventListener('input', (ev) => {
+        const next = ev.target.value
+        item.style.backgroundColor = next
+        if (settings?.COLORS?.PITCH_PALETTE) {
+          settings.COLORS.PITCH_PALETTE[index] = next
         }
-      }
-    }, 100)
+        this.triggerColorPaletteChange('pitch', index, next)
+      })
+
+      item.appendChild(label)
+      item.appendChild(input)
+      container.appendChild(item)
+    })
+  }
+
+  normalizeHexColor (color) {
+    if (typeof color !== 'string') return '#ffffff'
+    if (/^#[0-9a-fA-F]{6}$/.test(color)) return color
+    if (/^#[0-9a-fA-F]{3}$/.test(color)) {
+      return `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`
+    }
+    return '#ffffff'
+  }
+
+  hasSotoLuminodeSelected () {
+    if (!this.trackManager?.getTracks) return false
+    return this.trackManager
+      .getTracks()
+      .some(
+        (track) =>
+          track.luminode === 'sotoGrid' || track.luminode === 'sotoGridRotated'
+      )
+  }
+
+  refreshSotoPaletteVisibility () {
+    const show = this.hasSotoLuminodeSelected()
+    if (this.colorPaletteFolder) {
+      this.updateFolderVisibility(this.colorPaletteFolder, show)
+    }
+    if (this.sotoPaletteFolder) {
+      this.updateFolderVisibility(this.sotoPaletteFolder, show)
+    }
   }
 
   refreshShaderOverlayParamVisibility (enabled, mode, folders) {
@@ -1678,26 +1747,6 @@ export class CanvasUIManager {
   sliderToTableValues (sliderValue) {
     const value = Math.max(0, Math.min(1, sliderValue))
     return `${value} ${1 - value}`
-  }
-
-  updatePitchColorExample (factor) {
-    const exampleContainer = document.querySelector('#pitchColorExample')
-    if (!exampleContainer) return
-
-    const cScaleNotes = [60, 62, 64, 65, 67, 69, 71, 72]
-    const noteNames = ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C']
-
-    exampleContainer.innerHTML = cScaleNotes
-      .map((note, index) => {
-        const hue = (note % 14) * factor
-        const color = `hsla(${hue}, 100%, 70%, 0.6)`
-        return `
-        <div class="pitch-color-item" style="background-color: ${color};">
-          <span>${noteNames[index]}</span>
-        </div>
-      `
-      })
-      .join('')
   }
 
   triggerCanvasExport (detail) {

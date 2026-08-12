@@ -224,6 +224,53 @@ export class ModulationSystem {
     return this.applyEasing(level, modulator.easing || 'linear')
   }
 
+  /**
+   * Deterministic 1D noise in [-1, 1] from an integer index.
+   * Same index always yields the same value (good for monitors + reload).
+   */
+  noise1D (n) {
+    const x = Math.sin(n * 127.1) * 43758.5453123
+    return (x - Math.floor(x)) * 2 - 1
+  }
+
+  seedFromId (id) {
+    let h = 0
+    const s = String(id || '')
+    for (let i = 0; i < s.length; i++) {
+      h = (h << 5) - h + s.charCodeAt(i)
+      h |= 0
+    }
+    return h
+  }
+
+  isRandomModulator (type) {
+    return type === 'randomStepped' || type === 'randomSmooth'
+  }
+
+  /**
+   * Random modulator signal in [-1, 1].
+   * rate = how many new values per second (same units as LFO Hz).
+   * stepped: sample-and-hold; smooth: ease between successive samples.
+   */
+  getRandomSignal (modulator, time = this.getCurrentTime()) {
+    const rate = Math.max(0.001, modulator.rate || 0.1)
+    const phase = time * rate
+    const step = Math.floor(phase)
+    const frac = phase - step
+    const seed = this.seedFromId(modulator.id)
+
+    const sampleAt = (i) => this.noise1D(i * 374761393 + seed * 668265263)
+
+    if (modulator.type === 'randomStepped') {
+      return sampleAt(step)
+    }
+
+    const a = sampleAt(step)
+    const b = sampleAt(step + 1)
+    const t = this.applyEasing(frac, modulator.easing || 'smoothstep')
+    return a + (b - a) * t
+  }
+
   getModulatedValue (baseValue, modulator, configParam, noteData = null) {
     if (!modulator.enabled || !modulator.targetConfigKey) {
       return baseValue
@@ -243,6 +290,8 @@ export class ModulationSystem {
           modulator.cubicBezier
         )
         normalizedValue = (waveform + 1) / 2
+      } else if (this.isRandomModulator(modulatorType)) {
+        normalizedValue = (this.getRandomSignal(modulator) + 1) / 2
       } else if (modulatorType === 'numberOfNotes') {
         if (!noteData || !noteData.notes || noteData.notes.length === 0) {
           normalizedValue = 0
@@ -289,14 +338,18 @@ export class ModulationSystem {
 
     let normalizedValue = 0
 
-    if (modulatorType === 'lfo') {
-      const time = performance.now() / 1000 - this.startTime
-      const phase = time * modulator.rate * Math.PI * 2
-      const waveform = this.generateWaveform(
-        modulator.shape,
-        phase,
-        modulator.cubicBezier
-      )
+    if (modulatorType === 'lfo' || this.isRandomModulator(modulatorType)) {
+      const waveform =
+        modulatorType === 'lfo'
+          ? this.generateWaveform(
+              modulator.shape,
+              (performance.now() / 1000 - this.startTime) *
+                modulator.rate *
+                Math.PI *
+                2,
+              modulator.cubicBezier
+            )
+          : this.getRandomSignal(modulator)
       const modulationAmount = waveform * modulator.depth
       const offset = modulator.offset || 0
 
@@ -439,12 +492,21 @@ export class ModulationSystem {
   }
 
   getModulatorTypes () {
-    return ['lfo', 'numberOfNotes', 'velocity', 'audio']
+    return [
+      'lfo',
+      'randomStepped',
+      'randomSmooth',
+      'numberOfNotes',
+      'velocity',
+      'audio'
+    ]
   }
 
   getModulatorTypeNames () {
     return {
       lfo: 'LFO',
+      randomStepped: 'Random (Stepped)',
+      randomSmooth: 'Random (Smooth)',
       numberOfNotes: 'Number of Notes',
       velocity: 'Velocity',
       audio: 'Audio'

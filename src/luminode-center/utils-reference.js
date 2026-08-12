@@ -13,7 +13,9 @@ const rot = MODULE.ROTATION</pre>
   <h4>Color — <code>UTILS</code></h4>
   <dl>
     <dt><code>UTILS.pitchToColor(midi)</code></dt>
-    <dd>MIDI pitch → <code>hsla(...)</code> string. Respects <code>UTILS.pitchColorFactor</code>.</dd>
+    <dd>MIDI pitch → <code>hsla(...)</code> from <code>SETTINGS.COLORS.PITCH_PALETTE</code> (editable on Canvas tab). Falls back to hue-factor generation.</dd>
+    <dt><code>UTILS.generatePitchPalette(factor?)</code></dt>
+    <dd>Builds the pitch palette hex colors from a hue factor.</dd>
     <dt><code>UTILS.hexToRgba(hex, alpha?)</code></dt>
     <dd><code>"#rrggbb"</code> → <code>rgba(r,g,b,a)</code>.</dd>
     <dt><code>UTILS.hslaToRgb(hslaString)</code></dt>

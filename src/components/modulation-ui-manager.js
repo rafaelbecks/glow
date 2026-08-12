@@ -175,7 +175,7 @@ export class ModulationUIManager {
         offset: modulator.offset || 0,
         cubicBezier: modulator.cubicBezier || [0.5, 0, 0.5, 1],
         multiplier: modulator.multiplier !== undefined ? modulator.multiplier : 1.0,
-        easing: modulator.easing || 'linear',
+        easing: modulator.easing || (modulatorType === 'randomSmooth' ? 'smoothstep' : 'linear'),
         threshold: modulator.threshold !== undefined ? modulator.threshold : 0.5,
         audioDeviceId: modulator.audioDeviceId || '',
         audioChannel: modulator.audioChannel !== undefined ? modulator.audioChannel : 0,
@@ -209,7 +209,11 @@ export class ModulationUIManager {
         label: 'Type'
       }).on('change', (ev) => {
         modulatorData.type = ev.value
-        this.trackManager.updateModulator(modulator.id, { type: ev.value })
+        const updates = { type: ev.value }
+        if (ev.value === 'randomSmooth') {
+          updates.easing = 'smoothstep'
+        }
+        this.trackManager.updateModulator(modulator.id, updates)
         this.renderModulationControls()
       })
 
@@ -369,7 +373,7 @@ export class ModulationUIManager {
         }
       }
 
-      if (modulatorType === 'lfo') {
+      if (modulatorType === 'lfo' || modulatorType === 'randomStepped' || modulatorType === 'randomSmooth') {
         modulatorFolder.addBinding(modulatorData, 'rate', {
           label: 'Rate',
           min: 0.001,
@@ -425,22 +429,29 @@ export class ModulationUIManager {
       if (
         modulatorType === 'numberOfNotes' ||
         modulatorType === 'velocity' ||
-        modulatorType === 'audio'
+        modulatorType === 'audio' ||
+        modulatorType === 'randomSmooth'
       ) {
-        modulatorFolder.addBinding(modulatorData, 'multiplier', {
-          label: 'Multiplier',
-          min: 0.1,
-          max: 10,
-          step: 0.1
-        }).on('change', (ev) => {
-          modulatorData.multiplier = ev.value
-          this.trackManager.updateModulator(modulator.id, { multiplier: ev.value })
-        })
+        if (modulatorType !== 'randomSmooth') {
+          modulatorFolder.addBinding(modulatorData, 'multiplier', {
+            label: 'Multiplier',
+            min: 0.1,
+            max: 10,
+            step: 0.1
+          }).on('change', (ev) => {
+            modulatorData.multiplier = ev.value
+            this.trackManager.updateModulator(modulator.id, { multiplier: ev.value })
+          })
+        }
 
         const easingOptions = {}
         easingFunctions.forEach(easing => {
           easingOptions[easingFunctionNames[easing]] = easing
         })
+
+        if (modulatorType === 'randomSmooth') {
+          modulatorData.easing = modulator.easing || 'smoothstep'
+        }
 
         modulatorFolder.addBinding(modulatorData, 'easing', {
           options: easingOptions,
@@ -597,6 +608,24 @@ export class ModulationUIManager {
           phase,
           modulator.cubicBezier
         )
+        values[i] = Math.max(-1, Math.min(1, waveform * depth + offset))
+      }
+      return values
+    }
+
+    if (
+      modulator.type === 'randomStepped' ||
+      modulator.type === 'randomSmooth'
+    ) {
+      const now = modulationSystem.getCurrentTime()
+      const windowSeconds = 2
+      const depth = modulator.depth || 0
+      const offset = modulator.offset || 0
+      const sampleStep = windowSeconds / Math.max(1, sampleCount - 1)
+
+      for (let i = 0; i < sampleCount; i++) {
+        const sampleTime = now - (windowSeconds - i * sampleStep)
+        const waveform = modulationSystem.getRandomSignal(modulator, sampleTime)
         values[i] = Math.max(-1, Math.min(1, waveform * depth + offset))
       }
       return values

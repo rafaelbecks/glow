@@ -183,7 +183,7 @@ export class ExternalSystemsUIManager {
     })
 
     folder.addBinding(state, 'intervalMs', {
-      label: 'Interval (ms)', min: 100, max: 5000, step: 50
+      label: 'Interval (ms)', min: 100, max: 25000, step: 50
     }).on('change', (ev) => {
       this.midiGenerator.updateGenerator(generator.id, { intervalMs: ev.value })
     })

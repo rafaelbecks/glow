@@ -66,7 +66,6 @@ export const BUILTIN_SOURCE_FILES = {
   whitneyLines: 'whitney-lines.js',
   sinewave: 'sinewave.js',
   triangle: 'triangle.js',
-  polygons: 'polygons.js',
   noiseValley: 'noise-valley.js',
   catenoid: 'catenoid.js',
   lineCylinder: 'cylinder.js',

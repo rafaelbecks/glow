@@ -7,7 +7,6 @@ import { SotoGridLuminode } from './soto-grid.js'
 import { WhitneyLinesLuminode } from './whitney-lines.js'
 import { SinewaveLuminode } from './sinewave.js'
 import { TriangleLuminode } from './triangle.js'
-import { PolygonsLuminode } from './polygons.js'
 import { NoiseValleyLuminode } from './noise-valley.js'
 import { CatenoidLuminode } from './catenoid.js'
 import { LineCylinderLuminode } from './cylinder.js'
@@ -36,7 +35,6 @@ export {
   WhitneyLinesLuminode,
   SinewaveLuminode,
   TriangleLuminode,
-  PolygonsLuminode,
   NoiseValleyLuminode,
   CatenoidLuminode,
   LineCylinderLuminode,
@@ -106,11 +104,6 @@ export const LUMINODE_REGISTRY = {
     class: TriangleLuminode,
     displayName: 'Triangle',
     settingsKey: 'TRIANGLE'
-  },
-  polygons: {
-    class: PolygonsLuminode,
-    displayName: 'Polygons',
-    settingsKey: 'POLYGONS'
   },
   noiseValley: {
     class: NoiseValleyLuminode,

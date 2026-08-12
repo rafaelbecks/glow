@@ -1141,11 +1141,6 @@ export class GLOWVisualizer {
     ) {
       const paletteKey = palette.toUpperCase() + '_PALETTE'
       SETTINGS.COLORS[paletteKey][index] = color
-      console.log(
-        `Updated ${palette} palette color at index ${index} to ${color}`
-      )
-
-      // Mark as changed
       this.markProjectChanged()
     }
   }
@@ -1153,15 +1148,9 @@ export class GLOWVisualizer {
   updatePitchColorFactor (data) {
     const { value } = data
 
-    // Update the pitchToColor function in UTILS
-    if (UTILS.pitchToColor) {
-      // Store the factor for the pitchToColor function
-      UTILS.pitchColorFactor = value
-      console.log(`Updated pitch color factor to ${value}`)
-
-      // Mark as changed
-      this.markProjectChanged()
-    }
+    UTILS.pitchColorFactor = value
+    SETTINGS.COLORS.PITCH_PALETTE = UTILS.generatePitchPalette(value)
+    this.markProjectChanged()
   }
 
   updateLumiaEffect (blurStrength) {

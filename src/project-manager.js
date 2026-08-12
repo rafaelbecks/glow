@@ -1,5 +1,5 @@
 import { SETTINGS, UTILS } from "./settings.js";
-import { getLuminodeSettingsKey } from "./luminodes/index.js";
+import { getLuminodeSettingsKey, LUMINODE_REGISTRY } from "./luminodes/index.js";
 import { DEFAULT_EFFECT_LAYER_ORDER } from "./effect-layer-manager.js";
 import {
   FILE_TYPE,
@@ -173,7 +173,7 @@ export class ProjectManager {
       },
       colors: {
         sotoPalette: [...SETTINGS.COLORS.SOTO_PALETTE],
-        polygonColors: [...SETTINGS.COLORS.POLYGON_COLORS],
+        pitchPalette: [...(SETTINGS.COLORS.PITCH_PALETTE || [])],
         pitchColorFactor: UTILS.pitchColorFactor,
       },
       modules: this.collectModuleSettings(),
@@ -1300,12 +1300,16 @@ export class ProjectManager {
       SETTINGS.COLORS.SOTO_PALETTE = [...colorData.sotoPalette];
     }
 
-    if (colorData.polygonColors) {
-      SETTINGS.COLORS.POLYGON_COLORS = [...colorData.polygonColors];
-    }
-
     if (colorData.pitchColorFactor !== undefined) {
       UTILS.pitchColorFactor = colorData.pitchColorFactor;
+    }
+
+    if (colorData.pitchPalette && colorData.pitchPalette.length > 0) {
+      SETTINGS.COLORS.PITCH_PALETTE = [...colorData.pitchPalette];
+    } else {
+      SETTINGS.COLORS.PITCH_PALETTE = UTILS.generatePitchPalette(
+        UTILS.pitchColorFactor || 30,
+      );
     }
   }
 
@@ -1368,11 +1372,14 @@ export class ProjectManager {
           ? trackConfig.layerOrder
           : track.id - 1;
 
-      track.luminode = trackConfig.luminode || null;
-      if (trackConfig.luminode) {
-        this.glowVisualizer.createLuminodeForTrack(
-          track.id,
-          trackConfig.luminode,
+      const luminodeKey = trackConfig.luminode || null;
+      track.luminode =
+        luminodeKey && LUMINODE_REGISTRY[luminodeKey] ? luminodeKey : null;
+      if (track.luminode) {
+        this.glowVisualizer.createLuminodeForTrack(track.id, track.luminode);
+      } else if (luminodeKey) {
+        console.warn(
+          `Unknown luminode "${luminodeKey}" cleared from track ${track.id}`,
         );
       }
 
@@ -1481,6 +1488,25 @@ export class ProjectManager {
           if (modulatorData.cubicBezier) {
             updates.cubicBezier = modulatorData.cubicBezier;
           }
+        }
+
+        if (
+          modulatorType === "randomStepped" ||
+          modulatorType === "randomSmooth"
+        ) {
+          updates.rate =
+            modulatorData.rate !== undefined ? modulatorData.rate : 0.5;
+          updates.depth =
+            modulatorData.depth !== undefined ? modulatorData.depth : 0.5;
+          updates.offset =
+            modulatorData.offset !== undefined ? modulatorData.offset : 0;
+          if (modulatorType === "randomSmooth") {
+            updates.easing = modulatorData.easing || "smoothstep";
+          }
+          updates.threshold =
+            modulatorData.threshold !== undefined
+              ? modulatorData.threshold
+              : 0.5;
         }
 
         if (modulatorType === "numberOfNotes" || modulatorType === "velocity") {

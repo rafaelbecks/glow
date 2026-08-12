@@ -133,8 +133,9 @@ export class SquareTunnelLuminode {
     if (useColor) {
       const noteIndex = index % notes.length
       const midi = notes[noteIndex]?.midi || 60
-      const factor = UTILS.pitchColorFactor || 30
-      const hue = (midi % 14) * factor
+      const base = UTILS.pitchToColor(midi)
+      const match = /hsla?\(([^)]+)\)/.exec(base)
+      const hue = match ? parseFloat(match[1].split(',')[0]) : (midi % 12) * 30
       const lightness = 45 + (1 - fraction) * 30
       this.ctx.strokeStyle = `hsla(${hue}, 100%, ${lightness}%, ${alpha})`
       this.ctx.shadowColor = `hsla(${hue}, 100%, 70%, ${alpha * 0.6})`

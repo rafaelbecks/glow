@@ -35,7 +35,10 @@ export class SidePanel {
       this.luminodeConfigManager,
       midiGenerator
     )
-    this.canvasUIManager = new CanvasUIManager(this.basePanel.getPanel())
+    this.canvasUIManager = new CanvasUIManager(
+      this.basePanel.getPanel(),
+      trackManager
+    )
     this.modulationUIManager = new ModulationUIManager(
       trackManager,
       this.basePanel.getPanel()
@@ -64,6 +67,7 @@ export class SidePanel {
     // Delegate track manager events
     this.basePanel.on('trackUpdated', (data) => {
       this.trackUIManager.updateTrackUI(data.trackId, data.track)
+      this.canvasUIManager.refreshSotoPaletteVisibility()
     })
 
     this.basePanel.on('midiDeviceAdded', (data) => {
