@@ -12,7 +12,6 @@ export class RamielLuminode {
     this.baseVertices = null
     this.baseEdges = null
     this.lastConfig = null
-    this.atFieldAnimations = [] // Track AT field animations
     this.gradientOffset = 0
     this.lastNoteCount = 0
   }
@@ -158,84 +157,6 @@ export class RamielLuminode {
     return { vertices: result, faceMap }
   }
 
-  // Draw octagonal AT field
-  drawATField (x, y, size, opacity, t, followProjection = false, enableProjection = false, angleX = 0, angleY = 0, angleZ = 0, width = 0, height = 0) {
-    const sides = 8
-    const angleStep = (Math.PI * 2) / sides
-
-    // Helper to project a 3D point if projection is enabled
-    const projectPoint = (px, py, pz = 0) => {
-      if (followProjection && enableProjection) {
-        const [rotatedX, rotatedY, rotatedZ] = UTILS.rotate3D(
-          px - x,
-          py - y,
-          pz,
-          angleX,
-          angleY,
-          angleZ
-        )
-        // Apply perspective projection (same as diamond)
-        const projectedX = x + rotatedX + (rotatedX / width) * rotatedZ * 0.001
-        const projectedY = y + rotatedY + (rotatedY / height) * rotatedZ * 0.001 - rotatedZ * 0.3
-        return { x: projectedX, y: projectedY }
-      }
-      return { x: px, y: py }
-    }
-
-    // Outer sharp edge
-    this.ctx.save()
-    this.ctx.strokeStyle = `rgba(255, 140, 0, ${opacity})`
-    this.ctx.lineWidth = 2
-    this.ctx.shadowBlur = 0
-    this.ctx.shadowColor = 'rgba(255, 140, 0, 0.8)'
-
-    this.ctx.beginPath()
-    for (let i = 0; i <= sides; i++) {
-      const angle = i * angleStep
-      const px = x + size * Math.cos(angle)
-      const py = y + size * Math.sin(angle)
-      const pz = 0 // AT field is flat in XY plane
-      const projected = projectPoint(px, py, pz)
-      if (i === 0) {
-        this.ctx.moveTo(projected.x, projected.y)
-      } else {
-        this.ctx.lineTo(projected.x, projected.y)
-      }
-    }
-    this.ctx.stroke()
-
-    // Inner blurred glow
-    this.ctx.strokeStyle = `rgba(255, 200, 100, ${opacity * 0.6})`
-    this.ctx.lineWidth = 1
-    this.ctx.shadowBlur = 20
-    this.ctx.shadowColor = 'rgba(255, 140, 0, 0.6)'
-
-    const innerSize = size * 0.85
-    this.ctx.beginPath()
-    for (let i = 0; i <= sides; i++) {
-      const angle = i * angleStep
-      const px = x + innerSize * Math.cos(angle)
-      const py = y + innerSize * Math.sin(angle)
-      const pz = 0 // AT field is flat in XY plane
-      const projected = projectPoint(px, py, pz)
-      if (i === 0) {
-        this.ctx.moveTo(projected.x, projected.y)
-      } else {
-        this.ctx.lineTo(projected.x, projected.y)
-      }
-    }
-    this.ctx.stroke()
-
-    // Center glow (projected center)
-    const centerProj = projectPoint(x, y, 0)
-    const gradient = this.ctx.createRadialGradient(centerProj.x, centerProj.y, 0, centerProj.x, centerProj.y, size * 0.5)
-    gradient.addColorStop(0, `rgba(255, 200, 100, ${opacity * 0.4})`)
-    gradient.addColorStop(1, 'rgba(255, 140, 0, 0)')
-    this.ctx.fillStyle = gradient
-    this.ctx.fillRect(centerProj.x - size, centerProj.y - size, size * 2, size * 2)
-
-    this.ctx.restore()
-  }
 
   // Easing function for AT field fade
   easeInOutCubic (t) {
@@ -366,9 +287,6 @@ export class RamielLuminode {
     const shapeshiftingMode = SETTINGS.MODULES.RAMIEL.SHAPESHIFTING_MODE
     const shapeshiftingRate = SETTINGS.MODULES.RAMIEL.SHAPESHIFTING_RATE
     const shapeshiftingAmount = SETTINGS.MODULES.RAMIEL.SHAPESHIFTING_AMOUNT
-    const atFieldSize = SETTINGS.MODULES.RAMIEL.AT_FIELD_SIZE
-    const atFieldDuration = SETTINGS.MODULES.RAMIEL.AT_FIELD_DURATION
-    const atFieldFollowProjection = SETTINGS.MODULES.RAMIEL.AT_FIELD_FOLLOW_PROJECTION
     const enableRay = SETTINGS.MODULES.RAMIEL.ENABLE_RAY
     const rayLength = SETTINGS.MODULES.RAMIEL.RAY_LENGTH
     const rayPulseRate = SETTINGS.MODULES.RAMIEL.RAY_PULSE_RATE
@@ -408,86 +326,11 @@ export class RamielLuminode {
       this.currentBaseHue = Math.floor(Math.random() * 360)
     }
 
-    // Trigger AT field when 4+ note chord is first detected
-    if (isNew4PlusNote) {
-      const now = Date.now()
-      // Position AT field in front of diamond body at vertex edge
-      // Use base vertex 1 (s, 0, 0) as reference point
-      const s = (size * scale) / 2
-      // Position in front of the vertex, slightly offset forward (z direction)
-      const atFieldX = s * 1.2 // Slightly beyond the vertex
-      const atFieldY = 0
-      const atFieldZ = s * 0.3 // In front of the body
-      this.atFieldAnimations.push({
-        chordSig,
-        startTime: now,
-        x: atFieldX,
-        y: atFieldY,
-        z: atFieldZ
-      })
-    }
-
     this.lastNoteCount = noteCount
 
     // Calculate base scale for AT field (scales with diamond size, bigger than body)
     const baseScale = (size * scale) / 300 // Normalize to default size of 300
-    const scaledATFieldSize = (atFieldSize * baseScale) * 1.5 // Make AT field 1.5x bigger than diamond
 
-    // Update and draw AT fields (only for 4+ note chords, stop when chord changes)
-    this.atFieldAnimations = this.atFieldAnimations.filter(anim => {
-      // Stop if chord changed or not 4+ notes
-      if (anim.chordSig !== chordSig || noteCount < 4) {
-        return false
-      }
-
-      // Calculate elapsed time and loop it
-      const elapsed = (Date.now() - anim.startTime) % atFieldDuration
-      const progress = elapsed / atFieldDuration
-
-      // Continuous loop: fade in and out
-      let opacity
-      if (progress < 0.5) {
-        // Fade in
-        opacity = this.easeInOutCubic(progress * 2)
-      } else {
-        // Fade out
-        opacity = this.easeInOutCubic(1 - (progress - 0.5) * 2)
-      }
-
-      // Project AT field position if using 3D
-      let atFieldX = anim.x
-      let atFieldY = anim.y
-      if (enableProjection && anim.z !== undefined) {
-        const [rotatedX, rotatedY, rotatedZ] = UTILS.rotate3D(
-          anim.x,
-          anim.y,
-          anim.z || 0,
-          angleX,
-          angleY,
-          angleZ
-        )
-        // Apply perspective projection
-        atFieldX = rotatedX + (rotatedX / width) * rotatedZ * 0.001
-        atFieldY = rotatedY + (rotatedY / height) * rotatedZ * 0.001 - rotatedZ * 0.3
-      }
-
-      // Scale AT field with diamond size
-      this.drawATField(
-        atFieldX,
-        atFieldY,
-        scaledATFieldSize,
-        opacity,
-        t,
-        atFieldFollowProjection,
-        enableProjection,
-        angleX,
-        angleY,
-        angleZ,
-        width,
-        height
-      )
-      return true
-    })
 
     // Determine number of instances
     const numInstances = instancePerNote ? notes.length : instances

@@ -726,7 +726,7 @@ export const LUMINODE_CONFIGS = {
         label: 'Radial Spacing',
         type: 'slider',
         min: 40,
-        max: 300,
+        max: 1000,
         step: 10,
         default: 140
       },
@@ -1587,7 +1587,7 @@ export const LUMINODE_CONFIGS = {
         label: 'Instance Spacing',
         type: 'slider',
         min: 100,
-        max: 400,
+        max: 1000,
         step: 20,
         default: 200
       },
@@ -1642,54 +1642,54 @@ export const LUMINODE_CONFIGS = {
         type: 'checkbox',
         default: false
       },
-      {
-        key: 'SHAPESHIFTING_MODE',
-        label: 'Shapeshifting Mode',
-        type: 'checkbox',
-        default: false
-      },
-      {
-        key: 'SHAPESHIFTING_RATE',
-        label: 'Shapeshifting Rate',
-        type: 'slider',
-        min: 0.1,
-        max: 2,
-        step: 0.1,
-        default: 0.5
-      },
-      {
-        key: 'SHAPESHIFTING_AMOUNT',
-        label: 'Shapeshifting Amount',
-        type: 'slider',
-        min: 0,
-        max: 100,
-        step: 5,
-        default: 30
-      },
-      {
-        key: 'AT_FIELD_SIZE',
-        label: 'AT Field Size',
-        type: 'slider',
-        min: 50,
-        max: 300,
-        step: 10,
-        default: 120
-      },
-      {
-        key: 'AT_FIELD_DURATION',
-        label: 'AT Field Duration (ms)',
-        type: 'slider',
-        min: 500,
-        max: 5000,
-        step: 100,
-        default: 2000
-      },
-      {
-        key: 'AT_FIELD_FOLLOW_PROJECTION',
-        label: 'AT Field Follow Projection',
-        type: 'checkbox',
-        default: false
-      },
+      // {
+      //   key: 'SHAPESHIFTING_MODE',
+      //   label: 'Shapeshifting Mode',
+      //   type: 'checkbox',
+      //   default: false
+      // },
+      // {
+      //   key: 'SHAPESHIFTING_RATE',
+      //   label: 'Shapeshifting Rate',
+      //   type: 'slider',
+      //   min: 0.1,
+      //   max: 2,
+      //   step: 0.1,
+      //   default: 0.5
+      // },
+      // {
+      //   key: 'SHAPESHIFTING_AMOUNT',
+      //   label: 'Shapeshifting Amount',
+      //   type: 'slider',
+      //   min: 0,
+      //   max: 100,
+      //   step: 5,
+      //   default: 30
+      // },
+      // {
+      //   key: 'AT_FIELD_SIZE',
+      //   label: 'AT Field Size',
+      //   type: 'slider',
+      //   min: 50,
+      //   max: 300,
+      //   step: 10,
+      //   default: 120
+      // },
+      // {
+      //   key: 'AT_FIELD_DURATION',
+      //   label: 'AT Field Duration (ms)',
+      //   type: 'slider',
+      //   min: 500,
+      //   max: 5000,
+      //   step: 100,
+      //   default: 2000
+      // },
+      // {
+      //   key: 'AT_FIELD_FOLLOW_PROJECTION',
+      //   label: 'AT Field Follow Projection',
+      //   type: 'checkbox',
+      //   default: false
+      // },
       {
         key: 'ENABLE_RAY',
         label: 'Enable Ray',
