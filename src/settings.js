@@ -571,13 +571,15 @@ export const UTILS = {
   },
 
   pitchToColor: (midi) => {
+    const pitch = typeof midi === 'number' ? midi : (midi?.midi ?? 60)
     const palette = SETTINGS.COLORS?.PITCH_PALETTE
     if (palette && palette.length > 0) {
-      const hex = palette[((midi % palette.length) + palette.length) % palette.length]
-      return UTILS.hexToHsla(hex, 0.6)
+      const idx = ((pitch % palette.length) + palette.length) % palette.length
+      const hex = palette[idx]
+      if (typeof hex === 'string') return UTILS.hexToHsla(hex, 0.6)
     }
     const factor = UTILS.pitchColorFactor || 30
-    const hue = (midi % 14) * factor
+    const hue = (pitch % 14) * factor
     return `hsla(${hue}, 100%, 70%, 0.6)`
   },
 

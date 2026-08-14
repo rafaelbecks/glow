@@ -8,15 +8,21 @@ export class LissajousLuminode {
     this.dimensions = canvasDrawer.getDimensions()
   }
 
+  noteMidi (note, fallback = 60) {
+    if (typeof note === 'number') return note
+    return note?.midi ?? fallback
+  }
+
   draw (t, notes, layout = { x: 0, y: 0, rotation: 0 }) {
     if (notes.length === 0) return
 
     // Update dimensions in case canvas was resized
     this.dimensions = this.canvasDrawer.getDimensions()
 
-    const a = notes[0] % 7 + 1
-    const b = notes[1 % notes.length] % 7 + 1
-    const delta = (notes[2 % notes.length] || notes[0]) * 0.1
+    const midis = notes.map((n) => this.noteMidi(n))
+    const a = midis[0] % 7 + 1
+    const b = midis[1 % midis.length] % 7 + 1
+    const delta = (midis[2 % midis.length] || midis[0]) * 0.1
 
     this.canvasDrawer.applyLayoutTransform(layout)
     this.ctx.rotate(Math.sin(t * 0.1) * 0.3)
@@ -28,8 +34,7 @@ export class LissajousLuminode {
       this.ctx.lineTo(x, y)
     }
 
-    // Use the first note's MIDI value for color, or average if multiple notes
-    const midiValue = notes.length > 0 ? notes[0] : 60
+    const midiValue = midis[0]
     this.ctx.strokeStyle = UTILS.pitchToColor(midiValue)
     this.ctx.shadowColor = this.ctx.strokeStyle
     this.ctx.shadowBlur = SETTINGS.MODULES.LISSAJOUS.SHADOW_BLUR

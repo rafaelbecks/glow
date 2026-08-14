@@ -1763,13 +1763,6 @@ export class GLOWVisualizer {
       case 'sotoGridRotated':
         luminode.draw(t, notes, true, layout)
         break
-      case 'lissajous':
-        luminode.draw(
-          t,
-          notes.map((n) => n.midi),
-          layout
-        )
-        break
       case 'triangle':
         luminode.draw(t, notes, 'triangle', 1, 300, layout)
         break
