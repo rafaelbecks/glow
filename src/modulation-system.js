@@ -41,6 +41,7 @@ export class ModulationSystem {
       audioDeviceId: null,
       audioDeviceLabel: null,
       audioChannel: 0,
+      audioChannelMode: 'mono',
       audioFeature: 'rms',
       audioFreqMin: 20,
       audioFreqMax: 20000,
@@ -130,6 +131,7 @@ export class ModulationSystem {
         updates.enabled !== undefined ||
         updates.audioDeviceId !== undefined ||
         updates.audioChannel !== undefined ||
+        updates.audioChannelMode !== undefined ||
         updates.audioSourceType !== undefined ||
         updates.audioTrackId !== undefined
       ) {

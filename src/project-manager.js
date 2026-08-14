@@ -295,6 +295,7 @@ export class ProjectManager {
         audioDeviceId: modulator.audioDeviceId,
         audioDeviceLabel: modulator.audioDeviceLabel,
         audioChannel: modulator.audioChannel,
+        audioChannelMode: modulator.audioChannelMode || 'mono',
         audioFeature: modulator.audioFeature,
         audioFreqMin: modulator.audioFreqMin,
         audioFreqMax: modulator.audioFreqMax,
@@ -1529,6 +1530,8 @@ export class ProjectManager {
             modulatorData.audioChannel !== undefined
               ? modulatorData.audioChannel
               : 0;
+          updates.audioChannelMode =
+            modulatorData.audioChannelMode === "stereo" ? "stereo" : "mono";
           updates.audioFeature = modulatorData.audioFeature || "rms";
           updates.audioFreqMin =
             modulatorData.audioFreqMin !== undefined

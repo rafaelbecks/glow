@@ -9,6 +9,12 @@ import {
   getShaderOverlayIds
 } from '../shader-overlay-configs.js'
 import { createAudioPlayerControl } from './audio-player-control.js'
+import {
+  clampAudioChannelSelection,
+  encodeAudioChannelSelect,
+  getAudioChannelSelectOptions,
+  parseAudioChannelSelect
+} from '../audio-modulation-engine.js'
 
 const CANVAS_FILTER_LABELS = {
   clearAlpha: 'Clear Alpha',
@@ -179,6 +185,11 @@ export class ModulationUIManager {
         threshold: modulator.threshold !== undefined ? modulator.threshold : 0.5,
         audioDeviceId: modulator.audioDeviceId || '',
         audioChannel: modulator.audioChannel !== undefined ? modulator.audioChannel : 0,
+        audioChannelMode: modulator.audioChannelMode === 'stereo' ? 'stereo' : 'mono',
+        audioChannelSelect: encodeAudioChannelSelect(
+          modulator.audioChannel !== undefined ? modulator.audioChannel : 0,
+          modulator.audioChannelMode === 'stereo' ? 'stereo' : 'mono'
+        ),
         audioFeature: modulator.audioFeature || 'rms',
         audioFreqMin: modulator.audioFreqMin !== undefined ? modulator.audioFreqMin : 20,
         audioFreqMax: modulator.audioFreqMax !== undefined ? modulator.audioFreqMax : 20000,
@@ -684,19 +695,43 @@ export class ModulationUIManager {
           ? audioEngine.getChannelCount(modulator.audioDeviceId)
           : 1
     if (channelCount > 1) {
-      const channelOptions = {}
-      for (let i = 0; i < channelCount; i++) {
-        channelOptions[`Channel ${i + 1}`] = i
+      const clamped = clampAudioChannelSelection(
+        modulatorData.audioChannel,
+        modulatorData.audioChannelMode,
+        channelCount
+      )
+      if (
+        clamped.channel !== modulatorData.audioChannel ||
+        clamped.mode !== modulatorData.audioChannelMode
+      ) {
+        modulatorData.audioChannel = clamped.channel
+        modulatorData.audioChannelMode = clamped.mode
+        this.trackManager.updateModulator(modulator.id, {
+          audioChannel: clamped.channel,
+          audioChannelMode: clamped.mode
+        })
       }
+      modulatorData.audioChannelSelect = encodeAudioChannelSelect(
+        clamped.channel,
+        clamped.mode
+      )
+
       modulatorFolder
-        .addBinding(modulatorData, 'audioChannel', {
-          options: channelOptions,
+        .addBinding(modulatorData, 'audioChannelSelect', {
+          options: getAudioChannelSelectOptions(channelCount),
           label: 'Channel'
         })
         .on('change', (ev) => {
-          modulatorData.audioChannel = ev.value
+          const parsed = parseAudioChannelSelect(ev.value, channelCount)
+          modulatorData.audioChannel = parsed.channel
+          modulatorData.audioChannelMode = parsed.mode
+          modulatorData.audioChannelSelect = encodeAudioChannelSelect(
+            parsed.channel,
+            parsed.mode
+          )
           this.trackManager.updateModulator(modulator.id, {
-            audioChannel: ev.value
+            audioChannel: parsed.channel,
+            audioChannelMode: parsed.mode
           })
         })
     }
@@ -814,7 +849,8 @@ export class ModulationUIManager {
         modulatorData.audioTrackId = trackId || ''
         this.trackManager.updateModulator(modulator.id, {
           audioTrackId: trackId,
-          audioChannel: 0
+          audioChannel: 0,
+          audioChannelMode: 'mono'
         })
         this.renderModulationControls()
       })
@@ -862,9 +898,19 @@ export class ModulationUIManager {
           try {
             const input = await audioEngine.ensureInput(deviceId)
             const channelCount = input?.channelCount || 1
-            if ((modulator.audioChannel || 0) >= channelCount) {
+            const clamped = clampAudioChannelSelection(
+              modulator.audioChannel || 0,
+              modulator.audioChannelMode === 'stereo' ? 'stereo' : 'mono',
+              channelCount
+            )
+            if (
+              clamped.channel !== (modulator.audioChannel || 0) ||
+              clamped.mode !==
+                (modulator.audioChannelMode === 'stereo' ? 'stereo' : 'mono')
+            ) {
               this.trackManager.updateModulator(modulator.id, {
-                audioChannel: 0
+                audioChannel: clamped.channel,
+                audioChannelMode: clamped.mode
               })
             }
             this.renderModulationControls()

@@ -17,8 +17,8 @@ const FEATURE_BANDS = {
   presence: [8000, 16000]
 }
 
-function historyKey (sourceKey, channel, feature, freqMin, freqMax) {
-  return `${sourceKey || 'none'}|${channel}|${feature}|${freqMin}|${freqMax}`
+function historyKey (sourceKey, channel, feature, freqMin, freqMax, channelMode = 'mono') {
+  return `${sourceKey || 'none'}|${channel}|${channelMode}|${feature}|${freqMin}|${freqMax}`
 }
 
 function trackSourceKey (trackId) {
@@ -27,6 +27,65 @@ function trackSourceKey (trackId) {
 
 function createTrackId () {
   return `audio-track-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+}
+
+/** Encode channel selection for UI: mono:0, stereo:1, … */
+export function encodeAudioChannelSelect (channel = 0, mode = 'mono') {
+  const ch = Math.max(0, channel | 0)
+  return mode === 'stereo' ? `stereo:${ch}` : `mono:${ch}`
+}
+
+/** Parse UI channel selection back into { channel, mode }. */
+export function parseAudioChannelSelect (value, channelCount = 1) {
+  const maxIndex = Math.max(0, (channelCount | 0) - 1)
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return {
+      channel: Math.max(0, Math.min(maxIndex, value | 0)),
+      mode: 'mono'
+    }
+  }
+
+  const raw = String(value ?? 'mono:0')
+  const match = raw.match(/^(mono|stereo):(\d+)$/)
+  if (match) {
+    let channel = parseInt(match[2], 10) || 0
+    let mode = match[1]
+    if (mode === 'stereo') {
+      if (channelCount < 2) {
+        mode = 'mono'
+        channel = Math.min(channel, maxIndex)
+      } else if (channel >= channelCount - 1) {
+        channel = Math.max(0, channelCount - 2)
+      }
+    } else {
+      channel = Math.max(0, Math.min(maxIndex, channel))
+    }
+    return { channel, mode }
+  }
+
+  return { channel: 0, mode: 'mono' }
+}
+
+/** Ableton-style options: 1, 2, 3, 4, then 1/2, 2/3, 3/4, … */
+export function getAudioChannelSelectOptions (channelCount = 1) {
+  const count = Math.max(1, channelCount | 0)
+  const options = {}
+  for (let i = 0; i < count; i++) {
+    options[`${i + 1}`] = encodeAudioChannelSelect(i, 'mono')
+  }
+  for (let i = 0; i < count - 1; i++) {
+    options[`${i + 1}/${i + 2}`] = encodeAudioChannelSelect(i, 'stereo')
+  }
+  return options
+}
+
+/** Clamp stored channel/mode to a device's available channels. */
+export function clampAudioChannelSelection (channel = 0, mode = 'mono', channelCount = 1) {
+  return parseAudioChannelSelect(
+    encodeAudioChannelSelect(channel, mode === 'stereo' ? 'stereo' : 'mono'),
+    channelCount
+  )
 }
 
 export class AudioModulationEngine {
@@ -625,17 +684,37 @@ export class AudioModulationEngine {
     return sourceEntry.channels[index]
   }
 
-  _getAnalysisChannel (modulator) {
+  _getSourceEntry (modulator) {
     const sourceType = modulator.audioSourceType || 'input'
     if (sourceType === 'file') {
       const track = this.tracks.get(modulator.audioTrackId)
       if (!track || track.enabled === false) return null
-      return this._getChannelFromSource(track, modulator.audioChannel || 0)
+      return track
     }
-    return this._getChannelFromSource(
-      this.inputs.get(modulator.audioDeviceId),
-      modulator.audioChannel || 0
-    )
+    return this.inputs.get(modulator.audioDeviceId) || null
+  }
+
+  _getAnalysisChannels (modulator) {
+    const sourceEntry = this._getSourceEntry(modulator)
+    if (!sourceEntry) return []
+
+    const mode = modulator.audioChannelMode === 'stereo' ? 'stereo' : 'mono'
+    const start = Math.max(0, modulator.audioChannel | 0)
+    const left = this._getChannelFromSource(sourceEntry, start)
+    if (!left) return []
+
+    if (mode !== 'stereo' || sourceEntry.channels.length < 2) {
+      return [left]
+    }
+
+    const rightIndex = Math.min(start + 1, sourceEntry.channels.length - 1)
+    if (rightIndex === start) return [left]
+    const right = this._getChannelFromSource(sourceEntry, rightIndex)
+    return right ? [left, right] : [left]
+  }
+
+  _getAnalysisChannel (modulator) {
+    return this._getAnalysisChannels(modulator)[0] || null
   }
 
   _getSourceKey (modulator) {
@@ -721,11 +800,13 @@ export class AudioModulationEngine {
       if (!track || track.enabled === false || !track.source) return 0
     }
 
-    const ch = this._getAnalysisChannel(modulator)
-    if (!ch) return 0
+    const channels = this._getAnalysisChannels(modulator)
+    if (channels.length === 0) return 0
 
     const feature = modulator.audioFeature || 'rms'
     const channel = modulator.audioChannel || 0
+    const channelMode =
+      modulator.audioChannelMode === 'stereo' ? 'stereo' : 'mono'
     const freqMin =
       modulator.audioFreqMin !== undefined ? modulator.audioFreqMin : 20
     const freqMax =
@@ -735,7 +816,11 @@ export class AudioModulationEngine {
     const smoothing =
       modulator.audioSmoothing !== undefined ? modulator.audioSmoothing : 0.7
 
-    let level = this.computeRawLevel(ch, feature, freqMin, freqMax)
+    let level = 0
+    for (const ch of channels) {
+      level += this.computeRawLevel(ch, feature, freqMin, freqMax)
+    }
+    level /= channels.length
     level = Math.max(0, Math.min(1, level * multiplier))
 
     const key = historyKey(
@@ -743,7 +828,8 @@ export class AudioModulationEngine {
       channel,
       feature,
       freqMin,
-      freqMax
+      freqMax,
+      channelMode
     )
     const prev = this.smoothedLevels.has(key)
       ? this.smoothedLevels.get(key)
@@ -780,6 +866,8 @@ export class AudioModulationEngine {
 
     const feature = modulator.audioFeature || 'rms'
     const channel = modulator.audioChannel || 0
+    const channelMode =
+      modulator.audioChannelMode === 'stereo' ? 'stereo' : 'mono'
     const freqMin =
       modulator.audioFreqMin !== undefined ? modulator.audioFreqMin : 20
     const freqMax =
@@ -789,7 +877,8 @@ export class AudioModulationEngine {
       channel,
       feature,
       freqMin,
-      freqMax
+      freqMax,
+      channelMode
     )
     const history = this.monitorHistories.get(key)
     if (!history || history.length === 0) return values
