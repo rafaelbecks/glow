@@ -9,6 +9,7 @@ import { SinewaveLuminode } from './sinewave.js'
 import { TriangleLuminode } from './triangle.js'
 import { NoiseValleyLuminode } from './noise-valley.js'
 import { CatenoidLuminode } from './catenoid.js'
+import { TorusLuminode } from './torus.js'
 import { LineCylinderLuminode } from './cylinder.js'
 import { ClaviluxLuminode } from './clavilux.js'
 import { DiamondLuminode } from './diamond.js'
@@ -37,6 +38,7 @@ export {
   TriangleLuminode,
   NoiseValleyLuminode,
   CatenoidLuminode,
+  TorusLuminode,
   LineCylinderLuminode,
   ClaviluxLuminode,
   DiamondLuminode,
@@ -114,6 +116,11 @@ export const LUMINODE_REGISTRY = {
     class: CatenoidLuminode,
     displayName: 'Catenoid',
     settingsKey: 'CATENOID'
+  },
+  torus: {
+    class: TorusLuminode,
+    displayName: 'Torus',
+    settingsKey: 'TORUS'
   },
   lineCylinder: {
     class: LineCylinderLuminode,

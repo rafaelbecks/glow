@@ -217,6 +217,20 @@ export const SETTINGS = {
       ROTATION: { x: 0, y: 0, z: 0 },
       ROTATION_ENABLED: true
     },
+    TORUS: {
+      MAJOR_RADIUS: 120,
+      MINOR_RADIUS: 50,
+      RINGS: 16,
+      SEGMENTS: 24,
+      SCALE: 1.0,
+      ROTATION_SPEED: 0.3,
+      DEFORM_STRENGTH: 0.5,
+      LINE_WIDTH: 0.8,
+      BASE_HUE: 0,
+      USE_COLOR: false,
+      ROTATION: { x: 0, y: 0, z: 0 },
+      ROTATION_ENABLED: true
+    },
     LINE_CYLINDER: {
       RADIUS: 100,
       HEIGHT: 300,
@@ -511,6 +525,7 @@ export const MIDI_CHANNELS = {
   'bus 15': 'whitneyLines',
   'bus 16': 'noiseValley',
   'bus 17': 'catenoid',
+  'bus 32': 'torus',
   'bus 18': 'lineCylinder',
   'bus 19': 'clavilux',
   'bus 20': 'diamond',

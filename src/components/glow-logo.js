@@ -9,13 +9,16 @@ export class GlowLogo extends HTMLElement {
     this.svgPaths = []
     this.letterColors = ['white', 'white', 'white', 'white'] // G, L, O, W
     this.baseHues = [0, 0, 0, 0] // Base hues for each letter
+    this._onKeyDown = this.handleKeyDown.bind(this)
+    this._onResize = this.resize.bind(this)
   }
 
   async connectedCallback () {
     this.canvas = document.createElement('canvas')
     this.appendChild(this.canvas)
     this.ctx = this.canvas.getContext('2d')
-    window.addEventListener('resize', this.resize.bind(this))
+    window.addEventListener('resize', this._onResize)
+    window.addEventListener('keydown', this._onKeyDown)
 
     // Reshuffle hues on hover; color effect stays on otherwise
     this.canvas.addEventListener('mouseenter', this.handleMouseEnter.bind(this))
@@ -26,13 +29,59 @@ export class GlowLogo extends HTMLElement {
     await this.loadSVG()
     this.resize()
     this.render()
+
+    window.downloadLogoSvg = () => this.downloadLogoSvg()
   }
 
   disconnectedCallback () {
     if (this.animationId) {
       cancelAnimationFrame(this.animationId)
     }
-    window.removeEventListener('resize', this.resize.bind(this))
+    window.removeEventListener('resize', this._onResize)
+    window.removeEventListener('keydown', this._onKeyDown)
+    if (window.downloadLogoSvg) delete window.downloadLogoSvg
+  }
+
+  handleKeyDown (e) {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault()
+      this.downloadLogoSvg()
+    }
+  }
+
+  // TEMP: Cmd/Ctrl+G exports the wordmark SVG with the current letter colours
+  async downloadLogoSvg () {
+    const [gColor, lColor, oColor, wColor] = this.letterColors
+    try {
+      const response = await fetch('assets/glow-logo-with-o.svg')
+      const svgText = await response.text()
+      const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml')
+      const svg = doc.querySelector('svg')
+      if (!svg) return
+
+      svg.querySelectorAll('g path').forEach((path) => {
+        path.setAttribute('stroke', oColor)
+      })
+
+      const letterPaths = Array.from(svg.children).filter(
+        (el) => el.tagName.toLowerCase() === 'path'
+      )
+      letterPaths[0]?.setAttribute('fill', gColor)
+      letterPaths[1]?.setAttribute('fill', lColor)
+      letterPaths[2]?.setAttribute('fill', wColor)
+
+      const serialized = new XMLSerializer().serializeToString(svg)
+      const blob = new Blob([serialized], { type: 'image/svg+xml;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `glow-logo-${Date.now()}.svg`
+      a.rel = 'noopener'
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Failed to export logo SVG:', error)
+    }
   }
 
   handleMouseEnter () {

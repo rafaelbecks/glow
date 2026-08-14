@@ -68,6 +68,7 @@ export const BUILTIN_SOURCE_FILES = {
   triangle: 'triangle.js',
   noiseValley: 'noise-valley.js',
   catenoid: 'catenoid.js',
+  torus: 'torus.js',
   lineCylinder: 'cylinder.js',
   clavilux: 'clavilux.js',
   diamond: 'diamond.js',
