@@ -113,7 +113,14 @@ exec "$CHROME_BIN" \
   --check-for-update-interval=31536000 \
   --disable-features=TranslateUI \
   --autoplay-policy=no-user-gesture-required \
-  --enable-features=WebMIDI,WebHID,WebUSB \
+  --enable-features=WebMIDI,WebHID,WebUSB,CanvasOopRasterization \
+  --ignore-gpu-blocklist \
+  --enable-gpu-rasterization \
+  --enable-zero-copy \
+  --enable-accelerated-2d-canvas \
+  --use-gl=egl \
+  --disable-gpu-driver-bug-workarounds \
+  --canvas-msaa-sample-count=0 \
   --unsafely-treat-insecure-origin-as-secure="$GLOW_ORIGIN" \
   --allow-running-insecure-content \
   --use-fake-ui-for-media-stream \
