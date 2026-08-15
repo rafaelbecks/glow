@@ -1,6 +1,58 @@
 // MIDI CC (Control Change) mapping system for hardware control
 // Provides declarative mapping of MIDI CC messages to GLOW parameters
 import { getLuminodeConfig } from './luminode-configs.js'
+import {
+  getCanvasFilterParamByKey,
+  valueToTableValues
+} from './canvas-filter-configs.js'
+
+/** Ranges / types for SETTINGS.CANVAS keys controllable via MIDI CC */
+const CANVAS_CC_META = {
+  CLEAR_ALPHA: { min: 0, max: 1, type: 'number' },
+  LUMIA_EFFECT: { min: 0, max: 100, type: 'number' },
+  INVERT_FILTER: { min: 0, max: 100, type: 'number' },
+  GRAYSCALE_FILTER: { min: 0, max: 100, type: 'number' },
+  HUE_ROTATE_FILTER: { min: 0, max: 360, type: 'number' },
+  BRIGHTNESS_FILTER: { min: 0, max: 200, type: 'number' },
+  CONTRAST_FILTER: { min: 0, max: 200, type: 'number' },
+  SATURATION_FILTER: { min: 0, max: 200, type: 'number' },
+  CRT_MODE: { type: 'boolean' },
+  CRT_INTENSITY: { min: 0, max: 100, type: 'number' },
+  GRID_ENABLED: { type: 'boolean' },
+  GRID_X_LINES: { min: 1, max: 50, type: 'number' },
+  GRID_Y_LINES: { min: 1, max: 50, type: 'number' },
+  NOISE_OVERLAY: { type: 'boolean' },
+  NOISE_ANIMATE: { type: 'boolean' },
+  NOISE_OPACITY: { min: 0, max: 1, type: 'number' },
+  NOISE_DENSITY: { min: 0, max: 1, type: 'number' },
+  NOISE_PATTERN_WIDTH: { min: 1, max: 500, type: 'number' },
+  NOISE_PATTERN_HEIGHT: { min: 1, max: 500, type: 'number' },
+  NOISE_WIDTH: { min: 1, max: 20, type: 'number' },
+  NOISE_HEIGHT: { min: 1, max: 20, type: 'number' },
+  DITHER_OVERLAY: { type: 'boolean' },
+  DITHER_SATURATE: { min: 0, max: 1, type: 'number' },
+  DITHER_TABLE_VALUES_R: { min: 0, max: 1, type: 'tableValues' },
+  DITHER_TABLE_VALUES_G: { min: 0, max: 1, type: 'tableValues' },
+  DITHER_TABLE_VALUES_B: { min: 0, max: 1, type: 'tableValues' },
+  CHROMATIC_ABERRATION_ENABLED: { type: 'boolean' },
+  CHROMATIC_ABERRATION_CONTRAST: { min: 0, max: 5, type: 'number' },
+  SHADER_BACKGROUND_ENABLED: { type: 'boolean' },
+  SHADER_BACKGROUND_TRAIL_LENGTH: { min: 1, max: 60, type: 'number' },
+  SHADER_BACKGROUND_CURSOR_MODE: { type: 'boolean' }
+}
+
+function resolveCanvasMeta (setting) {
+  if (CANVAS_CC_META[setting]) return CANVAS_CC_META[setting]
+  const filterParam = getCanvasFilterParamByKey(setting)
+  if (filterParam) {
+    return {
+      min: filterParam.min,
+      max: filterParam.max,
+      type: filterParam.tableValues ? 'tableValues' : 'number'
+    }
+  }
+  return null
+}
 
 export class MIDICCMapper {
   constructor (trackManager, mainApp) {
@@ -80,6 +132,14 @@ export class MIDICCMapper {
     if (this.currentTrackId && this.mapping.motion) {
       this.handleMotion(cc, normalizedValue)
     }
+
+    if (this.mapping.mixer) {
+      this.handleMixer(cc, value, normalizedValue)
+    }
+
+    if (this.mapping.canvas) {
+      this.handleCanvas(cc, normalizedValue)
+    }
   }
 
   handleTrackSelection (cc, value) {
@@ -90,7 +150,7 @@ export class MIDICCMapper {
     for (const [trackIdStr, trackCC] of Object.entries(trackMapping)) {
       const trackId = parseInt(trackIdStr)
       if (trackCC === cc) {
-        // Value > 64 activates the track (unmute), value <= 64 deactivates (mute)
+        // Value > 64 activates the track for parameter control
         const track = this.trackManager.getTrack(trackId)
         if (track) {
           if (value > 64) {
@@ -251,6 +311,101 @@ export class MIDICCMapper {
         if (Object.keys(updates).length > 0) {
           this.trackManager.updateTrajectoryConfig(this.currentTrackId, updates)
         }
+      }
+    }
+  }
+
+  /**
+   * Mixer strip controls — absolute mute/solo (CC > 64 = on) and opacity faders.
+   * Config shape:
+   *   "mixer": {
+   *     "opacity": { "1": 14, "2": 15 },
+   *     "mute":    { "1": 23, "2": 24 },
+   *     "solo":    { "1": 27, "2": 28 }
+   *   }
+   */
+  handleMixer (cc, value, normalizedValue) {
+    const mixer = this.mapping.mixer
+    if (!mixer) return
+
+    const matchTrack = (section) => {
+      if (!section) return null
+      for (const [trackIdStr, mappedCC] of Object.entries(section)) {
+        if (Number(mappedCC) === cc) return parseInt(trackIdStr, 10)
+      }
+      return null
+    }
+
+    const opacityTrack = matchTrack(mixer.opacity)
+    if (opacityTrack != null) {
+      this.trackManager.setTrackOpacity(opacityTrack, normalizedValue)
+      if (this.mainApp?.showDebugMessage) {
+        this.mainApp.showDebugMessage(
+          `mixer T${opacityTrack} opacity: ${normalizedValue.toFixed(2)}`
+        )
+      }
+      return
+    }
+
+    const muteTrack = matchTrack(mixer.mute)
+    if (muteTrack != null) {
+      const muted = value > 64
+      this.trackManager.setTrackMuted(muteTrack, muted)
+      if (this.mainApp?.showDebugMessage) {
+        this.mainApp.showDebugMessage(
+          `mixer T${muteTrack} ${muted ? 'mute' : 'unmute'}`
+        )
+      }
+      return
+    }
+
+    const soloTrack = matchTrack(mixer.solo)
+    if (soloTrack != null) {
+      const solo = value > 64
+      this.trackManager.setTrackSolo(soloTrack, solo)
+      if (this.mainApp?.showDebugMessage) {
+        this.mainApp.showDebugMessage(
+          `mixer T${soloTrack} solo ${solo ? 'on' : 'off'}`
+        )
+      }
+    }
+  }
+
+  /**
+   * Canvas / color-filter settings.
+   * Config shape: "canvas": { "60": "CLEAR_ALPHA", "62": "INVERT_FILTER", ... }
+   * Values are SETTINGS.CANVAS keys. Booleans use CC > 64; numbers map 0–127 → min–max.
+   */
+  handleCanvas (cc, normalizedValue) {
+    const canvasMapping = this.mapping.canvas
+    if (!canvasMapping) return
+
+    const setting = canvasMapping[String(cc)]
+    if (!setting) return
+
+    const meta = resolveCanvasMeta(setting)
+    if (!meta) {
+      console.warn(`[MIDI CC] Unknown canvas setting: ${setting}`)
+      return
+    }
+
+    let value
+    if (meta.type === 'boolean') {
+      value = normalizedValue > 0.5
+    } else if (meta.type === 'tableValues') {
+      value = valueToTableValues(normalizedValue)
+    } else {
+      const min = meta.min ?? 0
+      const max = meta.max ?? 1
+      value = min + normalizedValue * (max - min)
+    }
+
+    if (this.mainApp?.updateCanvasSetting) {
+      this.mainApp.updateCanvasSetting({ setting, value })
+      if (this.mainApp.showDebugMessage) {
+        const display =
+          typeof value === 'number' ? Number(value.toFixed(3)) : value
+        this.mainApp.showDebugMessage(`canvas ${setting}: ${display}`)
       }
     }
   }

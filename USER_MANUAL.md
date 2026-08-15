@@ -100,16 +100,18 @@ G.L.O.W. includes a modulation system that works like LFOs (Low-Frequency Oscill
 Audio modulator settings (source type, device label, file data, loop, channel, analysis mode, etc.) are saved in the project `.glow` file. On load, Glow reconnects matching live inputs and restores embedded audio files when available.
 ### MIDI Mappings
 
-G.L.O.W. supports custom MIDI CC mappings for hardware controllers. This allows you to control tracks, luminodes, layout, and motion parameters directly from your MIDI controller.
+G.L.O.W. supports custom MIDI CC mappings for hardware controllers. This allows you to control tracks, luminodes, layout, motion, **mixer strips**, and **canvas / color filters** from a MIDI controller.
 
 **How It Works:**
 - Mapping files are JSON configurations stored in the `midi-mappings/` directory
-- Map CC numbers to track selection, luminode selection, layout (X/Y/rotation), and motion parameters
+- Map CC numbers to track selection, luminode selection, layout (X/Y/rotation), motion, mixer (opacity / mute / solo), and canvas settings
 - Each mapping file can target a specific MIDI device
 - Luminode parameters can be mapped to CC ranges for hands-on control
+- Mute / solo and boolean canvas flags use **CC value > 64 = on**
+- Canvas entries use `SETTINGS.CANVAS` keys (e.g. `CLEAR_ALPHA`, `INVERT_FILTER`, `BRIGHTNESS_FILTER`)
 
 **Available Mappings:**
-- `example-mapping.json` — reference configuration showing all available mappings
+- `example-mapping.json` — reference configuration showing all available mapping sections (edit CC numbers to match your gear)
 - `arturia-keylab-essential-49-mk3.json` — preset for Arturia KeyLab Essential 49 mk3
 
 *Note: MIDI mapping system is a work in progress and subject to changes.*

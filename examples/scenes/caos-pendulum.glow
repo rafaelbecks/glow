@@ -1,0 +1,484 @@
+{
+  "version": "1.0.0",
+  "timestamp": "2026-06-02T20:19:12.455Z",
+  "canvas": {
+    "clearAlpha": 0.41000000000000003,
+    "backgroundColor": "#000",
+    "crtMode": false,
+    "crtIntensity": 175,
+    "lumiaEffect": 0,
+    "gridEnabled": false,
+    "gridXLines": 10,
+    "gridYLines": 10,
+    "gridColor": "#333333",
+    "noiseOverlay": false,
+    "noiseAnimate": true,
+    "noisePatternWidth": 100,
+    "noisePatternHeight": 100,
+    "noiseOpacity": 0.05,
+    "noiseDensity": 1,
+    "noiseWidth": 1,
+    "noiseHeight": 1,
+    "ditherOverlay": false,
+    "ditherSaturate": 1,
+    "ditherTableValuesR": "0 1",
+    "ditherTableValuesG": "0 1",
+    "ditherTableValuesB": "0 1",
+    "chromaticAberrationEnabled": false,
+    "chromaticAberrationContrast": 1,
+    "invertFilter": 0,
+    "shaderBackgroundEnabled": false,
+    "shaderBackgroundMode": "Portal",
+    "shaderBackgroundTrailLength": 15,
+    "shaderBackgroundColorFluidBackground": {
+      "r": 0.02,
+      "g": 0.078,
+      "b": 0.157
+    },
+    "shaderBackgroundColorFluidTrail": {
+      "r": 0.506,
+      "g": 0.506,
+      "b": 0.604
+    },
+    "shaderBackgroundColorPressure": {
+      "r": 0.02,
+      "g": 0.078,
+      "b": 0.157
+    },
+    "shaderBackgroundColorVelocity": {
+      "r": 0.506,
+      "g": 0.506,
+      "b": 0.604
+    },
+    "shaderBackgroundCursorMode": true,
+    "shaderBackgroundPortalTimeOffset": 4,
+    "shaderBackgroundPortalTimeDivisor": 15,
+    "shaderBackgroundPortalBrightness": 0.02,
+    "shaderBackgroundDiscoPaletteVariant": 0,
+    "shaderBackgroundDiscoPaletteBase": 6,
+    "shaderBackgroundDiscoPaletteWave": 50,
+    "shaderBackgroundDiscoShimmer": 20,
+    "shaderBackgroundBalatroSpinRotation": -2,
+    "shaderBackgroundBalatroSpinSpeed": 7,
+    "shaderBackgroundBalatroOffsetX": 0,
+    "shaderBackgroundBalatroOffsetY": 0,
+    "shaderBackgroundBalatroColor1": {
+      "r": 0.871,
+      "g": 0.267,
+      "b": 0.231
+    },
+    "shaderBackgroundBalatroColor2": {
+      "r": 0,
+      "g": 0.42,
+      "b": 0.706
+    },
+    "shaderBackgroundBalatroColor3": {
+      "r": 0.086,
+      "g": 0.137,
+      "b": 0.145
+    },
+    "shaderBackgroundBalatroContrast": 3.5,
+    "shaderBackgroundBalatroLighting": 0.4,
+    "shaderBackgroundBalatroSpinAmount": 0.25,
+    "shaderBackgroundBalatroPixelFilter": 745,
+    "shaderBackgroundBalatroSpinEase": 1,
+    "shaderBackgroundBalatroIsRotate": false,
+    "shaderBackgroundChromaNoiseTimeScale": 0.2,
+    "shaderBackgroundChromaNoiseUvScale": 0.9,
+    "shaderBackgroundChromaFineNoiseScale": 300,
+    "shaderBackgroundChromaGrainMix": 0.08,
+    "shaderBackgroundChromaColorA": {
+      "r": 1,
+      "g": 0.5,
+      "b": 0
+    },
+    "shaderBackgroundChromaColorB": {
+      "r": 0.75,
+      "g": 0.3,
+      "b": 1
+    },
+    "shaderBackgroundChromaColorAMul": 1.3,
+    "shaderBackgroundChromaColorBMul": 0.9,
+    "shaderBackgroundChromaMixClampMin": -0.14,
+    "shaderBackgroundChromaMixClampMax": 0.9,
+    "shaderBackgroundChromaLayer1S": 1.2,
+    "shaderBackgroundChromaLayer2S": 1.5,
+    "shaderBackgroundChromaLayer1Z": 1.1,
+    "shaderBackgroundChromaLayer2Z": 1.4,
+    "glassOverlayEnabled": false,
+    "glassOverlayMode": "rain",
+    "glassOverlayWidth": 200,
+    "glassOverlayHeight": 200,
+    "glassOverlayRadius": 27,
+    "glassOverlayThickness": 200,
+    "glassOverlayBezel": 60,
+    "glassOverlayIOR": 3,
+    "glassOverlayBlur": 0,
+    "glassOverlaySpecular": 0.35,
+    "glassOverlayTint": 0,
+    "glassOverlayShadow": 0,
+    "glassOverlayBrickSize": 200,
+    "glassOverlayBrickOffsetX": 0,
+    "glassOverlayBrickOffsetY": 0,
+    "glassOverlayBrickGap": 8,
+    "shaderOverlayRainDistortion": 0.007000000000000002,
+    "shaderOverlayRainScale": 24.5,
+    "shaderOverlayRainTimeScale": 1,
+    "shaderOverlayRainPatternDrift": 0.1,
+    "shaderOverlayRainSharpness": 1
+  },
+  "colors": {
+    "sotoPalette": [
+      "#EF4136",
+      "#005BBB",
+      "#FCEE09",
+      "#2E7D32",
+      "#FFFFFF",
+      "#4A148C",
+      "#8B0000"
+    ],
+    "polygonColors": [
+      "#f93822",
+      "#fcdc4d",
+      "#00a6a6",
+      "#90be6d",
+      "#f94144",
+      "#ff006e",
+      "#8338ec"
+    ],
+    "pitchColorFactor": 30
+  },
+  "modules": {
+    "DOUBLE_PENDULUM": {
+      "USE_COLOR": true,
+      "COLOR_BLEND": true,
+      "PENDULUM_COUNT": 1,
+      "MAX_PENDULUM_COUNT": 5,
+      "RELEASE_FROM_REST": true,
+      "LAUNCH_STRENGTH_MAX": 1000,
+      "START_DIRECTION": "alternate",
+      "LAUNCH_STRENGTH": 1000,
+      "REST_TWIST": 0.1,
+      "PENDULUM_PHASE_GAP": 0.08,
+      "ARM_LENGTH": 150,
+      "ARM_RATIO": 0.68,
+      "M1": 1,
+      "M2": 1,
+      "G": 14,
+      "DAMPING": 0.012,
+      "MOTION_SPEED": 10,
+      "MOTION_SPEED_HANG": 10,
+      "SIM_SPEED": 1,
+      "MAX_STEP_DT": 0.012,
+      "SCALE": 0.9,
+      "HORIZONTAL_SPACING": 210,
+      "SHOW_TRACE": true,
+      "TRACE_MAX_POINTS": 4200,
+      "TRACE_LINE_WIDTH": 1.1,
+      "TRACE_OPACITY_BW": 0.42,
+      "SHOW_ARMS": true,
+      "SHOW_JOINTS": true,
+      "JOINT_RADIUS": 5,
+      "ARM_LINE_WIDTH": 2.2,
+      "SHADOW_BLUR": 12,
+      "MIDI_VELOCITY_MIX": 0.6000000000000001
+    },
+    "CUBE": {
+      "SIZE": 150,
+      "SEGMENTS": 5,
+      "SCALE": 1,
+      "ROTATION_SPEED": 0.3,
+      "LINE_WIDTH": 0.8,
+      "BASE_HUE": 0,
+      "USE_COLOR": false,
+      "ROTATION": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "ROTATION_ENABLED": true
+    },
+    "SPHERE": {
+      "BASE_RADIUS": 160,
+      "LAT_LINES": 12,
+      "LON_LINES": 20,
+      "DEFORM_FACTOR": 1.2,
+      "LINE_WIDTH": 0.8,
+      "USE_COLOR": false,
+      "ROTATION": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "ROTATION_ENABLED": true
+    },
+    "GEGO_NET": {
+      "BASE_NODES": 5,
+      "NODES_PER_NOTE": 15,
+      "CONNECTION_DISTANCE": 0.7,
+      "MAX_CONNECTIONS": 5
+    }
+  },
+  "tracks": {
+    "tracks": [
+      {
+        "id": 1,
+        "name": "Track 1",
+        "muted": false,
+        "solo": false,
+        "midiDevice": "-1278884473",
+        "luminode": "doublePendulum",
+        "layout": {
+          "x": -190,
+          "y": 20,
+          "rotation": 180
+        },
+        "midiDeviceInfo": {
+          "id": "-1278884473",
+          "name": "IAC Driver Bus 1",
+          "manufacturer": "Apple Inc."
+        }
+      },
+      {
+        "id": 2,
+        "name": "Track 2",
+        "muted": false,
+        "solo": false,
+        "midiDevice": "-1278884473",
+        "luminode": "cube",
+        "layout": {
+          "x": 150,
+          "y": 0,
+          "rotation": 0
+        },
+        "midiDeviceInfo": {
+          "id": "-1278884473",
+          "name": "IAC Driver Bus 1",
+          "manufacturer": "Apple Inc."
+        }
+      },
+      {
+        "id": 3,
+        "name": "Track 3",
+        "muted": false,
+        "solo": false,
+        "midiDevice": null,
+        "luminode": "sphere",
+        "layout": {
+          "x": 0,
+          "y": 0,
+          "rotation": 0
+        }
+      },
+      {
+        "id": 4,
+        "name": "Track 4",
+        "muted": false,
+        "solo": false,
+        "midiDevice": null,
+        "luminode": "gegoNet",
+        "layout": {
+          "x": 0,
+          "y": 0,
+          "rotation": 0
+        }
+      }
+    ]
+  },
+  "trajectories": {
+    "1": {
+      "enabled": false,
+      "trajectoryType": "whitney",
+      "motionRate": 0.5,
+      "ratioA": 1,
+      "ratioB": 2,
+      "ratioC": 3,
+      "offset": [
+        0,
+        0,
+        0
+      ],
+      "phase": [
+        0,
+        1.5707963267948966,
+        0.7853981633974483
+      ],
+      "amplitude": 100,
+      "inversion": false
+    },
+    "2": {
+      "enabled": false,
+      "trajectoryType": "whitney",
+      "motionRate": 0.5,
+      "ratioA": 1,
+      "ratioB": 2,
+      "ratioC": 3,
+      "offset": [
+        0,
+        0,
+        0
+      ],
+      "phase": [
+        0,
+        1.5707963267948966,
+        0.7853981633974483
+      ],
+      "amplitude": 100,
+      "inversion": false
+    },
+    "3": {
+      "enabled": false,
+      "trajectoryType": "whitney",
+      "motionRate": 0.5,
+      "ratioA": 1,
+      "ratioB": 2,
+      "ratioC": 3,
+      "offset": [
+        0,
+        0,
+        0
+      ],
+      "phase": [
+        0,
+        1.5707963267948966,
+        0.7853981633974483
+      ],
+      "amplitude": 100,
+      "inversion": false
+    },
+    "4": {
+      "enabled": false,
+      "trajectoryType": "whitney",
+      "motionRate": 0.5,
+      "ratioA": 1,
+      "ratioB": 2,
+      "ratioC": 3,
+      "offset": [
+        0,
+        0,
+        0
+      ],
+      "phase": [
+        0,
+        1.5707963267948966,
+        0.7853981633974483
+      ],
+      "amplitude": 100,
+      "inversion": false
+    }
+  },
+  "modulation": {
+    "modulators": [
+      {
+        "id": "modulator-1778728122338-clgtfp7uj",
+        "type": "lfo",
+        "shape": "sine",
+        "rate": 0.837,
+        "depth": 0.89,
+        "offset": 0.11,
+        "cubicBezier": [
+          0.5,
+          0,
+          0.5,
+          1
+        ],
+        "multiplier": 1,
+        "easing": "linear",
+        "threshold": 0.5,
+        "enabled": true,
+        "targetDestination": "track",
+        "targetTrack": 1,
+        "targetConfigKey": "ARM_RATIO",
+        "targetLuminode": "doublePendulum",
+        "targetCanvasFilter": null
+      },
+      {
+        "id": "modulator-1778728131163-2hofds3ly",
+        "type": "lfo",
+        "shape": "sine",
+        "rate": 0.783,
+        "depth": 0.9000000000000001,
+        "offset": -0.43,
+        "cubicBezier": [
+          0.5,
+          0,
+          0.5,
+          1
+        ],
+        "multiplier": 1,
+        "easing": "linear",
+        "threshold": 0.5,
+        "enabled": true,
+        "targetDestination": "track",
+        "targetTrack": 1,
+        "targetConfigKey": "ARM_LENGTH",
+        "targetLuminode": "doublePendulum",
+        "targetCanvasFilter": null
+      },
+      {
+        "id": "modulator-1778728907055-0zbeeo0dp",
+        "type": "lfo",
+        "shape": "sine",
+        "rate": 0.718,
+        "depth": 0.8300000000000001,
+        "offset": 0,
+        "cubicBezier": [
+          0.5,
+          0,
+          0.5,
+          1
+        ],
+        "multiplier": 1,
+        "easing": "linear",
+        "threshold": 0.5,
+        "enabled": true,
+        "targetDestination": "track",
+        "targetTrack": 2,
+        "targetConfigKey": "ARM_LENGTH",
+        "targetLuminode": "doublePendulum",
+        "targetCanvasFilter": null
+      },
+      {
+        "id": "modulator-1778728924622-zc1ic1u4t",
+        "type": "lfo",
+        "shape": "sine",
+        "rate": 0.1,
+        "depth": 0.5,
+        "offset": 0,
+        "cubicBezier": [
+          0.5,
+          0,
+          0.5,
+          1
+        ],
+        "multiplier": 1,
+        "easing": "linear",
+        "threshold": 0.5,
+        "enabled": true,
+        "targetDestination": "track",
+        "targetTrack": 2,
+        "targetConfigKey": "ARM_RATIO",
+        "targetLuminode": "doublePendulum",
+        "targetCanvasFilter": null
+      }
+    ]
+  },
+  "tablet": {
+    "lineWidth": 4,
+    "geometricMode": false,
+    "shapeDetectionThreshold": 0.8,
+    "geometricPencilMode": false,
+    "polygonSides": 3,
+    "polygonSize": 50,
+    "fadeDuration": 3000,
+    "connectionMode": "webhid",
+    "websocketHost": "localhost",
+    "websocketPort": 5678
+  },
+  "midi": {
+    "outputEnabled": false,
+    "outputDevice": null,
+    "octaveRange": 3
+  },
+  "name": "caos-pendulum"
+}

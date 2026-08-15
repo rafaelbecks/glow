@@ -1,0 +1,384 @@
+{
+  "version": "1.0.0",
+  "timestamp": "2026-05-03T17:55:41.989Z",
+  "canvas": {
+    "clearAlpha": 1,
+    "backgroundColor": "#000",
+    "crtMode": false,
+    "crtIntensity": 105,
+    "lumiaEffect": 0,
+    "gridEnabled": false,
+    "gridXLines": 10,
+    "gridYLines": 10,
+    "gridColor": "#333333",
+    "noiseOverlay": false,
+    "noiseAnimate": true,
+    "noisePatternWidth": 100,
+    "noisePatternHeight": 100,
+    "noiseOpacity": 0.06,
+    "noiseDensity": 1,
+    "noiseWidth": 1,
+    "noiseHeight": 1,
+    "ditherOverlay": true,
+    "ditherSaturate": 1,
+    "ditherTableValuesR": "0 1",
+    "ditherTableValuesG": "0 1",
+    "ditherTableValuesB": "0.4 0.6",
+    "chromaticAberrationEnabled": false,
+    "chromaticAberrationContrast": 1,
+    "invertFilter": 0,
+    "shaderBackgroundEnabled": false,
+    "shaderBackgroundMode": "Fluid",
+    "shaderBackgroundTrailLength": 15,
+    "shaderBackgroundColorFluidBackground": {
+      "r": 0.02,
+      "g": 0.078,
+      "b": 0.157
+    },
+    "shaderBackgroundColorFluidTrail": {
+      "r": 0,
+      "g": 0,
+      "b": 0.2
+    },
+    "shaderBackgroundColorPressure": {
+      "r": 0.02,
+      "g": 0.078,
+      "b": 0.157
+    },
+    "shaderBackgroundColorVelocity": {
+      "r": 0.259,
+      "g": 0.227,
+      "b": 0.184
+    },
+    "shaderBackgroundCursorMode": true,
+    "shaderBackgroundPortalTimeOffset": 4,
+    "shaderBackgroundPortalTimeDivisor": 44,
+    "shaderBackgroundPortalBrightness": 0.09999999999999999,
+    "shaderBackgroundDiscoPaletteVariant": 0,
+    "shaderBackgroundDiscoPaletteBase": 10.700000000000001,
+    "shaderBackgroundDiscoPaletteWave": 17,
+    "shaderBackgroundDiscoShimmer": 43.5,
+    "shaderBackgroundBalatroSpinRotation": -2,
+    "shaderBackgroundBalatroSpinSpeed": 7,
+    "shaderBackgroundBalatroOffsetX": 0,
+    "shaderBackgroundBalatroOffsetY": 0,
+    "shaderBackgroundBalatroColor1": {
+      "r": 0.16862745098039217,
+      "g": 0.1411764705882353,
+      "b": 0.1411764705882353
+    },
+    "shaderBackgroundBalatroColor2": {
+      "r": 0,
+      "g": 0,
+      "b": 0
+    },
+    "shaderBackgroundBalatroColor3": {
+      "r": 0.18823529411764706,
+      "g": 0.5058823529411764,
+      "b": 0.12156862745098039
+    },
+    "shaderBackgroundBalatroContrast": 3.5,
+    "shaderBackgroundBalatroLighting": 0.4,
+    "shaderBackgroundBalatroSpinAmount": 0.25,
+    "shaderBackgroundBalatroPixelFilter": 100,
+    "shaderBackgroundBalatroSpinEase": 1,
+    "shaderBackgroundBalatroIsRotate": false,
+    "shaderBackgroundChromaNoiseTimeScale": 0.86,
+    "shaderBackgroundChromaNoiseUvScale": 3,
+    "shaderBackgroundChromaFineNoiseScale": 600,
+    "shaderBackgroundChromaGrainMix": 0.025,
+    "shaderBackgroundChromaColorA": {
+      "r": 0,
+      "g": 0.49019607843137253,
+      "b": 0.23137254901960785
+    },
+    "shaderBackgroundChromaColorB": {
+      "r": 0.09019607843137255,
+      "g": 0.14901960784313725,
+      "b": 0.3411764705882353
+    },
+    "shaderBackgroundChromaColorAMul": 1.25,
+    "shaderBackgroundChromaColorBMul": 0.7999999999999999,
+    "shaderBackgroundChromaMixClampMin": 0.16,
+    "shaderBackgroundChromaMixClampMax": 1.44,
+    "shaderBackgroundChromaLayer1S": 1.2,
+    "shaderBackgroundChromaLayer2S": 1.5,
+    "shaderBackgroundChromaLayer1Z": 0.5,
+    "shaderBackgroundChromaLayer2Z": 1.25,
+    "glassOverlayEnabled": false,
+    "glassOverlayMode": "single",
+    "glassOverlayWidth": 200,
+    "glassOverlayHeight": 200,
+    "glassOverlayRadius": 27,
+    "glassOverlayThickness": 200,
+    "glassOverlayBezel": 60,
+    "glassOverlayIOR": 3,
+    "glassOverlayBlur": 9.5,
+    "glassOverlaySpecular": 0.29,
+    "glassOverlayTint": 0,
+    "glassOverlayShadow": 0,
+    "glassOverlayBrickSize": 210,
+    "glassOverlayBrickOffsetX": 174,
+    "glassOverlayBrickOffsetY": 0,
+    "glassOverlayBrickGap": 8
+  },
+  "colors": {
+    "sotoPalette": [
+      "#EF4136",
+      "#005BBB",
+      "#FCEE09",
+      "#2E7D32",
+      "#FFFFFF",
+      "#4A148C",
+      "#8B0000"
+    ],
+    "polygonColors": [
+      "#f93822",
+      "#fcdc4d",
+      "#00a6a6",
+      "#90be6d",
+      "#f94144",
+      "#ff006e",
+      "#8338ec"
+    ],
+    "pitchColorFactor": 30
+  },
+  "modules": {
+    "SPHERE": {
+      "BASE_RADIUS": 300,
+      "LAT_LINES": 6,
+      "LON_LINES": 16,
+      "DEFORM_FACTOR": 3,
+      "LINE_WIDTH": 1.4000000000000001,
+      "USE_COLOR": true,
+      "ROTATION": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "ROTATION_ENABLED": false
+    },
+    "TRIANGLE": {
+      "SIZE": 365,
+      "ROTATION_SPEED": 0.8,
+      "LINE_WIDTH": 2.8000000000000003,
+      "OPACITY": 0.9
+    },
+    "TREFOIL": {
+      "SCALE": 90,
+      "NUM_LACES": 10,
+      "NODE_MODE": false,
+      "SCALE_VARIATION": 0.5,
+      "SEGMENTS": 300,
+      "ROTATION_SPEED": 2,
+      "DEFORMATION_STRENGTH": 0.5,
+      "LINE_WIDTH": 1,
+      "BASE_HUE": 0,
+      "USE_COLOR": true,
+      "ROTATION": {
+        "x": 115.41717757489666,
+        "y": -130.968921072839,
+        "z": -9.431222213828102
+      },
+      "ROTATION_ENABLED": true
+    }
+  },
+  "tracks": {
+    "tracks": [
+      {
+        "id": 1,
+        "name": "Track 1",
+        "muted": false,
+        "solo": false,
+        "midiDevice": "-1389056893",
+        "luminode": "sphere",
+        "layout": {
+          "x": 0,
+          "y": 20,
+          "rotation": 0
+        },
+        "midiDeviceInfo": {
+          "id": "-1389056893",
+          "name": "IAC Driver Bus 1",
+          "manufacturer": "Apple Inc."
+        }
+      },
+      {
+        "id": 2,
+        "name": "Track 2",
+        "muted": true,
+        "solo": false,
+        "midiDevice": "-1389056893",
+        "luminode": "triangle",
+        "layout": {
+          "x": 20,
+          "y": 0,
+          "rotation": 0
+        },
+        "midiDeviceInfo": {
+          "id": "-1389056893",
+          "name": "IAC Driver Bus 1",
+          "manufacturer": "Apple Inc."
+        }
+      },
+      {
+        "id": 3,
+        "name": "Track 3",
+        "muted": true,
+        "solo": false,
+        "midiDevice": "-1389056893",
+        "luminode": "trefoil",
+        "layout": {
+          "x": 0,
+          "y": 0,
+          "rotation": 0
+        },
+        "midiDeviceInfo": {
+          "id": "-1389056893",
+          "name": "IAC Driver Bus 1",
+          "manufacturer": "Apple Inc."
+        }
+      },
+      {
+        "id": 4,
+        "name": "Track 4",
+        "muted": false,
+        "solo": false,
+        "midiDevice": null,
+        "luminode": "gegoNet",
+        "layout": {
+          "x": 0,
+          "y": 0,
+          "rotation": 0
+        }
+      }
+    ]
+  },
+  "trajectories": {
+    "1": {
+      "enabled": true,
+      "trajectoryType": "xAxis",
+      "motionRate": 0.15999999999999998,
+      "ratioA": 2.7,
+      "ratioB": 2,
+      "ratioC": 3,
+      "offset": [
+        0,
+        0,
+        0
+      ],
+      "phase": [
+        0,
+        1.5707963267948966,
+        0.7853981633974483
+      ],
+      "amplitude": 196,
+      "inversion": true
+    },
+    "2": {
+      "enabled": false,
+      "trajectoryType": "whitney",
+      "motionRate": 0.5,
+      "ratioA": 1,
+      "ratioB": 2,
+      "ratioC": 3,
+      "offset": [
+        0,
+        0,
+        0
+      ],
+      "phase": [
+        0,
+        1.5707963267948966,
+        0.7853981633974483
+      ],
+      "amplitude": 100,
+      "inversion": true
+    },
+    "3": {
+      "enabled": true,
+      "trajectoryType": "xAxis",
+      "motionRate": 0.09999999999999998,
+      "ratioA": 3.8000000000000003,
+      "ratioB": 3.9000000000000004,
+      "ratioC": 4.1,
+      "offset": [
+        0,
+        0,
+        0
+      ],
+      "phase": [
+        0,
+        1.5707963267948966,
+        0.7853981633974483
+      ],
+      "amplitude": 200,
+      "inversion": false
+    },
+    "4": {
+      "enabled": false,
+      "trajectoryType": "whitney",
+      "motionRate": 0.42000000000000004,
+      "ratioA": 1,
+      "ratioB": 2,
+      "ratioC": 3,
+      "offset": [
+        0,
+        0,
+        0
+      ],
+      "phase": [
+        0,
+        1.5707963267948966,
+        0.7853981633974483
+      ],
+      "amplitude": 100,
+      "inversion": false
+    }
+  },
+  "modulation": {
+    "modulators": [
+      {
+        "id": "modulator-1777777726465-hzjca6gwv",
+        "type": "lfo",
+        "shape": "sine",
+        "rate": 0.1,
+        "depth": 0.5,
+        "offset": 0,
+        "cubicBezier": [
+          0.5,
+          0,
+          0.5,
+          1
+        ],
+        "multiplier": 1,
+        "easing": "linear",
+        "threshold": 0.5,
+        "enabled": true,
+        "targetDestination": "canvasFilter",
+        "targetTrack": 1,
+        "targetConfigKey": "DITHER_TABLE_VALUES_B",
+        "targetLuminode": null,
+        "targetCanvasFilter": "dither"
+      }
+    ]
+  },
+  "tablet": {
+    "lineWidth": 4,
+    "geometricMode": false,
+    "shapeDetectionThreshold": 0.8,
+    "geometricPencilMode": false,
+    "polygonSides": 3,
+    "polygonSize": 50,
+    "fadeDuration": 3000,
+    "connectionMode": "webhid",
+    "websocketHost": "localhost",
+    "websocketPort": 5678
+  },
+  "midi": {
+    "outputEnabled": false,
+    "outputDevice": null,
+    "octaveRange": 3
+  },
+  "name": "trefoil-sphere"
+}

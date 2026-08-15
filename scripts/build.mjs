@@ -121,6 +121,7 @@ const COPY_ENTRIES = [
   'assets',
   'fonts',
   'midi-mappings',
+  'examples',
   'sw.js',
   'USER_MANUAL.md',
   'index.html',

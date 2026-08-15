@@ -63,6 +63,8 @@ npm run serve:dist   # http://127.0.0.1:8080
 
 For Chromium kiosk on a Pi (git pull on boot, fullscreen, MIDI/HID permissions), see **[KIOSK.md](KIOSK.md)**.
 
+Example scenes live in [`examples/scenes/`](examples/scenes/). MIDI CC reference mapping: [`midi-mappings/example-mapping.json`](midi-mappings/example-mapping.json).
+
 ---
 
 ## Luminodes

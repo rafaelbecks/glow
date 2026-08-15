@@ -1,0 +1,422 @@
+{
+  "version": "1.0.0",
+  "timestamp": "2026-08-08T04:24:55.177Z",
+  "canvas": {
+    "clearAlpha": 0.32,
+    "backgroundColor": "#000",
+    "crtMode": false,
+    "crtIntensity": 100,
+    "lumiaEffect": 0,
+    "gridEnabled": false,
+    "gridXLines": 10,
+    "gridYLines": 10,
+    "gridColor": "#333333",
+    "noiseOverlay": true,
+    "noiseAnimate": true,
+    "noisePatternWidth": 110,
+    "noisePatternHeight": 100,
+    "noiseOpacity": 0.08,
+    "noiseDensity": 1.9,
+    "noiseWidth": 1,
+    "noiseHeight": 1,
+    "ditherOverlay": false,
+    "ditherSaturate": 1,
+    "ditherTableValuesR": "0 1",
+    "ditherTableValuesG": "0 1",
+    "ditherTableValuesB": "0 1",
+    "chromaticAberrationEnabled": false,
+    "chromaticAberrationContrast": 1,
+    "invertFilter": 0,
+    "shaderBackgroundEnabled": false,
+    "shaderBackgroundMode": "Fluid",
+    "shaderBackgroundTrailLength": 15,
+    "shaderBackgroundColorFluidBackground": {
+      "r": 0.02,
+      "g": 0.078,
+      "b": 0.157
+    },
+    "shaderBackgroundColorFluidTrail": {
+      "r": 0.506,
+      "g": 0.506,
+      "b": 0.604
+    },
+    "shaderBackgroundColorPressure": {
+      "r": 0.02,
+      "g": 0.078,
+      "b": 0.157
+    },
+    "shaderBackgroundColorVelocity": {
+      "r": 0.506,
+      "g": 0.506,
+      "b": 0.604
+    },
+    "shaderBackgroundCursorMode": true,
+    "shaderBackgroundPortalTimeOffset": 4,
+    "shaderBackgroundPortalTimeDivisor": 15,
+    "shaderBackgroundPortalBrightness": 0.15,
+    "shaderBackgroundDiscoPaletteVariant": 0,
+    "shaderBackgroundDiscoPaletteBase": 6,
+    "shaderBackgroundDiscoPaletteWave": 50,
+    "shaderBackgroundDiscoShimmer": 20,
+    "shaderBackgroundBalatroSpinRotation": -2,
+    "shaderBackgroundBalatroSpinSpeed": 7,
+    "shaderBackgroundBalatroOffsetX": 0,
+    "shaderBackgroundBalatroOffsetY": 0,
+    "shaderBackgroundBalatroColor1": {
+      "r": 0.871,
+      "g": 0.267,
+      "b": 0.231
+    },
+    "shaderBackgroundBalatroColor2": {
+      "r": 0,
+      "g": 0.42,
+      "b": 0.706
+    },
+    "shaderBackgroundBalatroColor3": {
+      "r": 0.086,
+      "g": 0.137,
+      "b": 0.145
+    },
+    "shaderBackgroundBalatroContrast": 3.5,
+    "shaderBackgroundBalatroLighting": 0.4,
+    "shaderBackgroundBalatroSpinAmount": 0.25,
+    "shaderBackgroundBalatroPixelFilter": 745,
+    "shaderBackgroundBalatroSpinEase": 1,
+    "shaderBackgroundBalatroIsRotate": false,
+    "shaderBackgroundChromaNoiseTimeScale": 0.2,
+    "shaderBackgroundChromaNoiseUvScale": 0.9,
+    "shaderBackgroundChromaFineNoiseScale": 300,
+    "shaderBackgroundChromaGrainMix": 0.08,
+    "shaderBackgroundChromaColorA": {
+      "r": 1,
+      "g": 0.5,
+      "b": 0
+    },
+    "shaderBackgroundChromaColorB": {
+      "r": 0.75,
+      "g": 0.3,
+      "b": 1
+    },
+    "shaderBackgroundChromaColorAMul": 1.3,
+    "shaderBackgroundChromaColorBMul": 0.9,
+    "shaderBackgroundChromaMixClampMin": -0.14,
+    "shaderBackgroundChromaMixClampMax": 0.9,
+    "shaderBackgroundChromaLayer1S": 1.2,
+    "shaderBackgroundChromaLayer2S": 1.5,
+    "shaderBackgroundChromaLayer1Z": 1.1,
+    "shaderBackgroundChromaLayer2Z": 1.4,
+    "glassOverlayEnabled": false,
+    "glassOverlayMode": "single",
+    "glassOverlayWidth": 200,
+    "glassOverlayHeight": 200,
+    "glassOverlayRadius": 27,
+    "glassOverlayThickness": 200,
+    "glassOverlayBezel": 60,
+    "glassOverlayIOR": 3,
+    "glassOverlayBlur": 9.5,
+    "glassOverlaySpecular": 0.35,
+    "glassOverlayTint": 0,
+    "glassOverlayShadow": 0,
+    "glassOverlayBrickSize": 200,
+    "glassOverlayBrickOffsetX": 0,
+    "glassOverlayBrickOffsetY": 0,
+    "glassOverlayBrickGap": 8,
+    "shaderOverlayRainDistortion": 0.05,
+    "shaderOverlayRainScale": 25,
+    "shaderOverlayRainTimeScale": 1,
+    "shaderOverlayRainPatternDrift": 0.1,
+    "shaderOverlayRainSharpness": 1
+  },
+  "colors": {
+    "sotoPalette": [
+      "#EF4136",
+      "#005BBB",
+      "#FCEE09",
+      "#2E7D32",
+      "#FFFFFF",
+      "#4A148C",
+      "#8B0000"
+    ],
+    "polygonColors": [
+      "#f93822",
+      "#fcdc4d",
+      "#00a6a6",
+      "#90be6d",
+      "#f94144",
+      "#ff006e",
+      "#8338ec"
+    ],
+    "pitchColorFactor": 30
+  },
+  "modules": {
+    "USER_EXPERIMENT_GIDKWZ": {
+      "RADIUS": 250,
+      "LINES_PER_NOTE": 20,
+      "ROTATION_SPEED": 0.19999999999999998,
+      "LINE_WIDTH": 0.8,
+      "SHADOW_BLUR": 15,
+      "USE_COLOR": false,
+      "HORIZONTAL": false
+    },
+    "WHITNEY_LINES": {
+      "RADIUS": 400,
+      "LINES_PER_NOTE": 17,
+      "ROTATION_SPEED": 0.5,
+      "LINE_WIDTH": 0.8,
+      "SHADOW_BLUR": 15,
+      "USE_COLOR": false
+    },
+    "USER_ROTATING_LINES_78VND6": {
+      "RADIUS": 100,
+      "LINES_PER_NOTE": 10,
+      "ROTATION_SPEED": 0.1999999999999999,
+      "LINE_WIDTH": 1.6,
+      "SHADOW_BLUR": 30,
+      "USE_COLOR": false,
+      "HORIZONTAL": true,
+      "ANGLE1": 16,
+      "ANGLE2": 22
+    }
+  },
+  "tracks": {
+    "tracks": [
+      {
+        "id": 1,
+        "name": "Track 1",
+        "muted": false,
+        "solo": false,
+        "midiDevice": null,
+        "luminode": "user_experiment_gidkwz",
+        "layout": {
+          "x": 0,
+          "y": 0,
+          "rotation": 0
+        }
+      },
+      {
+        "id": 2,
+        "name": "Track 2",
+        "muted": false,
+        "solo": false,
+        "midiDevice": null,
+        "luminode": "whitneyLines",
+        "layout": {
+          "x": 0,
+          "y": 0,
+          "rotation": 0
+        }
+      },
+      {
+        "id": 3,
+        "name": "Track 3",
+        "muted": false,
+        "solo": false,
+        "midiDevice": null,
+        "luminode": "user_rotating_lines_78vnd6",
+        "layout": {
+          "x": 0,
+          "y": 0,
+          "rotation": 0
+        }
+      },
+      {
+        "id": 4,
+        "name": "Track 4",
+        "muted": false,
+        "solo": false,
+        "midiDevice": null,
+        "luminode": "user_experiment_gidkwz",
+        "layout": {
+          "x": 0,
+          "y": 0,
+          "rotation": 0
+        }
+      }
+    ]
+  },
+  "trajectories": {
+    "1": {
+      "enabled": true,
+      "trajectoryType": "rotation",
+      "motionRate": 0.36000000000000004,
+      "ratioA": 1,
+      "ratioB": 2,
+      "ratioC": 3,
+      "offset": [
+        0,
+        0,
+        0
+      ],
+      "phase": [
+        0,
+        1.5707963267948966,
+        0.7853981633974483
+      ],
+      "amplitude": 100,
+      "inversion": false
+    },
+    "2": {
+      "enabled": true,
+      "trajectoryType": "rotation",
+      "motionRate": 0.64,
+      "ratioA": 1,
+      "ratioB": 2,
+      "ratioC": 3,
+      "offset": [
+        0,
+        0,
+        0
+      ],
+      "phase": [
+        0,
+        1.5707963267948966,
+        0.7853981633974483
+      ],
+      "amplitude": 100,
+      "inversion": true
+    },
+    "3": {
+      "enabled": false,
+      "trajectoryType": "whitney",
+      "motionRate": 0.5,
+      "ratioA": 1,
+      "ratioB": 2,
+      "ratioC": 3,
+      "offset": [
+        0,
+        0,
+        0
+      ],
+      "phase": [
+        0,
+        1.5707963267948966,
+        0.7853981633974483
+      ],
+      "amplitude": 100,
+      "inversion": false
+    },
+    "4": {
+      "enabled": false,
+      "trajectoryType": "whitney",
+      "motionRate": 0.5,
+      "ratioA": 1,
+      "ratioB": 2,
+      "ratioC": 3,
+      "offset": [
+        0,
+        0,
+        0
+      ],
+      "phase": [
+        0,
+        1.5707963267948966,
+        0.7853981633974483
+      ],
+      "amplitude": 100,
+      "inversion": false
+    }
+  },
+  "modulation": {
+    "modulators": [
+      {
+        "id": "modulator-1786162740920-n7qh4h5nd",
+        "type": "lfo",
+        "shape": "sine",
+        "rate": 0.1,
+        "depth": 0.5,
+        "offset": 0,
+        "cubicBezier": [
+          0.5,
+          0,
+          0.5,
+          1
+        ],
+        "multiplier": 1,
+        "easing": "linear",
+        "threshold": 0.5,
+        "enabled": true,
+        "targetDestination": "track",
+        "targetTrack": 1,
+        "targetConfigKey": null,
+        "targetLuminode": null,
+        "targetCanvasFilter": null,
+        "targetShaderOverlay": null
+      },
+      {
+        "id": "modulator-1786162885155-q6l8n15bd",
+        "type": "lfo",
+        "shape": "sine",
+        "rate": 0.023000000000000003,
+        "depth": 0.11,
+        "offset": 0,
+        "cubicBezier": [
+          0.5,
+          0,
+          0.5,
+          1
+        ],
+        "multiplier": 1,
+        "easing": "linear",
+        "threshold": 0.5,
+        "enabled": false,
+        "targetDestination": "track",
+        "targetTrack": 3,
+        "targetConfigKey": "ANGLE1",
+        "targetLuminode": "user_rotating_lines_78vnd6",
+        "targetCanvasFilter": null,
+        "targetShaderOverlay": null
+      }
+    ]
+  },
+  "tablet": {
+    "lineWidth": 4,
+    "geometricMode": false,
+    "shapeDetectionThreshold": 0.8,
+    "geometricPencilMode": false,
+    "polygonSides": 3,
+    "polygonSize": 50,
+    "fadeDuration": 3000,
+    "connectionMode": "webhid",
+    "websocketHost": "localhost",
+    "websocketPort": 5678
+  },
+  "midi": {
+    "outputEnabled": false,
+    "outputDevice": null,
+    "octaveRange": 3,
+    "generators": [
+      {
+        "id": "gen-1",
+        "trackId": 1,
+        "enabled": true,
+        "intervalMs": 2000,
+        "intervalMode": "fifth",
+        "numberOfNotes": 2,
+        "velocity": 100,
+        "velocityRandom": 0
+      },
+      {
+        "id": "gen-2",
+        "trackId": 2,
+        "enabled": true,
+        "intervalMs": 2000,
+        "intervalMode": "fifth",
+        "numberOfNotes": 2,
+        "velocity": 100,
+        "velocityRandom": 0
+      },
+      {
+        "id": "gen-3",
+        "trackId": 3,
+        "enabled": true,
+        "intervalMs": 2000,
+        "intervalMode": "fifth",
+        "numberOfNotes": 2,
+        "velocity": 100,
+        "velocityRandom": 0
+      }
+    ],
+    "generateOutputEnabled": false
+  },
+  "name": "lineasss"
+}

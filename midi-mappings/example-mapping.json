@@ -1,5 +1,6 @@
 {
   "enabled": true,
+  "description": "Reference MIDI CC map — edit CC numbers to match your controller. mute/solo: CC>64 = on. canvas values are SETTINGS.CANVAS keys.",
   "device": {
     "name": "MIDI Controller",
     "id": null
@@ -27,6 +28,43 @@
     "41": "motionRate",
     "42": "amplitude",
     "43": "trajectoryType"
+  },
+  "mixer": {
+    "opacity": {
+      "1": 14,
+      "2": 15,
+      "3": 16,
+      "4": 17
+    },
+    "mute": {
+      "1": 50,
+      "2": 51,
+      "3": 52,
+      "4": 53
+    },
+    "solo": {
+      "1": 54,
+      "2": 55,
+      "3": 56,
+      "4": 57
+    }
+  },
+  "canvas": {
+    "60": "CLEAR_ALPHA",
+    "61": "LUMIA_EFFECT",
+    "62": "INVERT_FILTER",
+    "63": "GRAYSCALE_FILTER",
+    "64": "HUE_ROTATE_FILTER",
+    "65": "BRIGHTNESS_FILTER",
+    "66": "CONTRAST_FILTER",
+    "67": "SATURATION_FILTER",
+    "68": "CRT_MODE",
+    "69": "CRT_INTENSITY",
+    "70": "NOISE_OVERLAY",
+    "71": "NOISE_OPACITY",
+    "72": "DITHER_OVERLAY",
+    "73": "DITHER_SATURATE",
+    "74": "CHROMATIC_ABERRATION_ENABLED",
+    "75": "CHROMATIC_ABERRATION_CONTRAST"
   }
 }
-

@@ -106,23 +106,39 @@ export class TrackManager {
   toggleMute (trackId) {
     const track = this.getTrack(trackId)
     if (track) {
-      track.muted = !track.muted
-      if (track.muted && track.solo) {
-        track.solo = false // Un-solo when muting
-      }
-      this.triggerCallback('trackUpdated', { trackId, track })
+      this.setTrackMuted(trackId, !track.muted)
     }
   }
 
   toggleSolo (trackId) {
     const track = this.getTrack(trackId)
     if (track) {
-      track.solo = !track.solo
-      if (track.solo && track.muted) {
-        track.muted = false // Un-mute when soloing
-      }
-      this.triggerCallback('trackUpdated', { trackId, track })
+      this.setTrackSolo(trackId, !track.solo)
     }
+  }
+
+  setTrackMuted (trackId, muted) {
+    const track = this.getTrack(trackId)
+    if (!track) return
+    const next = Boolean(muted)
+    if (track.muted === next) return
+    track.muted = next
+    if (track.muted && track.solo) {
+      track.solo = false
+    }
+    this.triggerCallback('trackUpdated', { trackId, track })
+  }
+
+  setTrackSolo (trackId, solo) {
+    const track = this.getTrack(trackId)
+    if (!track) return
+    const next = Boolean(solo)
+    if (track.solo === next) return
+    track.solo = next
+    if (track.solo && track.muted) {
+      track.muted = false
+    }
+    this.triggerCallback('trackUpdated', { trackId, track })
   }
 
   setTrackOpacity (trackId, opacity) {
