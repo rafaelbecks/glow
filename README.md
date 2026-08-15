@@ -54,6 +54,15 @@ npm run start
 3. Open the side panel and assign a luminode to a track
 4. Feed notes via MIDI or **Generate mode** (External tab)
 
+### Offline / Raspberry Pi kiosk
+
+```bash
+npm run build
+npm run serve:dist   # http://127.0.0.1:8080
+```
+
+For Chromium kiosk on a Pi (git pull on boot, fullscreen, MIDI/HID permissions), see **[KIOSK.md](KIOSK.md)**.
+
 ---
 
 ## Luminodes

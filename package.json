@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "python3 -m http.server 8000",
+    "build": "node scripts/build.mjs",
+    "serve:dist": "python3 -m http.server 8080 --bind 127.0.0.1 --directory dist",
     "format": "standard --fix",
     "lint": "standard",
     "hid-bridge": "node scripts/hid-bridge/index.js"
