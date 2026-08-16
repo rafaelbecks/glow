@@ -96,12 +96,16 @@ export class CatenoidLuminode {
       this.currentBaseHue = Math.floor(Math.random() * 360)
     }
 
-    // Set up drawing context
-    const baseHue = this.currentBaseHue + t * 2
-    const hue = useColor ? (baseHue + notes.length * 15) % 360 : moduleSettings.BASE_HUE
-
-    this.ctx.strokeStyle = useColor ? `hsla(${hue}, 80%, 60%, 0.4)` : `hsla(${hue}, 0%, 80%, 0.4)`
-    this.ctx.shadowColor = useColor ? `hsla(${hue}, 80%, 70%, 0.5)` : 'rgba(255, 255, 255, 0.5)'
+    // Set up drawing context - use pitchToColor when useColor is true
+    if (useColor) {
+      const midiValue = notes.length > 0 ? notes[0].midi : 60
+      this.ctx.strokeStyle = UTILS.pitchToColor(midiValue)
+      this.ctx.shadowColor = this.ctx.strokeStyle
+    } else {
+      const baseHue = this.currentBaseHue + t * 2
+      this.ctx.strokeStyle = `hsla(${baseHue}, 0%, 80%, 0.4)`
+      this.ctx.shadowColor = 'rgba(255, 255, 255, 0.5)'
+    }
     this.ctx.lineWidth = moduleSettings.LINE_WIDTH
 
     const rotationSpeed = moduleSettings.ROTATION_SPEED

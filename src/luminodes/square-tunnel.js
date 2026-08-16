@@ -133,16 +133,30 @@ export class SquareTunnelLuminode {
     if (useColor) {
       const noteIndex = index % notes.length
       const midi = notes[noteIndex]?.midi || 60
-      const base = UTILS.pitchToColor(midi)
-      const match = /hsla?\(([^)]+)\)/.exec(base)
-      const hue = match ? parseFloat(match[1].split(',')[0]) : (midi % 12) * 30
-      const lightness = 45 + (1 - fraction) * 30
-      this.ctx.strokeStyle = `hsla(${hue}, 100%, ${lightness}%, ${alpha})`
-      this.ctx.shadowColor = `hsla(${hue}, 100%, 70%, ${alpha * 0.6})`
+      const { hue, saturation, lightness } = this._parsePitchColor(midi)
+      // Depth is applied as a lightness modulation so the palette color stays recognizable
+      const depthLightness = Math.max(0, Math.min(100, lightness * (0.75 + (1 - fraction) * 0.5)))
+      this.ctx.strokeStyle = `hsla(${hue}, ${saturation}%, ${depthLightness}%, ${alpha})`
+      this.ctx.shadowColor = `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha * 0.6})`
     } else {
       this.ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`
       this.ctx.shadowColor = `rgba(255, 255, 255, ${alpha * 0.5})`
     }
     this.ctx.shadowBlur = Math.max(0, shadowBlurAmount)
+  }
+
+  // Square Tunnel needs per-line alpha, so the palette color is decomposed
+  // instead of using the hsla string from pitchToColor directly
+  _parsePitchColor (midi) {
+    const match = /hsla?\(([^)]+)\)/.exec(UTILS.pitchToColor(midi))
+    if (!match) {
+      return { hue: (midi % 12) * 30, saturation: 100, lightness: 70 }
+    }
+    const parts = match[1].split(',')
+    return {
+      hue: parseFloat(parts[0]),
+      saturation: parseFloat(parts[1]),
+      lightness: parseFloat(parts[2])
+    }
   }
 }
