@@ -15,6 +15,7 @@ import {
   getAudioChannelSelectOptions,
   parseAudioChannelSelect
 } from '../audio-modulation-engine.js'
+import { TRACK_MOTION_MODULATION_PARAMS } from '../modulation-system.js'
 
 const CANVAS_FILTER_LABELS = {
   clearAlpha: 'Clear Alpha',
@@ -72,6 +73,13 @@ export class ModulationUIManager {
       }
     }
     requestAnimationFrame(stylePane)
+  }
+
+  getTrackTargetParams (luminode) {
+    return [
+      ...TRACK_MOTION_MODULATION_PARAMS,
+      ...getLuminodeConfig(luminode)
+    ]
   }
 
   renderModulationControls () {
@@ -288,7 +296,7 @@ export class ModulationUIManager {
         })
 
         if (trackLuminode) {
-          const configParams = getLuminodeConfig(trackLuminode)
+          const configParams = this.getTrackTargetParams(trackLuminode)
           const configOptions = { 'Select Parameter': '' }
           configParams
             .filter(p => p.type === 'slider' || p.type === 'number' || p.type === 'checkbox')
@@ -494,7 +502,7 @@ export class ModulationUIManager {
 
       let thresholdBinding = null
       if (targetDestination === 'track' && trackLuminode && modulator.targetConfigKey) {
-        const configParams = getLuminodeConfig(trackLuminode)
+        const configParams = this.getTrackTargetParams(trackLuminode)
         const currentParam = configParams.find(p => p.key === modulator.targetConfigKey)
         if (currentParam && currentParam.type === 'checkbox') {
           thresholdBinding = modulatorFolder.addBinding(modulatorData, 'threshold', {

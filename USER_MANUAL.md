@@ -102,6 +102,11 @@ Audio modulator settings (source type, device label, file data, loop, channel, a
 
 G.L.O.W. supports custom MIDI CC mappings for hardware controllers. This allows you to control tracks, luminodes, layout, motion, **mixer strips**, and **canvas / color filters** from a MIDI controller.
 
+**How to use:**
+- Open the side panel → **External** → **MIDI CC Mapping**
+- Enable mapping, pick a built-in preset, or load a custom JSON file
+- Ctrl/Cmd+M still loads the Arturia KeyLab Essential preset as a shortcut
+
 **How It Works:**
 - Mapping files are JSON configurations stored in the `midi-mappings/` directory
 - Map CC numbers to track selection, luminode selection, layout (X/Y/rotation), motion, mixer (opacity / mute / solo), and canvas settings
@@ -113,6 +118,7 @@ G.L.O.W. supports custom MIDI CC mappings for hardware controllers. This allows 
 **Available Mappings:**
 - `example-mapping.json` — reference configuration showing all available mapping sections (edit CC numbers to match your gear)
 - `arturia-keylab-essential-49-mk3.json` — preset for Arturia KeyLab Essential 49 mk3
+- `nanoKontrol2.json` — Korg nanoKONTROL2: track arrows select the active track, the luminode arrows select its luminode, Set randomizes its MIDI generator, button 95 toggles Color Mode when available, button 93 enters layout mode (sliders 1–3 = X/Y/Z, sliders 4–6 = 3D rotation on 3D luminodes), and Cycle toggles the eight sliders between luminode parameters and canvas-filter parameters. In canvas mode, arrows 91/92 select the filter and slider 1 enables/disables it.
 
 *Note: MIDI mapping system is a work in progress and subject to changes.*
 
@@ -141,7 +147,7 @@ Clear Alpha, Lumia Effect, Invert Filter, and Dither can also be driven from the
 ### Color
 
 - **Color Palettes** — Soto palette and polygon color options for luminodes that use them
-- **Pitch to Color Generator** — maps MIDI pitch to hue (**Hue Factor** plus a C-scale preview)
+- **Pitch to Color Palette** — maps MIDI pitch to color. **Colors** sets how many colors the palette cycles through (1–14), **Hue Factor** spreads their hues, and each swatch below can be overridden by hand.
 
 ### Shader Background
 

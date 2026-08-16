@@ -165,13 +165,14 @@ ion-icon {
     color: #fff;
     padding: 8px 12px;
     font-family: 'Inconsolata', monospace;
-    font-size: 11px;
+    font-size: 20px;
     line-height: 1.4;
     border: 1px solid rgba(255, 255, 255, 0.2);
     pointer-events: none;
     text-transform: lowercase;
     max-width: 300px;
     word-wrap: break-word;
+    white-space: pre-line;
 }
 
 /* Custom Scrollbar Styles */

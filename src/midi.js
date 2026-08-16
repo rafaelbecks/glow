@@ -223,13 +223,69 @@ export class MIDIManager {
   handleTrackMIDIMessage (deviceId, msg) {
     const [status, data1, data2] = msg.data
     const cmd = status & 0xf0
+    const channel = status & 0x0f
+    const input = this.trackInputs.get(deviceId)
+    const deviceName = input?.name || 'Unknown MIDI device'
+    const commandNames = {
+      [SETTINGS.MIDI.NOTE_OFF]: 'noteOff',
+      [SETTINGS.MIDI.NOTE_ON]: 'noteOn',
+      [SETTINGS.MIDI.CONTROL_CHANGE]: 'controlChange',
+      [SETTINGS.MIDI.PITCH_BEND]: 'pitchBend'
+    }
 
-    // Handle Control Change messages for hardware mode
-    if (SETTINGS.HARDWARE_MODE.ENABLED && cmd === SETTINGS.MIDI.CONTROL_CHANGE && this.ccMapper) {
-      const input = this.trackInputs.get(deviceId)
-      if (input) {
-        this.ccMapper.handleCC(data1, data2, deviceId, input.name)
+    console.log('[MIDI IN]', {
+      deviceId,
+      deviceName,
+      status: `0x${status.toString(16).padStart(2, '0')}`,
+      command: commandNames[cmd] || `0x${cmd.toString(16)}`,
+      channel: channel + 1,
+      data1,
+      data2,
+      hardwareMode: SETTINGS.HARDWARE_MODE.ENABLED,
+      mapperEnabled: Boolean(this.ccMapper?.enabled),
+      mapperDeviceMatch: Boolean(
+        this.ccMapper?.matchesDevice(deviceId, deviceName)
+      )
+    })
+
+    if (SETTINGS.HARDWARE_MODE.ENABLED && this.ccMapper && input) {
+      if (cmd === SETTINGS.MIDI.CONTROL_CHANGE) {
+        this.ccMapper.handleCC(data1, data2, deviceId, deviceName)
+      } else if (cmd === SETTINGS.MIDI.PITCH_BEND) {
+        this.ccMapper.handlePitchBend(
+          data1,
+          data2,
+          channel,
+          deviceId,
+          deviceName
+        )
+      } else if (
+        cmd === SETTINGS.MIDI.NOTE_ON ||
+        cmd === SETTINGS.MIDI.NOTE_OFF
+      ) {
+        this.ccMapper.handleNote(
+          data1,
+          data2,
+          cmd === SETTINGS.MIDI.NOTE_ON && data2 > 0,
+          deviceId,
+          deviceName
+        )
       }
+    }
+
+    const isNoteMessage =
+      cmd === SETTINGS.MIDI.NOTE_ON || cmd === SETTINGS.MIDI.NOTE_OFF
+    if (
+      isNoteMessage &&
+      this.ccMapper?.shouldSuppressNotes(deviceId, deviceName)
+    ) {
+      console.log('[MIDI IN] Suppressed mapped-controller note event', {
+        deviceName,
+        channel: channel + 1,
+        note: data1,
+        velocity: data2
+      })
+      return
     }
 
     // Find which tracks this device is assigned to

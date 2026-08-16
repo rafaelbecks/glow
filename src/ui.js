@@ -494,7 +494,6 @@ export class UIManager {
       this.hideAllIcons()
     }
     this.triggerCallback('iconsVisibilityChange', { visible: this.iconsVisible })
-    this.triggerCallback('toggleDebugOverlay')
   }
 
   showAllIcons () {

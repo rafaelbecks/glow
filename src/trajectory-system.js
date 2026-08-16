@@ -77,8 +77,13 @@ export class TrajectorySystem {
   }
 
   // Get trajectory layout for a track at a given time (position + rotation)
-  getPosition (trackId, time, basePosition = { x: 0, y: 0, z: 0, rotation: 0 }) {
-    const config = this.getTrackConfig(trackId)
+  getPosition (
+    trackId,
+    time,
+    basePosition = { x: 0, y: 0, z: 0, rotation: 0 },
+    configOverride = null
+  ) {
+    const config = configOverride || this.getTrackConfig(trackId)
     const baseRotation = basePosition.rotation ?? 0
 
     if (!config.enabled) {

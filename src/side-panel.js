@@ -47,7 +47,8 @@ export class SidePanel {
       this.basePanel.getPanel(),
       tabletManager,
       midiManager,
-      midiGenerator
+      midiGenerator,
+      options.ccMapper || null
     )
 
     // Set up event delegation
@@ -212,6 +213,10 @@ export class SidePanel {
 
   async refreshExternalSystems () {
     await this.externalSystemsUIManager.renderExternalControls()
+  }
+
+  setCCMapper (ccMapper) {
+    this.externalSystemsUIManager.setCCMapper(ccMapper)
   }
 
   applyLuminodeSelection (trackId, luminode) {

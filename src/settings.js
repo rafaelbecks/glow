@@ -102,6 +102,7 @@ export const SETTINGS = {
     NOTE_ON: 0x90,
     NOTE_OFF: 0x80,
     CONTROL_CHANGE: 0xb0,
+    PITCH_BEND: 0xe0,
     VELOCITY_MAX: 127
   },
 
@@ -542,10 +543,12 @@ export const MIDI_CHANNELS = {
   'bus 31': 'doublePendulum'
 }
 
+export const PITCH_PALETTE_MAX_SIZE = 14
+
 // Utility functions
 export const UTILS = {
   pitchColorFactor: 30, // Default factor, can be adjusted via UI
-  pitchPaletteSize: 14,
+  pitchPaletteSize: PITCH_PALETTE_MAX_SIZE, // Active number of pitch colors (1..14)
 
   hslToHex: (h, s = 100, l = 70) => {
     const hue = ((h % 360) + 360) % 360
@@ -562,11 +565,17 @@ export const UTILS = {
     return `#${f(0)}${f(8)}${f(4)}`
   },
 
+  clampPitchPaletteSize: (size) => {
+    const value = Math.round(Number(size))
+    if (!Number.isFinite(value)) return PITCH_PALETTE_MAX_SIZE
+    return Math.max(1, Math.min(PITCH_PALETTE_MAX_SIZE, value))
+  },
+
   generatePitchPalette: (factor = UTILS.pitchColorFactor, size = UTILS.pitchPaletteSize) => {
     const safeFactor = factor || 30
-    const count = Math.max(1, size || 14)
+    const count = UTILS.clampPitchPaletteSize(size)
     return Array.from({ length: count }, (_, i) =>
-      UTILS.hslToHex((i % 14) * safeFactor, 100, 70)
+      UTILS.hslToHex(i * safeFactor, 100, 70)
     )
   },
 

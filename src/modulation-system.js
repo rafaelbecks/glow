@@ -7,6 +7,79 @@
 
 import { getAudioModulationEngine } from './audio-modulation-engine.js'
 
+export const TRACK_MOTION_MODULATION_PARAMS = [
+  {
+    key: 'layout.x',
+    label: 'Layout · X',
+    type: 'slider',
+    min: -500,
+    max: 500,
+    step: 1
+  },
+  {
+    key: 'layout.y',
+    label: 'Layout · Y',
+    type: 'slider',
+    min: -500,
+    max: 500,
+    step: 1
+  },
+  {
+    key: 'trajectory.enabled',
+    label: 'Trajectory · Enabled',
+    type: 'checkbox'
+  },
+  {
+    key: 'trajectory.motionRate',
+    label: 'Trajectory · Rate',
+    type: 'slider',
+    min: 0.01,
+    max: 2,
+    step: 0.01
+  },
+  {
+    key: 'trajectory.amplitude',
+    label: 'Trajectory · Amplitude',
+    type: 'slider',
+    min: 0,
+    max: 600,
+    step: 1
+  },
+  {
+    key: 'trajectory.ratioA',
+    label: 'Trajectory · Ratio A',
+    type: 'slider',
+    min: 0.1,
+    max: 5,
+    step: 0.1
+  },
+  {
+    key: 'trajectory.ratioB',
+    label: 'Trajectory · Ratio B',
+    type: 'slider',
+    min: 0.1,
+    max: 5,
+    step: 0.1
+  },
+  {
+    key: 'trajectory.ratioC',
+    label: 'Trajectory · Ratio C',
+    type: 'slider',
+    min: 0.1,
+    max: 5,
+    step: 0.1
+  },
+  {
+    key: 'trajectory.inversion',
+    label: 'Trajectory · Invert',
+    type: 'checkbox'
+  }
+]
+
+export function getTrackMotionModulationParam (key) {
+  return TRACK_MOTION_MODULATION_PARAMS.find((param) => param.key === key)
+}
+
 export class ModulationSystem {
   constructor () {
     this.modulators = []
@@ -420,6 +493,68 @@ export class ModulationSystem {
       return Math.round(mappedValue)
     }
     return Math.max(min, Math.min(max, mappedValue))
+  }
+
+  getStackedModulatedValue (
+    baseValue,
+    modulators,
+    configParam,
+    noteData = null
+  ) {
+    if (configParam.type === 'checkbox') {
+      return modulators.reduce(
+        (value, modulator) =>
+          this.getModulatedValue(value, modulator, configParam, noteData),
+        baseValue
+      )
+    }
+
+    let modulatedValue = baseValue
+    const lfoModulators = modulators.filter(
+      (modulator) => (modulator.type || 'lfo') === 'lfo'
+    )
+
+    if (lfoModulators.length > 0) {
+      let totalModulation = 0
+      let totalOffset = 0
+      const time = this.getCurrentTime()
+
+      lfoModulators.forEach((modulator) => {
+        if (!modulator.enabled) return
+        const phase = time * modulator.rate * Math.PI * 2
+        const waveform = this.generateWaveform(
+          modulator.shape,
+          phase,
+          modulator.cubicBezier
+        )
+        totalModulation += waveform * modulator.depth
+        totalOffset += modulator.offset || 0
+      })
+
+      const range = configParam.max - configParam.min
+      modulatedValue =
+        baseValue + totalModulation * range + totalOffset * range
+      modulatedValue = Math.max(
+        configParam.min,
+        Math.min(configParam.max, modulatedValue)
+      )
+    }
+
+    modulators
+      .filter((modulator) => (modulator.type || 'lfo') !== 'lfo')
+      .forEach((modulator) => {
+        if (!modulator.enabled) return
+        modulatedValue = this.getModulatedValue(
+          modulatedValue,
+          modulator,
+          configParam,
+          noteData
+        )
+      })
+
+    return configParam.type === 'number'
+      ? Math.round(modulatedValue)
+      : modulatedValue
   }
 
   applyModulation (

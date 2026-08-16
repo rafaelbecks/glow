@@ -1,5 +1,5 @@
 import { Pane } from '../lib/tweakpane.min.js'
-import { UTILS } from '../settings.js'
+import { UTILS, PITCH_PALETTE_MAX_SIZE } from '../settings.js'
 import {
   FLUID_BACKGROUND_MODES,
   getBackgroundModePaneOptions
@@ -295,7 +295,8 @@ export class CanvasUIManager {
     }
 
     const pitchColorData = {
-      hueFactor: UTILS.pitchColorFactor || 30
+      hueFactor: UTILS.pitchColorFactor || 30,
+      paletteSize: UTILS.clampPitchPaletteSize(UTILS.pitchPaletteSize)
     }
 
     const colorFiltersFolder = this.mainPane.addFolder({
@@ -1555,10 +1556,11 @@ export class CanvasUIManager {
 
     if (
       !colorSettings.PITCH_PALETTE ||
-      colorSettings.PITCH_PALETTE.length !== UTILS.pitchPaletteSize
+      colorSettings.PITCH_PALETTE.length !== pitchColorData.paletteSize
     ) {
       colorSettings.PITCH_PALETTE = UTILS.generatePitchPalette(
-        pitchColorData.hueFactor
+        pitchColorData.hueFactor,
+        pitchColorData.paletteSize
       )
       if (settings.COLORS) {
         settings.COLORS.PITCH_PALETTE = [...colorSettings.PITCH_PALETTE]
@@ -1575,8 +1577,7 @@ export class CanvasUIManager {
     pitchSwatchContainer.className = 'pitch-color-example'
     this.pitchSwatchContainer = pitchSwatchContainer
 
-    const applyGeneratedPalette = (factor) => {
-      const nextPalette = UTILS.generatePitchPalette(factor)
+    const applyPitchPalette = (nextPalette) => {
       if (settings.COLORS) {
         settings.COLORS.PITCH_PALETTE = nextPalette
       }
@@ -1586,8 +1587,31 @@ export class CanvasUIManager {
         nextPalette,
         settings
       )
-      this.triggerPitchColorFactorChange(factor)
+      this.triggerPitchColorFactorChange(
+        pitchColorData.hueFactor,
+        pitchColorData.paletteSize,
+        nextPalette
+      )
     }
+
+    pitchColorFolder
+      .addBinding(pitchColorData, 'paletteSize', {
+        label: 'Colors',
+        min: 1,
+        max: PITCH_PALETTE_MAX_SIZE,
+        step: 1
+      })
+      .on('change', (ev) => {
+        pitchColorData.paletteSize = UTILS.clampPitchPaletteSize(ev.value)
+        UTILS.pitchPaletteSize = pitchColorData.paletteSize
+        // Keep colors the user already picked; only fill in newly added slots
+        const current = colorSettings.PITCH_PALETTE || []
+        const generated = UTILS.generatePitchPalette(
+          pitchColorData.hueFactor,
+          pitchColorData.paletteSize
+        )
+        applyPitchPalette(generated.map((color, i) => current[i] || color))
+      })
 
     pitchColorFolder
       .addBinding(pitchColorData, 'hueFactor', {
@@ -1597,7 +1621,9 @@ export class CanvasUIManager {
         step: 1
       })
       .on('change', (ev) => {
-        applyGeneratedPalette(ev.value)
+        applyPitchPalette(
+          UTILS.generatePitchPalette(ev.value, pitchColorData.paletteSize)
+        )
       })
 
     this.renderPitchPaletteSwatches(
@@ -1625,6 +1651,11 @@ export class CanvasUIManager {
   renderPitchPaletteSwatches (container, palette, settings) {
     if (!container) return
     container.innerHTML = ''
+    // Column-flow grid: keep at most 7 rows so short palettes don't leave gaps
+    container.style.gridTemplateRows = `repeat(${Math.min(
+      7,
+      Math.max(1, palette.length)
+    )}, auto)`
     palette.forEach((color, index) => {
       const hex = this.normalizeHexColor(color)
       const item = document.createElement('label')
@@ -1767,9 +1798,9 @@ export class CanvasUIManager {
     this.panel.dispatchEvent(event)
   }
 
-  triggerPitchColorFactorChange (value) {
+  triggerPitchColorFactorChange (value, size, palette) {
     const event = new CustomEvent('pitchColorFactorChange', {
-      detail: { value }
+      detail: { value, size, palette }
     })
     this.panel.dispatchEvent(event)
   }

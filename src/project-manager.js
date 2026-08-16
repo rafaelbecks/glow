@@ -175,6 +175,7 @@ export class ProjectManager {
         sotoPalette: [...SETTINGS.COLORS.SOTO_PALETTE],
         pitchPalette: [...(SETTINGS.COLORS.PITCH_PALETTE || [])],
         pitchColorFactor: UTILS.pitchColorFactor,
+        pitchPaletteSize: UTILS.pitchPaletteSize,
       },
       modules: this.collectModuleSettings(),
       tracks: this.collectTrackSettings(),
@@ -1306,10 +1307,21 @@ export class ProjectManager {
     }
 
     if (colorData.pitchPalette && colorData.pitchPalette.length > 0) {
-      SETTINGS.COLORS.PITCH_PALETTE = [...colorData.pitchPalette];
+      UTILS.pitchPaletteSize = UTILS.clampPitchPaletteSize(
+        colorData.pitchPaletteSize ?? colorData.pitchPalette.length,
+      );
+      SETTINGS.COLORS.PITCH_PALETTE = colorData.pitchPalette.slice(
+        0,
+        UTILS.pitchPaletteSize,
+      );
+      UTILS.pitchPaletteSize = SETTINGS.COLORS.PITCH_PALETTE.length;
     } else {
+      UTILS.pitchPaletteSize = UTILS.clampPitchPaletteSize(
+        colorData.pitchPaletteSize ?? UTILS.pitchPaletteSize,
+      );
       SETTINGS.COLORS.PITCH_PALETTE = UTILS.generatePitchPalette(
         UTILS.pitchColorFactor || 30,
+        UTILS.pitchPaletteSize,
       );
     }
   }

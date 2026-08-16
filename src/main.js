@@ -16,6 +16,7 @@ import { LuminodeLab, bootstrapUserLuminodes } from './luminode-center/index.js'
 import { getConfirmDialog } from './components/confirm-dialog.js'
 import { FILE_TYPE, isGlowProjectFileName, isLuminodeFileName } from './glow-file-types.js'
 import { getLuminodeConfig } from './luminode-configs.js'
+import { getTrackMotionModulationParam } from './modulation-system.js'
 import {
   getCanvasFilterParamByKey,
   getCanvasFilterEnableKey,
@@ -25,7 +26,7 @@ import {
   getShaderOverlayParamByKey,
   activateShaderOverlay
 } from './shader-overlay-configs.js'
-import { MIDICCMapper } from './midi-cc-mapper.js'
+import { MIDICCMapper, MIDI_CC_PRESETS } from './midi-cc-mapper.js'
 import {
   LUMINODE_REGISTRY,
   getLuminodeSettingsKey
@@ -64,15 +65,10 @@ export class GLOWVisualizer {
     this.mixerPanel = null
     this.mixerVisible = false
 
-    this.ccMapper = null
-    if (SETTINGS.HARDWARE_MODE.ENABLED) {
-      this.ccMapper = new MIDICCMapper(this.trackManager, this)
-    }
+    this.ccMapper = new MIDICCMapper(this.trackManager, this)
 
     this.midiManager = new MIDIManager(this.trackManager, this.ccMapper)
-    if (this.ccMapper) {
-      this.midiManager.setCCMapper(this.ccMapper)
-    }
+    this.midiManager.setCCMapper(this.ccMapper)
     this.midiGenerator = new MidiGenerator(this.midiManager, this.trackManager)
     this.midiGenerator.onChange = () => {
       this.markProjectChanged()
@@ -90,7 +86,7 @@ export class GLOWVisualizer {
       this.tabletManager,
       this.uiManager,
       this.midiManager,
-      {},
+      { ccMapper: this.ccMapper },
       this.midiGenerator
     )
     this.sidePanel.setSettings(SETTINGS)
@@ -161,6 +157,9 @@ export class GLOWVisualizer {
     this.debugOverlay = document.getElementById('midiDebugOverlay')
     this.debugVisible = false
     this.debugTimeout = null
+    this.debugMessage = null
+    this.midiControlStatus = null
+    this.uiChromeVisible = true
 
     this.setupEventHandlers()
     this.setupSaveDialog()
@@ -409,6 +408,8 @@ export class GLOWVisualizer {
     this.uiManager.on('toggleMixer', () => this.toggleMixerPanel())
     this.uiManager.on('toggleAudioTransport', () => this.toggleProjectAudio())
     this.uiManager.on('iconsVisibilityChange', ({ visible }) => {
+      this.uiChromeVisible = visible
+      this.renderDebugOverlay()
       if (!visible) {
         this.mixerPanel?.hide()
         document.body.classList.remove('mixer-visible')
@@ -469,6 +470,15 @@ export class GLOWVisualizer {
     )
     this.sidePanel.on('generateMidiOutDeviceChange', (deviceId) =>
       this.setGenerateMidiOutDevice(deviceId)
+    )
+    this.sidePanel.on('midiCcMappingEnabledChange', (enabled) =>
+      this.setMidiCcMappingEnabled(enabled)
+    )
+    this.sidePanel.on('midiCcMappingPresetChange', (presetId) =>
+      this.loadMidiCcMappingPreset(presetId)
+    )
+    this.sidePanel.on('midiCcMappingLoadFile', () =>
+      this.openMidiCcMappingFile()
     )
 
     // Track manager events
@@ -1146,10 +1156,14 @@ export class GLOWVisualizer {
   }
 
   updatePitchColorFactor (data) {
-    const { value } = data
+    const { value, size, palette } = data
 
-    UTILS.pitchColorFactor = value
-    SETTINGS.COLORS.PITCH_PALETTE = UTILS.generatePitchPalette(value)
+    if (value !== undefined) UTILS.pitchColorFactor = value
+    if (size !== undefined) UTILS.pitchPaletteSize = UTILS.clampPitchPaletteSize(size)
+
+    SETTINGS.COLORS.PITCH_PALETTE = Array.isArray(palette) && palette.length > 0
+      ? [...palette]
+      : UTILS.generatePitchPalette(UTILS.pitchColorFactor, UTILS.pitchPaletteSize)
     this.markProjectChanged()
   }
 
@@ -1228,82 +1242,160 @@ export class GLOWVisualizer {
     }
   }
 
-  loadCCMapping (mappingConfig) {
-    if (this.ccMapper) {
-      this.ccMapper.loadMapping(mappingConfig)
-    } else {
-      console.warn(
-        'Hardware mode is not enabled. Set SETTINGS.HARDWARE_MODE.ENABLED = true'
-      )
+  loadCCMapping (mappingConfig, options = {}) {
+    if (!this.ccMapper) {
+      this.ccMapper = new MIDICCMapper(this.trackManager, this)
+      this.midiManager.setCCMapper(this.ccMapper)
+      this.sidePanel.setCCMapper(this.ccMapper)
+    }
+
+    this.ccMapper.loadMapping(mappingConfig)
+    if (options.presetId !== undefined) {
+      this.ccMapper.presetId = options.presetId
+    }
+    if (options.sourceLabel) {
+      this.ccMapper.sourceLabel = options.sourceLabel
+    }
+    if (options.enable !== false) {
+      SETTINGS.HARDWARE_MODE.ENABLED = true
+      this.ccMapper.setEnabled(true)
+    }
+    console.log('[MIDI CC] Mapping state', {
+      hardwareMode: SETTINGS.HARDWARE_MODE.ENABLED,
+      ...this.ccMapper.getState()
+    })
+    this.sidePanel.refreshExternalSystems()
+  }
+
+  setMidiCcMappingEnabled (enabled) {
+    if (!this.ccMapper) {
+      this.ccMapper = new MIDICCMapper(this.trackManager, this)
+      this.midiManager.setCCMapper(this.ccMapper)
+      this.sidePanel.setCCMapper(this.ccMapper)
+    }
+
+    if (enabled && !this.ccMapper.mapping) {
+      this.loadMidiCcMappingPreset('example-mapping.json')
+      return
+    }
+
+    SETTINGS.HARDWARE_MODE.ENABLED = Boolean(enabled)
+    this.ccMapper.setEnabled(Boolean(enabled))
+    console.log('[MIDI CC] Enabled changed', {
+      hardwareMode: SETTINGS.HARDWARE_MODE.ENABLED,
+      ...this.ccMapper.getState()
+    })
+    this.uiManager.showStatus(
+      enabled ? 'MIDI CC mapping enabled' : 'MIDI CC mapping disabled',
+      enabled ? 'success' : 'info'
+    )
+    this.sidePanel.refreshExternalSystems()
+  }
+
+  async loadMidiCcMappingPreset (presetId) {
+    const preset =
+      MIDI_CC_PRESETS.find((entry) => entry.id === presetId) || null
+    if (!preset) {
+      this.uiManager.showStatus('Unknown MIDI CC preset', 'error')
+      return
+    }
+
+    try {
+      const response = await fetch(preset.path)
+      if (!response.ok) {
+        throw new Error(`Failed to load mapping: ${response.statusText}`)
+      }
+      const mapping = await response.json()
+      this.loadCCMapping(mapping, {
+        presetId: preset.id,
+        sourceLabel: mapping.description || preset.label,
+        enable: true
+      })
+      this.uiManager.showStatus(`Loaded MIDI CC map: ${preset.label}`, 'success')
+    } catch (error) {
+      console.error('Failed to load MIDI CC preset:', error)
+      this.uiManager.showStatus('Failed to load MIDI CC mapping', 'error')
     }
   }
 
+  openMidiCcMappingFile () {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'application/json,.json'
+    input.hidden = true
+    document.body.appendChild(input)
+    input.addEventListener('change', async () => {
+      const file = input.files && input.files[0]
+      input.remove()
+      if (!file) return
+      try {
+        const text = await file.text()
+        const mapping = JSON.parse(text)
+        this.loadCCMapping(mapping, {
+          presetId: file.name,
+          sourceLabel: mapping.description || file.name,
+          enable: true
+        })
+        this.uiManager.showStatus(`Loaded MIDI CC map: ${file.name}`, 'success')
+      } catch (error) {
+        console.error('Failed to load MIDI CC mapping file:', error)
+        this.uiManager.showStatus('Invalid MIDI CC mapping file', 'error')
+      }
+    })
+    input.click()
+  }
+
   showDebugMessage (message) {
-    if (!this.debugOverlay || !this.debugVisible) return
+    if (!this.debugOverlay) return
 
     if (this.debugTimeout) {
       clearTimeout(this.debugTimeout)
     }
 
-    this.debugOverlay.textContent = message
-    this.debugOverlay.style.display = 'block'
+    this.debugMessage = message
+    this.renderDebugOverlay()
 
     this.debugTimeout = setTimeout(() => {
-      if (this.debugOverlay) {
-        this.debugOverlay.style.display = 'none'
-      }
+      this.debugMessage = null
+      this.renderDebugOverlay()
+      this.debugTimeout = null
     }, 3000)
+  }
+
+  /**
+   * Persistent overlay line describing what the MIDI controller is pointed at.
+   */
+  setMidiControlStatus (status) {
+    this.midiControlStatus = status || null
+    this.renderDebugOverlay()
+  }
+
+  renderDebugOverlay () {
+    if (!this.debugOverlay) return
+
+    const lines = [this.midiControlStatus, this.debugMessage].filter(Boolean)
+    this.debugOverlay.textContent = lines.join('\n')
+    this.debugOverlay.style.display =
+      this.uiChromeVisible && (lines.length > 0 || this.debugVisible)
+        ? 'block'
+        : 'none'
   }
 
   toggleDebugOverlay () {
     this.debugVisible = !this.debugVisible
-    if (this.debugOverlay) {
-      if (this.debugVisible) {
-        this.debugOverlay.style.display = 'block'
-      } else {
-        this.debugOverlay.style.display = 'none'
-        if (this.debugTimeout) {
-          clearTimeout(this.debugTimeout)
-          this.debugTimeout = null
-        }
-      }
+    if (!this.debugVisible && this.debugTimeout) {
+      clearTimeout(this.debugTimeout)
+      this.debugTimeout = null
+      this.debugMessage = null
     }
+    this.renderDebugOverlay()
   }
 
   /**
-   * Enable hardware mode and load Arturia KeyLab mapping (for testing)
+   * Enable hardware mode and load Arturia KeyLab mapping (Ctrl/Cmd+M)
    */
   async enableHardwareMode () {
-    // Enable hardware mode in settings
-    SETTINGS.HARDWARE_MODE.ENABLED = true
-
-    // Create CC mapper if it doesn't exist
-    if (!this.ccMapper) {
-      this.ccMapper = new MIDICCMapper(this.trackManager, this)
-      this.midiManager.setCCMapper(this.ccMapper)
-    }
-
-    // Load Arturia KeyLab Essential 49 mk3 mapping
-    try {
-      const response = await fetch(
-        'midi-mappings/arturia-keylab-essential-49-mk3.json'
-      )
-      if (!response.ok) {
-        throw new Error(`Failed to load mapping: ${response.statusText}`)
-      }
-      const mapping = await response.json()
-      this.loadCCMapping(mapping)
-      console.log(
-        'Hardware mode enabled with Arturia KeyLab Essential 49 mk3 mapping'
-      )
-      this.uiManager.showStatus(
-        'Hardware mode enabled (Arturia KeyLab)',
-        'success'
-      )
-    } catch (error) {
-      console.error('Failed to load Arturia mapping:', error)
-      this.uiManager.showStatus('Failed to load hardware mapping', 'error')
-    }
+    await this.loadMidiCcMappingPreset('arturia-keylab-essential-49-mk3.json')
   }
 
   animate () {
@@ -1493,14 +1585,77 @@ export class GLOWVisualizer {
     }
   }
 
-  getTrackLayouts () {
+  applyTrackMotionModulation (track, notes = []) {
+    const modulationSystem = this.trackManager.getModulationSystem()
+    const layout = {
+      x: track.layout?.x ?? 0,
+      y: track.layout?.y ?? 0,
+      rotation: track.layout?.rotation ?? 0
+    }
+    const baseTrajectoryConfig = this.trackManager.getTrajectoryConfig(track.id)
+    const trajectoryConfig = {
+      ...baseTrajectoryConfig,
+      offset: [...(baseTrajectoryConfig.offset || [0, 0, 0])],
+      phase: [...(baseTrajectoryConfig.phase || [0, 0, 0])]
+    }
+    const modulators = modulationSystem
+      .getModulators()
+      .filter(
+        (modulator) =>
+          modulator.enabled &&
+          (modulator.targetDestination || 'track') === 'track' &&
+          modulator.targetTrack === track.id &&
+          getTrackMotionModulationParam(modulator.targetConfigKey)
+      )
+
+    if (modulators.length === 0) {
+      return { layout, trajectoryConfig }
+    }
+
+    const noteData = {
+      notes,
+      velocity:
+        notes.length > 0
+          ? notes.reduce((sum, note) => sum + (note.velocity || 0), 0) /
+            notes.length
+          : 0
+    }
+    const modulatorsByKey = new Map()
+    modulators.forEach((modulator) => {
+      const key = modulator.targetConfigKey
+      if (!modulatorsByKey.has(key)) modulatorsByKey.set(key, [])
+      modulatorsByKey.get(key).push(modulator)
+    })
+
+    modulatorsByKey.forEach((mods, key) => {
+      const param = getTrackMotionModulationParam(key)
+      if (!param) return
+
+      const [group, property] = key.split('.')
+      const target = group === 'layout' ? layout : trajectoryConfig
+      target[property] = modulationSystem.getStackedModulatedValue(
+        target[property],
+        mods,
+        param,
+        noteData
+      )
+    })
+
+    return { layout, trajectoryConfig }
+  }
+
+  getTrackLayouts (activeNotes = {}) {
     const layouts = {}
     const tracks = this.trackManager.getTracks()
     const time = performance.now() / 1000
 
     tracks.forEach((track) => {
       if (track.luminode) {
-        const baseLayout = track.layout || { x: 0, y: 0, rotation: 0 }
+        const notes = activeNotes[track.id] || activeNotes[track.luminode] || []
+        const {
+          layout: baseLayout,
+          trajectoryConfig
+        } = this.applyTrackMotionModulation(track, notes)
 
         // Apply trajectory motion to the layout (position and/or rotation)
         const trajectoryPosition = this.trackManager.getTrajectoryPosition(
@@ -1511,7 +1666,8 @@ export class GLOWVisualizer {
             y: baseLayout.y,
             z: 0,
             rotation: baseLayout.rotation
-          }
+          },
+          trajectoryConfig
         )
 
         // Use track ID as key to support multiple instances of same luminode type
@@ -1550,7 +1706,7 @@ export class GLOWVisualizer {
 
     // Get active tracks and their layouts
     const activeTracks = this.trackManager.getActiveTracks()
-    const trackLayouts = this.getTrackLayouts()
+    const trackLayouts = this.getTrackLayouts(activeNotes)
     const mainCtx = this.canvasDrawer.getContext()
     const layerCanvas = this.ensureTrackLayerCanvas()
     const layerCtx = layerCanvas.getContext('2d')
@@ -1697,55 +1853,12 @@ export class GLOWVisualizer {
       }
 
       const baseValue = originalValues.get(configKey)
-      let modulatedValue = baseValue
-
-      const lfoModulators = mods.filter((m) => (m.type || 'lfo') === 'lfo')
-      const noteModulators = mods.filter((m) => (m.type || 'lfo') !== 'lfo')
-
-      if (lfoModulators.length > 0) {
-        let totalModulation = 0
-        let totalOffset = 0
-        const time = modulationSystem.getCurrentTime()
-
-        lfoModulators.forEach((modulator) => {
-          if (!modulator.enabled) return
-
-          const phase = time * modulator.rate * Math.PI * 2
-          const waveform = modulationSystem.generateWaveform(
-            modulator.shape,
-            phase,
-            modulator.cubicBezier
-          )
-
-          totalModulation += waveform * modulator.depth
-          totalOffset += modulator.offset || 0
-        })
-
-        const min = configParam.min
-        const max = configParam.max
-        const range = max - min
-
-        modulatedValue =
-          baseValue + totalModulation * range + totalOffset * range
-        modulatedValue = Math.max(min, Math.min(max, modulatedValue))
-      }
-
-      noteModulators.forEach((modulator) => {
-        if (!modulator.enabled) return
-        modulatedValue = modulationSystem.getModulatedValue(
-          modulatedValue,
-          modulator,
-          configParam,
-          noteData
-        )
-      })
-
-      const finalValue =
-        configParam.type === 'number'
-          ? Math.round(modulatedValue)
-          : modulatedValue
-
-      moduleConfig[configKey] = finalValue
+      moduleConfig[configKey] = modulationSystem.getStackedModulatedValue(
+        baseValue,
+        mods,
+        configParam,
+        noteData
+      )
     })
 
     return () => {

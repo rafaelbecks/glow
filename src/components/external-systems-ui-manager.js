@@ -1,13 +1,42 @@
 import { Pane } from '../lib/tweakpane.min.js'
 import { INTERVALS } from '../midi-generator.js'
+import { MIDI_CC_PRESETS } from '../midi-cc-mapper.js'
 
 export class ExternalSystemsUIManager {
-  constructor (panel, tabletManager = null, midiManager = null, midiGenerator = null) {
+  constructor (
+    panel,
+    tabletManager = null,
+    midiManager = null,
+    midiGenerator = null,
+    ccMapper = null
+  ) {
     this.panel = panel
     this.tabletManager = tabletManager
     this.midiManager = midiManager
     this.midiGenerator = midiGenerator
+    this.ccMapper = ccMapper
     this.mainPane = null
+    this.ccPane = null
+  }
+
+  setCCMapper (ccMapper) {
+    this.ccMapper = ccMapper
+  }
+
+  stylePaneContainer (paneContainer) {
+    const stylePane = () => {
+      const paneElement = paneContainer.querySelector('.tp-rotv')
+      if (paneElement) {
+        paneElement.style.width = '100%'
+        paneElement.style.margin = '0'
+        paneElement.style.padding = '0'
+        paneElement.style.background = 'transparent'
+        paneElement.style.border = 'none'
+      } else {
+        requestAnimationFrame(stylePane)
+      }
+    }
+    requestAnimationFrame(stylePane)
   }
 
   async renderExternalControls () {
@@ -18,6 +47,10 @@ export class ExternalSystemsUIManager {
       this.mainPane.dispose()
       this.mainPane = null
     }
+    if (this.ccPane) {
+      this.ccPane.dispose()
+      this.ccPane = null
+    }
 
     const generators = this.midiGenerator?.getGenerators() ?? []
     const tracks = this.midiGenerator?.trackManager?.getTracks?.() ?? []
@@ -26,6 +59,13 @@ export class ExternalSystemsUIManager {
 
     container.innerHTML = `
       <div class="external-systems-controls">
+        <div class="control-section">
+          <div class="modulator-header">
+            <h4>MIDI CC Mapping</h4>
+          </div>
+          <div id="midi-cc-pane-container"></div>
+        </div>
+
         <div class="control-section">
           <div class="modulator-header">
             <h4>MIDI Generators</h4>
@@ -44,24 +84,18 @@ export class ExternalSystemsUIManager {
 
     this.setupGeneratorListListeners()
 
+    const ccPaneContainer = container.querySelector('#midi-cc-pane-container')
+    if (ccPaneContainer) {
+      this.ccPane = new Pane({ container: ccPaneContainer })
+      this.stylePaneContainer(ccPaneContainer)
+      this.createMidiCcMappingFolder(this.ccPane)
+    }
+
     const paneContainer = container.querySelector('#external-pane-container')
     if (!paneContainer) return
 
     this.mainPane = new Pane({ container: paneContainer })
-
-    const stylePane = () => {
-      const paneElement = paneContainer.querySelector('.tp-rotv')
-      if (paneElement) {
-        paneElement.style.width = '100%'
-        paneElement.style.margin = '0'
-        paneElement.style.padding = '0'
-        paneElement.style.background = 'transparent'
-        paneElement.style.border = 'none'
-      } else {
-        requestAnimationFrame(stylePane)
-      }
-    }
-    requestAnimationFrame(stylePane)
+    this.stylePaneContainer(paneContainer)
 
     const midiFolder = this.mainPane.addFolder({ title: 'MIDI', expanded: true })
 
@@ -139,6 +173,72 @@ export class ExternalSystemsUIManager {
     tabletMidiFolder.addBinding(tabletState, 'octaveRange', {
       label: 'Octave Range', min: 1, max: 4, step: 1
     }).on('change', (ev) => this.trigger('octaveRangeChange', ev.value))
+  }
+
+  createMidiCcMappingFolder (parentPane) {
+    const state = this.ccMapper?.getState?.() || {
+      enabled: false,
+      hasMapping: false,
+      deviceName: null,
+      currentTrackId: null,
+      currentLuminode: null,
+      sourceLabel: null,
+      presetId: null
+    }
+
+    const presetOptions = { 'Select mapping…': '' }
+    MIDI_CC_PRESETS.forEach((preset) => {
+      presetOptions[preset.label] = preset.id
+    })
+    if (state.presetId && !Object.values(presetOptions).includes(state.presetId)) {
+      presetOptions[`Custom (${state.presetId})`] = state.presetId
+    }
+
+    const mappingState = {
+      enabled: Boolean(state.enabled),
+      preset: state.presetId || '',
+      status: this.formatCcMappingStatus(state)
+    }
+
+    parentPane.addBinding(mappingState, 'enabled', { label: 'Enable' })
+      .on('change', (ev) => {
+        this.trigger('midiCcMappingEnabledChange', ev.value)
+      })
+
+    parentPane.addBinding(mappingState, 'preset', {
+      label: 'Preset',
+      options: presetOptions
+    }).on('change', (ev) => {
+      if (!ev.value) return
+      this.trigger('midiCcMappingPresetChange', ev.value)
+    })
+
+    parentPane.addButton({ title: 'Load Mapping File…' }).on('click', () => {
+      this.trigger('midiCcMappingLoadFile')
+    })
+
+    parentPane.addBinding(mappingState, 'status', {
+      label: 'Status',
+      readonly: true
+    })
+  }
+
+  formatCcMappingStatus (state) {
+    if (!state?.hasMapping) {
+      return 'No mapping loaded'
+    }
+    const parts = [
+      state.enabled ? 'Enabled' : 'Disabled',
+      state.sourceLabel || 'Mapping loaded'
+    ]
+    if (state.deviceName) parts.push(`device: ${state.deviceName}`)
+    if (state.currentTrackId) {
+      const luminode = state.currentLuminode ? ` (${state.currentLuminode})` : ''
+      parts.push(`track ${state.currentTrackId}${luminode}`)
+    } else {
+      parts.push('no active track')
+    }
+    return parts.join(' · ')
   }
 
   createGeneratorFolder (parentFolder, generator, index, tracks) {

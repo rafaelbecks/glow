@@ -221,8 +221,18 @@ export class TrackManager {
     return newConfig
   }
 
-  getTrajectoryPosition (trackId, time, basePosition = { x: 0, y: 0, z: 0, rotation: 0 }) {
-    return this.trajectorySystem.getPosition(trackId, time, basePosition)
+  getTrajectoryPosition (
+    trackId,
+    time,
+    basePosition = { x: 0, y: 0, z: 0, rotation: 0 },
+    configOverride = null
+  ) {
+    return this.trajectorySystem.getPosition(
+      trackId,
+      time,
+      basePosition,
+      configOverride
+    )
   }
 
   getTrajectoryTypes () {

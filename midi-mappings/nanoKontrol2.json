@@ -1,0 +1,54 @@
+{
+  "enabled": true,
+  "suppressNotes": true,
+  "description": "Korg nanoKONTROL2 native-mode mapping for G.L.O.W.",
+  "device": {
+    "name": "nanoKONTROL2 SLIDER/KNOB",
+    "id": null
+  },
+  "trackNavigation": {
+    "previousNote": 46,
+    "nextNote": 47
+  },
+  "luminodeNavigation": {
+    "previousCC": 84,
+    "nextCC": 85,
+    "previousNote": 84,
+    "nextNote": 85
+  },
+  "modeToggle": {
+    "cc": 86,
+    "note": 86
+  },
+  "canvasFilterNavigation": {
+    "previousCC": 91,
+    "nextCC": 92,
+    "previousNote": 91,
+    "nextNote": 92,
+    "filters": [
+      "clearAlpha",
+      "lumiaEffect",
+      "invertFilter",
+      "grayscaleFilter",
+      "hueRotateFilter",
+      "brightnessFilter",
+      "contrastFilter",
+      "saturationFilter",
+      "dither"
+    ]
+  },
+  "generatorDice": {
+    "note": 82
+  },
+  "useColorToggle": {
+    "cc": 95,
+    "note": 95
+  },
+  "layoutModeToggle": {
+    "cc": 93,
+    "note": 93
+  },
+  "luminodeParameters": {
+    "pitchBendChannels": [0, 1, 2, 3, 4, 5, 6, 7]
+  }
+}
