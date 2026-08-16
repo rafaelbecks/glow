@@ -85,12 +85,14 @@ export const LUMINODE_REGISTRY = {
   sotoGrid: {
     class: SotoGridLuminode,
     displayName: 'Soto Grid',
-    settingsKey: 'SOTO_GRID'
+    settingsKey: 'SOTO_GRID',
+    hidden: true
   },
   sotoGridRotated: {
     class: SotoGridLuminode,
     displayName: 'Soto Squares',
-    settingsKey: 'SOTO_GRID'
+    settingsKey: 'SOTO_GRID',
+    hidden: true
   },
   whitneyLines: {
     class: WhitneyLinesLuminode,
@@ -130,7 +132,8 @@ export const LUMINODE_REGISTRY = {
   clavilux: {
     class: ClaviluxLuminode,
     displayName: 'Clavilux',
-    settingsKey: 'CLAVILUX'
+    settingsKey: 'CLAVILUX',
+    hidden: true
   },
   diamond: {
     class: DiamondLuminode,
@@ -213,5 +216,7 @@ export function getLuminodeSettingsKey (name) {
 }
 
 export function getAvailableLuminodes () {
-  return Object.keys(LUMINODE_REGISTRY)
+  return Object.keys(LUMINODE_REGISTRY).filter(
+    (name) => !LUMINODE_REGISTRY[name]?.hidden
+  )
 }

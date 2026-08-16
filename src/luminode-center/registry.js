@@ -1,7 +1,7 @@
 /**
  * Register / unregister user luminodes into the live GLOW registries.
  */
-import { LUMINODE_REGISTRY } from '../luminodes/index.js'
+import { LUMINODE_REGISTRY, getAvailableLuminodes } from '../luminodes/index.js'
 import { LUMINODE_CONFIGS } from '../luminode-configs.js'
 import { SETTINGS } from '../settings.js'
 import { USER_GROUP, isUserLuminodeId } from './model.js'
@@ -73,7 +73,7 @@ export function unregisterUserLuminode (id, hooks = {}) {
     delete hooks.visualizer.luminodeFactory[id]
   }
   if (hooks.trackManager) {
-    hooks.trackManager.availableLuminodes = Object.keys(LUMINODE_REGISTRY)
+    hooks.trackManager.availableLuminodes = getAvailableLuminodes()
   }
   if (hooks.midiManager?.activeNotes) {
     delete hooks.midiManager.activeNotes[id]
@@ -86,7 +86,7 @@ function syncConsumers (id, Class, hooks) {
     hooks.visualizer.luminodeFactory[id] = Class
   }
   if (hooks.trackManager) {
-    hooks.trackManager.availableLuminodes = Object.keys(LUMINODE_REGISTRY)
+    hooks.trackManager.availableLuminodes = getAvailableLuminodes()
   }
   if (hooks.midiManager) {
     if (!hooks.midiManager.activeNotes[id]) {

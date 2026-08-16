@@ -61,13 +61,6 @@ export class ExternalSystemsUIManager {
       <div class="external-systems-controls">
         <div class="control-section">
           <div class="modulator-header">
-            <h4>MIDI CC Mapping</h4>
-          </div>
-          <div id="midi-cc-pane-container"></div>
-        </div>
-
-        <div class="control-section">
-          <div class="modulator-header">
             <h4>MIDI Generators</h4>
             <button class="add-modulator-btn" id="addGeneratorBtn" ${canAdd ? '' : 'disabled'}>
               <ion-icon name="add-outline"></ion-icon>
@@ -78,6 +71,13 @@ export class ExternalSystemsUIManager {
             ? '<div class="no-modulators">No generators. Click "Add Generator" to drive a track without MIDI hardware.</div>'
             : ''}
           <div id="external-pane-container"></div>
+        </div>
+
+        <div class="control-section">
+          <div class="modulator-header">
+            <h4>MIDI CC Mapping</h4>
+          </div>
+          <div id="midi-cc-pane-container"></div>
         </div>
       </div>
     `

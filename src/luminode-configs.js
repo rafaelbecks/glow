@@ -1037,6 +1037,7 @@ export const LUMINODE_CONFIGS = {
 
   sotoGrid: {
     group: 'Art-Inspired',
+    hidden: true,
     config: [
       {
         key: 'BASE_SIZE',
@@ -1079,6 +1080,7 @@ export const LUMINODE_CONFIGS = {
 
   sotoGridRotated: {
     group: 'Art-Inspired',
+    hidden: true,
     config: [
       {
         key: 'BASE_SIZE',
@@ -1178,6 +1180,7 @@ export const LUMINODE_CONFIGS = {
 
   clavilux: {
     group: 'Art-Inspired',
+    hidden: true,
     config: [
       {
         key: 'BASE_SIZE',
@@ -2513,7 +2516,9 @@ export function getLuminodeGroup (luminodeName) {
 
 // Helper function to get all available luminodes with configurations
 export function getAvailableLuminodes () {
-  return Object.keys(LUMINODE_CONFIGS)
+  return Object.keys(LUMINODE_CONFIGS).filter(
+    (name) => !LUMINODE_CONFIGS[name]?.hidden
+  )
 }
 
 // Helper function to check if a luminode has configuration
@@ -2525,6 +2530,7 @@ export function hasLuminodeConfig (luminodeName) {
 export function getLuminodesByGroup () {
   const grouped = {}
   Object.entries(LUMINODE_CONFIGS).forEach(([name, config]) => {
+    if (config.hidden) return
     const group = config.group
     if (!grouped[group]) {
       grouped[group] = []
