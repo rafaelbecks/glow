@@ -55,14 +55,14 @@ export class TabletManager {
 
   // Color generation methods
   getRandomColor () {
-    if (Math.random() < 0.5) {
-      // Use SOTO_PALETTE colors
-      return SETTINGS.COLORS.SOTO_PALETTE[Math.floor(Math.random() * SETTINGS.COLORS.SOTO_PALETTE.length)]
-    } else {
-      // Use random hue like pitchToColor function
-      const hue = Math.floor(Math.random() * 360)
-      return `hsla(${hue}, 100%, 70%, 1)`
+    // Read the palette per stroke so Canvas tab edits apply to new strokes
+    const palette = SETTINGS.COLORS?.PITCH_PALETTE
+    if (palette && palette.length > 0) {
+      return palette[Math.floor(Math.random() * palette.length)]
     }
+
+    const hue = Math.floor(Math.random() * 360)
+    return `hsla(${hue}, 100%, 70%, 1)`
   }
 
   // Drawing control methods
