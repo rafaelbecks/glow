@@ -17,6 +17,7 @@ import { getConfirmDialog } from './components/confirm-dialog.js'
 import { FILE_TYPE, isGlowProjectFileName, isLuminodeFileName } from './glow-file-types.js'
 import { getLuminodeConfig } from './luminode-configs.js'
 import { getTrackMotionModulationParam } from './modulation-system.js'
+import { createLineModulationContext } from './line-modulation-context.js'
 import {
   getCanvasFilterParamByKey,
   getCanvasFilterEnableKey,
@@ -1587,6 +1588,7 @@ export class GLOWVisualizer {
 
   applyTrackMotionModulation (track, notes = []) {
     const modulationSystem = this.trackManager.getModulationSystem()
+    const lineModulationSystem = this.trackManager.getLineModulationSystem()
     const layout = {
       x: track.layout?.x ?? 0,
       y: track.layout?.y ?? 0,
@@ -1598,6 +1600,8 @@ export class GLOWVisualizer {
       offset: [...(baseTrajectoryConfig.offset || [0, 0, 0])],
       phase: [...(baseTrajectoryConfig.phase || [0, 0, 0])]
     }
+    const baseLineConfig = this.trackManager.getLineModulationConfig(track.id)
+    const lineModulationConfig = lineModulationSystem.cloneConfig(baseLineConfig)
     const modulators = modulationSystem
       .getModulators()
       .filter(
@@ -1609,7 +1613,7 @@ export class GLOWVisualizer {
       )
 
     if (modulators.length === 0) {
-      return { layout, trajectoryConfig }
+      return { layout, trajectoryConfig, lineModulationConfig }
     }
 
     const noteData = {
@@ -1631,6 +1635,43 @@ export class GLOWVisualizer {
       const param = getTrackMotionModulationParam(key)
       if (!param) return
 
+      if (key.startsWith('lineModulation.')) {
+        const flatKey = key.slice('lineModulation.'.length)
+        let baseValue
+        if (flatKey === 'enabled') baseValue = lineModulationConfig.enabled
+        else if (flatKey === 'oscillationAmount') {
+          baseValue = lineModulationConfig.oscillation.amount
+        } else if (flatKey === 'oscillationFrequency') {
+          baseValue = lineModulationConfig.oscillation.frequency
+        } else if (flatKey === 'oscillationSpeed') {
+          baseValue = lineModulationConfig.oscillation.speed
+        } else if (flatKey === 'oscillationPhase') {
+          baseValue = lineModulationConfig.oscillation.phase
+        } else if (flatKey === 'noiseAmount') {
+          baseValue = lineModulationConfig.noise.amount
+        } else if (flatKey === 'noiseScale') {
+          baseValue = lineModulationConfig.noise.scale
+        } else if (flatKey === 'noiseSpeed') {
+          baseValue = lineModulationConfig.noise.speed
+        } else if (flatKey === 'audioAmount') {
+          baseValue = lineModulationConfig.audio.amount
+        } else {
+          return
+        }
+        const modulated = modulationSystem.getStackedModulatedValue(
+          baseValue,
+          mods,
+          param,
+          noteData
+        )
+        lineModulationSystem.applyFlatModulation(
+          lineModulationConfig,
+          key,
+          modulated
+        )
+        return
+      }
+
       const [group, property] = key.split('.')
       const target = group === 'layout' ? layout : trajectoryConfig
       target[property] = modulationSystem.getStackedModulatedValue(
@@ -1641,11 +1682,12 @@ export class GLOWVisualizer {
       )
     })
 
-    return { layout, trajectoryConfig }
+    return { layout, trajectoryConfig, lineModulationConfig }
   }
 
   getTrackLayouts (activeNotes = {}) {
     const layouts = {}
+    const lineModulationConfigs = {}
     const tracks = this.trackManager.getTracks()
     const time = performance.now() / 1000
 
@@ -1654,8 +1696,11 @@ export class GLOWVisualizer {
         const notes = activeNotes[track.id] || activeNotes[track.luminode] || []
         const {
           layout: baseLayout,
-          trajectoryConfig
+          trajectoryConfig,
+          lineModulationConfig
         } = this.applyTrackMotionModulation(track, notes)
+
+        lineModulationConfigs[track.id] = lineModulationConfig
 
         // Apply trajectory motion to the layout (position and/or rotation)
         const trajectoryPosition = this.trackManager.getTrajectoryPosition(
@@ -1679,6 +1724,7 @@ export class GLOWVisualizer {
       }
     })
 
+    this._frameLineModulationConfigs = lineModulationConfigs
     return layouts
   }
 
@@ -1743,9 +1789,22 @@ export class GLOWVisualizer {
       layerCtx.globalAlpha = 1
       layerCtx.globalCompositeOperation = 'source-over'
 
+      const lineConfig =
+        (this._frameLineModulationConfigs &&
+          this._frameLineModulationConfigs[track.id]) ||
+        this.trackManager.getLineModulationConfig(track.id)
+      const lineSystem = this.trackManager.getLineModulationSystem()
+      const audioLevel = lineSystem.getAudioLevel(lineConfig)
+      const drawCtx = createLineModulationContext(layerCtx, {
+        system: lineSystem,
+        config: lineConfig,
+        t,
+        audioLevel
+      })
+
       const prevLumCtx = luminode.ctx
-      luminode.ctx = layerCtx
-      this.canvasDrawer.withAlternateContext(layerCtx, () => {
+      luminode.ctx = drawCtx
+      this.canvasDrawer.withAlternateContext(drawCtx, () => {
         this.drawTrackLuminode(luminode, track.luminode, t, notes, layout)
       })
       luminode.ctx = prevLumCtx

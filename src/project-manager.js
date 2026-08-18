@@ -180,6 +180,7 @@ export class ProjectManager {
       modules: this.collectModuleSettings(),
       tracks: this.collectTrackSettings(),
       trajectories: this.collectTrajectorySettings(),
+      lineModulations: this.collectLineModulationSettings(),
       modulation: this.collectModulationSettings(),
       tablet: this.collectTabletSettings(),
       midi: this.collectMidiSettings(),
@@ -259,6 +260,23 @@ export class ProjectManager {
     });
 
     return trajectories;
+  }
+
+  collectLineModulationSettings() {
+    const tracks = this.glowVisualizer.trackManager.getTracks();
+    const lineModulations = {};
+    const system =
+      this.glowVisualizer.trackManager.getLineModulationSystem();
+
+    tracks.forEach((track) => {
+      const config =
+        this.glowVisualizer.trackManager.getLineModulationConfig(track.id);
+      if (config) {
+        lineModulations[track.id] = system.cloneConfig(config);
+      }
+    });
+
+    return lineModulations;
   }
 
   collectModulationSettings() {
@@ -887,6 +905,9 @@ export class ProjectManager {
       // Load trajectory settings
       this.loadTrajectorySettings(projectData.trajectories || {});
 
+      // Load line modulation settings
+      this.loadLineModulationSettings(projectData.lineModulations || {});
+
       // Load modulation settings
       await this.loadModulationSettings(projectData.modulation || {});
 
@@ -1426,6 +1447,20 @@ export class ProjectManager {
       const config = trajectoryData[trackId];
       if (config) {
         this.glowVisualizer.trackManager.updateTrajectoryConfig(
+          parseInt(trackId),
+          config,
+        );
+      }
+    });
+  }
+
+  loadLineModulationSettings(lineModulationData) {
+    if (!lineModulationData) return;
+
+    Object.keys(lineModulationData).forEach((trackId) => {
+      const config = lineModulationData[trackId];
+      if (config) {
+        this.glowVisualizer.trackManager.updateLineModulationConfig(
           parseInt(trackId),
           config,
         );

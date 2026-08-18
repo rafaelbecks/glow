@@ -87,6 +87,10 @@ export class SidePanel {
       this.trackUIManager.updateTrajectoryUI(data.trackId, data.config)
     })
 
+    this.basePanel.on('lineModulationUpdated', (data) => {
+      this.trackUIManager.updateLineModulationUI(data.trackId, data.config)
+    })
+
     // Listen for luminode config changes
     this.basePanel.getPanel().addEventListener('luminodeConfigChange', (e) => {
       this.triggerCallback('luminodeConfigChange', e.detail)

@@ -2,6 +2,7 @@ import { WindowBridge } from './window-bridge.js'
 import { SidePanel } from './side-panel.js'
 import { SETTINGS } from './settings.js'
 import { TrajectorySystem } from './trajectory-system.js'
+import { LineModulationSystem } from './line-modulation-system.js'
 import { ModulationSystem } from './modulation-system.js'
 import { getAvailableLuminodes } from './luminodes/index.js'
 
@@ -38,6 +39,7 @@ class ProxyTrackManager {
     this.tracks = []
     this.midiDevices = []
     this._trajectorySystem = new TrajectorySystem()
+    this._lineModulationSystem = new LineModulationSystem()
     this._modulationSystem = new ProxyModulationSystem(bridge)
     this._callbacks = {}
     this._availableLuminodes = getAvailableLuminodes()
@@ -64,6 +66,11 @@ class ProxyTrackManager {
     if (state.trajectoryConfigs) {
       Object.entries(state.trajectoryConfigs).forEach(([id, config]) => {
         this._trajectorySystem.updateTrackConfig(Number(id), config)
+      })
+    }
+    if (state.lineModulationConfigs) {
+      Object.entries(state.lineModulationConfigs).forEach(([id, config]) => {
+        this._lineModulationSystem.updateTrackConfig(Number(id), config)
       })
     }
     if (state.modulators) {
@@ -107,6 +114,14 @@ class ProxyTrackManager {
 
   getTrajectoryTypeNames () {
     return this._trajectorySystem.getTrajectoryTypeNames()
+  }
+
+  getLineModulationConfig (trackId) {
+    return this._lineModulationSystem.getTrackConfig(trackId)
+  }
+
+  getLineModulationSystem () {
+    return this._lineModulationSystem
   }
 
   getModulators () {
@@ -159,6 +174,13 @@ class ProxyTrackManager {
     const config = this._trajectorySystem.updateTrackConfig(trackId, updates)
     this._emit('trajectoryUpdated', { trackId, config })
     this._action('updateTrajectoryConfig', { trackId, updates })
+    return config
+  }
+
+  updateLineModulationConfig (trackId, updates) {
+    const config = this._lineModulationSystem.updateTrackConfig(trackId, updates)
+    this._emit('lineModulationUpdated', { trackId, config })
+    this._action('updateLineModulationConfig', { trackId, updates })
     return config
   }
 

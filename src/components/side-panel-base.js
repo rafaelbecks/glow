@@ -120,6 +120,10 @@ export class SidePanelBase {
     this.trackManager.on('trajectoryUpdated', (data) => {
       this.triggerCallback('trajectoryUpdated', data)
     })
+
+    this.trackManager.on('lineModulationUpdated', (data) => {
+      this.triggerCallback('lineModulationUpdated', data)
+    })
   }
 
   on (event, callback) {

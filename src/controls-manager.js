@@ -51,13 +51,16 @@ export class ControlsManager {
   _getState () {
     const { trackManager } = this.glow
     const trajectoryConfigs = {}
+    const lineModulationConfigs = {}
     trackManager.getTracks().forEach((t) => {
       trajectoryConfigs[t.id] = trackManager.getTrajectoryConfig(t.id)
+      lineModulationConfigs[t.id] = trackManager.getLineModulationConfig(t.id)
     })
     return {
       tracks: JSON.parse(JSON.stringify(trackManager.getTracks())),
       midiDevices: trackManager.getAvailableMidiDevices(),
       trajectoryConfigs,
+      lineModulationConfigs,
       modulators: JSON.parse(JSON.stringify(trackManager.getModulators())),
       canvasSettings: JSON.parse(JSON.stringify(SETTINGS.CANVAS)),
       colorSettings: JSON.parse(JSON.stringify(SETTINGS.COLORS))
@@ -110,6 +113,9 @@ export class ControlsManager {
         break
       case 'updateTrajectoryConfig':
         trackManager.updateTrajectoryConfig(p.trackId, p.updates)
+        break
+      case 'updateLineModulationConfig':
+        trackManager.updateLineModulationConfig(p.trackId, p.updates)
         break
       case 'addModulator':
         trackManager.addModulator('lfo', p.modulatorId)
