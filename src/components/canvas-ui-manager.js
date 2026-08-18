@@ -1532,12 +1532,52 @@ export class CanvasUIManager {
     })
     this.colorPaletteFolder = colorPaletteFolder
 
+    const sotoPaletteData = {}
+    colorSettings.SOTO_PALETTE.forEach((color, index) => {
+      sotoPaletteData[`color${index}`] = color
+    })
+
+    const sotoPaletteFolder = colorPaletteFolder.addFolder({
+      title: 'Soto Palette',
+      expanded: true
+    })
+    this.sotoPaletteFolder = sotoPaletteFolder
+    colorSettings.SOTO_PALETTE.forEach((color, index) => {
+      sotoPaletteFolder
+        .addBinding(sotoPaletteData, `color${index}`, {
+          label: `Color ${index + 1}`,
+          picker: 'inline'
+        })
+        .on('change', (ev) => {
+          this.triggerColorPaletteChange('soto', index, ev.value)
+        })
+    })
+    this.refreshSotoPaletteVisibility()
+
+    if (
+      !colorSettings.PITCH_PALETTE ||
+      colorSettings.PITCH_PALETTE.length !== pitchColorData.paletteSize
+    ) {
+      colorSettings.PITCH_PALETTE = UTILS.generatePitchPalette(
+        pitchColorData.hueFactor,
+        pitchColorData.paletteSize
+      )
+      if (settings.COLORS) {
+        settings.COLORS.PITCH_PALETTE = [...colorSettings.PITCH_PALETTE]
+      }
+    }
+
+    const pitchColorFolder = this.mainPane.addFolder({
+      title: 'Pitch to Color Palette',
+      expanded: true
+    })
+
     const transitionData = {
       enabled: colorSettings.PALETTE_TRANSITION_ENABLED === true,
       easing: colorSettings.PALETTE_TRANSITION_EASING || 'easeInOut',
       duration: colorSettings.PALETTE_TRANSITION_DURATION ?? 1
     }
-    const transitionFolder = colorPaletteFolder.addFolder({
+    const transitionFolder = pitchColorFolder.addFolder({
       title: 'Interpolation',
       expanded: true
     })
@@ -1578,46 +1618,6 @@ export class CanvasUIManager {
       .on('change', (ev) => {
         this.triggerColorTransitionSettingChange('duration', ev.value)
       })
-
-    const sotoPaletteData = {}
-    colorSettings.SOTO_PALETTE.forEach((color, index) => {
-      sotoPaletteData[`color${index}`] = color
-    })
-
-    const sotoPaletteFolder = colorPaletteFolder.addFolder({
-      title: 'Soto Palette',
-      expanded: true
-    })
-    this.sotoPaletteFolder = sotoPaletteFolder
-    colorSettings.SOTO_PALETTE.forEach((color, index) => {
-      sotoPaletteFolder
-        .addBinding(sotoPaletteData, `color${index}`, {
-          label: `Color ${index + 1}`,
-          picker: 'inline'
-        })
-        .on('change', (ev) => {
-          this.triggerColorPaletteChange('soto', index, ev.value)
-        })
-    })
-    this.refreshSotoPaletteVisibility()
-
-    if (
-      !colorSettings.PITCH_PALETTE ||
-      colorSettings.PITCH_PALETTE.length !== pitchColorData.paletteSize
-    ) {
-      colorSettings.PITCH_PALETTE = UTILS.generatePitchPalette(
-        pitchColorData.hueFactor,
-        pitchColorData.paletteSize
-      )
-      if (settings.COLORS) {
-        settings.COLORS.PITCH_PALETTE = [...colorSettings.PITCH_PALETTE]
-      }
-    }
-
-    const pitchColorFolder = this.mainPane.addFolder({
-      title: 'Pitch to Color Palette',
-      expanded: true
-    })
 
     const pitchSwatchContainer = document.createElement('div')
     pitchSwatchContainer.id = 'pitchColorExample'
