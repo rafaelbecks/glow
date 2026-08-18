@@ -1574,6 +1574,7 @@ export class CanvasUIManager {
 
     const pitchSwatchContainer = document.createElement('div')
     pitchSwatchContainer.id = 'pitchColorExample'
+    pitchSwatchContainer.style.height = '246px'
     pitchSwatchContainer.className = 'pitch-color-example'
     this.pitchSwatchContainer = pitchSwatchContainer
 
