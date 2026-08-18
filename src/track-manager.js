@@ -1,5 +1,6 @@
 // Track management system for DAW-style interface
 import { TrajectorySystem } from './trajectory-system.js'
+import { LineModulationSystem } from './line-modulation-system.js'
 import { ModulationSystem } from './modulation-system.js'
 import { getAvailableLuminodes } from './luminodes/index.js'
 import { TRACK_BLEND_MODES } from './track-blend-modes.js'
@@ -61,6 +62,8 @@ export class TrackManager {
 
     // Initialize trajectory system
     this.trajectorySystem = new TrajectorySystem()
+    // Initialize transversal line modulation (geometry deformation)
+    this.lineModulationSystem = new LineModulationSystem()
 
     // Initialize modulation system
     this.modulationSystem = new ModulationSystem()
@@ -249,6 +252,35 @@ export class TrackManager {
       trackId,
       config: this.trajectorySystem.getTrackConfig(trackId)
     })
+  }
+
+  // Line modulation management methods
+  getLineModulationConfig (trackId) {
+    return this.lineModulationSystem.getTrackConfig(trackId)
+  }
+
+  updateLineModulationConfig (trackId, updates) {
+    const newConfig = this.lineModulationSystem.updateTrackConfig(
+      trackId,
+      updates
+    )
+    this.triggerCallback('lineModulationUpdated', {
+      trackId,
+      config: newConfig
+    })
+    return newConfig
+  }
+
+  resetLineModulationConfig (trackId) {
+    this.lineModulationSystem.resetTrackConfig(trackId)
+    this.triggerCallback('lineModulationUpdated', {
+      trackId,
+      config: this.lineModulationSystem.getTrackConfig(trackId)
+    })
+  }
+
+  getLineModulationSystem () {
+    return this.lineModulationSystem
   }
 
   // Modulation management methods

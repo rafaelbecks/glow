@@ -6,6 +6,7 @@
  */
 
 import { getAudioModulationEngine } from './audio-modulation-engine.js'
+import { LINE_MODULATION_PARAMS } from './line-modulation-system.js'
 
 export const TRACK_MOTION_MODULATION_PARAMS = [
   {
@@ -73,7 +74,8 @@ export const TRACK_MOTION_MODULATION_PARAMS = [
     key: 'trajectory.inversion',
     label: 'Trajectory · Invert',
     type: 'checkbox'
-  }
+  },
+  ...LINE_MODULATION_PARAMS
 ]
 
 export function getTrackMotionModulationParam (key) {
