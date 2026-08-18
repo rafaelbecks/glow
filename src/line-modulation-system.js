@@ -4,11 +4,11 @@
  * Transversal geometry deformation applied after luminodes
  * generate line vertices (via a Canvas context proxy).
  *
- * Effects (composable): oscillation, Perlin noise, audio-driven
- * displacement. Disabled by default so existing scenes are unchanged.
+ * Effects (composable): oscillation + Perlin noise.
+ * Audio reactivity is done via the Modulation tab targeting
+ * oscillation/noise amounts — not a separate deform audio path.
+ * Disabled by default so existing scenes are unchanged.
  */
-
-import { getAudioModulationEngine } from './audio-modulation-engine.js'
 
 /** Modulation targets exposed in the Modulation tab (dotted keys). */
 export const LINE_MODULATION_PARAMS = [
@@ -72,19 +72,41 @@ export const LINE_MODULATION_PARAMS = [
     min: 0,
     max: 5,
     step: 0.01
-  },
-  {
-    key: 'lineModulation.audioAmount',
-    label: 'Line · Audio Amount',
-    type: 'slider',
-    min: 0,
-    max: 80,
-    step: 0.5
   }
 ]
 
+export const OSCILLATION_WAVE_SHAPES = ['sine', 'square', 'triangle', 'saw']
+
+export const OSCILLATION_WAVE_SHAPE_NAMES = {
+  sine: 'Sine',
+  square: 'Square',
+  triangle: 'Triangle',
+  saw: 'Sawtooth'
+}
+
 export function getLineModulationParam (key) {
   return LINE_MODULATION_PARAMS.find((param) => param.key === key)
+}
+
+/** Waveform in [-1, 1] for a given phase in radians. Matches LFO shapes. */
+export function oscillationWaveform (shape, phase) {
+  const normalizedPhase =
+    ((phase % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)
+
+  switch (shape) {
+    case 'square':
+      return normalizedPhase < Math.PI ? 1 : -1
+    case 'triangle':
+      if (normalizedPhase < Math.PI) {
+        return (normalizedPhase / Math.PI) * 2 - 1
+      }
+      return 1 - ((normalizedPhase - Math.PI) / Math.PI) * 2
+    case 'saw':
+      return (normalizedPhase / (Math.PI * 2)) * 2 - 1
+    case 'sine':
+    default:
+      return Math.sin(normalizedPhase)
+  }
 }
 
 // --- Compact classic Perlin (permutation table + fade) ---
@@ -168,7 +190,6 @@ function deepMergeSection (base, patch) {
 export class LineModulationSystem {
   constructor () {
     this.trackConfigs = new Map()
-    this.audioEngine = getAudioModulationEngine()
     this._out = { x: 0, y: 0 }
     this.initializeDefaultConfigs()
   }
@@ -181,7 +202,8 @@ export class LineModulationSystem {
         amount: 0,
         frequency: 0.08,
         speed: 1,
-        phase: 0
+        phase: 0,
+        wave: 'sine'
       },
       noise: {
         enabled: true,
@@ -189,20 +211,6 @@ export class LineModulationSystem {
         scale: 0.02,
         speed: 0.5,
         seed: 0
-      },
-      audio: {
-        enabled: false,
-        amount: 0,
-        audioSourceType: 'input',
-        audioDeviceId: null,
-        audioDeviceLabel: null,
-        audioTrackId: null,
-        audioFeature: 'rms',
-        audioChannel: 0,
-        audioChannelMode: 'mono',
-        audioSmoothing: 0.7,
-        audioFreqMin: 20,
-        audioFreqMax: 20000
       }
     }
   }
@@ -220,12 +228,15 @@ export class LineModulationSystem {
 
   updateTrackConfig (trackId, updates = {}) {
     const current = this.getTrackConfig(trackId)
+    // Ignore legacy `audio` section from older .glow files
     const next = {
-      ...current,
-      ...updates,
+      enabled:
+        updates.enabled !== undefined ? updates.enabled : current.enabled,
       oscillation: deepMergeSection(current.oscillation, updates.oscillation),
-      noise: deepMergeSection(current.noise, updates.noise),
-      audio: deepMergeSection(current.audio, updates.audio)
+      noise: deepMergeSection(current.noise, updates.noise)
+    }
+    if (!OSCILLATION_WAVE_SHAPES.includes(next.oscillation.wave)) {
+      next.oscillation.wave = 'sine'
     }
     this.trackConfigs.set(trackId, next)
     return next
@@ -254,7 +265,6 @@ export class LineModulationSystem {
     else if (prop === 'noiseAmount') config.noise.amount = value
     else if (prop === 'noiseScale') config.noise.scale = value
     else if (prop === 'noiseSpeed') config.noise.speed = value
-    else if (prop === 'audioAmount') config.audio.amount = value
     return config
   }
 
@@ -262,82 +272,15 @@ export class LineModulationSystem {
     return {
       enabled: config.enabled,
       oscillation: { ...config.oscillation },
-      noise: { ...config.noise },
-      audio: { ...config.audio }
+      noise: { ...config.noise }
     }
-  }
-
-  getAudioSources () {
-    const sources = []
-    for (const config of this.trackConfigs.values()) {
-      const audio = config?.audio
-      if (!config?.enabled || !audio?.enabled || !(audio.amount > 0)) continue
-      sources.push({
-        ...audio,
-        type: 'audio',
-        enabled: true
-      })
-    }
-    return sources
-  }
-
-  /**
-   * Sample audio level [0, 1] for the track's line-audio config.
-   * Reuses AudioModulationEngine (same path as audio modulators).
-   */
-  getAudioLevel (config) {
-    const audio = config?.audio
-    if (!audio || !audio.enabled || !(audio.amount > 0)) return 0
-
-    const sourceType = audio.audioSourceType || 'input'
-    let audioDeviceId = audio.audioDeviceId
-    let audioTrackId = audio.audioTrackId
-
-    // Fall back to first available source so Amount works without a picker visit
-    if (sourceType === 'input' && !audioDeviceId) {
-      const devices = this.audioEngine.getDevices?.() || []
-      audioDeviceId = devices[0]?.deviceId || null
-      if (!audioDeviceId) return 0
-    }
-    if (sourceType === 'file' && !audioTrackId) {
-      const tracks = this.audioEngine.getTracks?.() || []
-      audioTrackId = tracks[0]?.id || null
-      if (!audioTrackId) return 0
-    }
-
-    const modulatorLike = {
-      type: 'audio',
-      enabled: true,
-      audioSourceType: sourceType,
-      audioDeviceId,
-      audioTrackId,
-      audioFeature: audio.audioFeature || 'rms',
-      audioChannel: audio.audioChannel || 0,
-      audioChannelMode: audio.audioChannelMode || 'mono',
-      audioSmoothing:
-        audio.audioSmoothing !== undefined ? audio.audioSmoothing : 0.7,
-      audioFreqMin: audio.audioFreqMin ?? 20,
-      audioFreqMax: audio.audioFreqMax ?? 20000,
-      multiplier: 1,
-      depth: 1,
-      offset: 0
-    }
-    return this.audioEngine.getNormalizedLevel(modulatorLike)
   }
 
   /**
    * Apply composable line effects to a single vertex.
    * Mutates / returns reusable { x, y }. Prefer in-place for hot path.
-   *
-   * @param {number} x
-   * @param {number} y
-   * @param {{ index: number, prevX: number, prevY: number, hasPrev: boolean }} pathState
-   * @param {object} config
-   * @param {number} t elapsed seconds
-   * @param {number} audioLevel 0..1
-   * @param {{ x: number, y: number }} [out]
    */
-  applyPoint (x, y, pathState, config, t, audioLevel = 0, out = this._out) {
+  applyPoint (x, y, pathState, config, t, out = this._out) {
     if (!config || !config.enabled) {
       out.x = x
       out.y = y
@@ -371,9 +314,8 @@ export class LineModulationSystem {
     const index = pathState.index | 0
     const osc = config.oscillation
     if (osc && osc.enabled && osc.amount) {
-      offset +=
-        Math.sin(index * osc.frequency + osc.phase + t * osc.speed) *
-        osc.amount
+      const phase = index * osc.frequency + osc.phase + t * osc.speed
+      offset += oscillationWaveform(osc.wave || 'sine', phase) * osc.amount
     }
 
     const noise = config.noise
@@ -388,11 +330,6 @@ export class LineModulationSystem {
       offset += n * noise.amount
     }
 
-    const audio = config.audio
-    if (audio && audio.enabled && audio.amount && audioLevel) {
-      offset += audioLevel * audio.amount
-    }
-
     out.x = x + nx * offset
     out.y = y + ny * offset
     return out
@@ -403,7 +340,7 @@ export class LineModulationSystem {
    * [[{x,y}, ...], ...] — optional API for non-canvas consumers.
    * Mutates points in place when possible.
    */
-  applyLine (lines, config, t = 0, audioLevel = 0) {
+  applyLine (lines, config, t = 0) {
     if (!config?.enabled || !lines) return lines
     const pathState = { index: 0, prevX: 0, prevY: 0, hasPrev: false }
     for (let li = 0; li < lines.length; li++) {
@@ -419,7 +356,6 @@ export class LineModulationSystem {
           pathState,
           config,
           t,
-          audioLevel,
           this._out
         )
         pathState.prevX = pt.x

@@ -107,12 +107,6 @@ export class SidePanel {
 
     this.basePanel
       .getPanel()
-      .addEventListener('colorTransitionSettingChange', (e) => {
-        this.triggerCallback('colorTransitionSettingChange', e.detail)
-      })
-
-    this.basePanel
-      .getPanel()
       .addEventListener('pitchColorFactorChange', (e) => {
         this.triggerCallback('pitchColorFactorChange', e.detail)
       })

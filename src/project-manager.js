@@ -10,7 +10,6 @@ import {
   stripGlowExtension,
 } from "./glow-file-types.js";
 import { SetManager } from "./set-manager.js";
-import { colorPaletteTransition } from "./color-palette-transition.js";
 
 export class ProjectManager {
   constructor(glowVisualizer) {
@@ -177,12 +176,6 @@ export class ProjectManager {
         pitchPalette: [...(SETTINGS.COLORS.PITCH_PALETTE || [])],
         pitchColorFactor: UTILS.pitchColorFactor,
         pitchPaletteSize: UTILS.pitchPaletteSize,
-        paletteTransitionEnabled:
-          SETTINGS.COLORS.PALETTE_TRANSITION_ENABLED === true,
-        paletteTransitionEasing:
-          SETTINGS.COLORS.PALETTE_TRANSITION_EASING || "easeInOut",
-        paletteTransitionDuration:
-          SETTINGS.COLORS.PALETTE_TRANSITION_DURATION ?? 1,
       },
       modules: this.collectModuleSettings(),
       tracks: this.collectTrackSettings(),
@@ -917,7 +910,6 @@ export class ProjectManager {
 
       // Load modulation settings
       await this.loadModulationSettings(projectData.modulation || {});
-      await this.restoreLineModulationInputs();
 
       // Load MIDI settings
       await this.loadMidiSettings(projectData.midi);
@@ -1326,14 +1318,6 @@ export class ProjectManager {
 
   loadColorSettings(colorData) {
     if (!colorData) return;
-    colorPaletteTransition.reset();
-
-    SETTINGS.COLORS.PALETTE_TRANSITION_ENABLED =
-      colorData.paletteTransitionEnabled === true;
-    SETTINGS.COLORS.PALETTE_TRANSITION_EASING =
-      colorData.paletteTransitionEasing || "easeInOut";
-    SETTINGS.COLORS.PALETTE_TRANSITION_DURATION =
-      colorData.paletteTransitionDuration ?? 1;
 
     if (colorData.sotoPalette) {
       SETTINGS.COLORS.SOTO_PALETTE = [...colorData.sotoPalette];
@@ -1485,51 +1469,6 @@ export class ProjectManager {
         );
       }
     });
-  }
-
-  async restoreLineModulationInputs() {
-    const trackManager = this.glowVisualizer.trackManager;
-    const modulationSystem = trackManager.getModulationSystem();
-    const audioEngine = modulationSystem.getAudioEngine();
-    const liveConfigs = trackManager
-      .getTracks()
-      .map((track) => ({
-        trackId: track.id,
-        config: trackManager.getLineModulationConfig(track.id),
-      }))
-      .filter(
-        ({ config }) =>
-          (config?.audio?.audioSourceType || "input") === "input" &&
-          (config?.audio?.audioDeviceId || config?.audio?.audioDeviceLabel),
-      );
-
-    if (liveConfigs.length > 0) {
-      try {
-        await audioEngine.refreshDevices();
-        for (const { trackId, config } of liveConfigs) {
-          const match = audioEngine.findDevice(
-            config.audio.audioDeviceId,
-            config.audio.audioDeviceLabel,
-          );
-          if (match) {
-            trackManager.updateLineModulationConfig(trackId, {
-              audio: {
-                audioDeviceId: match.deviceId,
-                audioDeviceLabel: match.label,
-              },
-            });
-          } else if (config.audio.audioDeviceLabel) {
-            console.warn(
-              `Deformation audio input not found: ${config.audio.audioDeviceLabel}`,
-            );
-          }
-        }
-      } catch (error) {
-        console.warn("Could not restore deformation audio inputs:", error);
-      }
-    }
-
-    await modulationSystem.syncAudioInputs();
   }
 
   async loadModulationSettings(modulationData) {

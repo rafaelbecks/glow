@@ -1,6 +1,4 @@
 // Settings and configuration constants
-import { colorPaletteTransition } from './color-palette-transition.js'
-
 export const SETTINGS = {
   // Canvas settings
   CANVAS: {
@@ -124,10 +122,7 @@ export const SETTINGS = {
       '#8B0000' // Dark red
     ],
     // Filled below from UTILS.generatePitchPalette after UTILS is defined
-    PITCH_PALETTE: [],
-    PALETTE_TRANSITION_ENABLED: false,
-    PALETTE_TRANSITION_EASING: 'easeInOut',
-    PALETTE_TRANSITION_DURATION: 1
+    PITCH_PALETTE: []
   },
 
   // Drawing modules configuration
@@ -578,14 +573,9 @@ export const UTILS = {
     )
   },
 
-  getColorPalette: (key) => {
-    const target = SETTINGS.COLORS?.[key] || []
-    return colorPaletteTransition.getPalette(key, target)
-  },
-
   pitchToColor: (midi) => {
     const pitch = typeof midi === 'number' ? midi : (midi?.midi ?? 60)
-    const palette = UTILS.getColorPalette('PITCH_PALETTE')
+    const palette = SETTINGS.COLORS?.PITCH_PALETTE
     if (palette && palette.length > 0) {
       const idx = ((pitch % palette.length) + palette.length) % palette.length
       const hex = palette[idx]

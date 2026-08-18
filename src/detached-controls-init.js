@@ -1,6 +1,6 @@
 import { WindowBridge } from './window-bridge.js'
 import { SidePanel } from './side-panel.js'
-import { SETTINGS, UTILS } from './settings.js'
+import { SETTINGS } from './settings.js'
 import { TrajectorySystem } from './trajectory-system.js'
 import { LineModulationSystem } from './line-modulation-system.js'
 import { ModulationSystem } from './modulation-system.js'
@@ -227,24 +227,7 @@ if (!window.opener) {
     bridge.send('ACTION', { type: 'colorPaletteChange', data })
   })
 
-  sidePanel.on('colorTransitionSettingChange', (data) => {
-    const keys = {
-      enabled: 'PALETTE_TRANSITION_ENABLED',
-      easing: 'PALETTE_TRANSITION_EASING',
-      duration: 'PALETTE_TRANSITION_DURATION'
-    }
-    if (keys[data?.setting]) SETTINGS.COLORS[keys[data.setting]] = data.value
-    bridge.send('ACTION', { type: 'colorTransitionSettingChange', data })
-  })
-
   sidePanel.on('pitchColorFactorChange', (data) => {
-    if (data?.value !== undefined) UTILS.pitchColorFactor = data.value
-    if (data?.size !== undefined) {
-      UTILS.pitchPaletteSize = UTILS.clampPitchPaletteSize(data.size)
-    }
-    if (Array.isArray(data?.palette) && data.palette.length > 0) {
-      SETTINGS.COLORS.PITCH_PALETTE = [...data.palette]
-    }
     bridge.send('ACTION', { type: 'pitchColorFactorChange', data })
   })
 

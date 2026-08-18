@@ -18,7 +18,6 @@ import { FILE_TYPE, isGlowProjectFileName, isLuminodeFileName } from './glow-fil
 import { getLuminodeConfig } from './luminode-configs.js'
 import { getTrackMotionModulationParam } from './modulation-system.js'
 import { createLineModulationContext } from './line-modulation-context.js'
-import { colorPaletteTransition } from './color-palette-transition.js'
 import {
   getCanvasFilterParamByKey,
   getCanvasFilterEnableKey,
@@ -504,9 +503,6 @@ export class GLOWVisualizer {
     )
     this.sidePanel.on('colorPaletteChange', (data) =>
       this.updateColorPalette(data)
-    )
-    this.sidePanel.on('colorTransitionSettingChange', (data) =>
-      this.updateColorTransitionSetting(data)
     )
     this.sidePanel.on('pitchColorFactorChange', (data) =>
       this.updatePitchColorFactor(data)
@@ -1149,29 +1145,19 @@ export class GLOWVisualizer {
 
   updateColorPalette (data) {
     const { palette, index, color } = data
-    const paletteKey = palette.toUpperCase() + '_PALETTE'
 
-    if (SETTINGS.COLORS && SETTINGS.COLORS[paletteKey]) {
-      const fromPalette = [
-        ...colorPaletteTransition.getPalette(
-          paletteKey,
-          SETTINGS.COLORS[paletteKey]
-        )
-      ]
+    if (
+      SETTINGS.COLORS &&
+      SETTINGS.COLORS[palette.toUpperCase() + '_PALETTE']
+    ) {
+      const paletteKey = palette.toUpperCase() + '_PALETTE'
       SETTINGS.COLORS[paletteKey][index] = color
-      this.transitionColorPalette(paletteKey, fromPalette)
       this.markProjectChanged()
     }
   }
 
   updatePitchColorFactor (data) {
     const { value, size, palette } = data
-    const fromPalette = [
-      ...colorPaletteTransition.getPalette(
-        'PITCH_PALETTE',
-        SETTINGS.COLORS.PITCH_PALETTE
-      )
-    ]
 
     if (value !== undefined) UTILS.pitchColorFactor = value
     if (size !== undefined) UTILS.pitchPaletteSize = UTILS.clampPitchPaletteSize(size)
@@ -1179,39 +1165,7 @@ export class GLOWVisualizer {
     SETTINGS.COLORS.PITCH_PALETTE = Array.isArray(palette) && palette.length > 0
       ? [...palette]
       : UTILS.generatePitchPalette(UTILS.pitchColorFactor, UTILS.pitchPaletteSize)
-    this.transitionColorPalette('PITCH_PALETTE', fromPalette)
     this.markProjectChanged()
-  }
-
-  updateColorTransitionSetting ({ setting, value }) {
-    const settingKeys = {
-      enabled: 'PALETTE_TRANSITION_ENABLED',
-      easing: 'PALETTE_TRANSITION_EASING',
-      duration: 'PALETTE_TRANSITION_DURATION'
-    }
-    const key = settingKeys[setting]
-    if (!key) return
-    SETTINGS.COLORS[key] = value
-    if (key === 'PALETTE_TRANSITION_ENABLED' && !value) {
-      colorPaletteTransition.reset()
-    }
-    this.markProjectChanged()
-  }
-
-  transitionColorPalette (paletteKey, fromPalette) {
-    const modulationSystem = this.trackManager.getModulationSystem()
-    colorPaletteTransition.transitionTo(
-      paletteKey,
-      fromPalette,
-      SETTINGS.COLORS[paletteKey],
-      {
-        enabled: SETTINGS.COLORS.PALETTE_TRANSITION_ENABLED,
-        duration: SETTINGS.COLORS.PALETTE_TRANSITION_DURATION,
-        easing: SETTINGS.COLORS.PALETTE_TRANSITION_EASING,
-        applyEasing: (amount, easing) =>
-          modulationSystem.applyEasing(amount, easing)
-      }
-    )
   }
 
   updateLumiaEffect (blurStrength) {
@@ -1699,8 +1653,6 @@ export class GLOWVisualizer {
           baseValue = lineModulationConfig.noise.scale
         } else if (flatKey === 'noiseSpeed') {
           baseValue = lineModulationConfig.noise.speed
-        } else if (flatKey === 'audioAmount') {
-          baseValue = lineModulationConfig.audio.amount
         } else {
           return
         }
@@ -1840,12 +1792,10 @@ export class GLOWVisualizer {
           this._frameLineModulationConfigs[track.id]) ||
         this.trackManager.getLineModulationConfig(track.id)
       const lineSystem = this.trackManager.getLineModulationSystem()
-      const audioLevel = lineSystem.getAudioLevel(lineConfig)
       const drawCtx = createLineModulationContext(layerCtx, {
         system: lineSystem,
         config: lineConfig,
-        t,
-        audioLevel
+        t
       })
 
       const prevLumCtx = luminode.ctx

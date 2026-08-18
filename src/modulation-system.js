@@ -88,7 +88,6 @@ export class ModulationSystem {
     this.originalConfigValues = new Map()
     this.startTime = performance.now() / 1000
     this.audioEngine = getAudioModulationEngine()
-    this.additionalAudioSourcesProvider = null
   }
 
   addModulator (type = 'lfo', id = null) {
@@ -185,12 +184,7 @@ export class ModulationSystem {
   }
 
   syncAudioInputs () {
-    const additionalSources =
-      this.additionalAudioSourcesProvider?.() || []
-    return this.audioEngine.syncActiveInputs(
-      this.modulators,
-      additionalSources
-    )
+    return this.audioEngine.syncActiveInputs(this.modulators)
   }
 
   removeModulator (modulatorId) {

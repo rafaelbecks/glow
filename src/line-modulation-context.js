@@ -11,13 +11,11 @@
  * @param {{
  *   system: import('./line-modulation-system.js').LineModulationSystem,
  *   config: object,
- *   t: number,
- *   audioLevel?: number
+ *   t: number
  * }} options
  */
 export function createLineModulationContext (realCtx, options) {
   const { system, config, t } = options
-  const audioLevel = options.audioLevel || 0
 
   if (!config?.enabled) return realCtx
 
@@ -30,7 +28,7 @@ export function createLineModulationContext (realCtx, options) {
   const out = { x: 0, y: 0 }
 
   const transform = (x, y) => {
-    system.applyPoint(x, y, pathState, config, t, audioLevel, out)
+    system.applyPoint(x, y, pathState, config, t, out)
     pathState.prevX = x
     pathState.prevY = y
     pathState.hasPrev = true

@@ -1572,53 +1572,6 @@ export class CanvasUIManager {
       expanded: true
     })
 
-    const transitionData = {
-      enabled: colorSettings.PALETTE_TRANSITION_ENABLED === true,
-      easing: colorSettings.PALETTE_TRANSITION_EASING || 'easeInOut',
-      duration: colorSettings.PALETTE_TRANSITION_DURATION ?? 1
-    }
-    const transitionFolder = pitchColorFolder.addFolder({
-      title: 'Interpolation',
-      expanded: true
-    })
-    transitionFolder
-      .addBinding(transitionData, 'enabled', {
-        label: 'Enabled'
-      })
-      .on('change', (ev) => {
-        this.triggerColorTransitionSettingChange('enabled', ev.value)
-      })
-
-    const modulationSystem = this.trackManager?.getModulationSystem?.()
-    const easingNames = modulationSystem?.getEasingFunctionNames?.() || {
-      linear: 'Linear',
-      easeIn: 'Ease In',
-      easeOut: 'Ease Out',
-      easeInOut: 'Ease In-Out',
-      smoothstep: 'Smoothstep'
-    }
-    const easingOptions = Object.fromEntries(
-      Object.entries(easingNames).map(([value, label]) => [label, value])
-    )
-    transitionFolder
-      .addBinding(transitionData, 'easing', {
-        label: 'Easing',
-        options: easingOptions
-      })
-      .on('change', (ev) => {
-        this.triggerColorTransitionSettingChange('easing', ev.value)
-      })
-    transitionFolder
-      .addBinding(transitionData, 'duration', {
-        label: 'Time (s)',
-        min: 0.05,
-        max: 10,
-        step: 0.05
-      })
-      .on('change', (ev) => {
-        this.triggerColorTransitionSettingChange('duration', ev.value)
-      })
-
     const pitchSwatchContainer = document.createElement('div')
     pitchSwatchContainer.id = 'pitchColorExample'
     pitchSwatchContainer.style.height = '246px'
@@ -1626,15 +1579,19 @@ export class CanvasUIManager {
     this.pitchSwatchContainer = pitchSwatchContainer
 
     const applyPitchPalette = (nextPalette) => {
-      this.triggerPitchColorFactorChange(
-        pitchColorData.hueFactor,
-        pitchColorData.paletteSize,
-        nextPalette
-      )
+      if (settings.COLORS) {
+        settings.COLORS.PITCH_PALETTE = nextPalette
+      }
+      colorSettings.PITCH_PALETTE = nextPalette
       this.renderPitchPaletteSwatches(
         pitchSwatchContainer,
         nextPalette,
         settings
+      )
+      this.triggerPitchColorFactorChange(
+        pitchColorData.hueFactor,
+        pitchColorData.paletteSize,
+        nextPalette
       )
     }
 
@@ -1717,6 +1674,9 @@ export class CanvasUIManager {
       input.addEventListener('input', (ev) => {
         const next = ev.target.value
         item.style.backgroundColor = next
+        if (settings?.COLORS?.PITCH_PALETTE) {
+          settings.COLORS.PITCH_PALETTE[index] = next
+        }
         this.triggerColorPaletteChange('pitch', index, next)
       })
 
@@ -1837,14 +1797,6 @@ export class CanvasUIManager {
       detail: { palette, index, color }
     })
     this.panel.dispatchEvent(event)
-  }
-
-  triggerColorTransitionSettingChange (setting, value) {
-    this.panel.dispatchEvent(
-      new CustomEvent('colorTransitionSettingChange', {
-        detail: { setting, value }
-      })
-    )
   }
 
   triggerPitchColorFactorChange (value, size, palette) {

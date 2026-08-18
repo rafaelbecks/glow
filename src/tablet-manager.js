@@ -1,5 +1,5 @@
 // Tablet/HID device management and drawing
-import { SETTINGS, UTILS } from './settings.js'
+import { SETTINGS } from './settings.js'
 import { GeometricUtils } from './geometric-utils.js'
 import { CanvasDrawer } from './canvas-drawer.js'
 
@@ -56,7 +56,7 @@ export class TabletManager {
   // Color generation methods
   getRandomColor () {
     // Read the palette per stroke so Canvas tab edits apply to new strokes
-    const palette = UTILS.getColorPalette('PITCH_PALETTE')
+    const palette = SETTINGS.COLORS?.PITCH_PALETTE
     if (palette && palette.length > 0) {
       return palette[Math.floor(Math.random() * palette.length)]
     }

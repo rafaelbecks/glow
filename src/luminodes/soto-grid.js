@@ -1,5 +1,5 @@
 // Soto grid drawing module
-import { SETTINGS, UTILS } from '../settings.js'
+import { SETTINGS } from '../settings.js'
 
 export class SotoGridLuminode {
   constructor (canvasDrawer) {
@@ -84,8 +84,7 @@ export class SotoGridLuminode {
           if (retries <= 0) break
         } while (overlap)
 
-        const palette = UTILS.getColorPalette('SOTO_PALETTE')
-        const color = palette[midi % palette.length]
+        const color = SETTINGS.COLORS.SOTO_PALETTE[midi % SETTINGS.COLORS.SOTO_PALETTE.length]
         const angle = stripedMode ? (Math.random() > 0.5 ? 35 : -35) : 0
 
         this.existingSquares.set(midi, { x, y, size, color, angle })
@@ -94,8 +93,7 @@ export class SotoGridLuminode {
       // Always get the current color from palette for existing squares
       const existingSquare = this.existingSquares.get(midi)
       if (existingSquare) {
-        const palette = UTILS.getColorPalette('SOTO_PALETTE')
-        const currentColor = palette[midi % palette.length]
+        const currentColor = SETTINGS.COLORS.SOTO_PALETTE[midi % SETTINGS.COLORS.SOTO_PALETTE.length]
         squares.push({ ...existingSquare, color: currentColor })
       }
     })
