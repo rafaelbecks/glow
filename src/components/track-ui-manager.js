@@ -8,6 +8,12 @@ import {
   getLuminodeDisplayName,
   getLuminodeSettingsKey as getLuminodeSettingsKeyFromRegistry
 } from '../luminodes/index.js'
+import {
+  clampAudioChannelSelection,
+  encodeAudioChannelSelect,
+  getAudioChannelSelectOptions,
+  parseAudioChannelSelect
+} from '../audio-modulation-engine.js'
 
 export { getLuminodeDisplayName as normalizeLuminodeName }
 
@@ -363,8 +369,7 @@ export class TrackUIManager {
             this.trackManager.updateTrajectoryConfig(track.id, {
               ratioB: ev.value
             })
-          })
-
+        })
 
         trajectoryFolder
           .addBinding(trajectoryData, 'inversion', {
@@ -389,13 +394,18 @@ export class TrackUIManager {
           audioEnabled: lineConfig.audio.enabled,
           audioAmount: lineConfig.audio.amount,
           audioSourceType: lineConfig.audio.audioSourceType || 'input',
-          audioSourceKey: this._lineAudioSourceKey(lineConfig.audio),
+          audioDeviceId: lineConfig.audio.audioDeviceId || '',
+          audioTrackId: lineConfig.audio.audioTrackId || '',
+          audioChannelSelect: encodeAudioChannelSelect(
+            lineConfig.audio.audioChannel || 0,
+            lineConfig.audio.audioChannelMode || 'mono'
+          ),
           audioFeature: lineConfig.audio.audioFeature || 'rms'
         }
 
         const deformationFolder = pane.addFolder({
           title: 'Deformation',
-          expanded: false
+          expanded: true
         })
         deformationFolder
           .addBinding(lineModulationData, 'enabled', {
@@ -540,20 +550,12 @@ export class TrackUIManager {
             })
             this.renderTracks()
           })
-        audioTab
-          .addBinding(lineModulationData, 'audioSourceKey', {
-            options: this._lineAudioSourceOptions(
-              lineModulationData.audioSourceType
-            ),
-            label: 'Source'
-          })
-          .on('change', (ev) => {
-            const parsed = this._parseLineAudioSourceKey(ev.value)
-            lineModulationData.audioSourceKey = ev.value
-            this.trackManager.updateLineModulationConfig(track.id, {
-              audio: parsed
-            })
-          })
+        this.addLineAudioSourceControls(
+          audioTab,
+          track.id,
+          lineConfig.audio,
+          lineModulationData
+        )
         audioTab
           .addBinding(lineModulationData, 'audioFeature', {
             options: {
@@ -1001,7 +1003,6 @@ export class TrackUIManager {
     return getLuminodeDisplayName(name)
   }
 
-
   updateLineModulationUI (trackId, config) {
     const paneData = this.trackPanes.get(trackId)
     if (!paneData || !paneData.lineModulationData || !config) return
@@ -1018,7 +1019,12 @@ export class TrackUIManager {
       audioEnabled: config.audio?.enabled,
       audioAmount: config.audio?.amount,
       audioSourceType: config.audio?.audioSourceType || 'input',
-      audioSourceKey: this._lineAudioSourceKey(config.audio || {}),
+      audioDeviceId: config.audio?.audioDeviceId || '',
+      audioTrackId: config.audio?.audioTrackId || '',
+      audioChannelSelect: encodeAudioChannelSelect(
+        config.audio?.audioChannel || 0,
+        config.audio?.audioChannelMode || 'mono'
+      ),
       audioFeature: config.audio?.audioFeature || 'rms'
     })
   }
@@ -1027,53 +1033,142 @@ export class TrackUIManager {
     return this.trackManager.getLineModulationConfig(trackId)
   }
 
-  _lineAudioSourceKey (audio = {}) {
-    if ((audio.audioSourceType || 'input') === 'file') {
-      return audio.audioTrackId ? `file:${audio.audioTrackId}` : ''
-    }
-    return audio.audioDeviceId ? `input:${audio.audioDeviceId}` : ''
-  }
-
-  _parseLineAudioSourceKey (key) {
-    if (!key) {
-      return { audioDeviceId: null, audioTrackId: null }
-    }
-    if (key.startsWith('file:')) {
-      return {
-        audioSourceType: 'file',
-        audioTrackId: key.slice(5),
-        audioDeviceId: null
-      }
-    }
-    if (key.startsWith('input:')) {
-      return {
-        audioSourceType: 'input',
-        audioDeviceId: key.slice(6),
-        audioTrackId: null
-      }
-    }
-    return { audioDeviceId: null, audioTrackId: null }
-  }
-
-  _lineAudioSourceOptions (sourceType = 'input') {
-    const options = { None: '' }
+  addLineAudioSourceControls (tab, trackId, audio, data) {
     const modulationSystem = this.trackManager.getModulationSystem?.()
     const audioEngine = modulationSystem?.getAudioEngine?.()
-    if (!audioEngine) return options
+    if (!audioEngine) return
 
-    if (sourceType === 'file') {
-      const tracks = audioEngine.getTracks?.() || []
-      tracks.forEach((track) => {
-        options[track.name || track.id] = `file:${track.id}`
+    if ((audio.audioSourceType || 'input') === 'file') {
+      const options = { 'Select Track': '' }
+      const tracks = modulationSystem.getAudioTracks?.() || []
+      tracks.forEach((track, index) => {
+        options[track.name || `Audio Track ${index + 1}`] = track.id
       })
+      tab
+        .addBinding(data, 'audioTrackId', {
+          options,
+          label: 'Track'
+        })
+        .on('change', (ev) => {
+          this.trackManager.updateLineModulationConfig(trackId, {
+            audio: {
+              audioTrackId: ev.value || null,
+              audioChannel: 0,
+              audioChannelMode: 'mono'
+            }
+          })
+          this.renderTracks()
+        })
     } else {
-      const devices = audioEngine.getDevices?.() || []
+      const devices = audioEngine.getDevices()
+      const options = { 'Select Input': '' }
       devices.forEach((device) => {
-        const label = device.label || device.deviceId || 'Input'
-        options[label] = `input:${device.deviceId}`
+        options[device.label || device.deviceId] = device.deviceId
       })
+      if (
+        audio.audioDeviceId &&
+        !Object.values(options).includes(audio.audioDeviceId)
+      ) {
+        options[
+          audio.audioDeviceLabel ||
+            `Saved Input (${audio.audioDeviceId.slice(0, 6)}…)`
+        ] = audio.audioDeviceId
+      }
+
+      tab
+        .addBinding(data, 'audioDeviceId', {
+          options,
+          label: 'Audio Input'
+        })
+        .on('change', async (ev) => {
+          const deviceId = ev.value || null
+          const device = audioEngine.findDevice(deviceId)
+          this.trackManager.updateLineModulationConfig(trackId, {
+            audio: {
+              audioDeviceId: deviceId,
+              audioDeviceLabel: device?.label || audio.audioDeviceLabel || null
+            }
+          })
+          if (!deviceId) return
+          try {
+            const input = await audioEngine.ensureInput(deviceId)
+            const clamped = clampAudioChannelSelection(
+              audio.audioChannel || 0,
+              audio.audioChannelMode || 'mono',
+              input?.channelCount || 1
+            )
+            this.trackManager.updateLineModulationConfig(trackId, {
+              audio: {
+                audioChannel: clamped.channel,
+                audioChannelMode: clamped.mode
+              }
+            })
+            this.renderTracks()
+          } catch (error) {
+            console.error('Failed to open deformation audio input:', error)
+          }
+        })
+
+      tab
+        .addBlade({
+          view: 'button',
+          label: 'Devices',
+          title: 'Refresh Inputs'
+        })
+        .on('click', async () => {
+          try {
+            this._lineAudioDeviceRefreshAttempted = true
+            await audioEngine.refreshDevices()
+            this.renderTracks()
+          } catch (error) {
+            console.error('Failed to refresh audio devices:', error)
+          }
+        })
+
+      if (devices.length === 0 && !this._lineAudioDeviceRefreshAttempted) {
+        this._lineAudioDeviceRefreshAttempted = true
+        audioEngine
+          .refreshDevices()
+          .then(() => {
+            if (audioEngine.getDevices().length > 0) this.renderTracks()
+          })
+          .catch((error) => {
+            console.warn('Audio device enumeration failed:', error)
+          })
+      }
     }
-    return options
+
+    const channelCount =
+      (audio.audioSourceType || 'input') === 'file'
+        ? audioEngine.getTrackChannelCount(audio.audioTrackId)
+        : audio.audioDeviceId
+          ? audioEngine.getChannelCount(audio.audioDeviceId)
+          : 1
+    if (channelCount > 1) {
+      const clamped = clampAudioChannelSelection(
+        audio.audioChannel || 0,
+        audio.audioChannelMode || 'mono',
+        channelCount
+      )
+      data.audioChannelSelect = encodeAudioChannelSelect(
+        clamped.channel,
+        clamped.mode
+      )
+      tab
+        .addBinding(data, 'audioChannelSelect', {
+          options: getAudioChannelSelectOptions(channelCount),
+          label: 'Channel'
+        })
+        .on('change', (ev) => {
+          const selection = parseAudioChannelSelect(ev.value, channelCount)
+          this.trackManager.updateLineModulationConfig(trackId, {
+            audio: {
+              audioChannel: selection.channel,
+              audioChannelMode: selection.mode
+            }
+          })
+        })
+    }
   }
 
   getTrajectoryConfig (trackId) {

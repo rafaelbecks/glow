@@ -195,6 +195,7 @@ export class LineModulationSystem {
         amount: 0,
         audioSourceType: 'input',
         audioDeviceId: null,
+        audioDeviceLabel: null,
         audioTrackId: null,
         audioFeature: 'rms',
         audioChannel: 0,
@@ -264,6 +265,20 @@ export class LineModulationSystem {
       noise: { ...config.noise },
       audio: { ...config.audio }
     }
+  }
+
+  getAudioSources () {
+    const sources = []
+    for (const config of this.trackConfigs.values()) {
+      const audio = config?.audio
+      if (!config?.enabled || !audio?.enabled || !(audio.amount > 0)) continue
+      sources.push({
+        ...audio,
+        type: 'audio',
+        enabled: true
+      })
+    }
+    return sources
   }
 
   /**

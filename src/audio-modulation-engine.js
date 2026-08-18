@@ -593,8 +593,8 @@ export class AudioModulationEngine {
    * Keep live inputs in sync. Shared file tracks are owned independently and
    * are not released just because no modulator currently references them.
    */
-  syncActiveInputs (modulators = []) {
-    const audioMods = modulators.filter(
+  syncActiveInputs (modulators = [], additionalSources = []) {
+    const audioMods = [...modulators, ...additionalSources].filter(
       (m) => m && m.type === 'audio' && m.enabled
     )
 

@@ -67,6 +67,8 @@ export class TrackManager {
 
     // Initialize modulation system
     this.modulationSystem = new ModulationSystem()
+    this.modulationSystem.additionalAudioSourcesProvider = () =>
+      this.lineModulationSystem.getAudioSources()
 
     this.availableLuminodes = getAvailableLuminodes()
 
@@ -268,6 +270,9 @@ export class TrackManager {
       trackId,
       config: newConfig
     })
+    if (updates.enabled !== undefined || updates.audio) {
+      this.modulationSystem.syncAudioInputs()
+    }
     return newConfig
   }
 
