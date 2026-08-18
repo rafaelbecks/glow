@@ -302,15 +302,6 @@ export const LUMINODE_CONFIGS = {
         default: 0.3
       },
       {
-        key: 'DEFORMATION_STRENGTH',
-        label: 'Deformation',
-        type: 'slider',
-        min: 0.1,
-        max: 2,
-        step: 0.1,
-        default: 0.5
-      },
-      {
         key: 'LINE_WIDTH',
         label: 'Line Width',
         type: 'slider',
@@ -425,15 +416,6 @@ export const LUMINODE_CONFIGS = {
         default: 0.3
       },
       {
-        key: 'DEFORMATION_STRENGTH',
-        label: 'Deformation',
-        type: 'slider',
-        min: 0,
-        max: 2,
-        step: 0.1,
-        default: 0.5
-      },
-      {
         key: 'LINE_WIDTH',
         label: 'Line Width',
         type: 'slider',
@@ -528,15 +510,6 @@ export const LUMINODE_CONFIGS = {
         max: 3,
         step: 0.05,
         default: 0.3
-      },
-      {
-        key: 'DEFORM_STRENGTH',
-        label: 'Deformation',
-        type: 'slider',
-        min: 0,
-        max: 2,
-        step: 0.1,
-        default: 0.5
       },
       {
         key: 'LINE_WIDTH',
@@ -642,15 +615,6 @@ export const LUMINODE_CONFIGS = {
         max: 0.5,
         step: 0.01,
         default: 0.1
-      },
-      {
-        key: 'DEFORMATION_STRENGTH',
-        label: 'Deformation',
-        type: 'slider',
-        min: 0,
-        max: 2,
-        step: 0.1,
-        default: 0.4
       },
       {
         key: 'LINE_WIDTH',

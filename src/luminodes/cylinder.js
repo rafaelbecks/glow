@@ -71,42 +71,6 @@ export class LineCylinderLuminode {
     return animated
   }
 
-  // Apply deformation based on active notes
-  applyDeformation (points, notes, deformationStrength, t) {
-    if (notes.length === 0) return points
-
-    const deformed = points.map(point => ({ ...point }))
-
-    notes.forEach((note, index) => {
-      const velocity = note.velocity || 64
-      const midi = note.midi || 60
-
-      const waveStrength = (velocity / 127) * deformationStrength
-      const waveFreq = (midi / 127) * 0.1 + 0.05
-      const waveSpeed = (midi / 127) * 0.3 + 0.1
-
-      deformed.forEach(point => {
-        // Create wave patterns that affect the cylinder radius
-        const wave1 = Math.sin(point.angle * waveFreq + t * waveSpeed) * waveStrength
-        const wave2 = Math.sin(point.y * waveFreq * 0.5 + t * waveSpeed * 1.2) * waveStrength * 0.6
-        const wave3 = Math.sin(point.lineIndex * waveFreq * 0.3 + t * waveSpeed * 0.8) * waveStrength * 0.4
-
-        const totalWave = (wave1 + wave2 + wave3) * 0.2
-
-        // Apply deformation to radius
-        const scale = 1 + totalWave
-        point.x *= scale
-        point.z *= scale
-        point.top.x *= scale
-        point.top.z *= scale
-        point.bottom.x *= scale
-        point.bottom.z *= scale
-      })
-    })
-
-    return deformed
-  }
-
   draw (t, notes, useColor = false, layout = { x: 0, y: 0, rotation: 0 }) {
     if (notes.length === 0) return
 
@@ -129,9 +93,6 @@ export class LineCylinderLuminode {
     // Apply opening/closing animation with separation threshold
     const animatedPoints = this.applyCylinderAnimation(points, t, notes, animationSpeed, separationThreshold)
 
-    // Apply deformation based on active notes
-    const deformationStrength = SETTINGS.MODULES.LINE_CYLINDER.DEFORMATION_STRENGTH
-    const deformedPoints = this.applyDeformation(animatedPoints, notes, deformationStrength, t)
 
     // Create a unique signature of active MIDI notes for color changes
     const chordSig = notes.map(n => n.midi).sort().join('-')
@@ -162,7 +123,7 @@ export class LineCylinderLuminode {
     const angleY = baseAngleY + euler.y
     const angleZ = euler.z
 
-    deformedPoints.forEach(point => {
+    animatedPoints.forEach(point => {
       this.ctx.beginPath()
 
       const [rotatedTopX, rotatedTopY, rotatedTopZ] = UTILS.rotate3D(

@@ -44,47 +44,6 @@ export class NoiseValleyLuminode {
     return (n - Math.floor(n)) * 2 - 1
   }
 
-  // Apply deformation based on active notes
-  applyDeformation (terrain, notes, deformationStrength, t) {
-    if (notes.length === 0) return terrain
-
-    const deformed = terrain.map(row => [...row])
-    const centerX = Math.floor(terrain[0].length / 2)
-    const centerY = Math.floor(terrain.length / 2)
-
-    notes.forEach((note, index) => {
-      const velocity = note.velocity || 64
-      const midi = note.midi || 60
-
-      // Create deformation wave based on note properties
-      const waveStrength = (velocity / 127) * deformationStrength
-      const waveFreq = (midi / 127) * 0.05 + 0.02
-      const waveSpeed = (midi / 127) * 0.5 + 0.1
-
-      for (let i = 0; i < terrain.length; i++) {
-        for (let j = 0; j < terrain[i].length; j++) {
-          // Apply deformation to ALL points, not just within radius
-          const x = j - centerX
-          const y = i - centerY
-          const distance = Math.sqrt(x * x + y * y)
-
-          // Create multiple wave patterns across the entire terrain
-          const wave1 = Math.sin(x * waveFreq + t * waveSpeed) * waveStrength
-          const wave2 = Math.sin(y * waveFreq + t * waveSpeed * 1.3) * waveStrength * 0.7
-          const wave3 = Math.sin(distance * waveFreq * 0.5 + t * waveSpeed * 0.8) * waveStrength * 0.5
-
-          // Combine waves with some falloff from center for natural look
-          const falloff = Math.exp(-distance * 0.01) // Gentle falloff from center
-          const totalWave = (wave1 + wave2 + wave3) * falloff
-
-          deformed[i][j] += totalWave
-        }
-      }
-    })
-
-    return deformed
-  }
-
   draw (t, notes, useColor = false, layout = { x: 0, y: 0, rotation: 0 }) {
     if (notes.length === 0) return
 
@@ -103,9 +62,6 @@ export class NoiseValleyLuminode {
 
     this.canvasDrawer.applyLayoutTransform(layout)
 
-    // Apply deformation based on active notes
-    const deformationStrength = moduleSettings.DEFORMATION_STRENGTH
-    const deformedTerrain = this.applyDeformation(this.terrainData.terrain, notes, deformationStrength, t)
 
     // Create a unique signature of active MIDI notes for color changes
     const chordSig = notes.map(n => n.midi).sort().join('-')
@@ -148,7 +104,7 @@ export class NoiseValleyLuminode {
       for (let j = 0; j < cols; j++) {
         const x = j * scaleX - (width * size) / 2
         const y = i * scaleY - (height * size) / 2
-        const z = deformedTerrain[i][j] * heightScale
+        const z = terrain[i][j] * heightScale
 
         // Apply 3D rotation using the same approach as sphere
         const [rotatedX, rotatedY, rotatedZ] = UTILS.rotate3D(
@@ -179,7 +135,7 @@ export class NoiseValleyLuminode {
       for (let i = 0; i < rows; i++) {
         const x = j * scaleX - (width * size) / 2
         const y = i * scaleY - (height * size) / 2
-        const z = deformedTerrain[i][j] * heightScale
+        const z = terrain[i][j] * heightScale
 
         // Apply 3D rotation using the same approach as sphere
         const [rotatedX, rotatedY, rotatedZ] = UTILS.rotate3D(

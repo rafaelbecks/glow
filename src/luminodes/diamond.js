@@ -70,7 +70,7 @@ export class DiamondLuminode {
 
   // Build edges for wireframe (rings + spokes)
   buildDiamondEdges (meta) {
-    const { verts, rings, segments, lowerStartIndex } = meta
+    const { rings, segments, lowerStartIndex } = meta
     const edges = []
 
     // Upper cone rings (horizontal circles)
@@ -148,62 +148,6 @@ export class DiamondLuminode {
     }
   }
 
-  // Apply deformation based on active notes
-  applyDeformation (vertices, notes, deformationStrength, t) {
-    if (notes.length === 0) return vertices
-
-    const deformed = vertices.map(vertex => ({ ...vertex }))
-
-    notes.forEach((note, index) => {
-      const velocity = note.velocity || 64
-      const midi = note.midi || 60
-
-      const waveStrength = (velocity / 127) * deformationStrength
-      const waveFreq = (midi / 127) * 0.1 + 0.05
-      const waveSpeed = (midi / 127) * 0.3 + 0.1
-
-      deformed.forEach(vertex => {
-        // Per-vertex radial scale based on theta and ring position
-        const u = vertex.theta // segment angle
-        const v = vertex.ring / (deformed.length / (2 * 36)) // approximate ring position
-
-        const wave1 = Math.sin(u * waveFreq + t * waveSpeed) * waveStrength
-        const wave2 = Math.sin(v * waveFreq * 2 + t * waveSpeed * 1.2) * waveStrength * 0.6
-        const wave3 = Math.sin(vertex.x * waveFreq * 0.5 + t * waveSpeed * 0.8) * waveStrength * 0.4
-
-        const totalWave = (wave1 + wave2 + wave3) * 0.3
-        const scale = 1 + totalWave
-
-        // Apply radial deformation
-        vertex.x *= scale
-        vertex.z *= scale
-
-        // Optional tip wobble
-        if (vertex.ring === 0) {
-          const tipOffset = waveStrength * 0.1 * Math.sin(t * waveSpeed + index)
-          vertex.x += tipOffset * Math.cos(vertex.theta)
-          vertex.z += tipOffset * Math.sin(vertex.theta)
-        }
-      })
-    })
-
-    return deformed
-  }
-
-  // Generate or get cached base geometry
-  getBaseGeometry (R, h, rings, segments) {
-    const config = `${R}-${h}-${rings}-${segments}`
-
-    if (this.lastConfig !== config || !this.baseVertices || !this.baseEdges) {
-      const meta = this.generateDiamondVertices(R, h, rings, segments)
-      this.baseVertices = meta.verts
-      this.baseEdges = this.buildDiamondEdges(meta)
-      this.lastConfig = config
-    }
-
-    return { vertices: this.baseVertices, edges: this.baseEdges }
-  }
-
   draw (t, notes, useColor = false, layout = { x: 0, y: 0, rotation: 0 }) {
     if (notes.length === 0) return
 
@@ -262,14 +206,11 @@ export class DiamondLuminode {
         this.transformVertexForInstance(vertex, k, K, D, distanceMultiplier)
       )
 
-      // Apply deformation
-      const deformationStrength = SETTINGS.MODULES.DIAMOND.DEFORMATION_STRENGTH
-      const deformedVertices = this.applyDeformation(instanceVertices, notes, deformationStrength, t)
 
       // Draw edges
       for (const [ia, ib] of baseEdges) {
-        const A = deformedVertices[ia]
-        const B = deformedVertices[ib]
+        const A = instanceVertices[ia]
+        const B = instanceVertices[ib]
 
         // Apply 3D rotation
         const [rotatedAX, rotatedAY, rotatedAZ] = UTILS.rotate3D(

@@ -1,4 +1,4 @@
-// Trefoil knot - 3D wireframe trefoil knot with deformation
+// Trefoil knot - 3D wireframe trefoil knot
 import { SETTINGS, UTILS } from '../settings.js'
 import { getEulerRotation, isRotationEnabled } from '../rotation-utils.js'
 
@@ -29,39 +29,6 @@ export class TrefoilKnotLuminode {
     }
 
     return points
-  }
-
-  // Apply deformation based on active notes
-  applyDeformation (points, notes, deformationStrength, t) {
-    if (notes.length === 0) return points
-
-    const deformed = points.map(point => ({ ...point }))
-
-    notes.forEach((note, index) => {
-      const velocity = note.velocity || 64
-      const midi = note.midi || 60
-
-      const waveStrength = (velocity / 127) * deformationStrength
-      const waveFreq = (midi / 127) * 0.1 + 0.05
-      const waveSpeed = (midi / 127) * 0.3 + 0.1
-
-      deformed.forEach(point => {
-        // Create multiple wave patterns along the curve
-        const wave1 = Math.sin(point.t * waveFreq + t * waveSpeed) * waveStrength
-        const wave2 = Math.sin(point.t * waveFreq * 2 + t * waveSpeed * 1.2) * waveStrength * 0.6
-        const wave3 = Math.sin(point.x * waveFreq * 0.5 + point.y * waveFreq * 0.3 + t * waveSpeed * 0.8) * waveStrength * 0.4
-
-        const totalWave = (wave1 + wave2 + wave3) * 0.3
-
-        // Deform the point in all dimensions
-        const scale = 1 + totalWave
-        point.x *= scale
-        point.y *= scale
-        point.z *= scale
-      })
-    })
-
-    return deformed
   }
 
   draw (t, notes, useColor = false, layout = { x: 0, y: 0, rotation: 0 }) {
@@ -106,9 +73,6 @@ export class TrefoilKnotLuminode {
       // Generate trefoil points for this lace
       const basePoints = this.generateTrefoilPoints(segments, laceScale)
 
-      // Apply deformation based on active notes
-      const deformationStrength = SETTINGS.MODULES.TREFOIL.DEFORMATION_STRENGTH
-      const deformedPoints = this.applyDeformation(basePoints, notes, deformationStrength, t)
 
       // Set up drawing context for this lace (different colors for different laces when using color mode)
       const baseHue = this.currentBaseHue + t * 2
@@ -128,8 +92,8 @@ export class TrefoilKnotLuminode {
 
       // Draw the trefoil knot curve
       this.ctx.beginPath()
-      for (let i = 0; i < deformedPoints.length; i++) {
-        const point = deformedPoints[i]
+      for (let i = 0; i < basePoints.length; i++) {
+        const point = basePoints[i]
 
         // Apply 3D rotation
         const [rotatedX, rotatedY, rotatedZ] = UTILS.rotate3D(
@@ -152,7 +116,7 @@ export class TrefoilKnotLuminode {
         }
       }
       // Close the curve
-      const firstPoint = deformedPoints[0]
+      const firstPoint = basePoints[0]
       const [rotatedFirstX, rotatedFirstY, rotatedFirstZ] = UTILS.rotate3D(
         firstPoint.x,
         firstPoint.y,

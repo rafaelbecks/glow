@@ -1,4 +1,4 @@
-// Torus - 3D wireframe torus surface with deformation
+// Torus - 3D wireframe torus surface
 import { SETTINGS, UTILS } from '../settings.js'
 import { getEulerRotation, isRotationEnabled } from '../rotation-utils.js'
 
@@ -33,36 +33,6 @@ export class TorusLuminode {
     return { points, rings, segments }
   }
 
-  // Apply deformation based on active notes
-  applyDeformation (points, notes, deformationStrength, t) {
-    if (notes.length === 0) return points
-
-    const deformed = points.map(point => ({ ...point }))
-
-    notes.forEach((note) => {
-      const velocity = note.velocity || 64
-      const midi = note.midi || 60
-
-      const waveStrength = (velocity / 127) * deformationStrength
-      const waveFreq = (midi / 127) * 0.1 + 0.05
-      const waveSpeed = (midi / 127) * 0.3 + 0.1
-
-      deformed.forEach(point => {
-        const wave1 = Math.sin(point.u * waveFreq + t * waveSpeed) * waveStrength
-        const wave2 = Math.sin(point.v * waveFreq * 2 + t * waveSpeed * 1.2) * waveStrength * 0.6
-        const wave3 = Math.sin(point.x * waveFreq * 0.5 + t * waveSpeed * 0.8) * waveStrength * 0.4
-
-        const totalWave = (wave1 + wave2 + wave3) * 0.3
-        const scale = 1 + totalWave
-        point.x *= scale
-        point.y *= scale
-        point.z *= scale
-      })
-    })
-
-    return deformed
-  }
-
   draw (t, notes, useColor = false, layout = { x: 0, y: 0, rotation: 0 }) {
     if (notes.length === 0) return
 
@@ -80,8 +50,6 @@ export class TorusLuminode {
 
     const { points } = this.generateTorusPoints(majorRadius, minorRadius, rings, segments)
 
-    const deformationStrength = moduleSettings.DEFORM_STRENGTH
-    const deformedPoints = this.applyDeformation(points, notes, deformationStrength, t)
 
     const chordSig = notes.map(n => n.midi).sort().join('-')
     if (chordSig !== this.lastChordSignature) {
@@ -115,7 +83,7 @@ export class TorusLuminode {
     for (let i = 0; i <= rings; i++) {
       this.ctx.beginPath()
       for (let j = 0; j <= segments; j++) {
-        const point = deformedPoints[i * (segments + 1) + j]
+        const point = points[i * (segments + 1) + j]
 
         const [rotatedX, rotatedY, rotatedZ] = UTILS.rotate3D(
           point.x * scale,
@@ -142,7 +110,7 @@ export class TorusLuminode {
     for (let j = 0; j <= segments; j++) {
       this.ctx.beginPath()
       for (let i = 0; i <= rings; i++) {
-        const point = deformedPoints[i * (segments + 1) + j]
+        const point = points[i * (segments + 1) + j]
 
         const [rotatedX, rotatedY, rotatedZ] = UTILS.rotate3D(
           point.x * scale,

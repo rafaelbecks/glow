@@ -33,37 +33,6 @@ export class CubeLuminode {
     return { points, segments }
   }
 
-  // Apply deformation based on active notes
-  applyDeformation (points, notes, t) {
-    if (notes.length === 0) return points
-
-    const deformed = points.map(point => ({ ...point }))
-
-    notes.forEach((note, index) => {
-      const velocity = note.velocity || 64
-      const midi = note.midi || 60
-
-      const waveStrength = (velocity / 127) * 0.3
-      const waveFreq = (midi / 127) * 0.1 + 0.05
-      const waveSpeed = (midi / 127) * 0.3 + 0.1
-
-      deformed.forEach(point => {
-        // Create wave patterns based on position
-        const wave1 = Math.sin(point.x * waveFreq + t * waveSpeed) * waveStrength
-        const wave2 = Math.sin(point.y * waveFreq + t * waveSpeed * 1.2) * waveStrength * 0.7
-        const wave3 = Math.sin(point.z * waveFreq + t * waveSpeed * 0.8) * waveStrength * 0.5
-
-        // Apply deformation
-        const totalWave = (wave1 + wave2 + wave3) * 0.3
-        point.x *= (1 + totalWave)
-        point.y *= (1 + totalWave)
-        point.z *= (1 + totalWave)
-      })
-    })
-
-    return deformed
-  }
-
   draw (t, notes, useColor = false, layout = { x: 0, y: 0, rotation: 0 }) {
     if (notes.length === 0) return
 
@@ -79,9 +48,6 @@ export class CubeLuminode {
 
     // Generate cube points
     const { points } = this.generateCubePoints(size, segments)
-
-    // Apply deformation based on active notes
-    const deformedPoints = this.applyDeformation(points, notes, t)
 
     // Create a unique signature of active MIDI notes for color changes
     const chordSig = notes.map(n => n.midi).sort().join('-')
@@ -117,7 +83,7 @@ export class CubeLuminode {
       for (let k = 0; k <= segments; k++) {
         this.ctx.beginPath()
         for (let i = 0; i <= segments; i++) {
-          const point = deformedPoints[i * (segments + 1) * (segments + 1) + j * (segments + 1) + k]
+          const point = points[i * (segments + 1) * (segments + 1) + j * (segments + 1) + k]
 
           // Apply 3D rotation
           const [rotatedX, rotatedY, rotatedZ] = UTILS.rotate3D(
@@ -148,7 +114,7 @@ export class CubeLuminode {
       for (let k = 0; k <= segments; k++) {
         this.ctx.beginPath()
         for (let j = 0; j <= segments; j++) {
-          const point = deformedPoints[i * (segments + 1) * (segments + 1) + j * (segments + 1) + k]
+          const point = points[i * (segments + 1) * (segments + 1) + j * (segments + 1) + k]
 
           // Apply 3D rotation
           const [rotatedX, rotatedY, rotatedZ] = UTILS.rotate3D(
@@ -179,7 +145,7 @@ export class CubeLuminode {
       for (let j = 0; j <= segments; j++) {
         this.ctx.beginPath()
         for (let k = 0; k <= segments; k++) {
-          const point = deformedPoints[i * (segments + 1) * (segments + 1) + j * (segments + 1) + k]
+          const point = points[i * (segments + 1) * (segments + 1) + j * (segments + 1) + k]
 
           // Apply 3D rotation
           const [rotatedX, rotatedY, rotatedZ] = UTILS.rotate3D(
