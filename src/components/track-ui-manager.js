@@ -199,6 +199,7 @@ export class TrackUIManager {
 
       let layoutData = null
       let trajectoryData = null
+      let lineModulationData = null
 
       if (track.luminode !== 'triangle') {
         layoutData = {
@@ -374,6 +375,202 @@ export class TrackUIManager {
               inversion: ev.value
             })
           })
+
+        const lineConfig = this.getLineModulationConfig(track.id)
+        lineModulationData = {
+          enabled: lineConfig.enabled,
+          oscAmount: lineConfig.oscillation.amount,
+          oscFrequency: lineConfig.oscillation.frequency,
+          oscSpeed: lineConfig.oscillation.speed,
+          oscPhase: lineConfig.oscillation.phase,
+          noiseAmount: lineConfig.noise.amount,
+          noiseScale: lineConfig.noise.scale,
+          noiseSpeed: lineConfig.noise.speed,
+          audioEnabled: lineConfig.audio.enabled,
+          audioAmount: lineConfig.audio.amount,
+          audioSourceType: lineConfig.audio.audioSourceType || 'input',
+          audioSourceKey: this._lineAudioSourceKey(lineConfig.audio),
+          audioFeature: lineConfig.audio.audioFeature || 'rms'
+        }
+
+        const deformationFolder = pane.addFolder({
+          title: 'Deformation',
+          expanded: false
+        })
+        deformationFolder
+          .addBinding(lineModulationData, 'enabled', {
+            label: 'Enabled'
+          })
+          .on('change', (ev) => {
+            this.trackManager.updateLineModulationConfig(track.id, {
+              enabled: ev.value
+            })
+          })
+
+        const deformationTabs = deformationFolder.addTab({
+          pages: [
+            { title: 'Oscillation' },
+            { title: 'Noise' },
+            { title: 'Audio' }
+          ]
+        })
+        const oscTab = deformationTabs.pages[0]
+        const noiseTab = deformationTabs.pages[1]
+        const audioTab = deformationTabs.pages[2]
+
+        oscTab
+          .addBinding(lineModulationData, 'oscAmount', {
+            label: 'Amount',
+            min: 0,
+            max: 80,
+            step: 0.5
+          })
+          .on('change', (ev) => {
+            this.trackManager.updateLineModulationConfig(track.id, {
+              oscillation: { amount: ev.value }
+            })
+          })
+        oscTab
+          .addBinding(lineModulationData, 'oscFrequency', {
+            label: 'Frequency',
+            min: 0.01,
+            max: 2,
+            step: 0.01
+          })
+          .on('change', (ev) => {
+            this.trackManager.updateLineModulationConfig(track.id, {
+              oscillation: { frequency: ev.value }
+            })
+          })
+        oscTab
+          .addBinding(lineModulationData, 'oscSpeed', {
+            label: 'Speed',
+            min: 0,
+            max: 5,
+            step: 0.01
+          })
+          .on('change', (ev) => {
+            this.trackManager.updateLineModulationConfig(track.id, {
+              oscillation: { speed: ev.value }
+            })
+          })
+        oscTab
+          .addBinding(lineModulationData, 'oscPhase', {
+            label: 'Phase',
+            min: 0,
+            max: Math.PI * 2,
+            step: 0.01
+          })
+          .on('change', (ev) => {
+            this.trackManager.updateLineModulationConfig(track.id, {
+              oscillation: { phase: ev.value }
+            })
+          })
+
+        noiseTab
+          .addBinding(lineModulationData, 'noiseAmount', {
+            label: 'Amount',
+            min: 0,
+            max: 80,
+            step: 0.5
+          })
+          .on('change', (ev) => {
+            this.trackManager.updateLineModulationConfig(track.id, {
+              noise: { amount: ev.value }
+            })
+          })
+        noiseTab
+          .addBinding(lineModulationData, 'noiseScale', {
+            label: 'Scale',
+            min: 0.001,
+            max: 0.2,
+            step: 0.001
+          })
+          .on('change', (ev) => {
+            this.trackManager.updateLineModulationConfig(track.id, {
+              noise: { scale: ev.value }
+            })
+          })
+        noiseTab
+          .addBinding(lineModulationData, 'noiseSpeed', {
+            label: 'Speed',
+            min: 0,
+            max: 5,
+            step: 0.01
+          })
+          .on('change', (ev) => {
+            this.trackManager.updateLineModulationConfig(track.id, {
+              noise: { speed: ev.value }
+            })
+          })
+
+        audioTab
+          .addBinding(lineModulationData, 'audioEnabled', {
+            label: 'Enabled'
+          })
+          .on('change', (ev) => {
+            this.trackManager.updateLineModulationConfig(track.id, {
+              audio: { enabled: ev.value }
+            })
+          })
+        audioTab
+          .addBinding(lineModulationData, 'audioAmount', {
+            label: 'Amount',
+            min: 0,
+            max: 80,
+            step: 0.5
+          })
+          .on('change', (ev) => {
+            this.trackManager.updateLineModulationConfig(track.id, {
+              audio: { amount: ev.value }
+            })
+          })
+        audioTab
+          .addBinding(lineModulationData, 'audioSourceType', {
+            options: {
+              'Live Input': 'input',
+              'Audio Track': 'file'
+            },
+            label: 'Source Type'
+          })
+          .on('change', (ev) => {
+            lineModulationData.audioSourceType = ev.value
+            this.trackManager.updateLineModulationConfig(track.id, {
+              audio: { audioSourceType: ev.value }
+            })
+            this.renderTracks()
+          })
+        audioTab
+          .addBinding(lineModulationData, 'audioSourceKey', {
+            options: this._lineAudioSourceOptions(
+              lineModulationData.audioSourceType
+            ),
+            label: 'Source'
+          })
+          .on('change', (ev) => {
+            const parsed = this._parseLineAudioSourceKey(ev.value)
+            lineModulationData.audioSourceKey = ev.value
+            this.trackManager.updateLineModulationConfig(track.id, {
+              audio: parsed
+            })
+          })
+        audioTab
+          .addBinding(lineModulationData, 'audioFeature', {
+            options: {
+              RMS: 'rms',
+              Bass: 'bass',
+              Mid: 'mid',
+              Treble: 'treble',
+              Presence: 'presence',
+              Band: 'band'
+            },
+            label: 'Analysis'
+          })
+          .on('change', (ev) => {
+            this.trackManager.updateLineModulationConfig(track.id, {
+              audio: { audioFeature: ev.value }
+            })
+          })
       }
 
       let luminodeFolder = null
@@ -386,6 +583,7 @@ export class TrackUIManager {
         trackData,
         layoutData,
         trajectoryData,
+        lineModulationData,
         luminodeFolder,
         midiBinding,
         luminodeBinding,
@@ -801,6 +999,81 @@ export class TrackUIManager {
 
   normalizeLuminodeName (name) {
     return getLuminodeDisplayName(name)
+  }
+
+
+  updateLineModulationUI (trackId, config) {
+    const paneData = this.trackPanes.get(trackId)
+    if (!paneData || !paneData.lineModulationData || !config) return
+
+    Object.assign(paneData.lineModulationData, {
+      enabled: config.enabled,
+      oscAmount: config.oscillation?.amount,
+      oscFrequency: config.oscillation?.frequency,
+      oscSpeed: config.oscillation?.speed,
+      oscPhase: config.oscillation?.phase,
+      noiseAmount: config.noise?.amount,
+      noiseScale: config.noise?.scale,
+      noiseSpeed: config.noise?.speed,
+      audioEnabled: config.audio?.enabled,
+      audioAmount: config.audio?.amount,
+      audioSourceType: config.audio?.audioSourceType || 'input',
+      audioSourceKey: this._lineAudioSourceKey(config.audio || {}),
+      audioFeature: config.audio?.audioFeature || 'rms'
+    })
+  }
+
+  getLineModulationConfig (trackId) {
+    return this.trackManager.getLineModulationConfig(trackId)
+  }
+
+  _lineAudioSourceKey (audio = {}) {
+    if ((audio.audioSourceType || 'input') === 'file') {
+      return audio.audioTrackId ? `file:${audio.audioTrackId}` : ''
+    }
+    return audio.audioDeviceId ? `input:${audio.audioDeviceId}` : ''
+  }
+
+  _parseLineAudioSourceKey (key) {
+    if (!key) {
+      return { audioDeviceId: null, audioTrackId: null }
+    }
+    if (key.startsWith('file:')) {
+      return {
+        audioSourceType: 'file',
+        audioTrackId: key.slice(5),
+        audioDeviceId: null
+      }
+    }
+    if (key.startsWith('input:')) {
+      return {
+        audioSourceType: 'input',
+        audioDeviceId: key.slice(6),
+        audioTrackId: null
+      }
+    }
+    return { audioDeviceId: null, audioTrackId: null }
+  }
+
+  _lineAudioSourceOptions (sourceType = 'input') {
+    const options = { None: '' }
+    const modulationSystem = this.trackManager.getModulationSystem?.()
+    const audioEngine = modulationSystem?.getAudioEngine?.()
+    if (!audioEngine) return options
+
+    if (sourceType === 'file') {
+      const tracks = audioEngine.getTracks?.() || []
+      tracks.forEach((track) => {
+        options[track.name || track.id] = `file:${track.id}`
+      })
+    } else {
+      const devices = audioEngine.getDevices?.() || []
+      devices.forEach((device) => {
+        const label = device.label || device.deviceId || 'Input'
+        options[label] = `input:${device.deviceId}`
+      })
+    }
+    return options
   }
 
   getTrajectoryConfig (trackId) {
