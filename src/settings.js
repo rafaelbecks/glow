@@ -1,4 +1,6 @@
 // Settings and configuration constants
+import { colorPaletteTransition } from './color-palette-transition.js'
+
 export const SETTINGS = {
   // Canvas settings
   CANVAS: {
@@ -122,7 +124,10 @@ export const SETTINGS = {
       '#8B0000' // Dark red
     ],
     // Filled below from UTILS.generatePitchPalette after UTILS is defined
-    PITCH_PALETTE: []
+    PITCH_PALETTE: [],
+    PALETTE_TRANSITION_ENABLED: false,
+    PALETTE_TRANSITION_EASING: 'easeInOut',
+    PALETTE_TRANSITION_DURATION: 1
   },
 
   // Drawing modules configuration
@@ -195,7 +200,6 @@ export const SETTINGS = {
       SIZE: 0.8,
       DENSITY: 40,
       ROTATION_SPEED: 0.3,
-      DEFORMATION_STRENGTH: 0.5,
       LINE_WIDTH: 0.8,
       BASE_HUE: 0,
       USE_COLOR: false,
@@ -211,7 +215,6 @@ export const SETTINGS = {
       SEGMENTS: 24,
       SCALE: 1.0,
       ROTATION_SPEED: 0.3,
-      DEFORMATION_STRENGTH: 0.5,
       LINE_WIDTH: 0.8,
       BASE_HUE: 0,
       USE_COLOR: false,
@@ -225,7 +228,6 @@ export const SETTINGS = {
       SEGMENTS: 24,
       SCALE: 1.0,
       ROTATION_SPEED: 0.3,
-      DEFORM_STRENGTH: 0.5,
       LINE_WIDTH: 0.8,
       BASE_HUE: 0,
       USE_COLOR: false,
@@ -240,7 +242,6 @@ export const SETTINGS = {
       ROTATION_SPEED: 0.3,
       ANIMATION_SPEED: 0.5,
       SEPARATION_THRESHOLD: 0.1,
-      DEFORMATION_STRENGTH: 0.4,
       LINE_WIDTH: 0.8,
       BASE_HUE: 0,
       USE_COLOR: false,
@@ -265,7 +266,6 @@ export const SETTINGS = {
       INSTANCE_DISTANCE: 1.0, // Distance multiplier between instances
       SCALE: 1.0,
       ROTATION_SPEED: 0.3,
-      DEFORMATION_STRENGTH: 0.5,
       LINE_WIDTH: 0.8,
       BASE_HUE: 0,
       USE_COLOR: false,
@@ -290,7 +290,6 @@ export const SETTINGS = {
       SCALE_VARIATION: 0.5,
       SEGMENTS: 150,
       ROTATION_SPEED: 0.3,
-      DEFORMATION_STRENGTH: 0.5,
       LINE_WIDTH: 1.5,
       BASE_HUE: 0,
       USE_COLOR: true,
@@ -579,9 +578,14 @@ export const UTILS = {
     )
   },
 
+  getColorPalette: (key) => {
+    const target = SETTINGS.COLORS?.[key] || []
+    return colorPaletteTransition.getPalette(key, target)
+  },
+
   pitchToColor: (midi) => {
     const pitch = typeof midi === 'number' ? midi : (midi?.midi ?? 60)
-    const palette = SETTINGS.COLORS?.PITCH_PALETTE
+    const palette = UTILS.getColorPalette('PITCH_PALETTE')
     if (palette && palette.length > 0) {
       const idx = ((pitch % palette.length) + palette.length) % palette.length
       const hex = palette[idx]

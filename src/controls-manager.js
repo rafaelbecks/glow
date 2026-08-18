@@ -137,6 +137,9 @@ export class ControlsManager {
       case 'colorPaletteChange':
         glow.updateColorPalette(p.data)
         break
+      case 'colorTransitionSettingChange':
+        glow.updateColorTransitionSetting(p.data)
+        break
       case 'pitchColorFactorChange':
         glow.updatePitchColorFactor(p.data)
         break
