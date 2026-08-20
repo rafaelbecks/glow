@@ -488,6 +488,7 @@ export class GLOWVisualizer {
     )
     this.trackManager.on('trackUpdated', () => this.markProjectChanged())
     this.trackManager.on('tracksReordered', () => this.markProjectChanged())
+    this.trackManager.on('pitchPaletteUpdated', () => this.markProjectChanged())
     this.effectLayerManager.on('orderChanged', () => this.markProjectChanged())
 
     const audioEngine = this.trackManager
@@ -1799,6 +1800,8 @@ export class GLOWVisualizer {
         notes
       )
 
+      const restorePitchPalette = this.applyTrackPitchPalette(track.id)
+
       layerCtx.setTransform(1, 0, 0, 1, 0, 0)
       layerCtx.clearRect(0, 0, layerCanvas.width, layerCanvas.height)
       layerCtx.globalAlpha = 1
@@ -1847,7 +1850,30 @@ export class GLOWVisualizer {
       if (restoreValues) {
         restoreValues()
       }
+      if (restorePitchPalette) {
+        restorePitchPalette()
+      }
     })
+  }
+
+  applyTrackPitchPalette (trackId) {
+    const resolved = this.trackManager.getResolvedPitchPalette(trackId)
+
+    const saved = {
+      palette: SETTINGS.COLORS.PITCH_PALETTE,
+      factor: UTILS.pitchColorFactor,
+      size: UTILS.pitchPaletteSize
+    }
+
+    SETTINGS.COLORS.PITCH_PALETTE = [...resolved.palette]
+    UTILS.pitchColorFactor = resolved.pitchColorFactor
+    UTILS.pitchPaletteSize = resolved.pitchPaletteSize
+
+    return () => {
+      SETTINGS.COLORS.PITCH_PALETTE = saved.palette
+      UTILS.pitchColorFactor = saved.factor
+      UTILS.pitchPaletteSize = saved.size
+    }
   }
 
   ensureTrackLayerCanvas () {

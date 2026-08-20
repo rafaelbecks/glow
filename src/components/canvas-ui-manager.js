@@ -1,5 +1,4 @@
 import { Pane } from '../lib/tweakpane.min.js'
-import { UTILS, PITCH_PALETTE_MAX_SIZE } from '../settings.js'
 import {
   FLUID_BACKGROUND_MODES,
   getBackgroundModePaneOptions
@@ -13,7 +12,6 @@ export class CanvasUIManager {
     this.mainPane = null
     this.sotoPaletteFolder = null
     this.colorPaletteFolder = null
-    this.pitchSwatchContainer = null
   }
 
   rgbToHex (rgb) {
@@ -56,7 +54,6 @@ export class CanvasUIManager {
     }
     this.sotoPaletteFolder = null
     this.colorPaletteFolder = null
-    this.pitchSwatchContainer = null
 
     canvasControlsContainer.innerHTML =
       '<div id="canvas-pane-container"></div>'
@@ -93,8 +90,7 @@ export class CanvasUIManager {
         '#FFFFFF',
         '#4A148C',
         '#8B0000'
-      ],
-      PITCH_PALETTE: UTILS.generatePitchPalette(UTILS.pitchColorFactor || 30)
+      ]
     }
 
     const canvasData = {
@@ -292,11 +288,6 @@ export class CanvasUIManager {
         canvasSettings.SHADER_OVERLAY_RAIN_PATTERN_DRIFT ?? 0.1,
       shaderOverlayRainSharpness:
         canvasSettings.SHADER_OVERLAY_RAIN_SHARPNESS ?? 1
-    }
-
-    const pitchColorData = {
-      hueFactor: UTILS.pitchColorFactor || 30,
-      paletteSize: UTILS.clampPitchPaletteSize(UTILS.pitchPaletteSize)
     }
 
     const colorFiltersFolder = this.mainPane.addFolder({
@@ -1553,137 +1544,6 @@ export class CanvasUIManager {
         })
     })
     this.refreshSotoPaletteVisibility()
-
-    if (
-      !colorSettings.PITCH_PALETTE ||
-      colorSettings.PITCH_PALETTE.length !== pitchColorData.paletteSize
-    ) {
-      colorSettings.PITCH_PALETTE = UTILS.generatePitchPalette(
-        pitchColorData.hueFactor,
-        pitchColorData.paletteSize
-      )
-      if (settings.COLORS) {
-        settings.COLORS.PITCH_PALETTE = [...colorSettings.PITCH_PALETTE]
-      }
-    }
-
-    const pitchColorFolder = this.mainPane.addFolder({
-      title: 'Pitch to Color Palette',
-      expanded: true
-    })
-
-    const pitchSwatchContainer = document.createElement('div')
-    pitchSwatchContainer.id = 'pitchColorExample'
-    pitchSwatchContainer.style.height = '246px'
-    pitchSwatchContainer.className = 'pitch-color-example'
-    this.pitchSwatchContainer = pitchSwatchContainer
-
-    const applyPitchPalette = (nextPalette) => {
-      if (settings.COLORS) {
-        settings.COLORS.PITCH_PALETTE = nextPalette
-      }
-      colorSettings.PITCH_PALETTE = nextPalette
-      this.renderPitchPaletteSwatches(
-        pitchSwatchContainer,
-        nextPalette,
-        settings
-      )
-      this.triggerPitchColorFactorChange(
-        pitchColorData.hueFactor,
-        pitchColorData.paletteSize,
-        nextPalette
-      )
-    }
-
-    pitchColorFolder
-      .addBinding(pitchColorData, 'paletteSize', {
-        label: 'Colors',
-        min: 1,
-        max: PITCH_PALETTE_MAX_SIZE,
-        step: 1
-      })
-      .on('change', (ev) => {
-        pitchColorData.paletteSize = UTILS.clampPitchPaletteSize(ev.value)
-        UTILS.pitchPaletteSize = pitchColorData.paletteSize
-        // Keep colors the user already picked; only fill in newly added slots
-        const current = colorSettings.PITCH_PALETTE || []
-        const generated = UTILS.generatePitchPalette(
-          pitchColorData.hueFactor,
-          pitchColorData.paletteSize
-        )
-        applyPitchPalette(generated.map((color, i) => current[i] || color))
-      })
-
-    pitchColorFolder
-      .addBinding(pitchColorData, 'hueFactor', {
-        label: 'Hue Factor',
-        min: 1,
-        max: 100,
-        step: 1
-      })
-      .on('change', (ev) => {
-        applyPitchPalette(
-          UTILS.generatePitchPalette(ev.value, pitchColorData.paletteSize)
-        )
-      })
-
-    this.renderPitchPaletteSwatches(
-      pitchSwatchContainer,
-      colorSettings.PITCH_PALETTE,
-      settings
-    )
-
-    setTimeout(() => {
-      const pitchColorElement =
-        pitchColorFolder.element ||
-        pitchColorFolder.element_ ||
-        (pitchColorFolder.controller &&
-          pitchColorFolder.controller.view &&
-          pitchColorFolder.controller.view.element)
-      if (!pitchColorElement) return
-      const folderBody =
-        pitchColorElement.querySelector('.tp-fldv_c') ||
-        pitchColorElement.querySelector('.tp-fldv') ||
-        pitchColorElement
-      folderBody.appendChild(pitchSwatchContainer)
-    }, 0)
-  }
-
-  renderPitchPaletteSwatches (container, palette, settings) {
-    if (!container) return
-    container.innerHTML = ''
-    // Column-flow grid: keep at most 7 rows so short palettes don't leave gaps
-    container.style.gridTemplateRows = `repeat(${Math.min(
-      7,
-      Math.max(1, palette.length)
-    )}, auto)`
-    palette.forEach((color, index) => {
-      const hex = this.normalizeHexColor(color)
-      const item = document.createElement('label')
-      item.className = 'pitch-color-item'
-      item.style.backgroundColor = hex
-      item.title = `Color ${index + 1}`
-
-      const label = document.createElement('span')
-      label.textContent = String(index + 1)
-
-      const input = document.createElement('input')
-      input.type = 'color'
-      input.value = hex
-      input.setAttribute('aria-label', `Pitch color ${index + 1}`)
-      input.addEventListener('input', (ev) => {
-        const next = ev.target.value
-        item.style.backgroundColor = next
-        if (settings?.COLORS?.PITCH_PALETTE) {
-          settings.COLORS.PITCH_PALETTE[index] = next
-        }
-        this.triggerColorPaletteChange('pitch', index, next)
-      })
-
-      item.appendChild(label)
-      item.appendChild(input)
-      container.appendChild(item)
-    })
   }
 
   normalizeHexColor (color) {
@@ -1795,13 +1655,6 @@ export class CanvasUIManager {
   triggerColorPaletteChange (palette, index, color) {
     const event = new CustomEvent('colorPaletteChange', {
       detail: { palette, index, color }
-    })
-    this.panel.dispatchEvent(event)
-  }
-
-  triggerPitchColorFactorChange (value, size, palette) {
-    const event = new CustomEvent('pitchColorFactorChange', {
-      detail: { value, size, palette }
     })
     this.panel.dispatchEvent(event)
   }

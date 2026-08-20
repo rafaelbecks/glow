@@ -1,6 +1,7 @@
 // Track management system for DAW-style interface
 import { TrajectorySystem } from './trajectory-system.js'
 import { LineModulationSystem } from './line-modulation-system.js'
+import { PitchPaletteSystem } from './pitch-palette-system.js'
 import { ModulationSystem } from './modulation-system.js'
 import { getAvailableLuminodes } from './luminodes/index.js'
 import { TRACK_BLEND_MODES } from './track-blend-modes.js'
@@ -64,6 +65,7 @@ export class TrackManager {
     this.trajectorySystem = new TrajectorySystem()
     // Initialize transversal line modulation (geometry deformation)
     this.lineModulationSystem = new LineModulationSystem()
+    this.pitchPaletteSystem = new PitchPaletteSystem()
 
     // Initialize modulation system
     this.modulationSystem = new ModulationSystem()
@@ -281,6 +283,39 @@ export class TrackManager {
 
   getLineModulationSystem () {
     return this.lineModulationSystem
+  }
+
+  getPitchPaletteConfig (trackId) {
+    return this.pitchPaletteSystem.getTrackConfig(trackId)
+  }
+
+  getResolvedPitchPalette (trackId) {
+    return this.pitchPaletteSystem.getResolvedPalette(trackId)
+  }
+
+  updatePitchPaletteConfig (trackId, updates) {
+    const newConfig = this.pitchPaletteSystem.updateTrackConfig(trackId, updates)
+    this.triggerCallback('pitchPaletteUpdated', {
+      trackId,
+      config: newConfig
+    })
+    return newConfig
+  }
+
+  loadPitchPaletteConfig (trackId, data) {
+    return this.pitchPaletteSystem.loadTrackConfig(trackId, data)
+  }
+
+  resetPitchPaletteConfig (trackId) {
+    this.pitchPaletteSystem.resetTrackConfig(trackId)
+    this.triggerCallback('pitchPaletteUpdated', {
+      trackId,
+      config: this.pitchPaletteSystem.getTrackConfig(trackId)
+    })
+  }
+
+  getPitchPaletteSystem () {
+    return this.pitchPaletteSystem
   }
 
   // Modulation management methods

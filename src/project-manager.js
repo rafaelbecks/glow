@@ -181,6 +181,7 @@ export class ProjectManager {
       tracks: this.collectTrackSettings(),
       trajectories: this.collectTrajectorySettings(),
       lineModulations: this.collectLineModulationSettings(),
+      pitchPalettes: this.collectPitchPaletteSettings(),
       modulation: this.collectModulationSettings(),
       tablet: this.collectTabletSettings(),
       midi: this.collectMidiSettings(),
@@ -277,6 +278,20 @@ export class ProjectManager {
     });
 
     return lineModulations;
+  }
+
+  collectPitchPaletteSettings() {
+    const pitchPalettes = {};
+    const tracks = this.glowVisualizer.trackManager.getTracks();
+    const system =
+      this.glowVisualizer.trackManager.getPitchPaletteSystem();
+
+    tracks.forEach((track) => {
+      const config = system.getTrackConfig(track.id)
+      pitchPalettes[track.id] = system.cloneConfig(config)
+    })
+
+    return pitchPalettes;
   }
 
   collectModulationSettings() {
@@ -908,6 +923,9 @@ export class ProjectManager {
       // Load line modulation settings
       this.loadLineModulationSettings(projectData.lineModulations || {});
 
+      // Load per-track pitch palettes
+      this.loadPitchPaletteSettings(projectData.pitchPalettes || {});
+
       // Load modulation settings
       await this.loadModulationSettings(projectData.modulation || {});
 
@@ -1464,6 +1482,26 @@ export class ProjectManager {
       const config = lineModulationData[trackId];
       if (config) {
         this.glowVisualizer.trackManager.updateLineModulationConfig(
+          parseInt(trackId),
+          config,
+        );
+      }
+    });
+  }
+
+  loadPitchPaletteSettings(pitchPaletteData) {
+    if (!pitchPaletteData || Object.keys(pitchPaletteData).length === 0) {
+      const tracks = this.glowVisualizer.trackManager.getTracks();
+      this.glowVisualizer.trackManager
+        .getPitchPaletteSystem()
+        .seedAllTracksFromGlobal(tracks.map((t) => t.id));
+      return;
+    }
+
+    Object.keys(pitchPaletteData).forEach((trackId) => {
+      const config = pitchPaletteData[trackId];
+      if (config) {
+        this.glowVisualizer.trackManager.loadPitchPaletteConfig(
           parseInt(trackId),
           config,
         );

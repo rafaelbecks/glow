@@ -9,6 +9,7 @@ import {
   getLuminodeSettingsKey as getLuminodeSettingsKeyFromRegistry
 } from '../luminodes/index.js'
 import { OSCILLATION_WAVE_SHAPE_NAMES } from '../line-modulation-system.js'
+import { UTILS, PITCH_PALETTE_MAX_SIZE } from '../settings.js'
 
 export { getLuminodeDisplayName as normalizeLuminodeName }
 
@@ -520,6 +521,16 @@ export class TrackUIManager {
         luminodeFolder = this.createLuminodeConfigFolder(pane, track)
       }
 
+      let pitchPaletteFolder = null
+      let pitchPaletteData = null
+      let pitchSwatchContainer = null
+      if (track.luminode) {
+        const pitchCreated = this.createPitchPaletteFolder(pane, track)
+        pitchPaletteFolder = pitchCreated?.folder || null
+        pitchPaletteData = pitchCreated?.data || null
+        pitchSwatchContainer = pitchCreated?.swatchContainer || null
+      }
+
       this.trackPanes.set(track.id, {
         pane,
         trackData,
@@ -527,6 +538,9 @@ export class TrackUIManager {
         trajectoryData,
         lineModulationData,
         luminodeFolder,
+        pitchPaletteFolder,
+        pitchPaletteData,
+        pitchSwatchContainer,
         midiBinding,
         luminodeBinding,
         editLuminodeIcon,
@@ -781,6 +795,151 @@ export class TrackUIManager {
     return luminodeFolder
   }
 
+  createPitchPaletteFolder (pane, track) {
+    const paletteConfig = this.trackManager.getPitchPaletteConfig(track.id)
+    const resolved = this.trackManager.getResolvedPitchPalette(track.id)
+
+    const pitchPaletteData = {
+      hueFactor:
+        paletteConfig.pitchColorFactor ?? UTILS.pitchColorFactor ?? 30,
+      paletteSize: UTILS.clampPitchPaletteSize(
+        paletteConfig.pitchPaletteSize ?? UTILS.pitchPaletteSize
+      )
+    }
+
+    let activePalette = resolved.palette?.length
+      ? [...resolved.palette]
+      : UTILS.generatePitchPalette(
+          pitchPaletteData.hueFactor,
+          pitchPaletteData.paletteSize
+        )
+
+    const pitchPaletteFolder = pane.addFolder({
+      title: 'Pitch to Color Palette',
+      expanded: true
+    })
+
+    const swatchContainer = document.createElement('div')
+    swatchContainer.className = 'pitch-color-example track-pitch-color-example'
+    swatchContainer.style.height = '246px'
+
+    const applyPalette = (nextPalette) => {
+      activePalette = [...nextPalette]
+      this.trackManager.updatePitchPaletteConfig(track.id, {
+        pitchPalette: nextPalette,
+        pitchColorFactor: pitchPaletteData.hueFactor,
+        pitchPaletteSize: pitchPaletteData.paletteSize
+      })
+      this.renderPitchPaletteSwatches(swatchContainer, nextPalette, (index, color) => {
+        activePalette[index] = color
+        this.trackManager.updatePitchPaletteConfig(track.id, {
+          pitchPaletteIndex: index,
+          pitchPaletteColor: color
+        })
+      })
+    }
+
+    pitchPaletteFolder
+      .addBinding(pitchPaletteData, 'paletteSize', {
+        label: 'Colors',
+        min: 1,
+        max: PITCH_PALETTE_MAX_SIZE,
+        step: 1
+      })
+      .on('change', (ev) => {
+        pitchPaletteData.paletteSize = UTILS.clampPitchPaletteSize(ev.value)
+        const generated = UTILS.generatePitchPalette(
+          pitchPaletteData.hueFactor,
+          pitchPaletteData.paletteSize
+        )
+        applyPalette(generated.map((color, i) => activePalette[i] || color))
+      })
+
+    pitchPaletteFolder
+      .addBinding(pitchPaletteData, 'hueFactor', {
+        label: 'Hue Factor',
+        min: 1,
+        max: 100,
+        step: 1
+      })
+      .on('change', (ev) => {
+        pitchPaletteData.hueFactor = ev.value
+        applyPalette(
+          UTILS.generatePitchPalette(
+            ev.value,
+            pitchPaletteData.paletteSize
+          )
+        )
+      })
+
+    setTimeout(() => {
+      const folderEl =
+        pitchPaletteFolder.element ||
+        pitchPaletteFolder.element_ ||
+        (pitchPaletteFolder.controller &&
+          pitchPaletteFolder.controller.view &&
+          pitchPaletteFolder.controller.view.element)
+      if (!folderEl) return
+      const folderBody =
+        folderEl.querySelector('.tp-fldv_c') ||
+        folderEl.querySelector('.tp-fldv') ||
+        folderEl
+      folderBody.appendChild(swatchContainer)
+      this.renderPitchPaletteSwatches(swatchContainer, activePalette, (index, color) => {
+        activePalette[index] = color
+        this.trackManager.updatePitchPaletteConfig(track.id, {
+          pitchPaletteIndex: index,
+          pitchPaletteColor: color
+        })
+      })
+    }, 0)
+
+    return { folder: pitchPaletteFolder, data: pitchPaletteData, swatchContainer }
+  }
+
+  renderPitchPaletteSwatches (container, palette, onColorChange) {
+    if (!container) return
+    container.innerHTML = ''
+    container.style.gridTemplateRows = `repeat(${Math.min(
+      7,
+      Math.max(1, palette.length)
+    )}, auto)`
+
+    palette.forEach((color, index) => {
+      const hex = this.normalizeHexColor(color)
+      const item = document.createElement('label')
+      item.className = 'pitch-color-item'
+      item.style.backgroundColor = hex
+      item.title = `Color ${index + 1}`
+
+      const label = document.createElement('span')
+      label.textContent = String(index + 1)
+
+      const input = document.createElement('input')
+      input.type = 'color'
+      input.value = hex
+      input.setAttribute('aria-label', `Pitch color ${index + 1}`)
+      input.addEventListener('input', (ev) => {
+        const next = ev.target.value
+        item.style.backgroundColor = next
+        onColorChange?.(index, next)
+      })
+
+      item.appendChild(label)
+      item.appendChild(input)
+      container.appendChild(item)
+    })
+  }
+
+  normalizeHexColor (color) {
+    if (typeof color !== 'string') return '#ffffff'
+    if (/^#[0-9a-fA-F]{6}$/.test(color)) return color
+    if (/^#[0-9a-fA-F]{3}$/.test(color)) {
+      return `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`
+    }
+    return '#ffffff'
+  }
+
   triggerLuminodeConfigChange (trackId, luminode, param, value) {
     const event = new CustomEvent('luminodeConfigChange', {
       detail: {
@@ -819,10 +978,42 @@ export class TrackUIManager {
     // Dispose stale luminode bindings before refresh so tweakpane does not
     // emit change events against a luminode that was already cleared.
     this.updateLuminodeConfigPane(trackId, track.luminode)
+    this.updatePitchPalettePane(trackId, track.luminode)
 
     try {
       paneData.pane.refresh()
     } catch (_) {}
+  }
+
+  updatePitchPalettePane (trackId, luminode) {
+    const paneData = this.trackPanes.get(trackId)
+    if (!paneData || !paneData.pane) return
+
+    if (paneData.pitchPaletteFolder) {
+      try {
+        paneData.pitchPaletteFolder.dispose()
+      } catch (e) {
+        console.warn('Error disposing pitch palette folder:', e)
+      }
+      paneData.pitchPaletteFolder = null
+      paneData.pitchPaletteData = null
+      paneData.pitchSwatchContainer = null
+    }
+
+    if (luminode) {
+      const track = this.trackManager.getTrack(trackId)
+      if (track) {
+        try {
+          const created = this.createPitchPaletteFolder(paneData.pane, track)
+          paneData.pitchPaletteFolder = created?.folder || null
+          paneData.pitchPaletteData = created?.data || null
+          paneData.pitchSwatchContainer = created?.swatchContainer || null
+          paneData.pane.refresh()
+        } catch (e) {
+          console.error('Error creating pitch palette folder:', e)
+        }
+      }
+    }
   }
 
   updateLuminodeConfigPane (trackId, luminode) {
