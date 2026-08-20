@@ -10,6 +10,14 @@ import { LINE_MODULATION_PARAMS } from './line-modulation-system.js'
 
 export const TRACK_MOTION_MODULATION_PARAMS = [
   {
+    key: 'mixer.opacity',
+    label: 'Mixer · Opacity',
+    type: 'slider',
+    min: 0,
+    max: 1,
+    step: 0.01
+  },
+  {
     key: 'layout.x',
     label: 'Layout · X',
     type: 'slider',

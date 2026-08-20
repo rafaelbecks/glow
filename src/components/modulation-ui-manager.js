@@ -76,10 +76,9 @@ export class ModulationUIManager {
   }
 
   getTrackTargetParams (luminode) {
-    return [
-      ...TRACK_MOTION_MODULATION_PARAMS,
-      ...getLuminodeConfig(luminode)
-    ]
+    const luminodeParams = luminode ? getLuminodeConfig(luminode) : []
+    // Luminode parameters first, then mixer / layout / trajectory / line
+    return [...luminodeParams, ...TRACK_MOTION_MODULATION_PARAMS]
   }
 
   renderModulationControls () {
@@ -295,27 +294,25 @@ export class ModulationUIManager {
           this.renderModulationControls()
         })
 
-        if (trackLuminode) {
-          const configParams = this.getTrackTargetParams(trackLuminode)
-          const configOptions = { 'Select Parameter': '' }
-          configParams
-            .filter(p => p.type === 'slider' || p.type === 'number' || p.type === 'checkbox')
-            .forEach(p => { configOptions[p.label] = p.key })
+        const configParams = this.getTrackTargetParams(trackLuminode)
+        const configOptions = { 'Select Parameter': '' }
+        configParams
+          .filter(p => p.type === 'slider' || p.type === 'number' || p.type === 'checkbox')
+          .forEach(p => { configOptions[p.label] = p.key })
 
-          modulatorFolder.addBinding(modulatorData, 'targetConfigKey', {
-            options: configOptions,
-            label: 'Parameter'
-          }).on('change', (ev) => {
-            modulatorData.targetConfigKey = ev.value || ''
-            this.trackManager.updateModulator(modulator.id, {
-              targetConfigKey: ev.value || null,
-              targetLuminode: trackLuminode
-            })
-            this.updateThresholdVisibility(modulatorFolder, ev.value, configParams)
+        modulatorFolder.addBinding(modulatorData, 'targetConfigKey', {
+          options: configOptions,
+          label: 'Parameter'
+        }).on('change', (ev) => {
+          modulatorData.targetConfigKey = ev.value || ''
+          this.trackManager.updateModulator(modulator.id, {
+            targetConfigKey: ev.value || null,
+            targetLuminode: trackLuminode
           })
-          if (modulator.targetConfigKey) {
-            this.updateThresholdVisibility(modulatorFolder, modulator.targetConfigKey, configParams)
-          }
+          this.updateThresholdVisibility(modulatorFolder, ev.value, configParams)
+        })
+        if (modulator.targetConfigKey) {
+          this.updateThresholdVisibility(modulatorFolder, modulator.targetConfigKey, configParams)
         }
       } else if (targetDestination === 'shaderOverlay') {
         const overlayOptions = { 'Select Overlay': '' }

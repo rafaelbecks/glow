@@ -175,6 +175,54 @@ export class LuminodeMixerUI {
       window.addEventListener('pointercancel', onEnd)
     })
   }
+
+  /**
+   * Update mixer faders to show effective (modulated) opacity without
+   * writing the base track.opacity. Skips faders currently being dragged.
+   */
+  syncModulationOpacities (motionValues = {}, prevMotion = {}) {
+    if (!this.stripsEl) return
+
+    const trackIds = new Set([
+      ...Object.keys(motionValues),
+      ...Object.keys(prevMotion || {})
+    ])
+
+    trackIds.forEach((id) => {
+      const trackId = Number(id) || id
+      const motionNow = motionValues[trackId] || motionValues[id]
+      const motionWas = prevMotion?.[trackId] || prevMotion?.[id]
+      const keys = motionNow?.modulatedKeys
+      const opacityModulated = keys?.includes('mixer.opacity')
+
+      let value
+      if (opacityModulated) {
+        value = motionNow.opacity
+      } else if (motionWas?.modulatedKeys?.includes('mixer.opacity')) {
+        const track = this.trackManager.getTrack(trackId)
+        value = typeof track?.opacity === 'number' ? track.opacity : 1
+      } else {
+        return
+      }
+
+      if (typeof value !== 'number') return
+
+      const strip = this.stripsEl.querySelector(
+        `.mixer-strip[data-track-id="${trackId}"]`
+      )
+      if (!strip) return
+
+      const opacityInput = strip.querySelector('[data-action="opacity"]')
+      const opacityOut = strip.querySelector('.mixer-strip-opacity output')
+      if (!opacityInput) return
+      if (document.activeElement === opacityInput) return
+
+      if (Number(opacityInput.value) === value) return
+      opacityInput.value = String(value)
+      setFaderFill(opacityInput, value)
+      if (opacityOut) opacityOut.textContent = formatOpacity(value)
+    })
+  }
 }
 
 function formatOpacity (value) {
