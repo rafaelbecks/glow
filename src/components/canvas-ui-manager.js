@@ -54,7 +54,6 @@ export class CanvasUIManager {
       this.mainPane.dispose()
       this.mainPane = null
     }
-    this.canvasData = null
     this.sotoPaletteFolder = null
     this.colorPaletteFolder = null
     this.pitchSwatchContainer = null
@@ -294,7 +293,6 @@ export class CanvasUIManager {
       shaderOverlayRainSharpness:
         canvasSettings.SHADER_OVERLAY_RAIN_SHARPNESS ?? 1
     }
-    this.canvasData = canvasData
 
     const pitchColorData = {
       hueFactor: UTILS.pitchColorFactor || 30,
@@ -1769,94 +1767,18 @@ export class CanvasUIManager {
   }
 
   parseTableValuesToSlider (tableValues) {
-    if (typeof tableValues !== 'string') return 0
-    const parts = tableValues.trim().split(/\s+/)
-    return parts.length ? parseFloat(parts[0]) || 0 : 0
+    if (!tableValues) return 0
+    const values = tableValues
+      .split(' ')
+      .map((v) => parseFloat(v.trim()))
+      .filter((v) => !isNaN(v))
+    if (values.length === 0) return 0
+    return values[0]
   }
 
   sliderToTableValues (sliderValue) {
     const value = Math.max(0, Math.min(1, sliderValue))
     return `${value} ${1 - value}`
-  }
-
-  /** Map SETTINGS.CANVAS keys used by modulation to canvasData binding keys. */
-  getCanvasModulationUiKey (settingsKey) {
-    const map = {
-      CLEAR_ALPHA: 'clearAlpha',
-      LUMIA_EFFECT: 'lumiaEffect',
-      INVERT_FILTER: 'invertFilter',
-      GRAYSCALE_FILTER: 'grayscaleFilter',
-      HUE_ROTATE_FILTER: 'hueRotateFilter',
-      BRIGHTNESS_FILTER: 'brightnessFilter',
-      CONTRAST_FILTER: 'contrastFilter',
-      SATURATION_FILTER: 'saturationFilter',
-      DITHER_SATURATE: 'ditherSaturate',
-      DITHER_TABLE_VALUES_R: 'ditherTableValuesR',
-      DITHER_TABLE_VALUES_G: 'ditherTableValuesG',
-      DITHER_TABLE_VALUES_B: 'ditherTableValuesB'
-    }
-    return map[settingsKey] || null
-  }
-
-  /**
-   * Reflect canvas-filter modulation in tweakpane controls.
-   */
-  syncModulationDisplay (canvasValues, prevCanvas) {
-    if (!this.canvasData || !this.mainPane) return
-    const paneEl =
-      this.mainPane.element ||
-      this.mainPane.element_ ||
-      (this.mainPane.controller &&
-        this.mainPane.controller.view &&
-        this.mainPane.controller.view.element)
-    if (paneEl && paneEl.contains(document.activeElement)) return
-
-    const now = canvasValues || null
-    const was = prevCanvas || null
-    if (!now && !was) return
-
-    let dirty = false
-    const keys = new Set([
-      ...Object.keys(now || {}),
-      ...Object.keys(was || {})
-    ])
-
-    keys.forEach((settingsKey) => {
-      const uiKey = this.getCanvasModulationUiKey(settingsKey)
-      if (!uiKey || !(uiKey in this.canvasData)) return
-
-      let value
-      if (now && Object.prototype.hasOwnProperty.call(now, settingsKey)) {
-        value = now[settingsKey]
-        if (
-          settingsKey.startsWith('DITHER_TABLE_VALUES_') &&
-          typeof value === 'string'
-        ) {
-          value = this.parseTableValuesToSlider(value)
-        }
-      } else if (this.settings?.CANVAS) {
-        value = this.settings.CANVAS[settingsKey]
-        if (
-          settingsKey.startsWith('DITHER_TABLE_VALUES_') &&
-          typeof value === 'string'
-        ) {
-          value = this.parseTableValuesToSlider(value)
-        }
-      } else {
-        return
-      }
-
-      if (this.canvasData[uiKey] !== value) {
-        this.canvasData[uiKey] = value
-        dirty = true
-      }
-    })
-
-    if (dirty) {
-      try {
-        this.mainPane.refresh()
-      } catch (_) {}
-    }
   }
 
   triggerCanvasExport (detail) {

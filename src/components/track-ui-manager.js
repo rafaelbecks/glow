@@ -516,11 +516,8 @@ export class TrackUIManager {
       }
 
       let luminodeFolder = null
-      let luminodeData = null
       if (track.luminode && hasLuminodeConfig(track.luminode)) {
-        const created = this.createLuminodeConfigFolder(pane, track)
-        luminodeFolder = created?.folder || null
-        luminodeData = created?.data || null
+        luminodeFolder = this.createLuminodeConfigFolder(pane, track)
       }
 
       this.trackPanes.set(track.id, {
@@ -530,7 +527,6 @@ export class TrackUIManager {
         trajectoryData,
         lineModulationData,
         luminodeFolder,
-        luminodeData,
         midiBinding,
         luminodeBinding,
         editLuminodeIcon,
@@ -782,7 +778,7 @@ export class TrackUIManager {
         })
     })
 
-    return { folder: luminodeFolder, data: luminodeData }
+    return luminodeFolder
   }
 
   triggerLuminodeConfigChange (trackId, luminode, param, value) {
@@ -843,7 +839,6 @@ export class TrackUIManager {
         console.warn('Error disposing luminode folder:', e)
       }
       paneData.luminodeFolder = null
-      paneData.luminodeData = null
     }
 
     if (luminode && hasLuminodeConfig(luminode)) {
@@ -851,12 +846,10 @@ export class TrackUIManager {
       if (track) {
         const updatedTrack = { ...track, luminode }
         try {
-          const created = this.createLuminodeConfigFolder(
+          paneData.luminodeFolder = this.createLuminodeConfigFolder(
             paneData.pane,
             updatedTrack
           )
-          paneData.luminodeFolder = created?.folder || null
-          paneData.luminodeData = created?.data || null
           if (paneData.luminodeFolder) {
             paneData.pane.refresh()
           }
@@ -964,183 +957,6 @@ export class TrackUIManager {
       noiseAmount: config.noise?.amount,
       noiseScale: config.noise?.scale,
       noiseSpeed: config.noise?.speed
-    })
-  }
-
-  /**
-   * Push ephemeral modulated values into tweakpane bindings so controls
-   * animate while modulation is active. Skips panes the user is editing.
-   */
-  syncModulationDisplay (luminodeValues = {}, motionValues = {}, prev = {}) {
-    const prevLuminode = prev.luminode || {}
-    const prevMotion = prev.motion || {}
-    const trackIds = new Set([
-      ...Object.keys(luminodeValues),
-      ...Object.keys(motionValues),
-      ...Object.keys(prevLuminode),
-      ...Object.keys(prevMotion)
-    ])
-
-    trackIds.forEach((id) => {
-      const trackId = Number(id) || id
-      const paneData = this.trackPanes.get(trackId)
-      if (!paneData?.pane) return
-
-      const paneEl =
-        paneData.pane.element ||
-        paneData.pane.element_ ||
-        (paneData.pane.controller &&
-          paneData.pane.controller.view &&
-          paneData.pane.controller.view.element)
-      if (paneEl && paneEl.contains(document.activeElement)) return
-
-      let dirty = false
-      const luminodeNow = luminodeValues[trackId] || luminodeValues[id]
-      const luminodeWas = prevLuminode[trackId] || prevLuminode[id]
-      const motionNow = motionValues[trackId] || motionValues[id]
-      const motionWas = prevMotion[trackId] || prevMotion[id]
-
-      if (paneData.luminodeData) {
-        if (luminodeNow) {
-          Object.keys(luminodeNow).forEach((key) => {
-            if (paneData.luminodeData[key] !== luminodeNow[key]) {
-              paneData.luminodeData[key] = luminodeNow[key]
-              dirty = true
-            }
-          })
-        } else if (luminodeWas) {
-          // Restore base values once modulation stops
-          const track = this.trackManager.getTrack(trackId)
-          const luminodeName = track?.luminode
-          const settingsKey = luminodeName
-            ? this.getLuminodeSettingsKey(luminodeName)
-            : null
-          const base =
-            settingsKey && this.settings?.MODULES?.[settingsKey]
-              ? this.settings.MODULES[settingsKey]
-              : null
-          if (base) {
-            Object.keys(luminodeWas).forEach((key) => {
-              if (base[key] !== undefined && paneData.luminodeData[key] !== base[key]) {
-                paneData.luminodeData[key] = base[key]
-                dirty = true
-              }
-            })
-          }
-        }
-      }
-
-      if (motionNow?.modulatedKeys?.length) {
-        const keys = new Set(motionNow.modulatedKeys)
-        if (paneData.layoutData && (keys.has('layout.x') || keys.has('layout.y'))) {
-          const nextPos = {
-            x: motionNow.layout?.x ?? paneData.layoutData.position?.x ?? 0,
-            y: motionNow.layout?.y ?? paneData.layoutData.position?.y ?? 0
-          }
-          const cur = paneData.layoutData.position
-          if (!cur || cur.x !== nextPos.x || cur.y !== nextPos.y) {
-            paneData.layoutData.position = nextPos
-            dirty = true
-          }
-        }
-        if (paneData.trajectoryData) {
-          const trajMap = {
-            'trajectory.enabled': 'enabled',
-            'trajectory.motionRate': 'motionRate',
-            'trajectory.amplitude': 'amplitude',
-            'trajectory.ratioA': 'ratioA',
-            'trajectory.ratioB': 'ratioB',
-            'trajectory.ratioC': 'ratioC',
-            'trajectory.inversion': 'inversion'
-          }
-          Object.entries(trajMap).forEach(([modKey, uiKey]) => {
-            if (!keys.has(modKey)) return
-            const value = motionNow.trajectory?.[uiKey]
-            if (value !== undefined && paneData.trajectoryData[uiKey] !== value) {
-              paneData.trajectoryData[uiKey] = value
-              dirty = true
-            }
-          })
-        }
-        if (paneData.lineModulationData) {
-          const lineMap = {
-            'lineModulation.enabled': ['enabled', () => motionNow.lineModulation?.enabled],
-            'lineModulation.oscillationAmount': [
-              'oscAmount',
-              () => motionNow.lineModulation?.oscillation?.amount
-            ],
-            'lineModulation.oscillationFrequency': [
-              'oscFrequency',
-              () => motionNow.lineModulation?.oscillation?.frequency
-            ],
-            'lineModulation.oscillationSpeed': [
-              'oscSpeed',
-              () => motionNow.lineModulation?.oscillation?.speed
-            ],
-            'lineModulation.oscillationPhase': [
-              'oscPhase',
-              () => motionNow.lineModulation?.oscillation?.phase
-            ],
-            'lineModulation.noiseAmount': [
-              'noiseAmount',
-              () => motionNow.lineModulation?.noise?.amount
-            ],
-            'lineModulation.noiseScale': [
-              'noiseScale',
-              () => motionNow.lineModulation?.noise?.scale
-            ],
-            'lineModulation.noiseSpeed': [
-              'noiseSpeed',
-              () => motionNow.lineModulation?.noise?.speed
-            ]
-          }
-          Object.entries(lineMap).forEach(([modKey, [uiKey, getter]]) => {
-            if (!keys.has(modKey)) return
-            const value = getter()
-            if (value !== undefined && paneData.lineModulationData[uiKey] !== value) {
-              paneData.lineModulationData[uiKey] = value
-              dirty = true
-            }
-          })
-        }
-      } else if (motionWas?.modulatedKeys?.length) {
-        const track = this.trackManager.getTrack(trackId)
-        if (paneData.layoutData && track?.layout) {
-          paneData.layoutData.position = {
-            x: track.layout.x,
-            y: track.layout.y
-          }
-          dirty = true
-        }
-        if (paneData.trajectoryData) {
-          const config = this.trackManager.getTrajectoryConfig(trackId)
-          if (config) {
-            Object.assign(paneData.trajectoryData, {
-              enabled: config.enabled,
-              motionRate: config.motionRate,
-              amplitude: config.amplitude,
-              ratioA: config.ratioA,
-              ratioB: config.ratioB,
-              ratioC: config.ratioC,
-              inversion: config.inversion
-            })
-            dirty = true
-          }
-        }
-        if (paneData.lineModulationData) {
-          const config = this.trackManager.getLineModulationConfig(trackId)
-          if (config) {
-            this.updateLineModulationUI(trackId, config)
-            dirty = true
-          }
-        }
-      }
-
-      if (dirty) {
-        try {
-          paneData.pane.refresh()
-        } catch (_) {}
-      }
     })
   }
 

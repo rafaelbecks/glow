@@ -148,6 +148,20 @@ export class DiamondLuminode {
     }
   }
 
+  // Generate or get cached base geometry
+  getBaseGeometry (R, h, rings, segments) {
+    const config = `${R}-${h}-${rings}-${segments}`
+
+    if (this.lastConfig !== config || !this.baseVertices || !this.baseEdges) {
+      const meta = this.generateDiamondVertices(R, h, rings, segments)
+      this.baseVertices = meta.verts
+      this.baseEdges = this.buildDiamondEdges(meta)
+      this.lastConfig = config
+    }
+
+    return { vertices: this.baseVertices, edges: this.baseEdges }
+  }
+
   draw (t, notes, useColor = false, layout = { x: 0, y: 0, rotation: 0 }) {
     if (notes.length === 0) return
 

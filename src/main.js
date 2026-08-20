@@ -1415,7 +1415,6 @@ export class GLOWVisualizer {
       this.shaderBackgroundManager.update(t)
     }
 
-    this._frameCanvasUiValues = null
     const restoreCanvasModulation = this.applyModulationToCanvas()
     const restoreShaderOverlayModulation = this.applyModulationToShaderOverlays()
     this.canvasDrawer.clear()
@@ -1450,9 +1449,6 @@ export class GLOWVisualizer {
     // Update side panel activity indicators
     this.sidePanel.updateActivityIndicators(activeNotes)
 
-    // Reflect modulated values in tweakpane / mixer faders
-    this.syncModulationUi()
-
     // Check for periodic tablet clearing
     this.tabletManager.checkAndClearStrokes(time)
 
@@ -1462,43 +1458,6 @@ export class GLOWVisualizer {
     if (restoreCanvasModulation) restoreCanvasModulation()
     if (restoreShaderOverlayModulation) restoreShaderOverlayModulation()
     this.animationId = requestAnimationFrame(() => this.animate())
-  }
-
-  syncModulationUi () {
-    const luminodeValues = this._frameLuminodeUiValues || {}
-    const motionValues = this._frameMotionUiValues || {}
-    const canvasValues = this._frameCanvasUiValues
-    const prev = this._prevModulationUi || {
-      luminode: {},
-      motion: {},
-      canvas: null
-    }
-
-    const panelVisible = this.sidePanel?.isPanelVisible?.()
-    if (panelVisible) {
-      this.sidePanel.trackUIManager?.syncModulationDisplay?.(
-        luminodeValues,
-        motionValues,
-        prev
-      )
-      this.sidePanel.canvasUIManager?.syncModulationDisplay?.(
-        canvasValues,
-        prev.canvas
-      )
-    }
-
-    if (this.mixerVisible) {
-      this.mixerPanel?.luminodeMixerUI?.syncModulationOpacities?.(
-        motionValues,
-        prev.motion
-      )
-    }
-
-    this._prevModulationUi = {
-      luminode: luminodeValues,
-      motion: motionValues,
-      canvas: canvasValues ? { ...canvasValues } : null
-    }
   }
 
   applyModulationToCanvas () {
@@ -1558,8 +1517,6 @@ export class GLOWVisualizer {
       if (param.type === 'number') value = Math.round(value)
       if (param.tableValues) value = valueToTableValues(value)
       SETTINGS.CANVAS[configKey] = value
-      if (!this._frameCanvasUiValues) this._frameCanvasUiValues = {}
-      this._frameCanvasUiValues[configKey] = value
     })
     this.applyCanvasFilters()
     if (modulatorsByKey.has('DITHER_SATURATE')) { this.updateDitherSaturate(SETTINGS.CANVAS.DITHER_SATURATE) }
@@ -1646,7 +1603,6 @@ export class GLOWVisualizer {
     const baseLineConfig = this.trackManager.getLineModulationConfig(track.id)
     const lineModulationConfig = lineModulationSystem.cloneConfig(baseLineConfig)
     let opacity = typeof track.opacity === 'number' ? track.opacity : 1
-    const modulatedKeys = new Set()
     const modulators = modulationSystem
       .getModulators()
       .filter(
@@ -1658,13 +1614,7 @@ export class GLOWVisualizer {
       )
 
     if (modulators.length === 0) {
-      return {
-        layout,
-        trajectoryConfig,
-        lineModulationConfig,
-        opacity,
-        modulatedKeys
-      }
+      return { layout, trajectoryConfig, lineModulationConfig, opacity }
     }
 
     const noteData = {
@@ -1693,7 +1643,6 @@ export class GLOWVisualizer {
           param,
           noteData
         )
-        modulatedKeys.add(key)
         return
       }
 
@@ -1729,7 +1678,6 @@ export class GLOWVisualizer {
           key,
           modulated
         )
-        modulatedKeys.add(key)
         return
       }
 
@@ -1741,48 +1689,31 @@ export class GLOWVisualizer {
         param,
         noteData
       )
-      modulatedKeys.add(key)
     })
 
-    return {
-      layout,
-      trajectoryConfig,
-      lineModulationConfig,
-      opacity,
-      modulatedKeys
-    }
+    return { layout, trajectoryConfig, lineModulationConfig, opacity }
   }
 
   getTrackLayouts (activeNotes = {}) {
     const layouts = {}
     const lineModulationConfigs = {}
     const trackOpacities = {}
-    const motionUiValues = {}
     const tracks = this.trackManager.getTracks()
     const time = performance.now() / 1000
 
     tracks.forEach((track) => {
-      if (track.luminode) {
-        const notes = activeNotes[track.id] || activeNotes[track.luminode] || []
-        const {
-          layout: baseLayout,
-          trajectoryConfig,
-          lineModulationConfig,
-          opacity,
-          modulatedKeys
-        } = this.applyTrackMotionModulation(track, notes)
+      const notes = activeNotes[track.id] || activeNotes[track.luminode] || []
+      const {
+        layout: baseLayout,
+        trajectoryConfig,
+        lineModulationConfig,
+        opacity
+      } = this.applyTrackMotionModulation(track, notes)
 
+      trackOpacities[track.id] = opacity
+
+      if (track.luminode) {
         lineModulationConfigs[track.id] = lineModulationConfig
-        trackOpacities[track.id] = opacity
-        if (modulatedKeys && modulatedKeys.size > 0) {
-          motionUiValues[track.id] = {
-            layout: { ...baseLayout },
-            trajectory: { ...trajectoryConfig },
-            lineModulation: lineModulationConfig,
-            opacity,
-            modulatedKeys: [...modulatedKeys]
-          }
-        }
 
         // Apply trajectory motion to the layout (position and/or rotation)
         const trajectoryPosition = this.trackManager.getTrajectoryPosition(
@@ -1803,25 +1734,11 @@ export class GLOWVisualizer {
           y: trajectoryPosition.y,
           rotation: trajectoryPosition.rotation
         }
-      } else {
-        // Still allow mixer opacity modulation without a luminode (fader UI sync)
-        const { opacity, modulatedKeys } = this.applyTrackMotionModulation(
-          track,
-          []
-        )
-        trackOpacities[track.id] = opacity
-        if (modulatedKeys && modulatedKeys.has('mixer.opacity')) {
-          motionUiValues[track.id] = {
-            opacity,
-            modulatedKeys: ['mixer.opacity']
-          }
-        }
       }
     })
 
     this._frameLineModulationConfigs = lineModulationConfigs
     this._frameTrackOpacities = trackOpacities
-    this._frameMotionUiValues = motionUiValues
     return layouts
   }
 
@@ -1849,7 +1766,6 @@ export class GLOWVisualizer {
 
     // Get active tracks and their layouts
     const activeTracks = this.trackManager.getActiveTracks()
-    this._frameLuminodeUiValues = {}
     const trackLayouts = this.getTrackLayouts(activeNotes)
     const mainCtx = this.canvasDrawer.getContext()
     const layerCanvas = this.ensureTrackLayerCanvas()
@@ -1877,16 +1793,11 @@ export class GLOWVisualizer {
       const notes = activeNotes[track.id] || activeNotes[track.luminode] || []
       const layout = trackLayouts[track.id] || { x: 0, y: 0, rotation: 0 }
 
-      const modulationResult = this.applyModulationToTrack(
+      const restoreValues = this.applyModulationToTrack(
         track.id,
         track.luminode,
         notes
       )
-      const restoreValues = modulationResult?.restore || null
-      if (modulationResult?.values) {
-        if (!this._frameLuminodeUiValues) this._frameLuminodeUiValues = {}
-        this._frameLuminodeUiValues[track.id] = modulationResult.values
-      }
 
       layerCtx.setTransform(1, 0, 0, 1, 0, 0)
       layerCtx.clearRect(0, 0, layerCanvas.width, layerCanvas.height)
@@ -1983,7 +1894,6 @@ export class GLOWVisualizer {
 
     const moduleConfig = SETTINGS.MODULES[settingsKey]
     const originalValues = new Map()
-    const effectiveValues = {}
 
     const noteData = {
       notes: notes || [],
@@ -2021,23 +1931,18 @@ export class GLOWVisualizer {
       }
 
       const baseValue = originalValues.get(configKey)
-      const modulated = modulationSystem.getStackedModulatedValue(
+      moduleConfig[configKey] = modulationSystem.getStackedModulatedValue(
         baseValue,
         mods,
         configParam,
         noteData
       )
-      moduleConfig[configKey] = modulated
-      effectiveValues[configKey] = modulated
     })
 
-    return {
-      values: effectiveValues,
-      restore: () => {
-        originalValues.forEach((value, key) => {
-          moduleConfig[key] = value
-        })
-      }
+    return () => {
+      originalValues.forEach((value, key) => {
+        moduleConfig[key] = value
+      })
     }
   }
 
