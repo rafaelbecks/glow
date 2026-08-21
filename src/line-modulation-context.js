@@ -1,9 +1,9 @@
 /**
  * GLOW — Line Modulation Context Proxy
  * ------------------------------------------------------------
- * Wraps a CanvasRenderingContext2D so moveTo / lineTo / curve
- * vertices are deformed by LineModulationSystem before stroking.
- * Luminodes keep drawing as usual; geometry is intercepted once.
+ * Wraps a CanvasRenderingContext2D so moveTo / lineTo / curve /
+ * arc / rect vertices are deformed by LineModulationSystem before
+ * stroking. Luminodes keep drawing as usual; geometry is intercepted once.
  */
 
 /**
@@ -39,6 +39,78 @@ export function createLineModulationContext (realCtx, options) {
   const resetPath = () => {
     pathState.index = 0
     pathState.hasPrev = false
+  }
+
+  const emitVertex = (target, x, y, asMove) => {
+    const p = transform(x, y)
+    if (asMove) target.moveTo(p.x, p.y)
+    else target.lineTo(p.x, p.y)
+  }
+
+  /** Approximate arc as line segments so deformation can act along the curve. */
+  const emitArc = (
+    target,
+    cx,
+    cy,
+    radius,
+    startAngle,
+    endAngle,
+    counterclockwise = false
+  ) => {
+    const r = Math.abs(radius)
+    if (!(r > 0) || !Number.isFinite(cx) || !Number.isFinite(cy)) return
+
+    let delta = endAngle - startAngle
+    if (counterclockwise) {
+      if (delta >= 0) delta -= Math.PI * 2
+    } else if (delta <= 0) {
+      delta += Math.PI * 2
+    }
+
+    const absDelta = Math.abs(delta)
+    const segments = Math.max(
+      8,
+      Math.min(96, Math.ceil((r * absDelta) / 6))
+    )
+
+    for (let i = 0; i <= segments; i++) {
+      const a = startAngle + (delta * i) / segments
+      const x = cx + r * Math.cos(a)
+      const y = cy + r * Math.sin(a)
+      if (i === 0) {
+        // Match native arc(): empty path → moveTo; otherwise line into arc start
+        emitVertex(target, x, y, !pathState.hasPrev)
+      } else {
+        emitVertex(target, x, y, false)
+      }
+    }
+  }
+
+  /** Approximate rect as subdivided edges for deformation along each side. */
+  const emitRect = (target, x, y, w, h, segmentsPerEdge = 8) => {
+    const corners = [
+      [x, y],
+      [x + w, y],
+      [x + w, y + h],
+      [x, y + h]
+    ]
+    const steps = Math.max(1, Math.floor(segmentsPerEdge))
+
+    emitVertex(target, corners[0][0], corners[0][1], !pathState.hasPrev)
+
+    for (let c = 0; c < 4; c++) {
+      const [x0, y0] = corners[c]
+      const [x1, y1] = corners[(c + 1) % 4]
+      for (let s = 1; s <= steps; s++) {
+        const u = s / steps
+        emitVertex(
+          target,
+          x0 + (x1 - x0) * u,
+          y0 + (y1 - y0) * u,
+          false
+        )
+      }
+    }
   }
 
   return new Proxy(realCtx, {
@@ -87,6 +159,26 @@ export function createLineModulationContext (realCtx, options) {
           const by = b.y
           const p = transform(x, y)
           return target.bezierCurveTo(ax, ay, bx, by, p.x, p.y)
+        }
+      }
+
+      if (prop === 'arc') {
+        return (cx, cy, radius, startAngle, endAngle, counterclockwise) => {
+          emitArc(
+            target,
+            cx,
+            cy,
+            radius,
+            startAngle,
+            endAngle,
+            Boolean(counterclockwise)
+          )
+        }
+      }
+
+      if (prop === 'rect') {
+        return (x, y, w, h) => {
+          emitRect(target, x, y, w, h)
         }
       }
 
