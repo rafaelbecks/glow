@@ -105,6 +105,66 @@ export const LUMINODE_CONFIGS = {
     ]
   },
 
+  curvesTangenciales: {
+    group: 'Classic Patterns',
+    config: [
+      {
+        key: 'BASE_AMPLITUDE',
+        label: 'Base Amplitude',
+        type: 'slider',
+        min: 50,
+        max: 200,
+        step: 5,
+        default: 60
+      },
+      {
+        key: 'AMPLITUDE_VARIATION',
+        label: 'Amplitude Variation',
+        type: 'slider',
+        min: 10,
+        max: 100,
+        step: 5,
+        default: 55
+      },
+      {
+        key: 'VELOCITY_SCALE',
+        label: 'Velocity Scale',
+        type: 'slider',
+        min: 0.5,
+        max: 3,
+        step: 0.1,
+        default: 1.5
+      },
+      {
+        key: 'ITERATIONS',
+        label: 'Iterations',
+        type: 'number',
+        min: 1000,
+        max: 5000,
+        step: 100,
+        default: 1700
+      },
+      {
+        key: 'TIME_STEP',
+        label: 'Time Step',
+        type: 'slider',
+        min: 0.001,
+        max: 0.01,
+        step: 0.0001,
+        default: 0.0084
+      },
+      {
+        key: 'SHADOW_BLUR',
+        label: 'Shadow Blur',
+        type: 'slider',
+        min: 0,
+        max: 50,
+        step: 1,
+        default: 25
+      }
+    ]
+  },
+
   sinewave: {
     group: 'Classic Patterns',
     config: [
@@ -1138,6 +1198,69 @@ export const LUMINODE_CONFIGS = {
         label: 'Color Mode',
         type: 'checkbox',
         default: false
+      }
+    ]
+  },
+
+  experiment: {
+    group: 'Art-Inspired',
+    config: [
+      {
+        key: 'RADIUS',
+        label: 'Radius',
+        type: 'slider',
+        min: 100,
+        max: 400,
+        step: 10,
+        default: 250
+      },
+      {
+        key: 'LINES_PER_NOTE',
+        label: 'Lines Per Note',
+        type: 'number',
+        min: 5,
+        max: 20,
+        step: 1,
+        default: 20
+      },
+      {
+        key: 'ROTATION_SPEED',
+        label: 'Rotation Speed',
+        type: 'slider',
+        min: 0.1,
+        max: 2,
+        step: 0.1,
+        default: 0.5
+      },
+      {
+        key: 'LINE_WIDTH',
+        label: 'Line Width',
+        type: 'slider',
+        min: 0.3,
+        max: 2,
+        step: 0.1,
+        default: 0.8
+      },
+      {
+        key: 'SHADOW_BLUR',
+        label: 'Shadow Blur',
+        type: 'slider',
+        min: 0,
+        max: 30,
+        step: 1,
+        default: 15
+      },
+      {
+        key: 'USE_COLOR',
+        label: 'Color Mode',
+        type: 'checkbox',
+        default: false
+      },
+      {
+        key: 'HORIZONTAL',
+        label: 'Horizontal',
+        type: 'checkbox',
+        default: true
       }
     ]
   },

@@ -64,6 +64,8 @@ export const BUILTIN_SOURCE_FILES = {
   sotoGrid: 'soto-grid.js',
   sotoGridRotated: 'soto-grid.js',
   whitneyLines: 'whitney-lines.js',
+  experiment: 'experiment.js',
+  curvesTangenciales: 'curves-tangenciales.js',
   sinewave: 'sinewave.js',
   triangle: 'triangle.js',
   noiseValley: 'noise-valley.js',

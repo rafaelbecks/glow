@@ -179,6 +179,23 @@ export const SETTINGS = {
       SHADOW_BLUR: 15,
       USE_COLOR: false
     },
+    EXPERIMENT: {
+      RADIUS: 250,
+      LINES_PER_NOTE: 20,
+      ROTATION_SPEED: 0.5,
+      LINE_WIDTH: 0.8,
+      SHADOW_BLUR: 15,
+      USE_COLOR: false,
+      HORIZONTAL: true
+    },
+    CURVES_TANGENCIALES: {
+      BASE_AMPLITUDE: 60,
+      AMPLITUDE_VARIATION: 55,
+      VELOCITY_SCALE: 1.5,
+      ITERATIONS: 1700,
+      TIME_STEP: 0.0084,
+      SHADOW_BLUR: 25
+    },
     SINEWAVE: {
       AMPLITUDE: 1.5,
       FREQUENCY: 880,
@@ -517,6 +534,8 @@ export const MIDI_CHANNELS = {
   'bus 9': 'sotoGrid',
   'bus 10': 'sotoGridRotated',
   'bus 11': 'scanlineGradients',
+  'bus 12': 'experiment',
+  'bus 13': 'curvesTangenciales',
   'bus 15': 'whitneyLines',
   'bus 16': 'noiseValley',
   'bus 17': 'catenoid',

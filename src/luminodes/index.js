@@ -5,6 +5,8 @@ import { GegoNetLuminode } from './gego-net.js'
 import { GegoShapeLuminode } from './gego-shape.js'
 import { SotoGridLuminode } from './soto-grid.js'
 import { WhitneyLinesLuminode } from './whitney-lines.js'
+import { ExperimentLuminode } from './experiment.js'
+import { CurvesTangencialesLuminode } from './curves-tangenciales.js'
 import { SinewaveLuminode } from './sinewave.js'
 import { TriangleLuminode } from './triangle.js'
 import { NoiseValleyLuminode } from './noise-valley.js'
@@ -34,6 +36,8 @@ export {
   GegoShapeLuminode,
   SotoGridLuminode,
   WhitneyLinesLuminode,
+  ExperimentLuminode,
+  CurvesTangencialesLuminode,
   SinewaveLuminode,
   TriangleLuminode,
   NoiseValleyLuminode,
@@ -98,6 +102,16 @@ export const LUMINODE_REGISTRY = {
     class: WhitneyLinesLuminode,
     displayName: 'Whitney Lines',
     settingsKey: 'WHITNEY_LINES'
+  },
+  experiment: {
+    class: ExperimentLuminode,
+    displayName: 'Experiment',
+    settingsKey: 'EXPERIMENT'
+  },
+  curvesTangenciales: {
+    class: CurvesTangencialesLuminode,
+    displayName: 'Curves Tangenciales',
+    settingsKey: 'CURVES_TANGENCIALES'
   },
   sinewave: {
     class: SinewaveLuminode,
