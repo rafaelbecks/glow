@@ -19,7 +19,7 @@ import { TRACK_MOTION_MODULATION_PARAMS } from '../modulation-system.js'
 
 const CANVAS_FILTER_LABELS = {
   clearAlpha: 'Clear Alpha',
-  lumiaEffect: 'Lumia Effect',
+  lumiaEffect: 'Gaussian Blur',
   invertFilter: 'Invert',
   grayscaleFilter: 'Grayscale',
   hueRotateFilter: 'Hue Rotate',
@@ -30,6 +30,7 @@ const CANVAS_FILTER_LABELS = {
 }
 
 const SHADER_OVERLAY_LABELS = {
+  glass: 'Glass',
   rain: 'Rain screen'
 }
 

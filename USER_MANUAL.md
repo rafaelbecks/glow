@@ -77,8 +77,8 @@ G.L.O.W. includes a modulation system that works like LFOs (Low-Frequency Oscill
 - **Audio** — map a live audio input (microphone / interface) through FFT analysis into a parameter
 
 **Common controls:**
-- **Destination** — Track luminode params, canvas filters, or shader overlays
-- **Parameter** — which value to drive (e.g. sphere Base Radius)
+- **Destination** — Track luminode params, canvas filters, or shader overlays (Glass and Rain screen)
+- **Parameter** — which value to drive (e.g. sphere Base Radius, glass Width, rain Distortion)
 - **Enable/Disable** — toggle without removing the modulator
 - **Monitor** — live waveform of the modulation signal being applied
 
@@ -135,14 +135,14 @@ Open the side panel → **Canvas**. This is where you shape the look of the whol
 | **Clear Alpha** | How fast previous frames fade. Lower values leave longer trails; higher values clear faster. |
 | **Background Color** | Solid background (and page color) when shader backgrounds are off. |
 | **CRT Mode** | Retro CRT overlay (scanlines, color separation, flicker). **Intensity** appears when enabled. |
-| **Lumia Effect** | Soft blur / glow on the main canvas (0–100 px). |
+| **Gaussian Blur** | CSS Gaussian blur on the main canvas (0–100 px). |
 | **Background Grid** | Reference grid under luminodes. Set **X Lines**, **Y Lines**, and **Grid Color**. |
 | **Noise Overlay** | Film-grain layer. Tune animate, opacity, pattern size, density, and grain size. |
 | **Dither Overlay** | Bayer-style dither of the scene. Adjust saturation and per-channel table values. |
 | **Chromatic Aberration** | RGB channel offset with contrast control. |
-| **Invert Filter** | Invert amount on the main canvas (works together with Lumia). |
+| **Invert Filter** | Invert amount on the main canvas (works together with Gaussian Blur). |
 
-Clear Alpha, Lumia Effect, Invert Filter, and Dither can also be driven from the **Modulation** tab.
+Clear Alpha, Gaussian Blur, Invert Filter, and Dither can also be driven from the **Modulation** tab.
 
 ### Color
 
@@ -184,7 +184,7 @@ The **Shader overlays** folder adds a glass / rain layer on top of the scene:
 | **Glass (bricks)** | Tiled glass bricks with size, offset, and gap |
 | **Rain screen** | Distorted rain-like screen (distortion, drop scale, time, drift, sharpness) |
 
-Toggle **Enabled**, then pick an **Effect**.
+Toggle **Enabled**, then pick an **Effect**. Glass and Rain screen parameters can also be driven from the **Modulation** tab (Destination → Shader Overlay).
 
 ### Export / Snapshots
 

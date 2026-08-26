@@ -6,6 +6,7 @@ import {
   getCanvasFilterConfig,
   getCanvasFilterEnableKey,
   getCanvasFilterIds,
+  getCanvasFilterLabel,
   getCanvasFilterParamByKey,
   valueToTableValues
 } from './canvas-filter-configs.js'
@@ -48,7 +49,7 @@ const CANVAS_CC_META = {
 
 const CANVAS_SETTING_LABELS = {
   CLEAR_ALPHA: 'Clear Alpha',
-  LUMIA_EFFECT: 'Lumia Effect',
+  LUMIA_EFFECT: 'Gaussian Blur',
   INVERT_FILTER: 'Invert',
   GRAYSCALE_FILTER: 'Grayscale',
   HUE_ROTATE_FILTER: 'Hue Rotate',
@@ -577,7 +578,7 @@ export class MIDICCMapper {
 
   getSelectedCanvasFilterLabel () {
     const filterId = this.getSelectedCanvasFilterId()
-    return filterId ? this.getCanvasFilterLabel(filterId) : 'no filter'
+    return filterId ? getCanvasFilterLabel(filterId) : 'no filter'
   }
 
   stepCanvasFilter (direction, source = '') {
@@ -1144,7 +1145,7 @@ export class MIDICCMapper {
     const display =
       typeof value === 'number' ? Number(value.toFixed(3)) : value
     this.showControlMessage(
-      `${this.getCanvasFilterLabel(filterId)} · ${param.label}: ${display} · slider ${channel + 1}`
+      `${getCanvasFilterLabel(filterId)} · ${param.label}: ${display} · slider ${channel + 1}`
     )
     console.log('[MIDI CC] Canvas filter parameter', {
       filterId,
@@ -1180,7 +1181,7 @@ export class MIDICCMapper {
     }
 
     this.showControlMessage(
-      `${this.getCanvasFilterLabel(filterId)}: ${
+      `${getCanvasFilterLabel(filterId)}: ${
         enabled ? 'enabled' : 'disabled'
       } · slider 1`
     )
@@ -1233,12 +1234,6 @@ export class MIDICCMapper {
         .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
         .join(' ')
     )
-  }
-
-  getCanvasFilterLabel (filterId) {
-    return filterId
-      .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
-      .replace(/^./, (letter) => letter.toUpperCase())
   }
 
   showControlMessage (message, showStatus = false) {

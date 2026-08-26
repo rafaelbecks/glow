@@ -1172,7 +1172,7 @@ export class GLOWVisualizer {
   updateLumiaEffect (blurStrength) {
     if (this.canvas) {
       this.applyCanvasFilters()
-      console.log(`Updated Lumia Effect blur to ${blurStrength}px`)
+      console.log(`Updated Gaussian Blur to ${blurStrength}px`)
     }
   }
 
@@ -2198,7 +2198,7 @@ export class GLOWVisualizer {
       this.ditherCanvas.height
     )
 
-    // Check if lumia effect (blur) is enabled
+    // Check if Gaussian blur is enabled
     const lumiaBlur = SETTINGS.CANVAS.LUMIA_EFFECT || 0
 
     if (lumiaBlur > 0) {

@@ -40,7 +40,7 @@ export const EFFECT_LAYER_META = {
     locked: false,
     enableKey: 'GLASS_OVERLAY_ENABLED',
     modulation: {
-      shaderOverlays: ['rain'],
+      shaderOverlays: ['glass', 'rain'],
       configKeyPrefixes: ['SHADER_OVERLAY_RAIN_', 'GLASS_OVERLAY_']
     }
   },

@@ -407,7 +407,7 @@ export class CanvasUIManager {
 
     canvasFolder
       .addBinding(canvasData, 'lumiaEffect', {
-        label: 'Lumia Effect',
+        label: 'Gaussian Blur',
         min: 0,
         max: 100,
         step: 5

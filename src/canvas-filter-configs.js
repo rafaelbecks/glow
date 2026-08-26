@@ -7,6 +7,7 @@ export const CANVAS_FILTER_CONFIGS = {
     ]
   },
   lumiaEffect: {
+    label: 'Gaussian Blur',
     levelOnly: true,
     enableKey: null,
     config: [
@@ -79,6 +80,14 @@ export function getCanvasFilterEnableKey (filterId) {
 
 export function getCanvasFilterIds () {
   return Object.keys(CANVAS_FILTER_CONFIGS)
+}
+
+export function getCanvasFilterLabel (filterId) {
+  const entry = CANVAS_FILTER_CONFIGS[filterId]
+  if (entry?.label) return entry.label
+  return String(filterId)
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/^./, (letter) => letter.toUpperCase())
 }
 
 export function isCanvasFilterLevelOnly (filterId) {
