@@ -27,6 +27,18 @@
     box-sizing: border-box;
 }
 
+#mixer-panel.embedded {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    display: flex;
+    border-top: none;
+}
+
 .mixer-resize-handle {
     position: absolute;
     top: 0;

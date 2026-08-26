@@ -497,14 +497,17 @@ export class UIManager {
   }
 
   showAllIcons () {
-    this.showPanelToggleButton()
+    const detached = this.elements.detachButton?.classList.contains('active')
     this.showDetachButton()
     this.showOpenButton()
     this.showSaveButton()
-    this.showMixerButton()
     this.showLabButton()
     this.showInfoButton()
     this.showProjectNameDisplay()
+    if (!detached) {
+      this.showPanelToggleButton()
+      this.showMixerButton()
+    }
   }
 
   hideAllIcons () {

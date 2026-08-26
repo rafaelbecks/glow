@@ -7,9 +7,16 @@ const MIN_HEIGHT = 120
 const MIN_VIEWER = 160
 
 export class MixerPanel {
-  constructor ({ trackManager, effectLayerManager } = {}) {
+  constructor ({
+    trackManager,
+    effectLayerManager,
+    host = null,
+    embedded = false
+  } = {}) {
     this.trackManager = trackManager
     this.effectLayerManager = effectLayerManager
+    this.host = host
+    this.embedded = embedded
     this.expandedHeight = DEFAULT_HEIGHT
     this.luminodeMixerUI = null
     this.effectChainUI = null
@@ -21,8 +28,10 @@ export class MixerPanel {
     this._onOutsidePointerDown = (ev) => this.handleOutsidePointerDown(ev)
 
     this.mount()
-    this.restoreSize()
-    this.bindResize()
+    if (!this.embedded) {
+      this.restoreSize()
+      this.bindResize()
+    }
 
     this.luminodeMixerUI = new LuminodeMixerUI({
       container: this.panel.querySelector('#luminodeMixer'),
@@ -40,12 +49,15 @@ export class MixerPanel {
   }
 
   mount () {
-    let panel = document.getElementById('mixer-panel')
+    const parent = this.host || document.body
+    let panel = this.host
+      ? this.host.querySelector('#mixer-panel')
+      : document.getElementById('mixer-panel')
     if (!panel) {
       panel = document.createElement('section')
       panel.id = 'mixer-panel'
       panel.innerHTML = `
-        <div id="mixer-resize-handle" class="mixer-resize-handle" title="Resize mixer"></div>
+        ${this.embedded ? '' : '<div id="mixer-resize-handle" class="mixer-resize-handle" title="Resize mixer"></div>'}
         <div id="mixer-content" class="mixer-content">
           <div id="luminodeMixer" class="mixer-section mixer-section--luminodes">
             <div class="luminode-mixer-strips"></div>
@@ -58,16 +70,20 @@ export class MixerPanel {
           </div>
         </div>
       `
-      document.body.appendChild(panel)
+      parent.appendChild(panel)
     } else {
       panel.querySelector('.mixer-panel-header')?.remove()
       panel.querySelectorAll('.mixer-section-label').forEach((el) => el.remove())
     }
     this.panel = panel
-    document.documentElement.style.setProperty(
-      '--mixer-height',
-      `${DEFAULT_HEIGHT}px`
-    )
+    if (this.embedded) {
+      panel.classList.add('embedded')
+    } else {
+      document.documentElement.style.setProperty(
+        '--mixer-height',
+        `${DEFAULT_HEIGHT}px`
+      )
+    }
   }
 
   bindResize () {
@@ -142,12 +158,13 @@ export class MixerPanel {
 
   show () {
     this.panel.style.display = 'flex'
-    this.bindOutsideClose()
+    if (!this.embedded) this.bindOutsideClose()
     this.effectChainUI?.render()
     this.effectChainUI?.redrawWires()
   }
 
   hide () {
+    if (this.embedded) return
     this.unbindOutsideClose()
     this.panel.style.display = 'none'
   }

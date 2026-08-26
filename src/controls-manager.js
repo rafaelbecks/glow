@@ -27,12 +27,15 @@ export class ControlsManager {
     this.controlsWindow = window.open(
       'controls.html',
       'glow-controls',
-      'width=400,height=900,menubar=no,toolbar=no,location=no,resizable=yes,scrollbars=yes'
+      `width=${Math.max(1100, screen.availWidth)},height=${Math.max(800, screen.availHeight)},left=0,top=0,menubar=no,toolbar=no,location=no,resizable=yes,scrollbars=yes`
     )
+    if (!this.controlsWindow) return
     this.bridge.connect(this.controlsWindow)
 
     if (this.glow.sidePanel.isPanelVisible()) this.glow.sidePanel.hide()
+    this.glow.hideMixerPanel()
     this.glow.uiManager.hidePanelToggleButton()
+    this.glow.uiManager.hideMixerButton()
     this.glow.uiManager.setDetachActive(true)
 
     this._pollInterval = setInterval(() => {
@@ -45,6 +48,7 @@ export class ControlsManager {
     this._pollInterval = null
     this.controlsWindow = null
     this.glow.uiManager.showPanelToggleButton()
+    this.glow.uiManager.showMixerButton()
     this.glow.uiManager.setDetachActive(false)
   }
 
@@ -63,7 +67,8 @@ export class ControlsManager {
       lineModulationConfigs,
       modulators: JSON.parse(JSON.stringify(trackManager.getModulators())),
       canvasSettings: JSON.parse(JSON.stringify(SETTINGS.CANVAS)),
-      colorSettings: JSON.parse(JSON.stringify(SETTINGS.COLORS))
+      colorSettings: JSON.parse(JSON.stringify(SETTINGS.COLORS)),
+      effectLayerOrder: this.glow.effectLayerManager?.getOrder?.() || []
     }
   }
 
@@ -98,6 +103,24 @@ export class ControlsManager {
       case 'toggleSolo':
         trackManager.toggleSolo(p.trackId)
         sync()
+        break
+      case 'setTrackOpacity':
+        trackManager.setTrackOpacity(p.trackId, p.opacity)
+        glow.markProjectChanged()
+        break
+      case 'setTrackBlendMode':
+        trackManager.setTrackBlendMode(p.trackId, p.blendMode)
+        glow.markProjectChanged()
+        break
+      case 'reorderTracks':
+        trackManager.reorderTracks(p.orderedIds)
+        glow.mixerPanel?.refresh()
+        glow.markProjectChanged()
+        break
+      case 'setEffectLayerOrder':
+        glow.effectLayerManager?.setOrder(p.order)
+        glow.mixerPanel?.refresh()
+        glow.markProjectChanged()
         break
       case 'setMidiDevice':
         trackManager.setMidiDevice(p.trackId, p.deviceId)

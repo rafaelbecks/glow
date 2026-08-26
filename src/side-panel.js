@@ -5,6 +5,7 @@ import { LuminodeConfigManager } from './components/luminode-config-manager.js'
 import { CanvasUIManager } from './components/canvas-ui-manager.js'
 import { ModulationUIManager } from './components/modulation-ui-manager.js'
 import { ExternalSystemsUIManager } from './components/external-systems-ui-manager.js'
+import { MixerPanel } from './components/mixer-panel.js'
 
 export class SidePanel {
   constructor (
@@ -50,6 +51,23 @@ export class SidePanel {
       midiGenerator,
       options.ccMapper || null
     )
+    this.mixerPanel = null
+    this._detachedControlsRendered = false
+    if (options.detached && options.effectLayerManager) {
+      const host = this.basePanel.getPanel().querySelector('#detachedMixerHost')
+      this.mixerPanel = new MixerPanel({
+        trackManager,
+        effectLayerManager: options.effectLayerManager,
+        host,
+        embedded: true
+      })
+      this.mixerPanel.onToggleEffect = (data) => {
+        this.triggerCallback('canvasSettingChange', {
+          setting: data.setting,
+          value: data.value
+        })
+      }
+    }
 
     // Set up event delegation
     this.setupEventDelegation()
@@ -62,7 +80,11 @@ export class SidePanel {
     })
 
     this.basePanel.on('panelShown', () => {
-      this.trackUIManager.renderTracks()
+      if (this.basePanel.options.detached) {
+        this.handleTabSwitch(this.basePanel.activeTab || 'controls')
+      } else {
+        this.trackUIManager.renderTracks()
+      }
     })
 
     // Delegate track manager events
@@ -80,7 +102,12 @@ export class SidePanel {
     })
 
     this.basePanel.on('tracksReset', () => {
-      this.trackUIManager.renderTracks()
+      if (this.basePanel.options.detached) {
+        this._detachedControlsRendered = false
+        this.handleTabSwitch(this.basePanel.activeTab)
+      } else {
+        this.trackUIManager.renderTracks()
+      }
     })
 
     this.basePanel.on('trajectoryUpdated', (data) => {
@@ -124,6 +151,26 @@ export class SidePanel {
 
   // Handle tab switching
   async handleTabSwitch (tabName) {
+    if (this.basePanel.options.detached) {
+      const controlsActive = tabName === 'controls'
+      this.modulationUIManager.setMonitorActive(controlsActive)
+      if (controlsActive) {
+        if (!this._detachedControlsRendered) {
+          this.trackUIManager.renderTracks()
+          this.modulationUIManager.renderModulationControls()
+          this.canvasUIManager.renderCanvasControls()
+          await this.externalSystemsUIManager.renderExternalControls()
+          this._detachedControlsRendered = true
+        }
+      } else if (tabName === 'mixer') {
+        this.mixerPanel?.refresh()
+        requestAnimationFrame(() => {
+          this.mixerPanel?.effectChainUI?.redrawWires()
+        })
+      }
+      return
+    }
+
     this.modulationUIManager.setMonitorActive(tabName === 'modulation')
 
     if (tabName === 'tracks') {

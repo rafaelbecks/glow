@@ -5,6 +5,8 @@ import { TrajectorySystem } from './trajectory-system.js'
 import { LineModulationSystem } from './line-modulation-system.js'
 import { ModulationSystem } from './modulation-system.js'
 import { getAvailableLuminodes } from './luminodes/index.js'
+import { EffectLayerManager } from './effect-layer-manager.js'
+import { TRACK_BLEND_MODES } from './track-blend-modes.js'
 
 class ProxyModulationSystem extends ModulationSystem {
   constructor (bridge) {
@@ -190,6 +192,71 @@ class ProxyTrackManager {
 
   updateModulator (id, updates) {
     this._modulationSystem.updateModulator(id, updates)
+    this._emit('modulationUpdated')
+  }
+
+  getTracksByLayerOrder () {
+    return [...this.tracks].sort(
+      (a, b) => (a.layerOrder ?? a.id) - (b.layerOrder ?? b.id)
+    )
+  }
+
+  setTrackOpacity (trackId, opacity) {
+    const track = this.getTrack(trackId)
+    if (!track) return
+    const next = Math.min(1, Math.max(0, Number(opacity)))
+    if (Number.isNaN(next)) return
+    track.opacity = next
+    this._emit('trackUpdated', { trackId, track })
+    this._action('setTrackOpacity', { trackId, opacity: next })
+  }
+
+  setTrackBlendMode (trackId, blendMode) {
+    const track = this.getTrack(trackId)
+    if (!track) return
+    const mode = TRACK_BLEND_MODES.includes(blendMode)
+      ? blendMode
+      : 'source-over'
+    track.blendMode = mode
+    this._emit('trackUpdated', { trackId, track })
+    this._action('setTrackBlendMode', { trackId, blendMode: mode })
+  }
+
+  reorderTracks (orderedIds) {
+    if (!Array.isArray(orderedIds) || orderedIds.length === 0) return
+    const idSet = new Set(this.tracks.map((t) => t.id))
+    const normalized = orderedIds
+      .map((id) => Number(id))
+      .filter((id) => idSet.has(id))
+    this.tracks.forEach((track) => {
+      if (!normalized.includes(track.id)) normalized.push(track.id)
+    })
+    normalized.forEach((id, index) => {
+      const track = this.getTrack(id)
+      if (track) track.layerOrder = index
+    })
+    this._emit('tracksReordered', {
+      order: normalized,
+      tracks: this.getTracksByLayerOrder()
+    })
+    this._action('reorderTracks', { orderedIds: normalized })
+  }
+}
+
+class ProxyEffectLayerManager extends EffectLayerManager {
+  constructor (bridge) {
+    super({ resolveElement: () => null })
+    this.bridge = bridge
+  }
+
+  setOrder (order, opts = {}) {
+    super.setOrder(order, opts)
+    if (!opts.silent) {
+      this.bridge.send('ACTION', {
+        type: 'setEffectLayerOrder',
+        order: this.getOrder()
+      })
+    }
   }
 }
 
@@ -202,6 +269,7 @@ if (!window.opener) {
   bridge.connect(window.opener)
 
   const proxyTrackManager = new ProxyTrackManager(bridge)
+  const proxyEffectLayerManager = new ProxyEffectLayerManager(bridge)
   const stubTabletManager = { on: () => {}, triggerCallback: () => {} }
   const stubUiManager = { setPanelToggleActive: () => {} }
 
@@ -210,7 +278,7 @@ if (!window.opener) {
     stubTabletManager,
     stubUiManager,
     null,
-    { detached: true }
+    { detached: true, effectLayerManager: proxyEffectLayerManager }
   )
   sidePanel.setSettings(SETTINGS)
 
@@ -219,6 +287,7 @@ if (!window.opener) {
   sidePanel.on('canvasSettingChange', (data) => {
     if (data?.setting !== undefined) SETTINGS.CANVAS[data.setting] = data.value
     bridge.send('ACTION', { type: 'canvasSettingChange', data })
+    sidePanel.mixerPanel?.refresh()
   })
 
   sidePanel.on('colorPaletteChange', (data) => {
@@ -281,15 +350,23 @@ if (!window.opener) {
 
   bridge.on('STATE_SYNC', (state) => {
     proxyTrackManager.applyState(state, false)
+    if (state.effectLayerOrder) {
+      proxyEffectLayerManager.setOrder(state.effectLayerOrder, { silent: true })
+    }
+    sidePanel.mixerPanel?.refresh()
     if (!panelShown) {
       panelShown = true
       sidePanel.show()
     }
   })
 
-  bridge.on('TRACKS_RESET', (state) =>
+  bridge.on('TRACKS_RESET', (state) => {
     proxyTrackManager.applyState(state, true)
-  )
+    if (state.effectLayerOrder) {
+      proxyEffectLayerManager.setOrder(state.effectLayerOrder, { silent: true })
+    }
+    sidePanel.mixerPanel?.refresh()
+  })
 
   bridge.send('READY')
 }

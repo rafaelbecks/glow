@@ -16,18 +16,56 @@ export class SidePanelBase {
     this.isVisible = false
     this.panel = null
     this.callbacks = {}
-    this.activeTab = 'tracks'
+    this.activeTab = this.options.detached ? 'controls' : 'tracks'
 
     this.initializePanel()
     this.setupEventListeners()
   }
 
-  initializePanel () {
-    this.panel = document.createElement('div')
-    this.panel.id = 'sidePanel'
-    this.panel.className = 'side-panel'
+  getPanelMarkup () {
+    if (this.options.detached) {
+      return `
+      <div class="side-panel-header">
+        <div class="panel-tabs">
+          <button class="tab-btn active" data-tab="controls">
+            <ion-icon name="options-outline"></ion-icon>
+            <span>Controls</span>
+          </button>
+          <button class="tab-btn" data-tab="mixer">
+            <ion-icon name="layers-outline"></ion-icon>
+            <span>Mixer</span>
+          </button>
+        </div>
+      </div>
+      <div class="side-panel-content">
+        <div id="controlsTab" class="tab-content active">
+          <div class="detached-controls-stack">
+            <section class="detached-section">
+              <h3 class="detached-section-title">Tracks</h3>
+              <div id="tracksContainer" class="tracks-container"></div>
+            </section>
+            <section class="detached-section">
+              <h3 class="detached-section-title">Modulation</h3>
+              <div id="modulationControlsContainer"></div>
+            </section>
+            <section class="detached-section">
+              <h3 class="detached-section-title">Canvas</h3>
+              <div id="canvasControlsContainer"></div>
+            </section>
+            <section class="detached-section">
+              <h3 class="detached-section-title">External</h3>
+              <div id="externalControlsContainer"></div>
+            </section>
+          </div>
+        </div>
+        <div id="mixerTab" class="tab-content">
+          <div id="detachedMixerHost"></div>
+        </div>
+      </div>
+    `
+    }
 
-    this.panel.innerHTML = `
+    return `
       <div class="side-panel-header">
         <div class="panel-tabs">
           <button class="tab-btn active" data-tab="tracks">
@@ -63,6 +101,13 @@ export class SidePanelBase {
         </div>
       </div>
     `
+  }
+
+  initializePanel () {
+    this.panel = document.createElement('div')
+    this.panel.id = 'sidePanel'
+    this.panel.className = 'side-panel'
+    this.panel.innerHTML = this.getPanelMarkup()
 
     document.body.appendChild(this.panel)
 

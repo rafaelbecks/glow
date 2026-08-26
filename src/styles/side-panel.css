@@ -29,8 +29,82 @@
     border-left: none;
 }
 
+.side-panel.detached:not(.visible) {
+    display: none;
+}
+
 .side-panel.detached.visible {
     right: 0;
+}
+
+.side-panel.detached .side-panel-content {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.side-panel.detached #controlsTab.tab-content.active {
+    display: block;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.side-panel.detached #mixerTab.tab-content.active {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.detached-controls-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px 20px 40px;
+    box-sizing: border-box;
+}
+
+.detached-section {
+    border: 1px solid #333;
+    background: #0a0a0a;
+}
+
+.detached-section-title {
+    margin: 0;
+    padding: 10px 14px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #aaa;
+    border-bottom: 1px solid #333;
+    background: #111;
+}
+
+.side-panel.detached .tracks-container,
+.side-panel.detached #modulationControlsContainer,
+.side-panel.detached #canvasControlsContainer,
+.side-panel.detached #externalControlsContainer {
+    width: 100%;
+}
+
+.side-panel.detached .tp-rotv {
+    width: 100% !important;
+    max-width: none;
+}
+
+#detachedMixerHost {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.side-panel.detached #detachedMixerHost #mixer-panel {
+    flex: 1;
+    min-height: 0;
 }
 
 .side-panel-header {
