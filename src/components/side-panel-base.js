@@ -40,20 +40,40 @@ export class SidePanelBase {
       <div class="side-panel-content">
         <div id="controlsTab" class="tab-content active">
           <div class="detached-controls-stack">
-            <section class="detached-section">
-              <h3 class="detached-section-title">Tracks</h3>
+            <section class="detached-section" data-section="tracks">
+              <header class="detached-section-header">
+                <h3 class="detached-section-title">Tracks</h3>
+                <button type="button" class="detached-section-toggle" title="Hide Tracks" aria-label="Hide Tracks">
+                  <ion-icon name="eye-outline"></ion-icon>
+                </button>
+              </header>
               <div id="tracksContainer" class="tracks-container"></div>
             </section>
-            <section class="detached-section">
-              <h3 class="detached-section-title">Modulation</h3>
+            <section class="detached-section" data-section="modulation">
+              <header class="detached-section-header">
+                <h3 class="detached-section-title">Modulation</h3>
+                <button type="button" class="detached-section-toggle" title="Hide Modulation" aria-label="Hide Modulation">
+                  <ion-icon name="eye-outline"></ion-icon>
+                </button>
+              </header>
               <div id="modulationControlsContainer"></div>
             </section>
-            <section class="detached-section">
-              <h3 class="detached-section-title">Canvas</h3>
+            <section class="detached-section" data-section="canvas">
+              <header class="detached-section-header">
+                <h3 class="detached-section-title">Canvas</h3>
+                <button type="button" class="detached-section-toggle" title="Hide Canvas" aria-label="Hide Canvas">
+                  <ion-icon name="eye-outline"></ion-icon>
+                </button>
+              </header>
               <div id="canvasControlsContainer"></div>
             </section>
-            <section class="detached-section">
-              <h3 class="detached-section-title">External</h3>
+            <section class="detached-section" data-section="external">
+              <header class="detached-section-header">
+                <h3 class="detached-section-title">External</h3>
+                <button type="button" class="detached-section-toggle" title="Hide External" aria-label="Hide External">
+                  <ion-icon name="eye-outline"></ion-icon>
+                </button>
+              </header>
               <div id="externalControlsContainer"></div>
             </section>
           </div>
@@ -146,6 +166,8 @@ export class SidePanelBase {
       })
     })
 
+    this.setupDetachedSectionToggles()
+
     this.trackManager.on('trackUpdated', (data) => {
       this.triggerCallback('trackUpdated', data)
     })
@@ -182,6 +204,56 @@ export class SidePanelBase {
     if (this.callbacks[event]) {
       this.callbacks[event].forEach((callback) => callback(data))
     }
+  }
+
+  setupDetachedSectionToggles () {
+    if (!this.options.detached) return
+    this.panel.querySelectorAll('.detached-section-toggle').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation()
+        const section = btn.closest('.detached-section')
+        if (section) this.toggleDetachedSection(section)
+      })
+    })
+    this.syncDetachedSectionToggles()
+  }
+
+  toggleDetachedSection (section) {
+    const collapsed = section.classList.contains('is-collapsed')
+    if (!collapsed) {
+      const visible = this.panel.querySelectorAll(
+        '.detached-section:not(.is-collapsed)'
+      )
+      if (visible.length <= 1) return
+      section.classList.add('is-collapsed')
+    } else {
+      section.classList.remove('is-collapsed')
+    }
+    this.syncDetachedSectionToggles()
+  }
+
+  syncDetachedSectionToggles () {
+    const sections = [...this.panel.querySelectorAll('.detached-section')]
+    const visibleCount = sections.filter(
+      (section) => !section.classList.contains('is-collapsed')
+    ).length
+
+    sections.forEach((section) => {
+      const collapsed = section.classList.contains('is-collapsed')
+      const btn = section.querySelector('.detached-section-toggle')
+      const icon = btn?.querySelector('ion-icon')
+      const raw = section.dataset.section || 'section'
+      const label = raw.charAt(0).toUpperCase() + raw.slice(1)
+      if (icon) {
+        icon.setAttribute('name', collapsed ? 'eye-off-outline' : 'eye-outline')
+      }
+      if (btn) {
+        const title = collapsed ? `Show ${label}` : `Hide ${label}`
+        btn.title = title
+        btn.setAttribute('aria-label', title)
+        btn.disabled = !collapsed && visibleCount <= 1
+      }
+    })
   }
 
   async switchTab (tabName) {
