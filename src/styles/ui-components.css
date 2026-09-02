@@ -32,6 +32,125 @@
 }
 
 /* Project name display */
+.app-menu-mount {
+    position: fixed;
+    top: 8px;
+    left: 8px;
+    z-index: 1000;
+    display: none;
+    align-items: stretch;
+}
+
+.app-menu {
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.app-menu__item {
+    position: relative;
+}
+
+.app-menu__trigger {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.75);
+    font-family: "Analo Grotesk", "Inconsolata", sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    padding: 6px 10px;
+    cursor: pointer;
+    line-height: 1.2;
+    mix-blend-mode: difference;
+}
+
+.app-menu__trigger:hover,
+.app-menu__item.is-open .app-menu__trigger {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.app-menu__dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    min-width: 220px;
+    padding: 4px 0;
+    background: rgba(12, 12, 12, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(8px);
+    z-index: 40;
+}
+
+.app-menu__item.is-open .app-menu__dropdown {
+    display: block;
+}
+
+.app-menu__action {
+    appearance: none;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.9);
+    font-family: "Analo Grotesk", "Inconsolata", sans-serif;
+    font-size: 12px;
+    text-align: left;
+    padding: 7px 12px;
+    cursor: pointer;
+}
+
+.app-menu__action:hover {
+    background: rgba(174, 240, 184, 0.16);
+}
+
+.app-menu__icon {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.app-menu__action:hover .app-menu__icon {
+    color: #fff;
+}
+
+.app-menu__label {
+    flex: 1;
+}
+
+.app-menu__shortcut {
+    color: rgba(255, 255, 255, 0.45);
+    font-family: "Inconsolata", monospace;
+    font-size: 10px;
+}
+
+.app-menu__check {
+    width: 12px;
+    flex-shrink: 0;
+    font-size: 11px;
+    line-height: 1;
+    color: #aef0b8;
+}
+
+.app-menu__action.is-checked .app-menu__check::before {
+    content: "✓";
+}
+
+.app-menu__separator {
+    height: 1px;
+    margin: 4px 0;
+    background: rgba(255, 255, 255, 0.12);
+}
+
 .project-name-display {
     position: fixed;
     top: 20px;

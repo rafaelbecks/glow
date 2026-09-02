@@ -11,11 +11,19 @@ export class ControlsManager {
   }
 
   toggle () {
-    this.isOpen() ? this.controlsWindow.focus() : this.open()
+    this.isOpen() ? this.close() : this.open()
   }
 
   isOpen () {
     return !!(this.controlsWindow && !this.controlsWindow.closed)
+  }
+
+  close () {
+    if (!this.isOpen()) return
+    try {
+      this.controlsWindow.close()
+    } catch (_) {}
+    this._onClosed()
   }
 
   open () {
@@ -34,9 +42,8 @@ export class ControlsManager {
 
     if (this.glow.sidePanel.isPanelVisible()) this.glow.sidePanel.hide()
     this.glow.hideMixerPanel()
-    this.glow.uiManager.hidePanelToggleButton()
-    this.glow.uiManager.hideMixerButton()
     this.glow.uiManager.setDetachActive(true)
+    this.glow.uiManager.refreshAppMenu()
 
     this._pollInterval = setInterval(() => {
       if (this.controlsWindow?.closed) this._onClosed()
@@ -47,9 +54,8 @@ export class ControlsManager {
     clearInterval(this._pollInterval)
     this._pollInterval = null
     this.controlsWindow = null
-    this.glow.uiManager.showPanelToggleButton()
-    this.glow.uiManager.showMixerButton()
     this.glow.uiManager.setDetachActive(false)
+    this.glow.uiManager.refreshAppMenu()
   }
 
   _getState () {

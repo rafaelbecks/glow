@@ -36,18 +36,12 @@ export class UIManager {
   initializeElements () {
     this.elements = {
       startButton: document.getElementById('startButton'),
+      appMenuMount: document.getElementById('appMenuMount'),
       panelToggleButton: document.getElementById('panelToggleButton'),
-      openButton: document.getElementById('openButton'),
-      saveButton: document.getElementById('saveButton'),
-      labButton: document.getElementById('labButton'),
-      mixerButton: document.getElementById('mixerButton'),
-      infoButton: document.getElementById('infoButton'),
-      detachButton: document.getElementById('detachButton'),
       infoModal: document.getElementById('infoModal'),
       infoModalClose: document.getElementById('infoModalClose'),
       infoModalBody: document.getElementById('infoModalBody'),
       canvasMessage: document.getElementById('canvasMessage'),
-      canvasMessageCubeIcon: document.getElementById('canvasMessageCubeIcon'),
       readTabletData: document.getElementById('readTabletData'),
       clearTablet: document.getElementById('clearTablet'),
       tabletWidth: document.getElementById('tabletWidth'),
@@ -59,6 +53,9 @@ export class UIManager {
       )
     }
 
+    this.appMenu = null
+    this.detachActive = false
+    this.mixerActive = false
     this.statusVisible = false
     this.sidePanelVisible = false
     this.iconsVisible = true
@@ -66,37 +63,24 @@ export class UIManager {
     this.audioTransportPlaying = false
   }
 
+  setAppMenu (menu) {
+    this.appMenu = menu
+  }
+
+  refreshAppMenu () {
+    this.appMenu?.refresh?.()
+  }
+
   setupEventListeners () {
-    // Start button
     if (this.elements.startButton) {
       this.elements.startButton.addEventListener('click', () => {
         this.triggerCallback('startVisualizer')
       })
     }
-    // Panel toggle button
+
     if (this.elements.panelToggleButton) {
       this.elements.panelToggleButton.addEventListener('click', () => {
         this.triggerCallback('togglePanel')
-      })
-    }
-
-    if (this.elements.mixerButton) {
-      this.elements.mixerButton.addEventListener('click', () => {
-        this.triggerCallback('toggleMixer')
-      })
-    }
-
-    // Detach button
-    if (this.elements.detachButton) {
-      this.elements.detachButton.addEventListener('click', () => {
-        this.triggerCallback('detachControls')
-      })
-    }
-
-    // Open button
-    if (this.elements.openButton) {
-      this.elements.openButton.addEventListener('click', () => {
-        this.triggerCallback('openFile')
       })
     }
 
@@ -108,42 +92,12 @@ export class UIManager {
       })
     }
 
-    // Save button
-    if (this.elements.saveButton) {
-      this.elements.saveButton.addEventListener('click', () => {
-        this.triggerCallback('saveFile')
-      })
-    }
-
-    // Luminode Lab button
-    if (this.elements.labButton) {
-      this.elements.labButton.addEventListener('click', () => {
-        this.triggerCallback('openLuminodeLab')
-      })
-    }
-
-    // Info button
-    if (this.elements.infoButton) {
-      this.elements.infoButton.addEventListener('click', () => {
-        this.showInfoModal()
-      })
-    }
-
-    // Canvas message cube icon (clickable)
-    if (this.elements.canvasMessageCubeIcon) {
-      this.elements.canvasMessageCubeIcon.addEventListener('click', () => {
-        this.triggerCallback('togglePanel')
-      })
-    }
-
-    // Info modal close button
     if (this.elements.infoModalClose) {
       this.elements.infoModalClose.addEventListener('click', () => {
         this.hideInfoModal()
       })
     }
 
-    // Close modal when clicking outside
     if (this.elements.infoModal) {
       this.elements.infoModal.addEventListener('click', (e) => {
         if (e.target === this.elements.infoModal) {
@@ -152,7 +106,6 @@ export class UIManager {
       })
     }
 
-    // Tablet controls
     if (this.elements.readTabletData) {
       this.elements.readTabletData.addEventListener('click', () => {
         this.triggerCallback('connectTablet')
@@ -175,19 +128,31 @@ export class UIManager {
     window.addEventListener(
       'keydown',
       (e) => {
-        if ((e.metaKey || e.ctrlKey) && e.key === 'u') {
+        const mod = e.metaKey || e.ctrlKey
+        if (mod && this.isTextInputTarget(e.target)) return
+
+        if (mod && e.key.toLowerCase() === 'u') {
           e.preventDefault()
           this.triggerCallback('clearCanvas')
-        } else if ((e.metaKey || e.ctrlKey) && e.key === 'i') {
+        } else if (mod && e.key.toLowerCase() === 'i') {
           e.preventDefault()
           this.toggleIcons()
-        } else if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        } else if (mod && e.key.toLowerCase() === 'n') {
+          e.preventDefault()
+          this.triggerCallback('newFile')
+        } else if (mod && e.key.toLowerCase() === 'o') {
+          e.preventDefault()
+          this.triggerCallback('openFile')
+        } else if (mod && e.shiftKey && e.key.toLowerCase() === 's') {
+          e.preventDefault()
+          this.triggerCallback('saveFileAs')
+        } else if (mod && e.key.toLowerCase() === 's') {
           e.preventDefault()
           this.triggerCallback('saveFile')
-        } else if ((e.metaKey || e.ctrlKey) && e.key === 'm') {
+        } else if (mod && e.key.toLowerCase() === 'm') {
           e.preventDefault()
           this.triggerCallback('enableHardwareMode')
-        } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'p') {
+        } else if (mod && e.key.toLowerCase() === 'p') {
           e.preventDefault()
           this.triggerCallback('exportSnapshotHotkey')
         } else if (
@@ -221,7 +186,6 @@ export class UIManager {
       true
     )
 
-    // Window resize
     window.addEventListener('resize', () => {
       this.triggerCallback('resize')
     })
@@ -324,6 +288,28 @@ export class UIManager {
     }
   }
 
+  showAppMenu () {
+    this.appMenu?.show?.()
+  }
+
+  hideAppMenu () {
+    this.appMenu?.hide?.()
+  }
+
+  /** @deprecated Icons moved to app menu — kept as no-ops for callers */
+  showDetachButton () {}
+  hideDetachButton () {}
+  showOpenButton () {}
+  hideOpenButton () {}
+  showSaveButton () {}
+  hideSaveButton () {}
+  showLabButton () {}
+  hideLabButton () {}
+  showMixerButton () {}
+  hideMixerButton () {}
+  showInfoButton () {}
+  hideInfoButton () {}
+
   showPanelToggleButton () {
     if (this.elements.panelToggleButton) {
       this.elements.panelToggleButton.style.display = 'flex'
@@ -336,94 +322,32 @@ export class UIManager {
     }
   }
 
-  showDetachButton () {
-    if (this.elements.detachButton) {
-      this.elements.detachButton.style.display = 'flex'
-    }
-  }
-
-  hideDetachButton () {
-    if (this.elements.detachButton) {
-      this.elements.detachButton.style.display = 'none'
-    }
-  }
-
   setDetachActive (active) {
-    if (this.elements.detachButton) {
-      this.elements.detachButton.classList.toggle('active', active)
-    }
+    this.detachActive = Boolean(active)
+    this.refreshAppMenu()
+    this.triggerCallback('toolsShortcutSync')
   }
 
-  setPanelToggleActive (active) {
-    if (this.elements.panelToggleButton) {
-      this.elements.panelToggleButton.classList.toggle('active', active)
-    }
+  isDetachActive () {
+    return this.detachActive
   }
 
-  showOpenButton () {
-    if (this.elements.openButton) {
-      this.elements.openButton.style.display = 'flex'
-    }
-  }
-
-  hideOpenButton () {
-    if (this.elements.openButton) {
-      this.elements.openButton.style.display = 'none'
-    }
-  }
-
-  showSaveButton () {
-    if (this.elements.saveButton) {
-      this.elements.saveButton.style.display = 'flex'
-    }
-  }
-
-  hideSaveButton () {
-    if (this.elements.saveButton) {
-      this.elements.saveButton.style.display = 'none'
-    }
-  }
-
-  showLabButton () {
-    if (this.elements.labButton) {
-      this.elements.labButton.style.display = 'flex'
-    }
-  }
-
-  hideLabButton () {
-    if (this.elements.labButton) {
-      this.elements.labButton.style.display = 'none'
-    }
-  }
-
-  showMixerButton () {
-    if (this.elements.mixerButton) {
-      this.elements.mixerButton.style.display = 'flex'
-    }
-  }
-
-  hideMixerButton () {
-    if (this.elements.mixerButton) {
-      this.elements.mixerButton.style.display = 'none'
-    }
+  setPanelToggleActive (_active) {
+    this.refreshAppMenu()
+    this.triggerCallback('toolsShortcutSync')
   }
 
   setMixerToggleActive (active) {
-    if (this.elements.mixerButton) {
-      this.elements.mixerButton.classList.toggle('active', active)
-    }
+    this.mixerActive = Boolean(active)
+    this.refreshAppMenu()
   }
 
-  showInfoButton () {
-    if (this.elements.infoButton) {
-      this.elements.infoButton.style.display = 'flex'
-    }
+  isMixerActive () {
+    return this.mixerActive
   }
 
-  hideInfoButton () {
-    if (this.elements.infoButton) {
-      this.elements.infoButton.style.display = 'none'
-    }
+  isUiChromeVisible () {
+    return this.iconsVisible
   }
 
   async showInfoModal () {
@@ -474,6 +398,11 @@ export class UIManager {
   setSidePanelVisible (visible) {
     this.sidePanelVisible = visible
     this.updateCanvasSize()
+    this.refreshAppMenu()
+  }
+
+  isSidePanelVisible () {
+    return this.sidePanelVisible
   }
 
   updateCanvasSize () {
@@ -485,7 +414,7 @@ export class UIManager {
     }
   }
 
-  // Icon visibility management
+  // Chrome visibility (menu + project name)
   toggleIcons () {
     this.iconsVisible = !this.iconsVisible
     if (this.iconsVisible) {
@@ -497,28 +426,16 @@ export class UIManager {
   }
 
   showAllIcons () {
-    const detached = this.elements.detachButton?.classList.contains('active')
-    this.showDetachButton()
-    this.showOpenButton()
-    this.showSaveButton()
-    this.showLabButton()
-    this.showInfoButton()
+    this.showAppMenu()
     this.showProjectNameDisplay()
-    if (!detached) {
-      this.showPanelToggleButton()
-      this.showMixerButton()
-    }
+    this.refreshAppMenu()
+    this.triggerCallback('toolsShortcutSync')
   }
 
   hideAllIcons () {
-    this.hidePanelToggleButton()
-    this.hideDetachButton()
-    this.hideOpenButton()
-    this.hideSaveButton()
-    this.hideMixerButton()
-    this.hideLabButton()
-    this.hideInfoButton()
+    this.hideAppMenu()
     this.hideProjectNameDisplay()
+    this.hidePanelToggleButton()
   }
 
   showProjectNameDisplay () {

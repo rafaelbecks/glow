@@ -104,6 +104,7 @@
                 >Untitled Project</span
             >
         </div>
+        <div id="appMenuMount" class="app-menu-mount" style="display: none"></div>
         <button
             title="Tracks & External Systems"
             id="panelToggleButton"
@@ -111,57 +112,6 @@
             style="display: none"
         >
             <ion-icon title="Tracks & External Systems" name="cube-outline"></ion-icon>
-        </button>
-        <button
-            title="Mixer"
-            id="mixerButton"
-            class="mixer-toggle-btn"
-            style="display: none"
-        >
-            <ion-icon name="layers-outline"></ion-icon>
-        </button>
-        <button
-            title="Detach Controls"
-            id="detachButton"
-            class="detach-toggle-btn"
-            style="display: none"
-        >
-            <ion-icon name="browsers-outline"></ion-icon>
-        </button>
-        <button
-            title="Open Project"
-            id="openButton"
-            class="open-toggle-btn"
-            style="display: none"
-        >
-            <ion-icon
-                title="Open Project"
-                name="folder-open-outline"
-            ></ion-icon>
-        </button>
-        <button
-            title="Save Scene"
-            id="saveButton"
-            class="save-toggle-btn"
-            style="display: none"
-        >
-            <ion-icon title="Save Scene" name="save-outline"></ion-icon>
-        </button>
-        <button
-            title="Luminode Lab"
-            id="labButton"
-            class="lab-toggle-btn"
-            style="display: none"
-        >
-            <ion-icon name="flask-outline"></ion-icon>
-        </button>
-        <button
-            title="About"
-            id="infoButton"
-            class="info-toggle-btn"
-            style="display: none"
-        >
-            <ion-icon name="help-circle-outline"></ion-icon>
         </button>
         <canvas
             id="fluidBackgroundCanvas"
@@ -275,13 +225,8 @@
         </svg>
         <div id="canvasMessage" class="canvas-message" style="display: none">
             <h3>
-                <span class="step-number">1.</span> Click on tracks
-                <span
-                    class="clickable-cube-icon"
-                    id="canvasMessageCubeIcon"
-                    title="Click to open tracks panel"
-                    ><ion-icon name="cube-outline"></ion-icon
-                ></span>
+                <span class="step-number">1.</span> Open tracks from the cube
+                (top right) or View → Tools
                 <br /><br />
                 <span class="step-number">2.</span> Assign a
                 <strong>MIDI device</strong> and a <strong>Luminode to a track</strong

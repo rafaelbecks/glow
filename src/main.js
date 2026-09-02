@@ -40,6 +40,14 @@ import { downloadPngSnapshot, downloadSvgSnapshot } from './canvas-export.js'
 import { registerServiceWorker, setupLaunchQueue } from './pwa.js'
 import { EffectLayerManager } from './effect-layer-manager.js'
 import { MixerPanel } from './components/mixer-panel.js'
+import { createAppMenu } from './components/app-menu.js'
+
+const DEFAULT_TRACK_LUMINODES = {
+  1: 'lissajous',
+  2: 'harmonograph',
+  3: 'sphere',
+  4: 'gegoNet'
+}
 
 export class GLOWVisualizer {
   constructor () {
@@ -420,8 +428,12 @@ export class GLOWVisualizer {
       }
     })
     this.uiManager.on('detachControls', () => this.controlsManager.toggle())
+    this.uiManager.on('newFile', () => this.newProject())
     this.uiManager.on('openFile', () => this.openFile())
     this.uiManager.on('saveFile', () => this.saveFile())
+    this.uiManager.on('saveFileAs', () => this.saveFileAs())
+    this.uiManager.on('toolsShortcutSync', () => this.syncToolsShortcutVisibility())
+    this.setupAppMenu()
     this.uiManager.on('toggleMute', (trackId) =>
       this.trackManager.toggleMute(trackId)
     )
@@ -571,14 +583,7 @@ export class GLOWVisualizer {
         this.updateProjectName(this.projectManager.setManager.getDisplayName())
         this.updateUnsavedChangesIndicator()
         this.uiManager.hideLogoContainer()
-        this.uiManager.showPanelToggleButton()
-        this.uiManager.showOpenButton()
-        this.uiManager.showSaveButton()
-        this.uiManager.showLabButton()
-        this.uiManager.showInfoButton()
-        this.uiManager.showMixerButton()
-        this.showProjectNameDisplay()
-        this.uiManager.showCanvasMessage()
+        this.showWorkspaceChrome({ openTools: true })
         this.visualizerStarted = true
         if (!this.isRunning) {
           this.isRunning = true
@@ -608,20 +613,57 @@ export class GLOWVisualizer {
     }
   }
 
+  setupAppMenu () {
+    const menu = createAppMenu({
+      actions: {
+        new: () => this.newProject(),
+        open: () => this.openFile(),
+        save: () => this.saveFile(),
+        saveAs: () => this.saveFileAs(),
+        exportSvg: () => this.exportSnapshot({ format: 'svg' }),
+        exportPng: () => this.exportSnapshot({ format: 'png', pngScale: 2 }),
+        tools: () => this.toggleSidePanel(),
+        mixer: () => this.toggleMixerPanel(),
+        separateScreen: () => this.controlsManager.toggle(),
+        uiChrome: () => this.uiManager.toggleIcons(),
+        luminodeLab: () => this.luminodeLab.show(null),
+        about: () => this.uiManager.showInfoModal(),
+        isTools: () => this.sidePanel.isPanelVisible(),
+        isMixer: () => this.mixerVisible,
+        isSeparateScreen: () => this.controlsManager.isOpen(),
+        isUiChrome: () => this.uiManager.isUiChromeVisible()
+      }
+    })
+    this.appMenu = menu
+    this.uiManager.setAppMenu(menu)
+  }
+
+  syncToolsShortcutVisibility () {
+    const show =
+      this.uiChromeVisible &&
+      !this.sidePanel.isPanelVisible() &&
+      !this.controlsManager.isOpen()
+    if (show) this.uiManager.showPanelToggleButton()
+    else this.uiManager.hidePanelToggleButton()
+  }
+
+  showWorkspaceChrome ({ openTools = false } = {}) {
+    this.uiManager.showAppMenu()
+    this.showProjectNameDisplay()
+    this.uiManager.showCanvasMessage()
+    if (openTools && !this.controlsManager.isOpen() && !this.sidePanel.isPanelVisible()) {
+      this.sidePanel.show()
+    }
+    this.uiManager.refreshAppMenu()
+    this.syncToolsShortcutVisibility()
+  }
+
   async start () {
     try {
       this.visualizerStarted = true
       this.uiManager.hideStartButton()
       this.uiManager.hideLogoContainer()
-      this.uiManager.showPanelToggleButton()
-      this.uiManager.showDetachButton()
-      this.uiManager.showOpenButton()
-      this.uiManager.showSaveButton()
-      this.uiManager.showLabButton()
-      this.uiManager.showInfoButton()
-      this.uiManager.showMixerButton()
-      this.showProjectNameDisplay()
-      this.uiManager.showCanvasMessage()
+      this.showWorkspaceChrome({ openTools: true })
 
       this.uiManager.showStatus('Starting visualizer...', 'success')
       this.isRunning = true
@@ -696,6 +738,8 @@ export class GLOWVisualizer {
   toggleSidePanel () {
     this.sidePanel.toggle()
     this.uiManager.setPanelToggleActive(this.sidePanel.isPanelVisible())
+    this.uiManager.refreshAppMenu()
+    this.syncToolsShortcutVisibility()
   }
 
   showMixerPanel () {
@@ -749,6 +793,32 @@ export class GLOWVisualizer {
     this.filePickerDialog.show()
   }
 
+  async newProject () {
+    if (this.projectManager.updateUnsavedChangesFlag()) {
+      const shouldProceed = await this.promptUnsavedChanges()
+      if (!shouldProceed) return
+    }
+
+    this.clearCurrentState()
+
+    this.trackManager.getTracks().forEach((track) => {
+      const luminode = DEFAULT_TRACK_LUMINODES[track.id] || null
+      track.luminode = luminode
+      track.layout = { x: 0, y: 0, scale: 0 }
+      if (luminode) {
+        this.createLuminodeForTrack(track.id, luminode)
+      }
+    })
+
+    this.updateProjectName('Untitled Project')
+    this.updateUnsavedChangesIndicator()
+    this.uiManager.setSetModeActive(false)
+    this.sidePanel.renderTracks()
+    this.mixerPanel?.refresh()
+    this.showWorkspaceChrome()
+    this.uiManager.showStatus('New project', 'success')
+  }
+
   async saveFile () {
     try {
       if (this.projectManager.hasOpenFile()) {
@@ -763,13 +833,48 @@ export class GLOWVisualizer {
         } else if (result.cancelled) {
         }
       } else {
-        const timestamp = Math.floor(Date.now() / 1000)
-        const defaultName = `glow-scene-${timestamp}`
-        this.saveDialog.setDefaultName(defaultName)
-        this.saveDialog.show()
+        await this.saveFileAs()
       }
     } catch (error) {
       console.error('Error saving project:', error)
+      this.uiManager.showStatus(
+        'Error saving project. Check console for details.',
+        'error'
+      )
+    }
+  }
+
+  async saveFileAs () {
+    try {
+      if (this.projectManager.isSetMode()) {
+        const setName =
+          this.projectManager.setManager.setName ||
+          this.projectManager.getCurrentProjectName() ||
+          'Untitled Set'
+        const result = await this.projectManager.saveNewSet(
+          setName,
+          this.projectManager.setManager.scenes
+        )
+        if (result.success) {
+          this.updateProjectName(this.projectManager.setManager.getDisplayName())
+          this.updateUnsavedChangesIndicator()
+          this.uiManager.showStatus(
+            `Set "${result.setName}" saved successfully!`,
+            'success'
+          )
+        }
+        return
+      }
+
+      const current = this.projectManager.getCurrentProjectName()
+      const defaultName =
+        current && current !== 'Untitled Project'
+          ? current.replace(/\.glow$/i, '')
+          : `glow-scene-${Math.floor(Date.now() / 1000)}`
+      this.saveDialog.setDefaultName(defaultName)
+      this.saveDialog.show()
+    } catch (error) {
+      console.error('Error saving project as:', error)
       this.uiManager.showStatus(
         'Error saving project. Check console for details.',
         'error'
@@ -837,15 +942,7 @@ export class GLOWVisualizer {
         this.updateUnsavedChangesIndicator()
 
         this.uiManager.hideLogoContainer()
-        this.uiManager.showPanelToggleButton()
-        this.uiManager.showDetachButton()
-        this.uiManager.showOpenButton()
-        this.uiManager.showSaveButton()
-        this.uiManager.showLabButton()
-        this.uiManager.showInfoButton()
-        this.uiManager.showMixerButton()
-        this.showProjectNameDisplay()
-        this.uiManager.showCanvasMessage()
+        this.showWorkspaceChrome({ openTools: true })
         this.visualizerStarted = true
         if (!this.isRunning) {
           this.isRunning = true
