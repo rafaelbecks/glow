@@ -33,6 +33,12 @@ export class UIManager {
     )
   }
 
+  isStartScreenVisible () {
+    const logo = this.elements.logoContainer
+    if (!logo) return false
+    return logo.style.display !== 'none'
+  }
+
   initializeElements () {
     this.elements = {
       startButton: document.getElementById('startButton'),
@@ -214,6 +220,17 @@ export class UIManager {
         } else if (mod && e.key.toLowerCase() === 'p') {
           e.preventDefault()
           this.triggerCallback('exportSnapshotHotkey')
+        } else if (
+          this.isStartScreenVisible() &&
+          e.code === 'Space' &&
+          !e.metaKey &&
+          !e.ctrlKey &&
+          !e.altKey &&
+          !this.isTextInputTarget(e.target) &&
+          !this.isDialogOpen()
+        ) {
+          e.preventDefault()
+          this.triggerCallback('startVisualizer')
         } else if (
           this.audioTransportAvailable &&
           e.code === 'Space' &&

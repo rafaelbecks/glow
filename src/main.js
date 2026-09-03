@@ -648,6 +648,7 @@ export class GLOWVisualizer {
     if (!deviceId) return
     this.trackManager.setMidiDevice(trackId, deviceId)
     this.markProjectChanged()
+    this.openToolsPanel()
   }
 
   async enableWizardGenerator (trackId) {
@@ -656,6 +657,15 @@ export class GLOWVisualizer {
     this.sidePanel.refreshGeneratorDiceIcons()
     await this.sidePanel.refreshExternalSystems()
     this.markProjectChanged()
+    this.openToolsPanel()
+  }
+
+  openToolsPanel () {
+    if (this.controlsManager.isOpen() || this.sidePanel.isPanelVisible()) return
+    this.sidePanel.show()
+    this.uiManager.setPanelToggleActive(true)
+    this.uiManager.refreshAppMenu()
+    this.syncToolsShortcutVisibility()
   }
 
   setupAppMenu () {

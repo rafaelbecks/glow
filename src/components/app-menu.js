@@ -78,7 +78,6 @@ export function createAppMenu ({
       label: 'Help',
       items: [
         { id: 'about', label: 'About GLOW…', icon: 'information-circle-outline' },
-        { id: 'repository', label: 'Repository…', icon: 'logo-github' },
         { id: 'docs', label: 'Manual / Docs…', icon: 'document-text-outline' }
       ]
     }
