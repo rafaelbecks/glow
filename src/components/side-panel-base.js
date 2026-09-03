@@ -146,7 +146,7 @@ export class SidePanelBase {
           !this.panel.contains(e.target) &&
           !e.target.closest('.panel-toggle-btn') &&
           !e.target.closest(
-            '.luminode-picker-dialog, .save-dialog, .file-picker-dialog, .create-set-dialog, .info-modal'
+            '.luminode-picker-dialog, .save-dialog, .file-picker-dialog, .create-set-dialog, .info-modal, .glow-confirm-dialog'
           )
         ) {
           this.hide()

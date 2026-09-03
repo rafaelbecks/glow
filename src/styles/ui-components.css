@@ -250,6 +250,41 @@
     opacity: 0.8;
 }
 
+.canvas-wizard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    pointer-events: auto;
+    text-align: center;
+    max-width: 620px;
+}
+
+.canvas-wizard p {
+    margin: 0;
+    color: white;
+    font-size: 14px;
+    font-weight: 300;
+    letter-spacing: 1px;
+    font-family: "Inconsolata", monospace;
+    opacity: 0.86;
+}
+
+.canvas-wizard p strong {
+    color: #51cf66;
+}
+
+.canvas-wizard .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+}
+
+.canvas-wizard .btn-secondary ion-icon {
+    font-size: 15px;
+}
+
 .canvas-message h3 strong {
     color: #51cf66;
     font-weight: 600;

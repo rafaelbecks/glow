@@ -28,7 +28,7 @@ export class UIManager {
   isDialogOpen () {
     return Boolean(
       document.querySelector(
-        '.save-dialog.show, .create-set-dialog.show, .file-picker-dialog.show'
+        '.save-dialog.show, .create-set-dialog.show, .file-picker-dialog.show, .info-modal.show, .glow-confirm-dialog.show'
       )
     )
   }
@@ -41,7 +41,16 @@ export class UIManager {
       infoModal: document.getElementById('infoModal'),
       infoModalClose: document.getElementById('infoModalClose'),
       infoModalBody: document.getElementById('infoModalBody'),
+      aboutModal: document.getElementById('aboutModal'),
+      aboutModalClose: document.getElementById('aboutModalClose'),
+      aboutModalMeta: document.getElementById('aboutModalMeta'),
       canvasMessage: document.getElementById('canvasMessage'),
+      canvasWizardAddLuminode: document.getElementById('canvasWizardAddLuminode'),
+      quickStartMidiModal: document.getElementById('quickStartMidiModal'),
+      quickStartMidiClose: document.getElementById('quickStartMidiClose'),
+      quickStartMidiSelect: document.getElementById('quickStartMidiSelect'),
+      quickStartMidiConnect: document.getElementById('quickStartMidiConnect'),
+      quickStartMidiGenerator: document.getElementById('quickStartMidiGenerator'),
       readTabletData: document.getElementById('readTabletData'),
       clearTablet: document.getElementById('clearTablet'),
       tabletWidth: document.getElementById('tabletWidth'),
@@ -103,6 +112,56 @@ export class UIManager {
         if (e.target === this.elements.infoModal) {
           this.hideInfoModal()
         }
+      })
+    }
+
+    if (this.elements.aboutModalClose) {
+      this.elements.aboutModalClose.addEventListener('click', () => {
+        this.hideAboutModal()
+      })
+    }
+
+    if (this.elements.aboutModal) {
+      this.elements.aboutModal.addEventListener('click', (e) => {
+        if (e.target === this.elements.aboutModal) {
+          this.hideAboutModal()
+        }
+      })
+    }
+
+    if (this.elements.canvasWizardAddLuminode) {
+      this.elements.canvasWizardAddLuminode.addEventListener('click', () => {
+        this.triggerCallback('wizardAddLuminode')
+      })
+    }
+
+    if (this.elements.quickStartMidiClose) {
+      this.elements.quickStartMidiClose.addEventListener('click', () => {
+        this.hideQuickStartMidiModal()
+      })
+    }
+
+    if (this.elements.quickStartMidiModal) {
+      this.elements.quickStartMidiModal.addEventListener('click', (e) => {
+        if (e.target === this.elements.quickStartMidiModal) {
+          this.hideQuickStartMidiModal()
+        }
+      })
+    }
+
+    if (this.elements.quickStartMidiConnect) {
+      this.elements.quickStartMidiConnect.addEventListener('click', () => {
+        const deviceId = this.elements.quickStartMidiSelect?.value || ''
+        if (!deviceId) return
+        this.triggerCallback('wizardAssignMidiDevice', { trackId: 1, deviceId })
+        this.hideQuickStartMidiModal()
+      })
+    }
+
+    if (this.elements.quickStartMidiGenerator) {
+      this.elements.quickStartMidiGenerator.addEventListener('click', () => {
+        this.triggerCallback('wizardUseGenerator', { trackId: 1 })
+        this.hideQuickStartMidiModal()
       })
     }
 
@@ -379,6 +438,51 @@ export class UIManager {
   hideInfoModal () {
     if (this.elements.infoModal) {
       this.elements.infoModal.classList.remove('show')
+    }
+  }
+
+  showAboutModal ({ version = '1.0.0' } = {}) {
+    if (!this.elements.aboutModal) return
+    if (this.elements.aboutModalMeta) {
+      const year = new Date().getFullYear()
+      this.elements.aboutModalMeta.textContent = `v${version} · ${year}`
+    }
+    this.elements.aboutModal.classList.add('show')
+  }
+
+  hideAboutModal () {
+    if (this.elements.aboutModal) {
+      this.elements.aboutModal.classList.remove('show')
+    }
+  }
+
+  showQuickStartMidiModal (devices = []) {
+    const modal = this.elements.quickStartMidiModal
+    const select = this.elements.quickStartMidiSelect
+    const connectBtn = this.elements.quickStartMidiConnect
+    if (!modal || !select || !connectBtn) return
+
+    select.innerHTML = ''
+    const placeholder = document.createElement('option')
+    placeholder.value = ''
+    placeholder.textContent = devices.length ? 'Select device' : 'No MIDI devices found'
+    select.appendChild(placeholder)
+
+    devices.forEach((device) => {
+      const option = document.createElement('option')
+      option.value = device.id
+      option.textContent = device.name
+      select.appendChild(option)
+    })
+
+    select.disabled = devices.length === 0
+    connectBtn.disabled = devices.length === 0
+    modal.classList.add('show')
+  }
+
+  hideQuickStartMidiModal () {
+    if (this.elements.quickStartMidiModal) {
+      this.elements.quickStartMidiModal.classList.remove('show')
     }
   }
 

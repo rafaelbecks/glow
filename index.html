@@ -224,29 +224,81 @@
             </defs>
         </svg>
         <div id="canvasMessage" class="canvas-message" style="display: none">
-            <h3>
-                <span class="step-number">1.</span> Open tracks from the cube
-                (top right) or View → Tools
-                <br /><br />
-                <span class="step-number">2.</span> Assign a
-                <strong>MIDI device</strong> and a <strong>Luminode to a track</strong
-                ><br /><br />
-                <span class="step-number">3.</span>
-                <span>Send some MIDI. The geometry of light will unfold here</span>
-            </h3>
+            <div class="canvas-wizard">
+                <p>
+                    Add a luminode to begin your scene, or drop a
+                    <strong>.glow</strong> file.
+                </p>
+                <button id="canvasWizardAddLuminode" class="btn-secondary" type="button">
+                    <ion-icon name="cube-outline"></ion-icon>
+                    Add a luminode on Track 1
+                </button>
+            </div>
         </div>
 
-        <!-- Info Modal -->
+        <!-- Manual / Docs Modal -->
         <div id="infoModal" class="info-modal">
             <div class="info-modal-content">
                 <div class="info-modal-header">
-                    <h2>G.L.O.W.</h2>
+                    <h2>Manual / Docs</h2>
                     <button id="infoModalClose" class="info-modal-close">
                         <ion-icon name="close-outline"></ion-icon>
                     </button>
                 </div>
                 <div id="infoModalBody" class="info-modal-body">
                     <!-- Content will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- About Modal -->
+        <div id="aboutModal" class="info-modal about-modal">
+            <div class="info-modal-content about-modal-content">
+                <button id="aboutModalClose" class="info-modal-close about-modal-close">
+                    <ion-icon name="close-outline"></ion-icon>
+                </button>
+                <div class="about-modal-body">
+                    <h2 class="about-modal-title">GLOW</h2>
+                    <p id="aboutModalMeta" class="about-modal-meta"></p>
+                    <a
+                        class="about-modal-repo"
+                        href="https://github.com/rafaelbecks/glow"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >github.com/rafaelbecks/glow</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Start MIDI Modal -->
+        <div id="quickStartMidiModal" class="glow-confirm-dialog">
+            <div class="glow-confirm-dialog-content quick-start-midi-content">
+                <div class="glow-confirm-dialog-header">
+                    <h3>Connect Track 1</h3>
+                    <button
+                        id="quickStartMidiClose"
+                        class="glow-confirm-dialog-close"
+                        type="button"
+                        aria-label="Close"
+                    >
+                        <ion-icon name="close-outline"></ion-icon>
+                    </button>
+                </div>
+                <div class="glow-confirm-dialog-body quick-start-midi-body">
+                    <p>Select a MIDI device to control the luminode, or use an internal generator.</p>
+                    <div class="quick-start-midi-select-wrap">
+                        <label for="quickStartMidiSelect">MIDI Device</label>
+                        <select id="quickStartMidiSelect" aria-label="Select MIDI device for Track 1"></select>
+                    </div>
+                </div>
+                <div class="glow-confirm-dialog-footer">
+                    <button id="quickStartMidiGenerator" class="btn-secondary" type="button">
+                        <ion-icon name="dice-outline"></ion-icon>
+                        Use Internal Generator
+                    </button>
+                    <button id="quickStartMidiConnect" class="btn-primary" type="button">
+                        Use MIDI Device
+                    </button>
                 </div>
             </div>
         </div>

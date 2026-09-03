@@ -131,15 +131,17 @@ export class LuminodePickerDialog {
     requestAnimationFrame(paintChunk)
   }
 
-  hide () {
+  hide ({ selectionMade = false } = {}) {
     if (!this.isVisible) return
 
+    const trackId = this.trackId
     this.stopAnimationLoop()
     this.disposePreviews()
     this.dialog.classList.remove('show')
     this.isVisible = false
     this.trackId = null
     this.hoverKey = null
+    this.triggerCallback('closed', { trackId, selectionMade })
   }
 
   renderGrid () {
@@ -481,6 +483,6 @@ export class LuminodePickerDialog {
       trackId: this.trackId,
       luminode: key
     })
-    this.hide()
+    this.hide({ selectionMade: true })
   }
 }

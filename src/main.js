@@ -49,6 +49,9 @@ const DEFAULT_TRACK_LUMINODES = {
   4: 'gegoNet'
 }
 
+const APP_VERSION = '1.0.0'
+const REPO_URL = 'https://github.com/rafaelbecks/glow'
+
 export class GLOWVisualizer {
   constructor () {
     this.canvas = document.getElementById('canvas')
@@ -122,6 +125,7 @@ export class GLOWVisualizer {
       trackManager: this.trackManager,
       midiManager: this.midiManager
     })
+    this.wizardAwaitingTrack1Luminode = false
     this.visualizerStarted = false
 
     // CRT overlay element
@@ -416,6 +420,13 @@ export class GLOWVisualizer {
     this.uiManager.on('togglePanel', () => this.toggleSidePanel())
     this.uiManager.on('toggleMixer', () => this.toggleMixerPanel())
     this.uiManager.on('toggleAudioTransport', () => this.toggleProjectAudio())
+    this.uiManager.on('wizardAddLuminode', () => this.openWizardLuminodePicker())
+    this.uiManager.on('wizardAssignMidiDevice', ({ trackId, deviceId }) => {
+      this.assignWizardMidiDevice(trackId, deviceId)
+    })
+    this.uiManager.on('wizardUseGenerator', ({ trackId }) => {
+      this.enableWizardGenerator(trackId)
+    })
     this.uiManager.on('iconsVisibilityChange', ({ visible }) => {
       this.uiChromeVisible = visible
       this.renderDebugOverlay()
@@ -551,9 +562,18 @@ export class GLOWVisualizer {
   setupLuminodePickerDialog () {
     this.luminodePickerDialog.on('luminodeSelected', ({ trackId, luminode }) => {
       this.sidePanel.applyLuminodeSelection(trackId, luminode)
+      if (this.wizardAwaitingTrack1Luminode && trackId === 1 && luminode) {
+        this.wizardAwaitingTrack1Luminode = false
+        this.showWizardMidiStep(trackId)
+      }
     })
     this.luminodePickerDialog.on('userLuminodeDeleted', ({ luminode }) => {
       this.handleUserLuminodeDeleted(luminode)
+    })
+    this.luminodePickerDialog.on('closed', ({ trackId, selectionMade }) => {
+      if (this.wizardAwaitingTrack1Luminode && trackId === 1 && !selectionMade) {
+        this.wizardAwaitingTrack1Luminode = false
+      }
     })
     this.luminodePickerDialog.setupEventListeners()
   }
@@ -613,6 +633,31 @@ export class GLOWVisualizer {
     }
   }
 
+  openWizardLuminodePicker () {
+    this.wizardAwaitingTrack1Luminode = true
+    const track = this.trackManager.getTrack(1)
+    this.luminodePickerDialog.show(1, track?.luminode || null)
+  }
+
+  showWizardMidiStep (trackId = 1) {
+    const devices = this.trackManager.getAvailableMidiDevices()
+    this.uiManager.showQuickStartMidiModal(devices, { trackId })
+  }
+
+  assignWizardMidiDevice (trackId, deviceId) {
+    if (!deviceId) return
+    this.trackManager.setMidiDevice(trackId, deviceId)
+    this.markProjectChanged()
+  }
+
+  async enableWizardGenerator (trackId) {
+    const result = this.midiGenerator.ensureOrRandomizeForTrack(trackId)
+    if (!result) return
+    this.sidePanel.refreshGeneratorDiceIcons()
+    await this.sidePanel.refreshExternalSystems()
+    this.markProjectChanged()
+  }
+
   setupAppMenu () {
     const menu = createAppMenu({
       actions: {
@@ -627,7 +672,9 @@ export class GLOWVisualizer {
         separateScreen: () => this.controlsManager.toggle(),
         uiChrome: () => this.uiManager.toggleIcons(),
         luminodeLab: () => this.luminodeLab.show(null),
-        about: () => this.uiManager.showInfoModal(),
+        about: () => this.uiManager.showAboutModal({ version: APP_VERSION }),
+        repository: () => window.open(REPO_URL, '_blank', 'noopener,noreferrer'),
+        docs: () => this.uiManager.showInfoModal(),
         isTools: () => this.sidePanel.isPanelVisible(),
         isMixer: () => this.mixerVisible,
         isSeparateScreen: () => this.controlsManager.isOpen(),

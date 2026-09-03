@@ -136,6 +136,61 @@
     margin: 20px 0;
 }
 
+.about-modal .about-modal-content {
+    position: relative;
+    width: fit-content;
+    min-width: 260px;
+    max-width: calc(100vw - 40px);
+    max-height: none;
+    padding: 30px 20px 20px;
+}
+
+.about-modal-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+}
+
+.about-modal-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+}
+
+.about-modal-title {
+    margin: 0;
+    color: #fff;
+    font-size: 20px;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-family: "Analo Grotesk", "Inconsolata", sans-serif;
+}
+
+.about-modal-meta {
+    margin: 0;
+    font-family: "Inconsolata", monospace;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.about-modal-repo {
+    margin-top: 2px;
+    font-family: "Inconsolata", monospace;
+    font-size: 11px;
+    color: #51cf66;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.about-modal-repo:hover {
+    text-decoration: underline;
+    color: #fff;
+}
+
 /* Save Dialog Styles */
 .save-dialog {
     position: fixed;
@@ -964,6 +1019,44 @@
 .btn-danger:hover {
     background: #ff5252;
     border-color: #ff5252;
+}
+
+.quick-start-midi-content {
+    max-width: 460px;
+}
+
+.quick-start-midi-body p {
+    margin: 0;
+}
+
+.quick-start-midi-select-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.quick-start-midi-select-wrap label {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.65);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.quick-start-midi-select-wrap select {
+    width: 100%;
+    min-height: 36px;
+    background: #0a0a0a;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    color: #fff;
+    font-family: "Inconsolata", monospace;
+    font-size: 13px;
+    padding: 8px 10px;
+    outline: none;
+}
+
+.quick-start-midi-select-wrap select:focus {
+    border-color: #51cf66;
 }
 
 .luminode-picker-dialog-footer-left {
