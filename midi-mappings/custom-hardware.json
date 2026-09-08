@@ -1,0 +1,12 @@
+{
+  "enabled": true,
+  "description": "GLOW custom hardware via IAC Driver Bus 5 (Arduino serial→MIDI). joyX/joyY → luminode layout position.",
+  "device": {
+    "name": "IAC Driver Bus 5",
+    "id": null
+  },
+  "layout": {
+    "24": "x",
+    "25": "y"
+  }
+}

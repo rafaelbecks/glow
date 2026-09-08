@@ -94,6 +94,11 @@ export const MIDI_CC_PRESETS = [
     id: 'nanoKontrol2.json',
     label: 'Korg nanoKONTROL2',
     path: 'midi-mappings/nanoKontrol2.json'
+  },
+  {
+    id: 'custom-hardware.json',
+    label: 'Custom Hardware',
+    path: 'midi-mappings/custom-hardware.json'
   }
 ]
 
