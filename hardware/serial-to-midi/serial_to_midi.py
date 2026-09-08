@@ -2,8 +2,14 @@
 """
 Serial → MIDI bridge for the GLOW Arduino controller sketch.
 
-Reads lines like `pot0: 64` from the UNO and sends MIDI CC messages
+Reads lines like `pot0: 64` / `btn0: 127` from the UNO and sends MIDI CC
 to an output device you pick interactively.
+
+Current button wiring (mux-pots-joystick-test) — direct pins, no 165:
+  btn0–btn3  4-button module → D10 D11 D12 A3  → CC 29–32  (GLOW track 1–4)
+  btn8–btn9  discrete → A4 / A5                 → CC 37–38  (deform / dither modes)
+  btn4–btn7  reserved for later 165 inputs      → CC 33–36
+  pot0–3     → CC 20–23 (luminode / deformation / dither sat+RGB by mode)
 
 Setup (once):
   cd hardware/serial-to-midi
@@ -44,6 +50,7 @@ except ImportError:
 DEFAULT_MIDI_PORT = "IAC Driver Bus 5"
 
 # Default CC map (channel 1 = MIDI channel 0 in mido)
+# Keep btn4–btn7 reserved so later discrete 165 buttons get stable CCs.
 DEFAULT_CC = {
     "pot0": 20,
     "pot1": 21,
@@ -54,13 +61,36 @@ DEFAULT_CC = {
     "joyBtn": 26,
     "enc": 27,
     "encBtn": 28,
-    "btn0": 29,
-    "btn1": 30,
-    "btn2": 31,
-    "btn3": 32,
-    "btn4": 33,
+    "btn0": 29,  # track 1
+    "btn1": 30,  # track 2
+    "btn2": 31,  # track 3
+    "btn3": 32,  # track 4
+    "btn4": 33,  # reserved
     "btn5": 34,
+    "btn6": 35,
+    "btn7": 36,
+    "btn8": 37,  # deformation mode toggle
+    "btn9": 38,  # dither mode toggle
 }
+
+# Labels currently wired on the breadboard (printed first at startup)
+WIRED_NOW = (
+    "pot0",
+    "pot1",
+    "pot2",
+    "pot3",
+    "joyX",
+    "joyY",
+    "joyBtn",
+    "enc",
+    "encBtn",
+    "btn0",
+    "btn1",
+    "btn2",
+    "btn3",
+    "btn8",
+    "btn9",
+)
 
 LINE_RE = re.compile(r"^\s*([A-Za-z0-9_]+)\s*:\s*(\d+)\s*$")
 BAUD = 115200
@@ -154,9 +184,12 @@ def run(serial_port: str, midi_name: str, channel: int, quiet: bool) -> None:
     cc_map = dict(DEFAULT_CC)
     print(f"Serial: {serial_port} @ {BAUD}")
     print(f"MIDI out: {midi_name} (channel {channel + 1})")
-    print("CC map:")
-    for label, cc in cc_map.items():
-        print(f"  {label:8} → CC {cc}")
+    print("CC map (wired now):")
+    for label in WIRED_NOW:
+        print(f"  {label:8} → CC {cc_map[label]}")
+    print("Reserved (not wired yet):")
+    for label in ("btn4", "btn5", "btn6", "btn7"):
+        print(f"  {label:8} → CC {cc_map[label]}")
     print("Ctrl+C to quit.\n")
 
     out = mido.open_output(midi_name)

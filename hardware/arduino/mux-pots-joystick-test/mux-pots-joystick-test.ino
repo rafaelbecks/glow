@@ -1,21 +1,25 @@
 /*
-  Mux pots + joystick + encoder + 74HC165 buttons — filtered Serial
+  Mux pots + joystick + encoder + buttons — filtered Serial
   -----------------------------------------------------------------
   Silent until you enable a filter. Send labels (115200, newline):
 
     pot0,pot1
-    btn0,btn1,btn2
+    btn0,btn1,btn2,btn3,btn8,btn9
+    buttons       ← shortcut for the six wired buttons
     all
     diag          ← raw ADC dump every 200ms (mux debug)
+    btndiag       ← raw HIGH/LOW of button pins every 200ms
 
   Blank / "off" / "stop" clears the filter / stops diag.
 
-  Labels:
-    pot0 pot1 pot2 pot3 joyX joyY joyBtn enc encBtn
-    btn0 btn1 btn2 btn3 btn4 btn5
+  Wired now (see WIRING.md) — all INPUT_PULLUP, no external resistors:
+    btn0…btn3  4-button module → D10 D11 D12 A3
+    btn8 btn9  discrete tacts  → A4 A5
+    btn4…btn7  reserved (use 74HC165 later when you have 10k pull-ups)
 
-  Diag tip: also wire one pot wiper directly to A3 (outers 5V/GND)
-  to compare mux vs direct. Diag prints a3= as well.
+  Note: avoid D13 for buttons — the onboard LED weakens INPUT_PULLUP.
+
+  Also: pot0–pot3 joyX joyY joyBtn enc encBtn
 */
 
 // --- Pin map ---------------------------------------------------------------
@@ -33,26 +37,39 @@ const uint8_t ENC_CLK = 7;
 const uint8_t ENC_DT = 8;
 const uint8_t ENC_SW = 9;
 
-// 74HC165 parallel-in / serial-out (buttons board)
-const uint8_t SR_PL = 10;   // /PL  parallel load (active LOW)
-const uint8_t SR_CP = 11;   // CP   shift clock
-const uint8_t SR_Q7 = 12;   // Q7   serial data out
+// Direct buttons (INPUT_PULLUP). 74HC165 parked until 10k resistors available.
+const uint8_t BTN0_PIN = 10;  // module K1
+const uint8_t BTN1_PIN = 11;  // module K2
+const uint8_t BTN2_PIN = 12;  // module K3
+const uint8_t BTN3_PIN = A3;  // module K4 (not D13 — LED breaks pull-up)
+const uint8_t BTN8_PIN = A4;  // discrete
+const uint8_t BTN9_PIN = A5;  // discrete
 
 const uint8_t POT_CHANNELS[4] = {0, 1, 2, 3};
-const uint8_t NUM_SHIFT_BTNS = 6;
 
 const char* const LABELS[] = {
   "pot0", "pot1", "pot2", "pot3",
   "joyX", "joyY", "joyBtn",
   "enc", "encBtn",
-  "btn0", "btn1", "btn2", "btn3", "btn4", "btn5"
+  "btn0", "btn1", "btn2", "btn3", "btn4",
+  "btn5", "btn6", "btn7", "btn8", "btn9"
 };
-const uint8_t NUM_CONTROLS = 15;
+const uint8_t NUM_CONTROLS = 19;
 const uint8_t NUM_ANALOG = 6;
 const uint8_t IDX_JOY_BTN = 6;
 const uint8_t IDX_ENC = 7;
 const uint8_t IDX_ENC_BTN = 8;
 const uint8_t IDX_BTN0 = 9;
+const uint8_t IDX_BTN8 = 17;
+const uint8_t IDX_BTN9 = 18;
+
+const uint8_t WIRED_BTN_PINS[] = {
+  BTN0_PIN, BTN1_PIN, BTN2_PIN, BTN3_PIN, BTN8_PIN, BTN9_PIN
+};
+const uint8_t WIRED_BTN_IDX[] = {
+  IDX_BTN0, IDX_BTN0 + 1, IDX_BTN0 + 2, IDX_BTN0 + 3, IDX_BTN8, IDX_BTN9
+};
+const uint8_t NUM_WIRED_BTNS = 6;
 
 const unsigned long SCAN_INTERVAL_MS = 20;
 const uint8_t MUX_SETTLE_US = 50;   // mux needs time after channel select
@@ -67,6 +84,7 @@ uint8_t lineLen = 0;
 bool watch[NUM_CONTROLS] = {false};
 bool anyWatch = false;
 bool diagMode = false;
+bool btnDiagMode = false;
 
 uint16_t lastRaw[NUM_ANALOG];
 uint8_t lastMidi[NUM_CONTROLS];
@@ -79,9 +97,9 @@ uint8_t joyBtnStable = 0, encBtnStable = 0;
 uint8_t joyBtnReading = 0, encBtnReading = 0;
 unsigned long joyBtnDebounceAt = 0, encBtnDebounceAt = 0;
 
-uint8_t shiftBtnStable[NUM_SHIFT_BTNS] = {0};
-uint8_t shiftBtnReading[NUM_SHIFT_BTNS] = {0};
-unsigned long shiftBtnDebounceAt[NUM_SHIFT_BTNS] = {0};
+uint8_t wiredBtnStable[NUM_WIRED_BTNS] = {0};
+uint8_t wiredBtnReading[NUM_WIRED_BTNS] = {0};
+unsigned long wiredBtnDebounceAt[NUM_WIRED_BTNS] = {0};
 
 // --- Analog helpers --------------------------------------------------------
 void selectMuxChannel(uint8_t channel) {
@@ -156,32 +174,11 @@ void debounceButton(uint8_t pin, uint8_t* reading, uint8_t* stable,
   debounceValue(activeLowToMidi(pin), reading, stable, changedAt);
 }
 
-// Read 74HC165: bit0 = chip D0 … bit7 = chip D7 (btn0 → D0)
-uint8_t readShiftRegister() {
-  digitalWrite(SR_PL, LOW);
-  delayMicroseconds(5);
-  digitalWrite(SR_PL, HIGH);
-
-  uint8_t value = 0;
-  for (uint8_t i = 0; i < 8; i++) {
-    value <<= 1;
-    if (digitalRead(SR_Q7) == HIGH) {
-      value |= 1;
-    }
-    digitalWrite(SR_CP, HIGH);
-    delayMicroseconds(5);
-    digitalWrite(SR_CP, LOW);
-  }
-  return value;
-}
-
-void pollShiftButtons() {
-  // Inputs are pulled HIGH; button to GND → pressed bit is 0
-  const uint8_t bits = readShiftRegister();
-  for (uint8_t i = 0; i < NUM_SHIFT_BTNS; i++) {
-    const uint8_t raw = (bits & (1 << i)) ? 0 : 127;
-    debounceValue(
-        raw, &shiftBtnReading[i], &shiftBtnStable[i], &shiftBtnDebounceAt[i]);
+void pollWiredButtons() {
+  for (uint8_t i = 0; i < NUM_WIRED_BTNS; i++) {
+    debounceButton(
+        WIRED_BTN_PINS[i], &wiredBtnReading[i], &wiredBtnStable[i],
+        &wiredBtnDebounceAt[i]);
   }
 }
 
@@ -224,10 +221,10 @@ void clearWatch() {
   anyWatch = false;
   primed = false;
   diagMode = false;
+  btnDiagMode = false;
 }
 
 void runDiagDump() {
-  // Raw 0–1023 — if these jump wildly with pots untouched, wiring/mux is wrong
   Serial.print(F("mux0="));
   Serial.print(readMuxChannel(0));
   Serial.print(F(" mux1="));
@@ -238,13 +235,24 @@ void runDiagDump() {
   Serial.print(readMuxChannel(3));
   Serial.print(F(" joyX="));
   Serial.print(readAnalogAveraged(JOY_X));
-  Serial.print(F(" a3="));
-  Serial.print(readAnalogAveraged(A3));  // optional direct pot
   Serial.print(F(" S="));
   Serial.print(digitalRead(MUX_S0));
   Serial.print(digitalRead(MUX_S1));
   Serial.print(digitalRead(MUX_S2));
   Serial.println(digitalRead(MUX_S3));
+}
+
+void runBtnDiagDump() {
+  // Idle = 1 (pulled up). Pressed = 0 (to GND). If idle flickers, wiring is wrong.
+  for (uint8_t i = 0; i < NUM_WIRED_BTNS; i++) {
+    if (i) {
+      Serial.print(' ');
+    }
+    Serial.print(LABELS[WIRED_BTN_IDX[i]]);
+    Serial.print('=');
+    Serial.print(digitalRead(WIRED_BTN_PINS[i]));
+  }
+  Serial.println();
 }
 
 void watchAll() {
@@ -253,6 +261,19 @@ void watchAll() {
   }
   anyWatch = true;
   primed = false;
+}
+
+void watchWiredButtons() {
+  for (uint8_t i = 0; i < NUM_CONTROLS; i++) {
+    watch[i] = false;
+  }
+  for (uint8_t i = 0; i < NUM_WIRED_BTNS; i++) {
+    watch[WIRED_BTN_IDX[i]] = true;
+  }
+  anyWatch = true;
+  primed = false;
+  diagMode = false;
+  btnDiagMode = false;
 }
 
 void setFilterFromLine(char* line) {
@@ -270,9 +291,22 @@ void setFilterFromLine(char* line) {
     return;
   }
 
+  if (strcmp(line, "btndiag") == 0) {
+    clearWatch();
+    btnDiagMode = true;
+    Serial.println(F("btndiag on (1=idle 0=pressed). off to stop."));
+    return;
+  }
+
   if (strcmp(line, "all") == 0) {
     diagMode = false;
+    btnDiagMode = false;
     watchAll();
+    return;
+  }
+
+  if (strcmp(line, "buttons") == 0) {
+    watchWiredButtons();
     return;
   }
 
@@ -301,6 +335,7 @@ void setFilterFromLine(char* line) {
   }
 
   diagMode = false;
+  btnDiagMode = false;
   for (uint8_t i = 0; i < NUM_CONTROLS; i++) {
     watch[i] = nextWatch[i];
   }
@@ -338,7 +373,7 @@ void emitIfChanged(uint8_t index, uint8_t value) {
 void scanWatched() {
   debounceButton(JOY_BTN, &joyBtnReading, &joyBtnStable, &joyBtnDebounceAt);
   debounceButton(ENC_SW, &encBtnReading, &encBtnStable, &encBtnDebounceAt);
-  pollShiftButtons();
+  pollWiredButtons();
 
   if (!anyWatch) {
     return;
@@ -363,8 +398,8 @@ void scanWatched() {
     lastMidi[IDX_JOY_BTN] = joyBtnStable;
     lastMidi[IDX_ENC] = encMidi;
     lastMidi[IDX_ENC_BTN] = encBtnStable;
-    for (uint8_t i = 0; i < NUM_SHIFT_BTNS; i++) {
-      lastMidi[IDX_BTN0 + i] = shiftBtnStable[i];
+    for (uint8_t i = 0; i < NUM_WIRED_BTNS; i++) {
+      lastMidi[WIRED_BTN_IDX[i]] = wiredBtnStable[i];
     }
     primed = true;
     return;
@@ -388,8 +423,8 @@ void scanWatched() {
   emitIfChanged(IDX_JOY_BTN, joyBtnStable);
   emitIfChanged(IDX_ENC, encMidi);
   emitIfChanged(IDX_ENC_BTN, encBtnStable);
-  for (uint8_t i = 0; i < NUM_SHIFT_BTNS; i++) {
-    emitIfChanged(IDX_BTN0 + i, shiftBtnStable[i]);
+  for (uint8_t i = 0; i < NUM_WIRED_BTNS; i++) {
+    emitIfChanged(WIRED_BTN_IDX[i], wiredBtnStable[i]);
   }
 }
 
@@ -404,18 +439,16 @@ void setup() {
   pinMode(ENC_DT, INPUT_PULLUP);
   pinMode(ENC_SW, INPUT_PULLUP);
 
-  pinMode(SR_PL, OUTPUT);
-  pinMode(SR_CP, OUTPUT);
-  pinMode(SR_Q7, INPUT);
-  digitalWrite(SR_PL, HIGH);
-  digitalWrite(SR_CP, LOW);
+  for (uint8_t i = 0; i < NUM_WIRED_BTNS; i++) {
+    pinMode(WIRED_BTN_PINS[i], INPUT_PULLUP);
+  }
 
   lastClk = digitalRead(ENC_CLK);
   joyBtnStable = joyBtnReading = activeLowToMidi(JOY_BTN);
   encBtnStable = encBtnReading = activeLowToMidi(ENC_SW);
-  pollShiftButtons();
-  for (uint8_t i = 0; i < NUM_SHIFT_BTNS; i++) {
-    shiftBtnStable[i] = shiftBtnReading[i];
+  pollWiredButtons();
+  for (uint8_t i = 0; i < NUM_WIRED_BTNS; i++) {
+    wiredBtnStable[i] = wiredBtnReading[i];
   }
 
   Serial.begin(115200);
@@ -429,12 +462,16 @@ void loop() {
   pollEncoder();
 
   const unsigned long now = millis();
-  if (diagMode) {
+  if (diagMode || btnDiagMode) {
     if (now - lastScan < 200) {
       return;
     }
     lastScan = now;
-    runDiagDump();
+    if (diagMode) {
+      runDiagDump();
+    } else {
+      runBtnDiagDump();
+    }
     return;
   }
 

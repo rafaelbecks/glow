@@ -56,8 +56,51 @@ const CANVAS_SETTING_LABELS = {
   BRIGHTNESS_FILTER: 'Brightness',
   CONTRAST_FILTER: 'Contrast',
   SATURATION_FILTER: 'Saturation',
-  DITHER_SATURATE: 'Dither Saturation'
+  DITHER_SATURATE: 'Dither Saturation',
+  DITHER_TABLE_VALUES_R: 'Dither R',
+  DITHER_TABLE_VALUES_G: 'Dither G',
+  DITHER_TABLE_VALUES_B: 'Dither B'
 }
+
+/** pot0–3 while controlMode === 'deformation' */
+const DEFORMATION_POT_PARAMS = [
+  {
+    section: 'oscillation',
+    key: 'amount',
+    label: 'Osc Amount',
+    min: 0,
+    max: 80
+  },
+  {
+    section: 'oscillation',
+    key: 'frequency',
+    label: 'Osc Frequency',
+    min: 0.01,
+    max: 2
+  },
+  {
+    section: 'oscillation',
+    key: 'speed',
+    label: 'Osc Speed',
+    min: 0,
+    max: 5
+  },
+  {
+    section: 'noise',
+    key: 'amount',
+    label: 'Noise Amount',
+    min: 0,
+    max: 80
+  }
+]
+
+/** pot0–3 while controlMode === 'dither' */
+const DITHER_POT_SETTINGS = [
+  'DITHER_SATURATE',
+  'DITHER_TABLE_VALUES_R',
+  'DITHER_TABLE_VALUES_G',
+  'DITHER_TABLE_VALUES_B'
+]
 
 function resolveCanvasMeta (setting) {
   if (CANVAS_CC_META[setting]) return CANVAS_CC_META[setting]
@@ -193,6 +236,8 @@ export class MIDICCMapper {
 
     handled = this.handleModeToggle('cc', cc, value > 64) || handled
     handled = this.handleLayoutModeToggle('cc', cc, value > 64) || handled
+    handled = this.handleDeformationModeToggle('cc', cc, value > 64) || handled
+    handled = this.handleDitherModeToggle('cc', cc, value > 64) || handled
     handled = this.handleLuminodeNavigation('cc', cc, value > 64) || handled
     handled = this.handleCanvasFilterNavigation('cc', cc, value > 64) || handled
     handled = this.handleUseColorToggle('cc', cc, value > 64) || handled
@@ -210,8 +255,28 @@ export class MIDICCMapper {
       handled = true
     }
 
-    if (this.currentTrackId && this.currentLuminode && this.mapping.luminodeParameters) {
+    if (
+      this.controlMode === 'luminode' &&
+      this.currentTrackId &&
+      this.currentLuminode &&
+      this.mapping.luminodeParameters
+    ) {
       handled = this.handleLuminodeParameters(cc, normalizedValue) || handled
+    }
+
+    if (
+      this.controlMode === 'deformation' &&
+      this.currentTrackId &&
+      this.mapping.luminodeParameters
+    ) {
+      handled = this.handleDeformationParameters(cc, normalizedValue) || handled
+    }
+
+    if (
+      this.controlMode === 'dither' &&
+      this.mapping.luminodeParameters
+    ) {
+      handled = this.handleDitherParameters(cc, normalizedValue) || handled
     }
 
     if (this.currentTrackId && this.mapping.layout) {
@@ -348,6 +413,11 @@ export class MIDICCMapper {
     const isDice = matchesCc(this.mapping.generatorDice?.note, note)
     const isModeToggle = matchesCc(this.mapping.modeToggle?.note, note)
     const isLayoutMode = matchesCc(this.mapping.layoutModeToggle?.note, note)
+    const isDeformationMode = matchesCc(
+      this.mapping.deformationModeToggle?.note,
+      note
+    )
+    const isDitherMode = matchesCc(this.mapping.ditherModeToggle?.note, note)
     const isUseColor = matchesCc(this.mapping.useColorToggle?.note, note)
     const luminodeNavigation = this.mapping.luminodeNavigation
     const isPreviousLuminode = matchesCc(
@@ -365,6 +435,8 @@ export class MIDICCMapper {
       !isDice &&
       !isModeToggle &&
       !isLayoutMode &&
+      !isDeformationMode &&
+      !isDitherMode &&
       !isUseColor &&
       !isPreviousLuminode &&
       !isNextLuminode &&
@@ -395,6 +467,16 @@ export class MIDICCMapper {
 
     if (isLayoutMode) {
       this.toggleLayoutMode()
+      return true
+    }
+
+    if (isDeformationMode) {
+      this.toggleDeformationMode()
+      return true
+    }
+
+    if (isDitherMode) {
+      this.toggleDitherMode()
       return true
     }
 
@@ -430,6 +512,20 @@ export class MIDICCMapper {
     const mapped = this.mapping.layoutModeToggle?.[messageType]
     if (!matchesCc(mapped, number)) return false
     if (isPressed) this.toggleLayoutMode()
+    return true
+  }
+
+  handleDeformationModeToggle (messageType, number, isPressed) {
+    const mapped = this.mapping.deformationModeToggle?.[messageType]
+    if (!matchesCc(mapped, number)) return false
+    if (isPressed) this.toggleDeformationMode()
+    return true
+  }
+
+  handleDitherModeToggle (messageType, number, isPressed) {
+    const mapped = this.mapping.ditherModeToggle?.[messageType]
+    if (!matchesCc(mapped, number)) return false
+    if (isPressed) this.toggleDitherMode()
     return true
   }
 
@@ -509,6 +605,9 @@ export class MIDICCMapper {
 
   toggleControlMode () {
     // Cycle stays between luminode params and canvas filters.
+    if (this.controlMode === 'dither') {
+      this.setDitherOverlay(false)
+    }
     this.controlMode = this.controlMode === 'canvas' ? 'luminode' : 'canvas'
     this.publishTrackStatus()
     this.showControlMessage(
@@ -529,6 +628,46 @@ export class MIDICCMapper {
         : `luminode · ${this.currentLuminode}`,
       true
     )
+  }
+
+  toggleDeformationMode () {
+    const entering = this.controlMode !== 'deformation'
+    if (this.controlMode === 'dither') {
+      this.setDitherOverlay(false)
+    }
+    this.controlMode = entering ? 'deformation' : 'luminode'
+    if (entering && this.currentTrackId) {
+      this.trackManager.updateLineModulationConfig(this.currentTrackId, {
+        enabled: true
+      })
+    }
+    this.publishTrackStatus()
+    this.showControlMessage(
+      this.controlMode === 'deformation'
+        ? `deformation · track ${this.currentTrackId}`
+        : `luminode · ${this.currentLuminode}`,
+      true
+    )
+  }
+
+  toggleDitherMode () {
+    const entering = this.controlMode !== 'dither'
+    this.controlMode = entering ? 'dither' : 'luminode'
+    this.setDitherOverlay(entering)
+    this.publishTrackStatus()
+    this.showControlMessage(
+      this.controlMode === 'dither'
+        ? 'dither · saturation / RGB'
+        : `luminode · ${this.currentLuminode}`,
+      true
+    )
+  }
+
+  setDitherOverlay (enabled) {
+    this.mainApp?.updateCanvasSetting?.({
+      setting: 'DITHER_OVERLAY',
+      value: enabled
+    })
   }
 
   has3dRotation () {
@@ -683,9 +822,13 @@ export class MIDICCMapper {
           ? `midi · layout${this.has3dRotation() ? ' · 3d' : ''} · track ${
               this.currentTrackId
             }`
-          : `midi · track ${this.currentTrackId}${
-              this.currentLuminode ? ` · ${this.currentLuminode}` : ''
-            }`
+          : this.controlMode === 'deformation'
+            ? `midi · deformation · track ${this.currentTrackId}`
+            : this.controlMode === 'dither'
+              ? 'midi · dither · sat / RGB'
+              : `midi · track ${this.currentTrackId}${
+                  this.currentLuminode ? ` · ${this.currentLuminode}` : ''
+                }`
     )
   }
 
@@ -695,14 +838,15 @@ export class MIDICCMapper {
 
     // Check if this CC is mapped to a track
     for (const [trackIdStr, trackCC] of Object.entries(trackMapping)) {
-      const trackId = parseInt(trackIdStr)
-      if (trackCC === cc) {
+      const trackId = parseInt(trackIdStr, 10)
+      if (Number(trackCC) === cc) {
         // Value > 64 activates the track for parameter control
         const track = this.trackManager.getTrack(trackId)
         if (track && value > 64) {
           this.currentTrackId = trackId
           this.currentLuminode = track.luminode
-          this.showControlMessage(`track ${trackId} active`)
+          this.publishTrackStatus()
+          this.showControlMessage(`track ${trackId} active`, true)
         }
         return true
       }
@@ -759,6 +903,83 @@ export class MIDICCMapper {
 
     const paramIndex = cc - startCC
     this.applyLuminodeParameter(paramIndex, normalizedValue, `CC ${cc}`)
+    return true
+  }
+
+  /**
+   * Shared pot CCs (same range as luminodeParameters) while in deformation mode.
+   * pot0–3 → osc amount / freq / speed / noise amount; enables deformation.
+   */
+  handleDeformationParameters (cc, normalizedValue) {
+    const paramConfig = this.mapping.luminodeParameters
+    if (!paramConfig || paramConfig.start == null || !this.currentTrackId) {
+      return false
+    }
+
+    const startCC = paramConfig.start
+    const maxCC = paramConfig.max ?? 127
+    if (cc < startCC || cc > maxCC) return false
+
+    const paramIndex = cc - startCC
+    const params = DEFORMATION_POT_PARAMS
+    const param = params[paramIndex]
+    if (!param) return true
+
+    const value = param.min + normalizedValue * (param.max - param.min)
+    const updates = { enabled: true }
+    if (param.section === 'oscillation') {
+      updates.oscillation = { [param.key]: value }
+    } else {
+      updates.noise = { [param.key]: value }
+    }
+
+    this.trackManager.updateLineModulationConfig(this.currentTrackId, updates)
+    this.showControlMessage(
+      `${param.label}: ${Number(value.toFixed(3))} · CC ${cc}`
+    )
+    console.log('[MIDI CC] Deformation parameter', {
+      trackId: this.currentTrackId,
+      parameter: param.label,
+      value
+    })
+    return true
+  }
+
+  /**
+   * Shared pot CCs while in dither mode: saturation + RGB table values.
+   */
+  handleDitherParameters (cc, normalizedValue) {
+    const paramConfig = this.mapping.luminodeParameters
+    if (!paramConfig || paramConfig.start == null) return false
+
+    const startCC = paramConfig.start
+    const maxCC = paramConfig.max ?? 127
+    if (cc < startCC || cc > maxCC) return false
+
+    const paramIndex = cc - startCC
+    const settings = DITHER_POT_SETTINGS
+    const setting = settings[paramIndex]
+    if (!setting) return true
+
+    const meta = resolveCanvasMeta(setting)
+    if (!meta) return true
+
+    let value
+    if (meta.type === 'tableValues') {
+      value = valueToTableValues(normalizedValue)
+    } else {
+      const min = meta.min ?? 0
+      const max = meta.max ?? 1
+      value = min + normalizedValue * (max - min)
+    }
+
+    this.mainApp?.updateCanvasSetting?.({ setting, value })
+    const display =
+      typeof value === 'number' ? Number(value.toFixed(3)) : value
+    this.showControlMessage(
+      `${this.getCanvasSettingLabel(setting)}: ${display} · CC ${cc}`
+    )
+    console.log('[MIDI CC] Dither parameter', { setting, value })
     return true
   }
 

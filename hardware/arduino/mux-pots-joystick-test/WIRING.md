@@ -1,4 +1,4 @@
-# Breadboard wiring — mux pots + joystick + encoder + shift-register buttons
+# Breadboard wiring — mux pots + joystick + encoder + buttons
 
 Matches `mux-pots-joystick-test.ino`.
 
@@ -30,16 +30,23 @@ UNO GND ──►  both breadboard − rails
          A2 ────────┤ Joy VRy     │
          D6 ────────┤ Joy SW      │
                     │             │
-         D7 ────────┤ Enc CLK     │  ← keep direct (not on shift reg)
+         D7 ────────┤ Enc CLK     │
          D8 ────────┤ Enc DT      │
          D9 ────────┤ Enc SW      │
                     │             │
-         D10 ───────┤ 165 /PL     │  ← buttons board
-         D11 ───────┤ 165 CP      │
-         D12 ───────┤ 165 Q7      │
+         D10 ───────┤ btn0 / K1   │  ← 4-button module (direct)
+         D11 ───────┤ btn1 / K2   │
+         D12 ───────┤ btn2 / K3   │
+         A3 ────────┤ btn3 / K4   │  ← not D13 (LED breaks pull-up)
+         A4 ────────┤ btn8        │  ← 2 discrete tacts
+         A5 ────────┤ btn9        │
          5V/GND ────┤ everything  │
                     └─────────────┘
 ```
+
+**Note:** The 74HC165N is parked for now. Without pull-up resistors its inputs float
+(random presses / one button affecting others). Use it later when you have 10ks.
+**Do not use D13** for a pull-up button — the built-in LED loads the pin.
 
 ---
 
@@ -106,62 +113,44 @@ Each pot: outer legs **5V** + **GND**, wiper → mux **C0–C3**.
 
 A rotary encoder needs fast edge detection. A 74HC165 is polled in a slow serial burst; you will miss detents and get wrong direction. Leave **CLK + DT on D7/D8**.
 
-The **push button (SW)** *could* sit on the 165 later to free D9, but with only 6 buttons it is not worth it — keep SW on D9.
+The **push button (SW)** *could* sit on a 165 later to free D9 — keep SW on D9 for now.
 
 ---
 
-## 4. Second board: 74HC165 + 6 buttons
+## 4. Buttons — direct UNO pins (no resistors, no 165)
 
-Use a **74HC165** (parallel-in / serial-out). A 74HC595 is for *outputs* (LEDs), not buttons.
+**Why:** Your module almost certainly has **no onboard pull-ups**. On a 74HC165 those
+inputs float → random `btnN` chatter and pressing one line coupling into others.
+UNO `INPUT_PULLUP` fixes that without external 10ks.
 
-### Chip pinout (DIP-16)
+### 4-button module → D10 D11 D12 A3
 
-```
-                 notch
-              ┌───┴───┐
-   /PL ← D10 ─┤1   16├─ VCC → 5V
-    CP ← D11 ─┤2   15├─ Q7\ (unused)
-         D4 ──┤3   14├─ D3  → btn3
-         D5 ──┤4   13├─ D2  → btn2
-         D6 ──┤5   12├─ D1  → btn1
-         D7 ──┤6   11├─ D0  → btn0
-/CE ← GND ────┤7   10├─ DS  → GND (no cascade)
-        GND ──┤8    9├─ Q7  → D12
-              └───────┘
-```
+| Module | UNO | Label |
+|--------|-----|-------|
+| Common | **GND** | |
+| K1 / Out1 | **D10** | `btn0` |
+| K2 / Out2 | **D11** | `btn1` |
+| K3 / Out3 | **D12** | `btn2` |
+| K4 / Out4 | **A3** | `btn3` |
 
-| 165 pin | Goes to |
-|--------:|---------|
-| 16 VCC | 5V |
-| 8 GND | GND |
-| 7 /CE | **GND** |
-| 10 DS | **GND** (unused serial-in) |
-| 1 /PL | UNO **D10** |
-| 2 CP | UNO **D11** |
-| 9 Q7 | UNO **D12** |
-| 11–14, 3–4 | buttons (below) |
-| 5–6 D6/D7 | tie to **5V** if unused |
+**Disconnect the 165** from D10/D11/D12 and from the module while testing this way.
+Skip **D13** for buttons — the onboard LED makes `INPUT_PULLUP` unreliable.
 
-### Each button
+### 2 discrete tacts → A4 / A5
 
 ```
-  5V ── 10k ──┬── 165 Dx (D0…D5)
-              │
-             btn  (momentary NO)
-              │
-             GND
+  UNO A4 ── btn8 ── GND
+  UNO A5 ── btn9 ── GND
 ```
 
-| Button | 165 input | Serial label |
-|--------|-----------|--------------|
-| 1 | **D0** (pin 11) | `btn0` |
-| 2 | **D1** (pin 12) | `btn1` |
-| 3 | **D2** (pin 13) | `btn2` |
-| 4 | **D3** (pin 14) | `btn3` |
-| 5 | **D4** (pin 3) | `btn4` |
-| 6 | **D5** (pin 4) | `btn5` |
+One leg to the pin, other leg to **GND** (same breadboard − rail as UNO GND).
+Which side of the switch is which does not matter.
 
-Pressed = LOW on the chip → sketch reports `127`.
+### Later: 74HC165 (needs 10k pull-ups)
+
+When you have resistors, you can put the module (or more tacts) back on the 165:
+`/PL`→D10, `CP`→D11, `Q7`→D12, each Dx with `5V—10k—Dx` and button to GND.
+Until then, leave the chip unpowered / unwired.
 
 ---
 
@@ -173,10 +162,10 @@ Pressed = LOW on the chip → sketch reports `127`.
 | D2–D5, A0 | mux S0–S3, SIG |
 | A1 A2 D6 | joystick |
 | D7 D8 D9 | encoder CLK DT SW |
-| D10 D11 D12 | 165 /PL CP Q7 |
-| 165 /CE, DS | GND |
 | Pot wipers | mux C0–C3 |
-| Buttons | 165 D0–D5 + 10k pull-ups |
+| Module Common | GND |
+| Module K1–K4 | **D10 D11 D12 A3** |
+| Discrete btn8 / btn9 | **A4** / **A5** → GND |
 
 ---
 
@@ -185,11 +174,11 @@ Pressed = LOW on the chip → sketch reports `127`.
 ```
   BOARD A (analog)                         BOARD B (buttons)
   ────────────────                         ─────────────────
-  74HC4067 + 4 pots                        74HC165 + 6 buttons
-  Joystick                                 (10k pull-ups)
-  Encoder
+  74HC4067 + 4 pots                        4-button module → D10–D12, A3
+  Joystick                                 2 tact → A4 / A5
+  Encoder                                  (74HC165 unused for now)
 
-       │ 5V GND D2-D5 A0 A1 A2 D6-D9              │ 5V GND D10 D11 D12
+       │ 5V GND D2-D5 A0 A1 A2 D6-D9              │ GND D10 D11 D12 A3 A4 A5
        └──────────────────┬───────────────────────┘
                           │
                      Arduino UNO
@@ -201,9 +190,13 @@ Pressed = LOW on the chip → sketch reports `127`.
 
 1. Flash the sketch  
 2. Serial **115200**, newline  
-3. Send `btn0,btn1,btn2,btn3,btn4,btn5` — press each → `btnN: 127` / `0`  
-4. Send `pot0` — should be quieter than before (more averaging + deadband)  
-5. Bridge: `hardware/serial-to-midi/serial_to_midi.py` (`btn0`… → CC 29–34)
+3. Send `btndiag` — idle should show all `=1`; press one → only that line `=0`  
+4. Send `buttons` — press each → `btnN: 127` / `0`  
+5. Bridge: `hardware/serial-to-midi/serial_to_midi.py`  
+   - `btn0`…`btn3` → CC 29–32 → GLOW tracks 1–4  
+   - `btn8` → CC 37 → deformation pot bank  
+   - `btn9` → CC 38 → dither on + sat/RGB pots  
+   - Load preset **Custom Hardware** in GLOW (Cmd/Ctrl+M); enable Hardware Mode
 
 ---
 

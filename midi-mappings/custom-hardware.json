@@ -1,9 +1,21 @@
 {
   "enabled": true,
-  "description": "GLOW custom hardware via IAC Driver Bus 5 (Arduino serial→MIDI). pot0–3 → luminode params; joyX/Y → layout; joyBtn → next luminode.",
+  "description": "GLOW custom hardware via IAC Driver Bus 5. btn0–3 track select; btn8 deformation pots; btn9 dither pots (sat/RGB); pot0–3 mode-dependent; joyX/Y layout; joyBtn next luminode.",
   "device": {
     "name": "IAC Driver Bus 5",
     "id": null
+  },
+  "trackSelection": {
+    "1": 29,
+    "2": 30,
+    "3": 31,
+    "4": 32
+  },
+  "deformationModeToggle": {
+    "cc": 37
+  },
+  "ditherModeToggle": {
+    "cc": 38
   },
   "luminodeNavigation": {
     "nextCC": 26
