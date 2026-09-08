@@ -54,6 +54,12 @@ DEFAULT_CC = {
     "joyBtn": 26,
     "enc": 27,
     "encBtn": 28,
+    "btn0": 29,
+    "btn1": 30,
+    "btn2": 31,
+    "btn3": 32,
+    "btn4": 33,
+    "btn5": 34,
 }
 
 LINE_RE = re.compile(r"^\s*([A-Za-z0-9_]+)\s*:\s*(\d+)\s*$")
