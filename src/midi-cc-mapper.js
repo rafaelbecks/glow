@@ -586,8 +586,53 @@ export class MIDICCMapper {
     const isNext = matchesCc(navigation?.[`next${suffix}`], number)
     if (!isPrevious && !isNext) return false
     if (isPressed && this.controlMode !== 'canvas') {
+      // Next on a track with no MIDI device: enable generator first, then
+      // further presses cycle luminodes as usual.
+      if (isNext && this.tryEnableGeneratorForTrackWithoutMidi(
+        `${messageType} ${number}`
+      )) {
+        return true
+      }
       this.stepLuminode(isNext ? 1 : -1, `${messageType} ${number}`)
     }
+    return true
+  }
+
+  /**
+   * @returns {boolean} true if this press was consumed to enable a generator
+   */
+  tryEnableGeneratorForTrackWithoutMidi (source = '') {
+    this.ensureCurrentTrack()
+    if (!this.currentTrackId) return false
+
+    const track = this.trackManager.getTrack(this.currentTrackId)
+    if (!track || track.midiDevice) return false
+
+    const generator = this.mainApp?.midiGenerator?.getGeneratorForTrack?.(
+      this.currentTrackId
+    )
+    if (generator?.enabled) return false
+
+    const result = this.mainApp?.midiGenerator?.enableGeneratorForTrack?.(
+      this.currentTrackId
+    )
+    if (!result) {
+      this.showControlMessage(
+        `track ${this.currentTrackId} · generator unavailable`,
+        true
+      )
+      return true
+    }
+
+    this.showControlMessage(
+      `track ${this.currentTrackId} · generator ${result}`,
+      true
+    )
+    console.log('[MIDI CC] Generator enable (no MIDI device)', {
+      source,
+      trackId: this.currentTrackId,
+      result
+    })
     return true
   }
 
@@ -1287,6 +1332,16 @@ export class MIDICCMapper {
       value = normalizedValue > 0.5
     } else if (meta.type === 'tableValues') {
       value = valueToTableValues(normalizedValue)
+    } else if (setting === 'CLEAR_ALPHA') {
+      // Hardware/LDR fader uses UI thresholds instead of full 0…1
+      let min = SETTINGS.CANVAS.CLEAR_ALPHA_MIDI_MIN ?? meta.min ?? 0
+      let max = SETTINGS.CANVAS.CLEAR_ALPHA_MIDI_MAX ?? meta.max ?? 1
+      if (max < min) {
+        const swap = min
+        min = max
+        max = swap
+      }
+      value = min + normalizedValue * (max - min)
     } else {
       const min = meta.min ?? 0
       const max = meta.max ?? 1

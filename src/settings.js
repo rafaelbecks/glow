@@ -3,6 +3,9 @@ export const SETTINGS = {
   // Canvas settings
   CANVAS: {
     CLEAR_ALPHA: 0.4,
+    // MIDI/hardware (ldrRange) maps 0…127 into this Clear Alpha window
+    CLEAR_ALPHA_MIDI_MIN: 0.05,
+    CLEAR_ALPHA_MIDI_MAX: 0.85,
     BACKGROUND_COLOR: '#000',
     CRT_MODE: false,
     CRT_INTENSITY: 100,

@@ -174,6 +174,22 @@ export class MidiGenerator {
     return id ? 'added' : null
   }
 
+  /**
+   * Ensure a generator exists and is running for the track (no randomize).
+   * @returns {'added'|'enabled'|'already'|null}
+   */
+  enableGeneratorForTrack (trackId) {
+    const existing = this.getGeneratorForTrack(trackId)
+    if (existing) {
+      if (existing.enabled) return 'already'
+      this.updateGenerator(existing.id, { enabled: true })
+      return 'enabled'
+    }
+    if (this.generators.length >= MAX_GENERATORS) return null
+    if (this.getUsedTrackIds().includes(trackId)) return null
+    return this.addGenerator(trackId) ? 'added' : null
+  }
+
   randomizeGenerator (id) {
     const generator = this.getGenerator(id)
     if (!generator) return

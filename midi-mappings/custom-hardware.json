@@ -1,6 +1,6 @@
 {
   "enabled": true,
-  "description": "GLOW custom hardware via IAC Driver Bus 5. btn0–3 track select; btn8 deformation pots; btn9 dither pots (sat/RGB); pot0–3 mode-dependent; joyX/Y layout; joyBtn next luminode.",
+  "description": "GLOW custom hardware via IAC Driver Bus 5. btn0–3 track select; btn8 deformation pots; btn9 dither pots (sat/RGB); pot0–3 mode-dependent; joyX/Y layout; joyBtn enables generator if track has no MIDI device, otherwise next luminode; ldrRange → clear alpha (UI min/max).",
   "device": {
     "name": "IAC Driver Bus 5",
     "id": null
@@ -27,5 +27,8 @@
   "layout": {
     "24": "x",
     "25": "y"
+  },
+  "canvas": {
+    "43": "CLEAR_ALPHA"
   }
 }

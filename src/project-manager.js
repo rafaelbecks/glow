@@ -28,6 +28,8 @@ export class ProjectManager {
       timestamp: new Date().toISOString(),
       canvas: {
         clearAlpha: SETTINGS.CANVAS.CLEAR_ALPHA,
+        clearAlphaMidiMin: SETTINGS.CANVAS.CLEAR_ALPHA_MIDI_MIN,
+        clearAlphaMidiMax: SETTINGS.CANVAS.CLEAR_ALPHA_MIDI_MAX,
         backgroundColor: SETTINGS.CANVAS.BACKGROUND_COLOR,
         crtMode: SETTINGS.CANVAS.CRT_MODE,
         crtIntensity: SETTINGS.CANVAS.CRT_INTENSITY,
@@ -954,6 +956,13 @@ export class ProjectManager {
     if (canvasData.clearAlpha !== undefined) {
       SETTINGS.CANVAS.CLEAR_ALPHA = canvasData.clearAlpha;
       this.glowVisualizer.canvasDrawer.setClearAlpha(canvasData.clearAlpha);
+    }
+
+    if (canvasData.clearAlphaMidiMin !== undefined) {
+      SETTINGS.CANVAS.CLEAR_ALPHA_MIDI_MIN = canvasData.clearAlphaMidiMin;
+    }
+    if (canvasData.clearAlphaMidiMax !== undefined) {
+      SETTINGS.CANVAS.CLEAR_ALPHA_MIDI_MAX = canvasData.clearAlphaMidiMax;
     }
 
     if (canvasData.backgroundColor !== undefined) {

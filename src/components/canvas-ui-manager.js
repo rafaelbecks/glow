@@ -1,4 +1,5 @@
 import { Pane } from '../lib/tweakpane.min.js'
+import { SETTINGS } from '../settings.js'
 import {
   FLUID_BACKGROUND_MODES,
   getBackgroundModePaneOptions
@@ -95,6 +96,8 @@ export class CanvasUIManager {
 
     const canvasData = {
       clearAlpha: canvasSettings.CLEAR_ALPHA || 0.4,
+      clearAlphaMidiMin: canvasSettings.CLEAR_ALPHA_MIDI_MIN ?? 0.05,
+      clearAlphaMidiMax: canvasSettings.CLEAR_ALPHA_MIDI_MAX ?? 0.85,
       backgroundColor: canvasSettings.BACKGROUND_COLOR || '#000000',
       crtMode: canvasSettings.CRT_MODE || false,
       crtIntensity: canvasSettings.CRT_INTENSITY || 100,
@@ -369,6 +372,36 @@ export class CanvasUIManager {
       })
       .on('change', (ev) => {
         this.triggerCanvasSettingChange('CLEAR_ALPHA', ev.value)
+      })
+
+    canvasFolder
+      .addBinding(canvasData, 'clearAlphaMidiMin', {
+        label: 'Clear α MIDI Min',
+        min: 0,
+        max: 1,
+        step: 0.01
+      })
+      .on('change', (ev) => {
+        let min = ev.value
+        const max = SETTINGS.CANVAS.CLEAR_ALPHA_MIDI_MAX ?? 1
+        if (min > max) min = max
+        canvasData.clearAlphaMidiMin = min
+        this.triggerCanvasSettingChange('CLEAR_ALPHA_MIDI_MIN', min)
+      })
+
+    canvasFolder
+      .addBinding(canvasData, 'clearAlphaMidiMax', {
+        label: 'Clear α MIDI Max',
+        min: 0,
+        max: 1,
+        step: 0.01
+      })
+      .on('change', (ev) => {
+        let max = ev.value
+        const min = SETTINGS.CANVAS.CLEAR_ALPHA_MIDI_MIN ?? 0
+        if (max < min) max = min
+        canvasData.clearAlphaMidiMax = max
+        this.triggerCanvasSettingChange('CLEAR_ALPHA_MIDI_MAX', max)
       })
 
     canvasFolder
